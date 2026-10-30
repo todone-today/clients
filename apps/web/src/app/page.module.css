@@ -277,6 +277,55 @@
   height: auto;
 }
 
+/* The terminal app's screens */
+.screens {
+  grid-column: 1 / -1;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 3.5rem;
+}
+.screens img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 0.9rem;
+  background: #1b1c22;
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+}
+.screens h3 {
+  font-size: 1.8rem;
+}
+.screens p {
+  margin-top: 0.3rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+.keys kbd {
+  padding: 0.05rem 0.4rem;
+  font: 700 0.8rem var(--mono);
+  color: var(--ink);
+  border: 2px solid var(--hair);
+}
+@media (max-width: 900px) {
+  .screens {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .screens {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Open source */
 .open {
   padding: 7rem var(--gutter) 6rem;

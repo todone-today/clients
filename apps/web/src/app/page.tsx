@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { GithubMark } from "@/components/GithubMark";
@@ -67,6 +68,55 @@ const steps = [
     title: "Take it anywhere",
     line: "Every list is a Markdown file. Open it in the terminal, in Obsidian, in any editor.",
     proof: <pre className={s.md}>{"- [x] Book flights\n- [ ] Pack ⏱ 45m 📅 2026-11-02"}</pre>,
+  },
+];
+
+// The terminal app's screens, from the real recording in demo/demo.tape.
+const screens = [
+  {
+    img: "home",
+    title: "Home",
+    line: "Every list with what's open and how far along it is.",
+    alt: "The terminal app's home screen: three lists with open counts and progress bars",
+    keys: [
+      ["n", "new list"],
+      ["s", "find"],
+      ["enter", "open"],
+    ],
+  },
+  {
+    img: "list",
+    title: "List",
+    line: "Subtasks, estimates against time spent, and when each is due.",
+    alt: "A list in the terminal app with subtasks, estimates and due days, one task late",
+    keys: [
+      ["x", "tick"],
+      ["a", "subtask"],
+      ["t", "due"],
+      ["h", "estimate"],
+    ],
+  },
+  {
+    img: "calendar",
+    title: "Calendar",
+    line: "A month of everything due, across every list.",
+    alt: "The terminal app's month calendar with dots on days that have tasks",
+    keys: [
+      ["h l", "day"],
+      ["j k", "week"],
+      ["[ ]", "month"],
+    ],
+  },
+  {
+    img: "focus",
+    title: "Focus",
+    line: "A timer on one task. The minutes are written back onto it.",
+    alt: "The terminal app's focus timer counting down on a task, 40 minutes of 2 hours spent",
+    keys: [
+      ["p", "start"],
+      ["space", "break"],
+      ["x", "done"],
+    ],
   },
 ];
 
@@ -142,8 +192,8 @@ export default function Home() {
               <span className={s.lime}>Terminal second.</span>
             </h2>
             <p>
-              Your lists also run in a full-screen terminal app with tabs, a calendar and a focus timer, one list per folder.
-              Today they move between the two as Markdown files: export here, open there. Live sync is coming.
+              The same lists in a full-screen terminal app: tabs, subtasks, due dates, estimates, a calendar and a focus
+              timer, all from the keyboard. Lists are Markdown files, one per folder, and sync with the web app.
             </p>
             <CopyCommand command={INSTALL} />
             <a className={s.more} href={`${REPO}#readme`}>
@@ -160,9 +210,31 @@ export default function Home() {
               muted
               loop
               playsInline
-              aria-label="The terminal app: a home screen of lists, then a list with subtasks, due dates and estimates"
+              aria-label="The terminal app: a list with subtasks, due dates and estimates, a focus timer, the calendar and the home screen"
             />
           </div>
+          <ul className={s.screens}>
+            {screens.map((sc) => (
+              <li key={sc.img}>
+                <Image
+                  src={`/demo/${sc.img}.png`}
+                  alt={sc.alt}
+                  width={1280}
+                  height={760}
+                  sizes="(max-width: 760px) 100vw, 25vw"
+                />
+                <h3 className="display">{sc.title}</h3>
+                <p>{sc.line}</p>
+                <p className={s.keys}>
+                  {sc.keys.map(([k, what]) => (
+                    <span key={k}>
+                      <kbd>{k}</kbd> {what}
+                    </span>
+                  ))}
+                </p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section id="open" className={s.open}>
@@ -184,8 +256,8 @@ export default function Home() {
             <article className={`sticker ${s.term3}`} style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
               <h3 className="display">Or use our cloud</h3>
               <p>
-                Sync across your devices without running a server. Free for everyday use; a paid plan only for unusually heavy
-                use. Coming soon.
+                Sync across your devices without running a server. Free for everyday use; a paid plan only for unusually
+                heavy use. Coming soon.
               </p>
             </article>
           </div>
