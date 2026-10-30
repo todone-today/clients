@@ -1,0 +1,13 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.mark {
+  flex: none;
+  transition: transform 0.25s var(--ease);
+}
+.logo:hover .mark,
+a:hover > .logo .mark {
+  transform: rotate(-8deg);
+}

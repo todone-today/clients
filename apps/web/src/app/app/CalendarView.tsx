@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@/lib/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
@@ -21,14 +21,21 @@ export function CalendarView({
   lists,
   update,
   onOpen,
+  share,
+  start,
 }: {
   lists: List[];
   update?: (id: string, f: (l: List) => List | null) => void;
   onOpen?: (listId: string) => void;
+  // Returns the workspace's secret calendar token (or an error message) for a share link.
+  share?: () => Promise<{ token: string } | { error: string }>;
+  // Where a shared link opens: its view and date.
+  start?: { view?: string; at?: string };
 }) {
   const today = todayISO();
-  const [view, setView] = useState<View>("week");
-  const [at, setAt] = useState(today);
+  const [view, setView] = useState<View>(() => (VIEWS.includes(start?.view as View) ? (start!.view as View) : "week"));
+  const [at, setAt] = useState(() => (/^\d{4}-\d{2}-\d{2}$/.test(start?.at ?? "") ? start!.at! : today));
+  const [shared, setShared] = useState("");
 
   const all: Item[] = lists.flatMap((list) => list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })));
   const byDay = new Map<string, Item[]>();
@@ -142,6 +149,25 @@ export function CalendarView({
             </button>
           ))}
         </div>
+        {share && (
+          <button
+            className={s.ghost}
+            onClick={async () => {
+              const r = await share();
+              if ("error" in r) return setShared(r.error);
+              const url = `${location.origin}/calendar/${r.token}?view=${view}&at=${at}`;
+              await navigator.clipboard.writeText(url);
+              setShared(`Copied a read-only link to this ${view}. Anyone with it can see your dated tasks.`);
+            }}
+          >
+            <Share2 size={16} strokeWidth={2.5} /> Share
+          </button>
+        )}
+        {shared && (
+          <p className={s.shareNote} role="status">
+            {shared}
+          </p>
+        )}
       </div>
 
       <div className={s.planner} data-tray={!!update}>

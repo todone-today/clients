@@ -18,7 +18,8 @@
   text-decoration: none;
 }
 .local {
-  margin-right: auto;
+  margin-left: auto;
+  text-align: right;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--ink-2);
@@ -1613,6 +1614,23 @@
 .noMatch {
   grid-column: 1 / -1;
   padding: 2rem 0;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Brainstorm, pinned above the lists */
+.ideasBtn span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ideasBtn[aria-current="true"] {
+  background: var(--pink);
+}
+
+.shareNote {
+  flex-basis: 100%;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--ink-2);
 }

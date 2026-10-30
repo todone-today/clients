@@ -49,3 +49,20 @@
   font-weight: 700;
   text-decoration: underline;
 }
+
+/* A haiku on every sign-in */
+.haiku {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: -0.75rem;
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--ink-2);
+}
+.haiku span:last-child {
+  font-weight: 700;
+  font-style: normal;
+  color: var(--ink);
+}

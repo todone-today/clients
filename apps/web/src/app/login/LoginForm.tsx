@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { GithubMark } from "@/components/GithubMark";
-import { NAME } from "@/lib/brand";
 import { authClient } from "@/lib/auth-client";
 import s from "./login.module.css";
 
@@ -13,16 +13,21 @@ const safeNext = () => {
   return n.startsWith("/") && !n.startsWith("//") ? n : "/app";
 };
 
-export function LoginForm({ github }: { github: boolean }) {
+export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, string, string] }) {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
   return (
     <main className={s.page}>
-      <Link href="/" className={`display ${s.mark}`}>
-        {NAME}
+      <Link href="/" className={s.mark} aria-label="Home">
+        <Logo size={34} />
       </Link>
+      <p className={s.haiku}>
+        {haiku.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </p>
       <form
         className={`sticker ${s.card}`}
         onSubmit={async (e) => {

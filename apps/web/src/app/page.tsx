@@ -1,11 +1,12 @@
 import Image from "next/image";
+import { Logo } from "@/components/Logo";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { GithubMark } from "@/components/GithubMark";
 import { CopyCommand } from "@/components/CopyCommand";
 import { HeroDemo } from "@/components/HeroDemo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { INSTALL, NAME, REPO } from "@/lib/brand";
+import { INSTALL, REPO } from "@/lib/brand";
 import s from "./page.module.css";
 
 const steps = [
@@ -124,8 +125,8 @@ export default function Home() {
   return (
     <>
       <header className={s.nav}>
-        <Link href="/" className={`display ${s.mark}`}>
-          {NAME}
+        <Link href="/" className={s.mark} aria-label="Home">
+          <Logo size={30} />
         </Link>
         <nav className={s.links} aria-label="Sections">
           <a href="#how">How it works</a>
@@ -276,7 +277,7 @@ export default function Home() {
       </main>
 
       <footer className={s.foot}>
-        <span className="display">{NAME}</span>
+        <Logo size={22} />
         <span>Free and open source, GPL-3.0.</span>
         <a href={REPO}>GitHub</a>
       </footer>

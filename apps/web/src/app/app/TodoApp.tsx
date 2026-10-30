@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Check, Clock, Download, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, Lightbulb, Check, Clock, Download, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { NAME } from "@/lib/brand";
 import { authClient } from "@/lib/auth-client";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
@@ -14,6 +14,7 @@ import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Integrations } from "./Integrations";
+import { shareCalendar } from "./integration-actions";
 import { Stickers, sticker } from "./Stickers";
 import { Members, type Panel, Workspaces } from "./Workspaces";
 import {
@@ -118,15 +119,14 @@ export function TodoApp() {
   return (
     <div className={s.shell}>
       <header className={s.top}>
-        <Link href="/" className={`display ${s.mark}`}>
-          {NAME}
+        <Link href="/" className={s.mark} aria-label="todone home">
+          <Logo size={26} />
         </Link>
         <nav className={s.tabs} aria-label="Views">
           {(
             [
               [null, "Lists"],
               ["calendar", "Calendar"],
-              ["ideas", "Brainstorm"],
             ] as const
           ).map(([p, name]) => (
             <button key={name} aria-pressed={panel === p} onClick={() => setPanel(p)}>
@@ -159,6 +159,13 @@ export function TodoApp() {
             setPanel(null);
           }}
         />
+        {/* Brainstorm lives above the lists: a place for loose ideas that isn't a list itself. */}
+        <button className={`${s.listBtn} ${s.ideasBtn}`} aria-current={panel === "ideas"} onClick={() => setPanel("ideas")}>
+          <span>
+            <Lightbulb size={16} strokeWidth={2.5} aria-hidden /> Brainstorm
+          </span>
+          <span className={s.open}>{lists?.find((l) => l.kind === "ideas")?.tasks.length || ""}</span>
+        </button>
         <h2 className={s.sideHead}>Lists</h2>
         {lists && (
           <ul className={s.lists}>
@@ -197,7 +204,7 @@ export function TodoApp() {
 
       <main className={s.main} data-wide={panel === "calendar"}>
         {panel === "calendar" ? (
-          lists && <CalendarView lists={lists.filter((l) => !l.kind)} update={update} onOpen={open} />
+          lists && <CalendarView lists={lists.filter((l) => !l.kind)} update={update} onOpen={open} share={shareCalendar} />
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} />
         ) : panel === "members" && orgId ? (
@@ -207,10 +214,8 @@ export function TodoApp() {
         ) : !lists ? null : list ? (
           <ListView key={list.id} list={list} update={update} />
         ) : (
-          <div className={s.empty}>
-            <p className="display">No lists yet.</p>
-            <p>Make one on the left: inbox, groceries, this week.</p>
-          </div>
+          // No lists yet: start in Brainstorm, where ideas can become the first tasks.
+          <Brainstorm lists={lists} add={add} update={update} />
         )}
       </main>
     </div>
