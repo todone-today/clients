@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@/lib/calendar";
-import { draggable, useDrop } from "@/lib/drag";
+import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
 import { type List, type Task, fmtMinutes, todayISO } from "@/lib/tasks";
 import s from "./app.module.css";
@@ -41,8 +41,23 @@ export function CalendarView({
     update && draggable({ kind: "task", listId: it.list.id, id: it.task.id, ids: [it.task.id] }, it.task.title);
   // Drop spots: "day:<date>" keeps the time, "all:<date>" clears it, "col:<date>" sets it from where it lands,
   // "tray" unschedules. Read-only calendars (the shared page) take no drops.
+  // While a task is dragged over the hour grid, a ghost block shows where it lands and for how long.
+  const [ghost, setGhost] = useState<{ day: string; start: number; est: number } | null>(null);
+  const minuteAt = (at: At) => {
+    const y = at.y - at.el.getBoundingClientRect().top;
+    return Math.max(0, Math.min(24 * 60 - SNAP, Math.round(((y / HOUR) * 60) / SNAP) * SNAP));
+  };
   const dropAt = useDrop("cal", {
     accept: (p) => !!update && p.kind === "task",
+    where: (p, arg, at) => {
+      const [spot, d] = arg.split(":");
+      if (spot !== "col" || p.kind !== "task") return (setGhost(null), "");
+      const est = all.find((x) => x.list.id === p.listId && x.task.id === p.id)?.task.est || 30;
+      const start = minuteAt(at);
+      setGhost((g) => (g?.day === d && g.start === start ? g : { day: d, start, est }));
+      return "";
+    },
+    leave: () => setGhost(null),
     drop: (p, arg, at) => {
       const it = p.kind === "task" && all.find((x) => x.list.id === p.listId && x.task.id === p.id);
       if (!it) return;
@@ -51,11 +66,7 @@ export function CalendarView({
       else if (arg === "tray-date") move(it, { due: undefined, at: undefined });
       else if (spot === "day") move(it, { due: d });
       else if (spot === "all") move(it, { due: d, at: undefined });
-      else if (spot === "col") {
-        const y = at.y - at.el.getBoundingClientRect().top;
-        const m = Math.max(0, Math.min(24 * 60 - SNAP, Math.round(((y / HOUR) * 60) / SNAP) * SNAP));
-        move(it, { due: d, at: toClock(m) });
-      }
+      else if (spot === "col") move(it, { due: d, at: toClock(minuteAt(at)) });
     },
   });
   const drop: Drop = (arg) => (update ? dropAt(arg) : {});
@@ -207,6 +218,7 @@ export function CalendarView({
             onDay={openDay}
             onOpen={onOpen}
             resize={update && ((it, est) => move(it, { est }))}
+            ghost={ghost}
           />
         )}
         {update && (
@@ -246,6 +258,7 @@ function TimeGrid({
   onDay,
   onOpen,
   resize,
+  ghost,
 }: {
   days: string[];
   today: string;
@@ -256,6 +269,7 @@ function TimeGrid({
   onDay: (d: string) => void;
   onOpen?: (listId: string) => void;
   resize?: (it: Item, est: number) => void;
+  ghost: { day: string; start: number; est: number } | null;
 }) {
   // Dragging a block's bottom edge stretches it; the new length becomes the task's estimate.
   const [stretch, setStretch] = useState<{ id: string; est: number } | null>(null);
@@ -318,6 +332,15 @@ function TimeGrid({
         {days.map((d) => (
           <div key={d} className={s.col} {...drop(`col:${d}`)}>
             {d === today && now !== null && <i className={s.now} style={{ top: (now / 60) * HOUR }} />}
+            {ghost?.day === d && (
+              <span
+                className={s.ghostBlock}
+                style={{ top: (ghost.start / 60) * HOUR, height: Math.max((ghost.est / 60) * HOUR - 2, 18) }}
+                aria-hidden
+              >
+                {toClock(ghost.start)}–{toClock(Math.min(24 * 60, ghost.start + ghost.est))}
+              </span>
+            )}
             {lanes(
               (byDay.get(d) ?? [])
                 .filter((it) => it.task.at)

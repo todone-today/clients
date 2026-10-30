@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Check, Clock, Download, LogOut, Pencil, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, Check, Clock, Download, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NAME } from "@/lib/brand";
 import { authClient } from "@/lib/auth-client";
+import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { mapTask, moveToList, refresh, reload, reorder, useLists } from "@/lib/store";
 import { AiImport } from "./AiImport";
@@ -31,8 +32,25 @@ import {
 import s from "./app.module.css";
 
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.
-const NOTES = ["var(--butter)", "var(--pink)", "var(--cyan)", "var(--lime)", "var(--peri)"];
-const noteColor = (id: string) => NOTES[[...id].reduce((n, c) => n + c.charCodeAt(0), 0) % NOTES.length];
+// Sticky colours. Each note in a list gets its own, ranked by id, so no two match until there are more
+// notes than colours, and dragging notes around doesn't reshuffle them.
+const NOTES = [
+  "var(--butter)",
+  "var(--pink)",
+  "var(--cyan)",
+  "var(--lime)",
+  "var(--peri)",
+  "var(--orange)",
+  "#c9b3ff", // lavender
+  "#8fe3b0", // mint
+];
+const noteColors = (tasks: Task[]) =>
+  new Map(
+    [...tasks]
+      .map((t) => t.id)
+      .sort()
+      .map((id, i) => [id, NOTES[i % NOTES.length]]),
+  );
 const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
 const count = (ts: Task[]) => {
@@ -224,6 +242,7 @@ function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name
 }
 
 type Update = (id: string, f: (l: List) => List | null) => void;
+
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
 function ListView({ list, update }: { list: List; update: Update }) {
@@ -231,6 +250,8 @@ function ListView({ list, update }: { list: List; update: Update }) {
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
   const [selected, setSelected] = useState<string | null>(null); // the task whose editor is open
+  const [show, setShow] = useState<Show>("all");
+  const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   const [binned, setBinned] = useState<{ before: Task[]; text: string } | null>(null);
   const today = todayISO();
@@ -249,7 +270,9 @@ function ListView({ list, update }: { list: List; update: Update }) {
   };
   // Dropping a task: on a note's left or right edge puts it before or after; in the middle nests it.
   // Among subtasks, the top or bottom half puts it above or below.
-  const place = (arg: string, at: At) => (isTop(arg) ? placeOn(at, "x") : placeOn(at, "y", false));
+  // While sorted, the screen isn't your order, so edges nest too instead of reordering.
+  const place = (arg: string, at: At) =>
+    !isTop(arg) ? placeOn(at, "y", false) : sort === "mine" ? placeOn(at, "x") : ("inside" as const);
   const drop = useDrop(`list-${list.id}`, {
     accept: (p, arg) =>
       p.kind === "sticker"
@@ -306,7 +329,8 @@ function ListView({ list, update }: { list: List; update: Update }) {
     a.click();
     URL.revokeObjectURL(url);
   };
-  const row = { listId: list.id, today, setTasks, selected, onSelect: setSelected, picked, onPick: pick, drop };
+  const colors = noteColors(list.tasks);
+  const row = { listId: list.id, today, setTasks, selected, onSelect: setSelected, picked, onPick: pick, drop, colors };
 
   return (
     <>
@@ -324,27 +348,39 @@ function ListView({ list, update }: { list: List; update: Update }) {
           <Trash2 size={28} strokeWidth={2.5} />
           <span>{armed ? "Delete list?" : "Bin"}</span>
         </button>
+        {/* Click the name to rename; Enter or clicking away saves, Esc cancels. */}
         {renaming ? (
-          <form
-            className={s.rename}
-            onSubmit={(e) => {
-              e.preventDefault();
-              const v = new FormData(e.currentTarget).get("name")?.toString().trim();
-              if (v) update(list.id, (l) => ({ ...l, name: v }));
-              setRenaming(false);
-            }}
-          >
+          <>
             <label className="sr-only" htmlFor="list-name">
               List name
             </label>
-            <input id="list-name" name="name" defaultValue={list.name} autoFocus maxLength={60} className="display" />
-            <button className="btn">Save</button>
-            <button type="button" className={s.ghost} onClick={() => setRenaming(false)}>
-              Cancel
-            </button>
-          </form>
+            <input
+              id="list-name"
+              defaultValue={list.name}
+              autoFocus
+              maxLength={60}
+              className={`display ${s.title} ${s.titleEdit}`}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") {
+                  e.currentTarget.value = list.name;
+                  setRenaming(false);
+                }
+              }}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && v !== list.name) update(list.id, (l) => ({ ...l, name: v }));
+                setRenaming(false);
+              }}
+            />
+          </>
         ) : (
-          <h1 className={`display ${s.title}`}>{list.name}</h1>
+          <h1 className={`display ${s.title}`}>
+            <button className={s.titleBtn} onClick={() => setRenaming(true)} title="Click to rename">
+              {list.name}
+            </button>
+          </h1>
         )}
         <p className={s.progress}>
           {c.all ? `${c.done} of ${c.all} done` : "Empty"}
@@ -353,9 +389,6 @@ function ListView({ list, update }: { list: List; update: Update }) {
           </span>
         </p>
         <div className={s.tools}>
-          <button className={s.ghost} onClick={() => setRenaming(true)}>
-            <Pencil size={16} strokeWidth={2.5} /> Rename
-          </button>
           <button className={s.ghost} onClick={exportMd}>
             <Download size={16} strokeWidth={2.5} /> Export .md
           </button>
@@ -413,11 +446,41 @@ function ListView({ list, update }: { list: List; update: Update }) {
             </button>
           </form>
 
+          {list.tasks.length > 1 && (
+            <div className={s.boardBar}>
+              <div className={s.seg} role="group" aria-label="Show">
+                {SHOWS.map(([k, name]) => (
+                  <button key={k} aria-pressed={show === k} onClick={() => setShow(k)}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+              <label className={s.sortBy}>
+                <span>Sort</span>
+                <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+                  {SORTS.map(([k, name]) => (
+                    <option key={k} value={k}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
           {list.tasks.length ? (
             <ul className={s.tasks}>
-              {list.tasks.map((t) => (
+              {board(list.tasks, show, sort, today).map((t) => (
                 <TaskRow key={t.id} task={t} {...row} top />
               ))}
+              {!board(list.tasks, show, sort, today).length && (
+                <li className={s.noMatch}>
+                  No tasks here.{" "}
+                  <button className={s.link} onClick={() => setShow("all")}>
+                    Show all
+                  </button>
+                </li>
+              )}
               {list.tasks.some((t) => t.sub.length) && (
                 <li className={s.unnest} {...drop("unnest")}>
                   Drop a subtask here to make it a main task
@@ -432,8 +495,8 @@ function ListView({ list, update }: { list: List; update: Update }) {
           )}
           {list.tasks.length > 0 && (
             <p className={s.hint}>
-              Drag a note onto another to nest it, or onto its left or right edge to reorder. <kbd>Ctrl</kbd>/<kbd>⌘</kbd>
-              -click to select several.
+              Drag a note onto another to nest it{sort === "mine" ? ", or onto its left or right edge to reorder" : ""}.{" "}
+              <kbd>Ctrl</kbd>/<kbd>⌘</kbd>-click to select several.
             </p>
           )}
         </div>
@@ -458,6 +521,7 @@ function TaskRow({
   picked,
   onPick,
   drop,
+  colors,
   top = false,
 }: {
   listId: string;
@@ -469,6 +533,7 @@ function TaskRow({
   picked: Set<string>;
   onPick: (id: string) => void;
   drop: (arg: string) => object;
+  colors: Map<string, string>;
   top?: boolean;
 }) {
   const open = selected === task.id;
@@ -476,13 +541,13 @@ function TaskRow({
   const late = task.due && !task.done && task.due < today;
   // Dragging a selected task carries the whole selection.
   const ids = picked.has(task.id) ? [...picked] : [task.id];
-  const row = { listId, today, setTasks, selected, onSelect, picked, onPick, drop };
+  const row = { listId, today, setTasks, selected, onSelect, picked, onPick, drop, colors };
 
   return (
     <li
       className={top ? s.note : s.taskItem}
       data-open={open || undefined}
-      style={top ? ({ "--fill": noteColor(task.id) } as React.CSSProperties) : undefined}
+      style={top ? ({ "--fill": colors.get(task.id) } as React.CSSProperties) : undefined}
     >
       <div
         className={s.row}

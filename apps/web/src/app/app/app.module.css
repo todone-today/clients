@@ -1539,3 +1539,80 @@
 .undo:has(+ .pickBar) {
   bottom: 5rem;
 }
+
+/* The list's name: click to rename it in place. */
+.titleBtn {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  color: inherit;
+  text-decoration: underline 0.06em transparent;
+  text-underline-offset: 0.12em;
+  cursor: text;
+}
+.titleBtn:hover {
+  text-decoration-color: var(--hair);
+}
+.titleEdit {
+  width: 100%;
+  padding: 0;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid var(--lime);
+}
+.titleEdit:focus-visible {
+  outline: none;
+}
+
+/* Where a dragged task will land on the hour grid, and for how long. */
+.ghostBlock {
+  position: absolute;
+  right: 4px;
+  left: 2px;
+  z-index: 3;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--lime) 35%, transparent);
+  border: 2px dashed var(--ink);
+  pointer-events: none;
+}
+
+/* Filter and sort above the board */
+.boardBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.boardBar .seg button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+.sortBy {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.sortBy select {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+  background-color: var(--raise);
+  border: 2px solid var(--hair);
+}
+.noMatch {
+  grid-column: 1 / -1;
+  padding: 2rem 0;
+  font-weight: 600;
+  color: var(--ink-2);
+}

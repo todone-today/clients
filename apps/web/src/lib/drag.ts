@@ -17,6 +17,8 @@ type Target = {
   drop: (p: Payload, arg: string, at: At) => void;
   // Optional: where on the target the drop would land ("before", "after", "inside"); shown as data-over.
   where?: (p: Payload, arg: string, at: At) => string;
+  // Optional: the pointer left the target (or the drag ended), e.g. to hide a preview.
+  leave?: () => void;
 };
 
 // Which part of an element the pointer is on: the first or last quarter along an axis, or the middle.
@@ -60,6 +62,7 @@ export function draggable(payload: Payload, label: string) {
       const touch = e.pointerType === "touch";
       let ghost: HTMLDivElement | null = null;
       let over: HTMLElement | null = null;
+      let overT: Target | null = null;
       let timer = 0;
 
       const move = (x: number, y: number) => {
@@ -67,7 +70,11 @@ export function draggable(payload: Payload, label: string) {
         ghost.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
         const t = targetAt(x, y);
         const hit = t?.el ?? null;
-        if (hit !== over) over?.removeAttribute("data-over");
+        if (hit !== over) {
+          over?.removeAttribute("data-over");
+          if (overT && overT !== t?.t) overT.leave?.();
+        }
+        overT = t?.t ?? null;
         hit?.setAttribute("data-over", t!.t.where?.(current!, t!.arg, { x, y, el: hit }) ?? "");
         over = hit;
       };
@@ -103,6 +110,7 @@ export function draggable(payload: Payload, label: string) {
       const finish = () => {
         clearTimeout(timer);
         over?.removeAttribute("data-over");
+        overT?.leave?.();
         ghost?.remove();
         document.body.classList.remove("is-dragging");
         current = null;
