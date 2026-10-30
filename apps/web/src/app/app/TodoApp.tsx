@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Lightbulb, Check, Clock, Download, LogOut, Plus, Timer, Trash2 } from "lucide-react";
@@ -118,6 +119,7 @@ export function TodoApp() {
 
   return (
     <div className={s.shell}>
+      <Welcome />
       <header className={s.top}>
         <Link href="/" className={s.mark} aria-label="todone home">
           <Logo size={26} />
@@ -516,12 +518,6 @@ function ListView({ list, update }: { list: List; update: Update }) {
               <p className="display">Nothing here.</p>
               <p>Add the first task above. Enjoy the quiet while it lasts.</p>
             </div>
-          )}
-          {list.tasks.length > 0 && (
-            <p className={s.hint}>
-              Drag a note onto another to nest it{sort === "mine" ? ", or onto its left or right edge to reorder" : ""}.{" "}
-              <kbd>Ctrl</kbd>/<kbd>⌘</kbd>-click to select several.
-            </p>
           )}
         </div>
         <Stickers

@@ -1,0 +1,26 @@
+.welcome {
+  width: min(28rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 2.25rem 2rem 1.75rem;
+  text-align: center;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -1deg;
+}
+.welcome::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+.lines {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1.75rem;
+  font-size: 1.25rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+.lines span:last-child {
+  font-weight: 800;
+  font-style: normal;
+}

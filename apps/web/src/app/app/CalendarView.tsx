@@ -23,14 +23,17 @@ export function CalendarView({
   onOpen,
   share,
   start,
+  locked = false,
 }: {
   lists: List[];
   update?: (id: string, f: (l: List) => List | null) => void;
   onOpen?: (listId: string) => void;
   // Returns the workspace's secret calendar token (or an error message) for a share link.
-  share?: () => Promise<{ token: string } | { error: string }>;
+  share?: (view: View, at: string) => Promise<{ token: string } | { error: string }>;
   // Where a shared link opens: its view and date.
   start?: { view?: string; at?: string };
+  // A shared view: only that period, no way to move to another one.
+  locked?: boolean;
 }) {
   const today = todayISO();
   const [view, setView] = useState<View>(() => (VIEWS.includes(start?.view as View) ? (start!.view as View) : "week"));
@@ -132,32 +135,39 @@ export function CalendarView({
   return (
     <div className={s.calendar}>
       <div className={s.calBar}>
-        <button className={s.ghost} onClick={() => setAt(today)}>
-          Today
-        </button>
-        <button className={s.ghost} onClick={() => setAt(step(-1))} aria-label="Previous">
-          <ChevronLeft size={16} strokeWidth={2.5} />
-        </button>
-        <button className={s.ghost} onClick={() => setAt(step(1))} aria-label="Next">
-          <ChevronRight size={16} strokeWidth={2.5} />
-        </button>
-        <h2 className="display">{title}</h2>
-        <div className={s.seg} role="group" aria-label="Calendar view">
-          {VIEWS.map((v) => (
-            <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
-              {v[0].toUpperCase() + v.slice(1)}
+        {!locked && (
+          <>
+            <button className={s.ghost} onClick={() => setAt(today)}>
+              Today
             </button>
-          ))}
-        </div>
+            <button className={s.ghost} onClick={() => setAt(step(-1))} aria-label="Previous">
+              <ChevronLeft size={16} strokeWidth={2.5} />
+            </button>
+            <button className={s.ghost} onClick={() => setAt(step(1))} aria-label="Next">
+              <ChevronRight size={16} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
+        <h2 className="display">{title}</h2>
+        {!locked && (
+          <div className={s.seg} role="group" aria-label="Calendar view">
+            {VIEWS.map((v) => (
+              <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+                {v[0].toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
         {share && (
           <button
             className={s.ghost}
             onClick={async () => {
-              const r = await share();
+              const r = await share(view, at);
               if ("error" in r) return setShared(r.error);
-              const url = `${location.origin}/calendar/${r.token}?view=${view}&at=${at}`;
-              await navigator.clipboard.writeText(url);
-              setShared(`Copied a read-only link to this ${view}. Anyone with it can see your dated tasks.`);
+              await navigator.clipboard.writeText(`${location.origin}/calendar/${r.token}`);
+              setShared(
+                `Copied a read-only link to ${title}. It shows only this ${view}. Stop sharing it any time in Integrations.`,
+              );
             }}
           >
             <Share2 size={16} strokeWidth={2.5} /> Share

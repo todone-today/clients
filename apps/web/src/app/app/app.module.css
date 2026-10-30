@@ -1634,3 +1634,40 @@
   font-weight: 600;
   color: var(--ink-2);
 }
+
+/* Shared calendar views in Integrations */
+.shares {
+  display: grid;
+  gap: 0.6rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid var(--hair);
+}
+.shares h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.shares > p {
+  color: var(--ink-2);
+}
+.shares ul {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+.shares li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.shares li > span {
+  margin-right: auto;
+  font-weight: 700;
+}
+.shares em {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}

@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, Copy, RefreshCw } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { label, rangeOf } from "@/lib/calendar";
 import { GOOGLE_SCOPE } from "@/lib/integrations";
 import { refresh } from "@/lib/store";
 import {
   connectGoogle,
   disconnectGoogle,
   getIntegrations,
+  listShares,
+  stopShare,
   setCalendar,
   setDiscord,
   setMarkdownSync,
@@ -118,6 +121,7 @@ export function Integrations() {
         {key === "google" && <Google st={st} busy={busy} act={act} />}
         {key === "notion" && <Notion st={st} busy={busy} act={act} />}
         {key === "markdown" && <Markdown token={st.syncToken} manager={st.manager} act={act} />}
+        {key === "link" && st.manager && <SharedViews />}
         {(key === "link" || key === "apple") && (
           <CalendarLink token={st.icsToken} manager={st.manager} apple={key === "apple"} act={act} />
         )}
@@ -346,5 +350,46 @@ function CalendarLink({ token, manager, apple, act }: { token: string | null; ma
         </button>
       )}
     </>
+  );
+}
+
+// Views shared from the calendar's Share button; each link can be stopped on its own.
+function SharedViews() {
+  const [shares, setShares] = useState<Awaited<ReturnType<typeof listShares>> | null>(null);
+  const load = useCallback(() => listShares().then(setShares), []);
+  useEffect(() => {
+    load();
+  }, [load]);
+  if (!shares?.length) return null;
+  const name = (v: string, at: string) =>
+    ({
+      day: label(at, { weekday: "short", month: "short", day: "numeric" }),
+      week: `Week of ${label(rangeOf("week", at)[0], { month: "short", day: "numeric" })}`,
+      month: label(at, { month: "long", year: "numeric" }),
+      year: at.slice(0, 4),
+    })[v];
+  return (
+    <div className={s.shares}>
+      <h2>Shared views</h2>
+      <p>Each link shows only its day, week, month or year. Stop one and it no longer opens.</p>
+      <ul>
+        {shares.map((sh) => (
+          <li key={sh.token}>
+            <span>
+              {name(sh.view, sh.at)} <em>{sh.view}</em>
+            </span>
+            <button
+              className={s.ghost}
+              onClick={() => navigator.clipboard.writeText(`${location.origin}/calendar/${sh.token}`)}
+            >
+              <Copy size={16} strokeWidth={2.5} /> Copy link
+            </button>
+            <button className={`${s.ghost} ${s.danger}`} onClick={() => stopShare(sh.token).then(load)}>
+              Stop sharing
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

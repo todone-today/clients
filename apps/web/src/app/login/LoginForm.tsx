@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { GithubMark } from "@/components/GithubMark";
 import { authClient } from "@/lib/auth-client";
+import { greet } from "@/components/Welcome";
 import s from "./login.module.css";
 
 // Only same-site paths, so the login page can't be used to bounce people elsewhere.
@@ -23,11 +24,6 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
       <Link href="/" className={s.mark} aria-label="Home">
         <Logo size={34} />
       </Link>
-      <p className={s.haiku}>
-        {haiku.map((line) => (
-          <span key={line}>{line}</span>
-        ))}
-      </p>
       <form
         className={`sticker ${s.card}`}
         onSubmit={async (e) => {
@@ -46,6 +42,7 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
                 });
           setBusy(false);
           if (r.error) return setErr(r.error.message ?? "That didn't work. Try again.");
+          greet(haiku);
           location.assign(safeNext());
         }}
       >
@@ -82,7 +79,10 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
           <button
             type="button"
             className="btn"
-            onClick={() => authClient.signIn.social({ provider: "github", callbackURL: safeNext() })}
+            onClick={() => {
+              greet(haiku);
+              authClient.signIn.social({ provider: "github", callbackURL: safeNext() });
+            }}
           >
             <GithubMark /> Continue with GitHub
           </button>
