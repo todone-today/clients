@@ -43,6 +43,7 @@ export function AiImport({
   const [into, setInto] = useState<string>("");
   const [name, setName] = useState("From AI");
   const [copied, setCopied] = useState(false);
+  const [today, setToday] = useState(""); // read when the dialog opens, not while the page renders
   const [err, setErr] = useState("");
   const tasks = parse(answer);
   const all = tasks.flatMap((t) => [t, ...t.sub]);
@@ -66,6 +67,7 @@ export function AiImport({
         className={s.ghost}
         onClick={() => {
           setInto(current ?? "new");
+          setToday(todayISO());
           dialog.current?.showModal();
         }}
       >
@@ -88,11 +90,11 @@ export function AiImport({
               <b>Copy this prompt</b> into ChatGPT, Claude or any AI, then add your plans after it: a brain dump, a
               meeting&apos;s notes, “plan my week”.
             </p>
-            <pre className={s.code}>{prompt(todayISO())}</pre>
+            <pre className={s.code}>{today && prompt(today)}</pre>
             <button
               className="btn"
               onClick={async () => {
-                await navigator.clipboard.writeText(prompt(todayISO()));
+                await navigator.clipboard.writeText(prompt(today));
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}

@@ -1384,3 +1384,158 @@
   color: var(--ink);
   text-decoration: underline;
 }
+
+/* Where a dragged task will land: a bar on a note's edge (before/after), an outline (inside),
+   or a line above/below a subtask. */
+.note > .row[data-over="before"] {
+  outline: none;
+  box-shadow: -10px 0 0 -4px var(--black);
+}
+.note > .row[data-over="after"] {
+  outline: none;
+  box-shadow: 10px 0 0 -4px var(--black);
+}
+.subs .row[data-over="before"] {
+  outline: none;
+  box-shadow: 0 -3px 0 var(--black);
+}
+.subs .row[data-over="after"] {
+  outline: none;
+  box-shadow: 0 3px 0 var(--black);
+}
+.listBtn[data-over="before"] {
+  box-shadow: 0 -3px 0 var(--lime);
+}
+.listBtn[data-over="after"] {
+  box-shadow: 0 3px 0 var(--lime);
+}
+.listBtn {
+  cursor: grab;
+}
+
+/* Ctrl/Cmd-click selection */
+.row[data-picked] {
+  background: rgb(0 0 0 / 0.1);
+  outline: 2.5px dashed var(--black);
+  outline-offset: 2px;
+}
+.taskItem .row[data-picked] {
+  outline-color: var(--lime);
+}
+.pickBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+}
+.pickBar .ghost {
+  margin-left: auto;
+  color: var(--black);
+  border-color: var(--black);
+}
+.hint {
+  margin-top: 1.25rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+/* Task editor: name on top, then day / time / how long, then steps, then actions. */
+.editor,
+.note .editor {
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+.edTitle {
+  width: 100%;
+  padding: 0.3rem 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ink);
+  background: none !important;
+  border: 0 !important;
+  border-bottom: 2.5px solid var(--hair) !important;
+}
+.edTitle:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ink) !important;
+}
+.edFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.edFields label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.edFields input:disabled {
+  opacity: 0.45;
+}
+.edStep {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.1rem 0.6rem;
+  border: 2px dashed var(--hair);
+}
+.edStep input {
+  flex: 1;
+  border: 0 !important;
+  background: none !important;
+}
+.edStep input:focus-visible {
+  outline: none;
+}
+.edStep:focus-within {
+  border-style: solid;
+  border-color: var(--ink);
+}
+.edEnd {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.edEnd .btn {
+  margin-left: auto;
+  padding: 0.45rem 1rem;
+}
+.edEnd > span {
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+.edEnd > span + .btn {
+  margin-left: 0;
+}
+@media (max-width: 560px) {
+  .edFields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .edEnd > span {
+    display: none;
+  }
+}
+
+/* The selection and undo bars float at the bottom, so they never push the tasks around. */
+.pickBar,
+.undo {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  z-index: 50;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  translate: -50% 0;
+  box-shadow: var(--lift);
+}
+.pickBar + .undo,
+.undo:has(+ .pickBar) {
+  bottom: 5rem;
+}

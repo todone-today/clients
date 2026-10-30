@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Check, Download, LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
+import { CalendarDays, Check, Clock, Download, LogOut, Pencil, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NAME } from "@/lib/brand";
 import { authClient } from "@/lib/auth-client";
-import { draggable, useDrop } from "@/lib/drag";
-import { mapTask, refresh, reload, useLists } from "@/lib/store";
+import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
+import { mapTask, moveToList, refresh, reload, reorder, useLists } from "@/lib/store";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
@@ -19,15 +19,14 @@ import {
   type List,
   type Task,
   fmtMinutes,
-  nestUnder,
+  moveTasks,
+  parseMinutes,
   relDue,
   serialize,
   todayISO,
   uid,
+  takeTasks,
   unnest,
-  locate,
-  putBack,
-  type Spot,
 } from "@/lib/tasks";
 import s from "./app.module.css";
 
@@ -49,12 +48,34 @@ export function TodoApp() {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
-  const sorted = useMemo(() => (lists ?? []).filter((l) => !l.kind).sort((a, b) => b.updated - a.updated), [lists]);
+  // Dragged lists keep their order; lists never dragged come first, newest first.
+  const sorted = useMemo(
+    () =>
+      (lists ?? [])
+        .filter((l) => !l.kind)
+        .sort((a, b) =>
+          a.position == null || b.position == null
+            ? (a.position == null ? 0 : 1) - (b.position == null ? 0 : 1) || b.updated - a.updated
+            : a.position - b.position,
+        ),
+    [lists],
+  );
   const list = sorted.find((l) => l.id === picked) ?? sorted[0];
-  // Idea cards dropped on a list in the sidebar become tasks there.
+  // The sidebar's lists take ideas (they become tasks), tasks from another list (they move there),
+  // and other lists (dropped above or below to reorder).
   const dropOnList = useDrop("sidebar", {
-    accept: (p) => p.kind === "idea",
-    drop: (p, listId) => p.kind === "idea" && lists && ideaToTask(lists, p.id, listId, update),
+    accept: (p, listId) =>
+      p.kind === "idea" || (p.kind === "task" && p.listId !== listId) || (p.kind === "list" && p.id !== listId),
+    where: (p, _, at) => (p.kind === "list" ? placeOn(at, "y", false) : "inside"),
+    drop: (p, listId, at) => {
+      if (p.kind === "idea" && lists) ideaToTask(lists, p.id, listId, update);
+      else if (p.kind === "task") moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
+      else if (p.kind === "list") {
+        const ids = sorted.map((l) => l.id).filter((id) => id !== p.id);
+        ids.splice(ids.indexOf(listId) + (placeOn(at, "y", false) === "after" ? 1 : 0), 0, p.id);
+        reorder(ids);
+      }
+    },
   });
   const open = (id: string) => {
     setPicked(id);
@@ -130,6 +151,7 @@ export function TodoApp() {
                     aria-current={!panel && l.id === list?.id}
                     onClick={() => open(l.id)}
                     {...dropOnList(l.id)}
+                    {...draggable({ kind: "list", id: l.id }, l.name)}
                   >
                     <span>{l.name}</span>
                     <span className={s.open}>{c.open}</span>
@@ -201,40 +223,70 @@ function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name
   );
 }
 
-function ListView({ list, update }: { list: List; update: (id: string, f: (l: List) => List | null) => void }) {
+type Update = (id: string, f: (l: List) => List | null) => void;
+const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
+
+function ListView({ list, update }: { list: List; update: Update }) {
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  // A task card lands on a main task (becoming its subtask) or on "unnest" (becoming a main task again).
-  // A sticker lands on any task. A task card lands on a main task (becoming its subtask) or on "unnest".
+  const [selected, setSelected] = useState<string | null>(null); // the task whose editor is open
+  const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
+  const [binned, setBinned] = useState<{ before: Task[]; text: string } | null>(null);
+  const today = todayISO();
+  const c = count(list.tasks);
+  const setTasks = (f: (ts: Task[]) => Task[]) => update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
+  const isTop = (id: string) => list.tasks.some((t) => t.id === id);
+  const pick = (id: string) =>
+    setPicked((p) => {
+      const n = new Set(p);
+      if (!n.delete(id)) n.add(id);
+      return n;
+    });
+  const applySticker = (key: string, ids: string[]) => {
+    const patch = sticker(key, today);
+    if (patch) setTasks((ts) => ids.reduce((acc, id) => mapTask(acc, id, (t) => ({ ...t, ...patch })), ts));
+  };
+  // Dropping a task: on a note's left or right edge puts it before or after; in the middle nests it.
+  // Among subtasks, the top or bottom half puts it above or below.
+  const place = (arg: string, at: At) => (isTop(arg) ? placeOn(at, "x") : placeOn(at, "y", false));
   const drop = useDrop(`list-${list.id}`, {
     accept: (p, arg) =>
       p.kind === "sticker"
         ? arg !== "unnest"
         : p.kind === "task" &&
           p.listId === list.id &&
-          p.id !== arg &&
-          (arg === "unnest" ? !list.tasks.some((t) => t.id === p.id) : list.tasks.some((t) => t.id === arg)),
-    drop: (p, arg) => {
-      if (p.kind === "sticker") {
-        const patch = sticker(p.key, today);
-        if (patch) setTasks((ts) => mapTask(ts, arg, (t) => ({ ...t, ...patch })));
-      } else if (p.kind === "task") setTasks((ts) => (arg === "unnest" ? unnest(ts, p.id) : nestUnder(ts, p.id, arg)));
+          !p.ids.includes(arg) &&
+          (arg === "unnest" ? p.ids.some((id) => !isTop(id)) : !!findTask(list.tasks, arg)),
+    where: (p, arg, at) => (p.kind === "task" && arg !== "unnest" ? place(arg, at) : "inside"),
+    drop: (p, arg, at) => {
+      if (p.kind === "sticker") applySticker(p.key, picked.has(arg) ? [...picked] : [arg]);
+      else if (p.kind === "task") {
+        setTasks((ts) =>
+          arg === "unnest" ? p.ids.reduce((acc, id) => unnest(acc, id), ts) : moveTasks(ts, p.ids, arg, place(arg, at)),
+        );
+        setPicked(new Set());
+      }
     },
   });
-  const today = todayISO();
-  const c = count(list.tasks);
-  const setTasks = (f: (ts: Task[]) => Task[]) => update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
-  const [binned, setBinned] = useState<Spot | null>(null);
+  // The bin takes tasks, or a date sticker: then every task due that day goes. Either way, undo puts the list back.
   const binDrop = useDrop(`bin-${list.id}`, {
-    accept: (p) => p.kind === "task" && p.listId === list.id,
+    accept: (p) => (p.kind === "task" && p.listId === list.id) || (p.kind === "sticker" && !!sticker(p.key, today)?.due),
     drop: (p) => {
-      if (p.kind !== "task") return;
-      const spot = locate(list.tasks, p.id);
-      if (!spot) return;
-      setTasks((ts) => mapTask(ts, p.id, () => null));
-      setBinned(spot);
+      const before = list.tasks;
+      if (p.kind === "task") {
+        const gone = flatten(before).filter((t) => p.ids.includes(t.id));
+        setTasks((ts) => p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts));
+        setBinned({ before, text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.` });
+        setPicked(new Set());
+      } else if (p.kind === "sticker") {
+        const due = sticker(p.key, today)!.due!;
+        const gone = flatten(before).filter((t) => t.due === due);
+        const day = relDue(due, today);
+        if (!gone.length) return setBinned({ before, text: `Nothing is due ${day}.` });
+        setTasks((ts) => gone.reduce((acc, t) => mapTask(acc, t.id, () => null), ts));
+        setBinned({ before, text: `Deleted ${gone.length} task${gone.length === 1 ? "" : "s"} due ${day}.` });
+      }
     },
   });
   useEffect(() => {
@@ -242,6 +294,11 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
     const t = setTimeout(() => setBinned(null), 10_000);
     return () => clearTimeout(t);
   }, [binned]);
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setPicked(new Set());
+    addEventListener("keydown", esc);
+    return () => removeEventListener("keydown", esc);
+  }, []);
 
   const exportMd = () => {
     const url = URL.createObjectURL(new Blob([serialize(list.tasks)], { type: "text/markdown" }));
@@ -249,19 +306,20 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
     a.click();
     URL.revokeObjectURL(url);
   };
+  const row = { listId: list.id, today, setTasks, selected, onSelect: setSelected, picked, onPick: pick, drop };
 
   return (
     <>
       <div className={s.listHead}>
-        {/* The bin: drop a task to delete it (with undo); click twice to delete the whole list. */}
+        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click twice to delete the whole list. */}
         <button
           className={s.bin}
           data-armed={armed}
           {...binDrop("bin")}
           onClick={() => (armed ? update(list.id, () => null) : setArmed(true))}
           onBlur={() => setArmed(false)}
-          aria-label={armed ? "Click again to delete this list" : "Delete list, or drop a task here to delete it"}
-          title={armed ? "Click again to delete this list" : "Drop a task here to delete it. Click to delete the list."}
+          aria-label={armed ? "Click again to delete this list" : "Delete list, or drop tasks here to delete them"}
+          title={armed ? "Click again to delete this list" : "Drop tasks here to delete them. Click to delete the list."}
         >
           <Trash2 size={28} strokeWidth={2.5} />
           <span>{armed ? "Delete list?" : "Bin"}</span>
@@ -306,15 +364,25 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
 
       {binned && (
         <div className={s.undo} role="status">
-          Deleted “{binned.task.title}”{binned.task.sub.length ? " and its subtasks" : ""}.
-          <button
-            className={s.ghost}
-            onClick={() => {
-              setTasks((ts) => putBack(ts, binned));
-              setBinned(null);
-            }}
-          >
-            Undo
+          {binned.text}
+          {binned.before !== list.tasks && (
+            <button
+              className={s.ghost}
+              onClick={() => {
+                setTasks(() => binned.before);
+                setBinned(null);
+              }}
+            >
+              Undo
+            </button>
+          )}
+        </div>
+      )}
+      {picked.size > 0 && (
+        <div className={s.pickBar} role="status">
+          <b>{picked.size} selected.</b> Drag them onto a sticker, the bin or another list, or click a sticker.
+          <button className={s.ghost} onClick={() => setPicked(new Set())}>
+            Clear <kbd>Esc</kbd>
           </button>
         </div>
       )}
@@ -348,17 +416,7 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
           {list.tasks.length ? (
             <ul className={s.tasks}>
               {list.tasks.map((t) => (
-                <TaskRow
-                  key={t.id}
-                  listId={list.id}
-                  task={t}
-                  today={today}
-                  setTasks={setTasks}
-                  selected={selected}
-                  onSelect={setSelected}
-                  drop={drop}
-                  top
-                />
+                <TaskRow key={t.id} task={t} {...row} top />
               ))}
               {list.tasks.some((t) => t.sub.length) && (
                 <li className={s.unnest} {...drop("unnest")}>
@@ -372,13 +430,18 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
               <p>Add the first task above. Enjoy the quiet while it lasts.</p>
             </div>
           )}
+          {list.tasks.length > 0 && (
+            <p className={s.hint}>
+              Drag a note onto another to nest it, or onto its left or right edge to reorder. <kbd>Ctrl</kbd>/<kbd>⌘</kbd>
+              -click to select several.
+            </p>
+          )}
         </div>
         <Stickers
-          selected={findTask(list.tasks, selected)?.title ?? null}
-          onApply={(key, taskId = selected ?? "") => {
-            const patch = sticker(key, today);
-            if (taskId && patch) setTasks((ts) => mapTask(ts, taskId, (t) => ({ ...t, ...patch })));
-          }}
+          selected={
+            picked.size > 1 ? `${picked.size} tasks` : (findTask(list.tasks, [...picked][0] ?? selected)?.title ?? null)
+          }
+          onApply={(key, taskIds) => applySticker(key, taskIds ?? (picked.size ? [...picked] : selected ? [selected] : []))}
         />
       </div>
     </>
@@ -392,6 +455,8 @@ function TaskRow({
   setTasks,
   selected,
   onSelect,
+  picked,
+  onPick,
   drop,
   top = false,
 }: {
@@ -401,13 +466,17 @@ function TaskRow({
   setTasks: (f: (ts: Task[]) => Task[]) => void;
   selected: string | null;
   onSelect: (id: string | null) => void;
+  picked: Set<string>;
+  onPick: (id: string) => void;
   drop: (arg: string) => object;
   top?: boolean;
 }) {
-  const [sub, setSub] = useState("");
   const open = selected === task.id;
   const edit = (f: (t: Task) => Task | null) => setTasks((ts) => mapTask(ts, task.id, f));
   const late = task.due && !task.done && task.due < today;
+  // Dragging a selected task carries the whole selection.
+  const ids = picked.has(task.id) ? [...picked] : [task.id];
+  const row = { listId, today, setTasks, selected, onSelect, picked, onPick, drop };
 
   return (
     <li
@@ -418,8 +487,16 @@ function TaskRow({
       <div
         className={s.row}
         data-done={task.done}
+        data-picked={picked.has(task.id) || undefined}
         {...drop(task.id)}
-        {...draggable({ kind: "task", listId, id: task.id }, task.title)}
+        {...draggable({ kind: "task", listId, id: task.id, ids }, ids.length > 1 ? `${ids.length} tasks` : task.title)}
+        // Ctrl/Cmd-click selects instead of ticking or opening.
+        onClickCapture={(e) => {
+          if (!e.metaKey && !e.ctrlKey) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onPick(task.id);
+        }}
       >
         <button
           className={s.check}
@@ -460,75 +537,144 @@ function TaskRow({
         </span>
       </div>
 
-      {open && (
-        <div className={s.editor}>
-          <label>
-            <span>Task</span>
-            <input
-              defaultValue={task.title}
-              onBlur={(e) => {
-                const v = e.target.value.trim();
-                if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
-              }}
-            />
-          </label>
-          <label>
-            <span>Exact date</span>
-            <input
-              key={task.due}
-              type="date"
-              defaultValue={task.due ?? ""}
-              onChange={(e) => edit((t) => ({ ...t, due: e.target.value || undefined }))}
-            />
-          </label>
-          {top ? (
-            <form
-              className={s.subForm}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const v = sub.trim();
-                if (!v) return;
-                edit((t) => ({ ...t, sub: [...t.sub, { id: uid(), title: v, done: false, sub: [] }] }));
-                setSub("");
-              }}
-            >
-              <label>
-                <span>Subtask</span>
-                <input value={sub} onChange={(e) => setSub(e.target.value)} placeholder="Add a step, press enter" />
-              </label>
-            </form>
-          ) : (
-            <button className={`${s.ghost} ${s.subForm}`} onClick={() => setTasks((ts) => unnest(ts, task.id))}>
-              Make it a main task
-            </button>
-          )}
-          <div className={s.editorEnd}>
-            <button className={`${s.ghost} ${s.danger}`} onClick={() => edit(() => null)}>
-              <Trash2 size={16} strokeWidth={2.5} /> Delete{task.sub.length ? " with its subtasks" : ""}
-            </button>
-            <button className={s.ghost} onClick={() => onSelect(null)}>
-              <X size={16} strokeWidth={2.5} /> Close
-            </button>
-          </div>
-        </div>
-      )}
+      {open && <Editor task={task} top={top} edit={edit} setTasks={setTasks} onClose={() => onSelect(null)} />}
 
       {task.sub.length > 0 && (
         <ul className={s.subs}>
           {task.sub.map((x) => (
-            <TaskRow
-              key={x.id}
-              task={x}
-              today={today}
-              setTasks={setTasks}
-              selected={selected}
-              onSelect={onSelect}
-              listId={listId}
-              drop={drop}
-            />
+            <TaskRow key={x.id} task={x} {...row} />
           ))}
         </ul>
       )}
     </li>
+  );
+}
+
+// Everything about one task in one place; changes save as you go. Esc or Done closes it.
+function Editor({
+  task,
+  top,
+  edit,
+  setTasks,
+  onClose,
+}: {
+  task: Task;
+  top: boolean;
+  edit: (f: (t: Task) => Task | null) => void;
+  setTasks: (f: (ts: Task[]) => Task[]) => void;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState("");
+  const [estErr, setEstErr] = useState(false);
+  return (
+    <div
+      className={s.editor}
+      onKeyDown={(e) => {
+        if (e.key !== "Escape") return;
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <label className="sr-only" htmlFor={`title-${task.id}`}>
+        Task name
+      </label>
+      <input
+        id={`title-${task.id}`}
+        className={s.edTitle}
+        defaultValue={task.title}
+        autoFocus
+        maxLength={500}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+        onBlur={(e) => {
+          const v = e.target.value.trim();
+          if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
+        }}
+      />
+      <div className={s.edFields}>
+        <label>
+          <span>
+            <CalendarDays size={14} strokeWidth={2.5} /> Day
+          </span>
+          <input
+            key={task.due}
+            type="date"
+            defaultValue={task.due ?? ""}
+            onChange={(e) =>
+              edit((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
+            }
+          />
+        </label>
+        <label>
+          <span>
+            <Clock size={14} strokeWidth={2.5} /> Time
+          </span>
+          <input
+            key={task.at}
+            type="time"
+            step={900}
+            disabled={!task.due}
+            title={task.due ? undefined : "Give it a day first"}
+            defaultValue={task.at ?? ""}
+            onChange={(e) => edit((t) => ({ ...t, at: e.target.value || undefined }))}
+          />
+        </label>
+        <label>
+          <span>
+            <Timer size={14} strokeWidth={2.5} /> How long
+          </span>
+          <input
+            key={task.est}
+            defaultValue={task.est ? fmtMinutes(task.est) : ""}
+            placeholder="45m, 1h30m"
+            aria-invalid={estErr}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              const m = v ? parseMinutes(v) : 0;
+              setEstErr(m === null);
+              if (m !== null && m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
+            }}
+          />
+        </label>
+      </div>
+      {top ? (
+        <form
+          className={s.edStep}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const v = step.trim();
+            if (!v) return;
+            edit((t) => ({ ...t, sub: [...t.sub, { id: uid(), title: v, done: false, sub: [] }] }));
+            setStep("");
+          }}
+        >
+          <Plus size={16} strokeWidth={2.5} aria-hidden />
+          <label className="sr-only" htmlFor={`step-${task.id}`}>
+            Add a step
+          </label>
+          <input
+            id={`step-${task.id}`}
+            value={step}
+            onChange={(e) => setStep(e.target.value)}
+            placeholder="Add a step, press enter"
+            autoComplete="off"
+          />
+        </form>
+      ) : (
+        <button className={s.ghost} onClick={() => setTasks((ts) => unnest(ts, task.id))}>
+          Make it a main task
+        </button>
+      )}
+      {estErr && <p className={s.err}>How long reads like 30m, 2h or 1h30m.</p>}
+      <div className={s.edEnd}>
+        <button className={`${s.ghost} ${s.danger}`} onClick={() => edit(() => null)}>
+          <Trash2 size={16} strokeWidth={2.5} /> Delete{task.sub.length ? " with steps" : ""}
+        </button>
+        <span className={s.open}>Saves as you go</span>
+        <button className="btn" onClick={onClose}>
+          Done
+        </button>
+      </div>
+    </div>
   );
 }

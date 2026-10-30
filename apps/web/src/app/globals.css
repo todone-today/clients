@@ -213,3 +213,10 @@ body.is-dragging * {
   cursor: grabbing !important;
   user-select: none;
 }
+
+kbd {
+  padding: 0 0.3rem;
+  font: 700 0.75em var(--mono);
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+}

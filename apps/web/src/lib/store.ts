@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { createList, deleteList, fetchLists, saveList } from "@/app/app/actions";
+import { createList, deleteList, fetchLists, reorderLists, saveList } from "@/app/app/actions";
 import { type List, type Task } from "./tasks";
 
 // Lists from before accounts, kept in the browser; imported once into the personal workspace.
@@ -109,6 +109,29 @@ export function update(id: string, f: (l: List) => List | null) {
     }
     throw new Error("Too many conflicting edits");
   });
+}
+
+// Puts lists in the given order (the sidebar after a drag).
+export function reorder(ids: string[]) {
+  const pos = new Map(ids.map((id, i) => [id, i + 1]));
+  const apply = (ls: List[]) => ls.map((l) => (pos.has(l.id) ? { ...l, position: pos.get(l.id) } : l));
+  show(apply(cache ?? []));
+  enqueue(async () => {
+    await reorderLists(ids);
+    server = apply(server);
+  });
+}
+
+// Moves tasks to another list: out of one, onto the end of the other.
+export function moveToList(from: string, to: string, take: (tasks: Task[]) => [Task[], Task[]]) {
+  if (from === to) return;
+  let taken: Task[] = [];
+  update(from, (l) => {
+    const [t, rest] = take(l.tasks);
+    taken = t;
+    return { ...l, tasks: rest };
+  });
+  update(to, (l) => ({ ...l, tasks: [...l.tasks, ...taken] }));
 }
 
 // Maps a task (or subtask) by id; the callback returns the new task, or null to delete it.

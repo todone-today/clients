@@ -30,11 +30,11 @@ export function Stickers({
   onApply,
 }: {
   selected: string | null;
-  onApply: (key: string, taskId?: string, listId?: string) => void;
+  onApply: (key: string, taskIds?: string[]) => void;
 }) {
   const drop = useDrop("stickers", {
     accept: (p) => p.kind === "task",
-    drop: (p, key) => p.kind === "task" && onApply(key, p.id, p.listId),
+    drop: (p, key) => p.kind === "task" && onApply(key, p.ids),
   });
   const group = (title: string, items: typeof WHEN, kind: string) => (
     <div className={s.stickGroup}>

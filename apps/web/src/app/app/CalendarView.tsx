@@ -37,7 +37,8 @@ export function CalendarView({
 
   const move = (it: Item, patch: Partial<Task>) =>
     update?.(it.list.id, (l) => ({ ...l, tasks: mapTask(l.tasks, it.task.id, (t) => ({ ...t, ...patch })) }));
-  const drag = (it: Item) => update && draggable({ kind: "task", listId: it.list.id, id: it.task.id }, it.task.title);
+  const drag = (it: Item) =>
+    update && draggable({ kind: "task", listId: it.list.id, id: it.task.id, ids: [it.task.id] }, it.task.title);
   // Drop spots: "day:<date>" keeps the time, "all:<date>" clears it, "col:<date>" sets it from where it lands,
   // "tray" unschedules. Read-only calendars (the shared page) take no drops.
   const dropAt = useDrop("cal", {

@@ -5,10 +5,27 @@
 // Mouse and pen start dragging after a small move; touch after a short hold, so swipes still scroll.
 import { useEffect, useRef } from "react";
 
+// A task drag carries every selected task; `id` is the one under the pointer.
 export type Payload =
-  { kind: "task"; listId: string; id: string } | { kind: "idea"; id: string } | { kind: "sticker"; key: string };
-type At = { x: number; y: number; el: HTMLElement };
-type Target = { accept: (p: Payload, arg: string) => boolean; drop: (p: Payload, arg: string, at: At) => void };
+  | { kind: "task"; listId: string; id: string; ids: string[] }
+  | { kind: "idea"; id: string }
+  | { kind: "sticker"; key: string }
+  | { kind: "list"; id: string };
+export type At = { x: number; y: number; el: HTMLElement };
+type Target = {
+  accept: (p: Payload, arg: string) => boolean;
+  drop: (p: Payload, arg: string, at: At) => void;
+  // Optional: where on the target the drop would land ("before", "after", "inside"); shown as data-over.
+  where?: (p: Payload, arg: string, at: At) => string;
+};
+
+// Which part of an element the pointer is on: the first or last quarter along an axis, or the middle.
+export function placeOn(at: At, axis: "x" | "y", middle = true): "before" | "after" | "inside" {
+  const r = at.el.getBoundingClientRect();
+  const f = axis === "x" ? (at.x - r.left) / r.width : (at.y - r.top) / r.height;
+  if (!middle) return f < 0.5 ? "before" : "after";
+  return f < 0.25 ? "before" : f > 0.75 ? "after" : "inside";
+}
 
 const targets = new Map<string, { current: Target }>();
 let current: Payload | null = null;
@@ -48,10 +65,10 @@ export function draggable(payload: Payload, label: string) {
       const move = (x: number, y: number) => {
         if (!ghost) return;
         ghost.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
-        const hit = targetAt(x, y)?.el ?? null;
-        if (hit === over) return;
-        over?.removeAttribute("data-over");
-        hit?.setAttribute("data-over", "");
+        const t = targetAt(x, y);
+        const hit = t?.el ?? null;
+        if (hit !== over) over?.removeAttribute("data-over");
+        hit?.setAttribute("data-over", t!.t.where?.(current!, t!.arg, { x, y, el: hit }) ?? "");
         over = hit;
       };
       const begin = (x: number, y: number) => {
