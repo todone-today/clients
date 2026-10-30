@@ -29,3 +29,33 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  deploy:
+    # develop -> preview at todone-develop.vercel.app, main -> production.
+    if: github.event_name == 'push'
+    needs: [cli, web]
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_NNPaLOvnhZx4WAk5fFqcBoW8
+      VERCEL_PROJECT_ID: prj_Fv7EqxAYuL8lui3gVItJ4XOnxORr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Deploy with the Vercel CLI
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::VERCEL_TOKEN secret is not set; skipping deploy"
+            exit 0
+          fi
+          npm i -g vercel@57
+          if [ "$GITHUB_REF_NAME" = main ]; then env=production prod=--prod; else env=preview prod=; fi
+          vercel pull --yes --environment=$env --token="$VERCEL_TOKEN"
+          vercel build $prod --token="$VERCEL_TOKEN"
+          url=$(vercel deploy --prebuilt $prod --token="$VERCEL_TOKEN")
+          echo "Deployed $url"
+          if [ "$GITHUB_REF_NAME" = develop ]; then
+            vercel alias set "$url" todone-develop.vercel.app --token="$VERCEL_TOKEN"
+          fi
