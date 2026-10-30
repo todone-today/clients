@@ -97,7 +97,7 @@
 .term {
   position: relative;
   width: min(100%, 34rem);
-  margin-top: 0.25rem;
+  margin-top: -0.9rem;
   transform: rotate(1.5deg);
   background: #111;
   color: #e8e2d8;

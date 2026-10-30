@@ -317,7 +317,9 @@
 
 /* Close */
 .close {
+  /* --lift-sm is resolved at :root, so the band redefines it, not just --shadow. */
   --shadow: var(--black);
+  --lift-sm: 3px 3px 0 var(--black);
   display: grid;
   justify-items: start;
   gap: 2.5rem;
@@ -395,11 +397,15 @@
 
 @media (max-width: 560px) {
   .hero {
-    gap: 2rem;
-    padding-top: 1.5rem;
+    gap: 1.5rem;
+    padding-top: 1.25rem;
+  }
+  .h1 {
+    font-size: 2.9rem;
   }
   .lede {
-    margin-top: 1.1rem;
+    margin-top: 0.9rem;
+    font-size: 1rem;
   }
   .actions {
     margin-top: 1.4rem;
