@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Download, LogOut, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Download, LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NAME } from "@/lib/brand";
 import { authClient } from "@/lib/auth-client";
 import { draggable, useDrop } from "@/lib/drag";
 import { mapTask, refresh, reload, useLists } from "@/lib/store";
+import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Integrations } from "./Integrations";
@@ -19,7 +20,6 @@ import {
   type Task,
   fmtMinutes,
   nestUnder,
-  parse,
   relDue,
   serialize,
   todayISO,
@@ -141,7 +141,15 @@ export function TodoApp() {
         )}
         <div className={s.sideTools}>
           <NewList onAdd={(name) => open(add(name))} taken={(n) => !!lists?.some((l) => l.name === n)} />
-          <ImportList onImport={(name, tasks) => open(add(name, tasks))} />
+          <AiImport
+            lists={sorted}
+            current={list?.id ?? null}
+            onAdd={(name, tasks) => open(add(name, tasks))}
+            onAppend={(id, tasks) => {
+              update(id, (l) => ({ ...l, tasks: [...l.tasks, ...tasks] }));
+              open(id);
+            }}
+          />
         </div>
       </aside>
 
@@ -190,34 +198,6 @@ function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name
       </button>
       {clash && <p className={s.err}>There is already a list called “{clean}”.</p>}
     </form>
-  );
-}
-
-function ImportList({ onImport }: { onImport: (name: string, tasks: Task[]) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [err, setErr] = useState("");
-  return (
-    <div className={s.import}>
-      <button className={s.ghost} onClick={() => input.current?.click()}>
-        <Upload size={16} strokeWidth={2.5} /> Import
-      </button>
-      <input
-        ref={input}
-        type="file"
-        accept=".md,.markdown,text/markdown,text/plain"
-        hidden
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          e.target.value = "";
-          if (!f) return;
-          const tasks = parse(await f.text());
-          if (!tasks.length) return setErr(`No tasks found in ${f.name}. Tasks look like “- [ ] buy milk”.`);
-          setErr("");
-          onImport(f.name.replace(/\.(md|markdown|txt)$/i, ""), tasks);
-        }}
-      />
-      {err && <p className={s.err}>{err}</p>}
-    </div>
   );
 }
 
