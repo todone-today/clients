@@ -20,6 +20,8 @@ import {
   type List,
   type Task,
   fmtMinutes,
+  lateBy,
+  lateLabel,
   moveTasks,
   parseMinutes,
   relDue,
@@ -255,6 +257,12 @@ function ListView({ list, update }: { list: List; update: Update }) {
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   const [binned, setBinned] = useState<{ before: Task[]; text: string } | null>(null);
   const today = todayISO();
+  // The minute of the day, kept current so a task turns late when its time passes.
+  const [nowMin, setNowMin] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
+  useEffect(() => {
+    const t = setInterval(() => setNowMin(new Date().getHours() * 60 + new Date().getMinutes()), 30_000);
+    return () => clearInterval(t);
+  }, []);
   const c = count(list.tasks);
   const setTasks = (f: (ts: Task[]) => Task[]) => update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
   const isTop = (id: string) => list.tasks.some((t) => t.id === id);
@@ -330,7 +338,18 @@ function ListView({ list, update }: { list: List; update: Update }) {
     URL.revokeObjectURL(url);
   };
   const colors = noteColors(list.tasks);
-  const row = { listId: list.id, today, setTasks, selected, onSelect: setSelected, picked, onPick: pick, drop, colors };
+  const row = {
+    listId: list.id,
+    today,
+    nowMin,
+    setTasks,
+    selected,
+    onSelect: setSelected,
+    picked,
+    onPick: pick,
+    drop,
+    colors,
+  };
 
   return (
     <>
@@ -470,10 +489,10 @@ function ListView({ list, update }: { list: List; update: Update }) {
 
           {list.tasks.length ? (
             <ul className={s.tasks}>
-              {board(list.tasks, show, sort, today).map((t) => (
+              {board(list.tasks, show, sort, today, nowMin).map((t) => (
                 <TaskRow key={t.id} task={t} {...row} top />
               ))}
-              {!board(list.tasks, show, sort, today).length && (
+              {!board(list.tasks, show, sort, today, nowMin).length && (
                 <li className={s.noMatch}>
                   No tasks here.{" "}
                   <button className={s.link} onClick={() => setShow("all")}>
@@ -515,6 +534,7 @@ function TaskRow({
   listId,
   task,
   today,
+  nowMin,
   setTasks,
   selected,
   onSelect,
@@ -527,6 +547,7 @@ function TaskRow({
   listId: string;
   task: Task;
   today: string;
+  nowMin: number;
   setTasks: (f: (ts: Task[]) => Task[]) => void;
   selected: string | null;
   onSelect: (id: string | null) => void;
@@ -538,10 +559,10 @@ function TaskRow({
 }) {
   const open = selected === task.id;
   const edit = (f: (t: Task) => Task | null) => setTasks((ts) => mapTask(ts, task.id, f));
-  const late = task.due && !task.done && task.due < today;
+  const late = lateBy(task, today, nowMin);
   // Dragging a selected task carries the whole selection.
   const ids = picked.has(task.id) ? [...picked] : [task.id];
-  const row = { listId, today, setTasks, selected, onSelect, picked, onPick, drop, colors };
+  const row = { listId, today, nowMin, setTasks, selected, onSelect, picked, onPick, drop, colors };
 
   return (
     <li
@@ -590,13 +611,14 @@ function TaskRow({
           {task.spent ? <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span> : null}
           {task.due ? (
             <button
-              className={`${s.chip} ${late ? s.late : s.due}`}
+              className={`${s.chip} ${late !== null ? s.late : s.due}`}
               onClick={() => edit((t) => ({ ...t, due: undefined, at: undefined }))}
               aria-label={`Remove date ${relDue(task.due, today)}`}
               title="Remove date"
             >
-              {relDue(task.due, today)}
-              {task.at ? ` ${task.at}` : ""}
+              {late !== null && late !== Infinity
+                ? `${lateLabel(late)} · ${task.at}`
+                : `${relDue(task.due, today)}${task.at ? ` ${task.at}` : ""}`}
             </button>
           ) : null}
         </span>

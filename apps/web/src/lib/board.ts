@@ -1,4 +1,4 @@
-import type { Task } from "./tasks.ts";
+import { type Task, lateBy } from "./tasks.ts";
 
 // Filtering and sorting the board. A note counts for a filter if it or one of its steps does.
 export type Show = "all" | "open" | "done" | "today" | "late" | "undated";
@@ -17,13 +17,13 @@ export const SORTS: [Sort, string][] = [
   ["est", "How long"],
   ["name", "A–Z"],
 ];
-export function board(tasks: Task[], show: Show, sort: Sort, today: string): Task[] {
+export function board(tasks: Task[], show: Show, sort: Sort, today: string, nowMin = 0): Task[] {
   const is: Record<Show, (t: Task) => boolean> = {
     all: () => true,
     open: (t) => !t.done,
     done: (t) => t.done,
     today: (t) => !t.done && t.due === today,
-    late: (t) => !t.done && !!t.due && t.due < today,
+    late: (t) => lateBy(t, today, nowMin) !== null,
     undated: (t) => !t.done && !t.due,
   };
   const shown = show === "all" ? tasks : tasks.filter((t) => is[show](t) || (show !== "undated" && t.sub.some(is[show])));
