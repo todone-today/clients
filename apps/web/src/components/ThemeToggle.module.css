@@ -1,0 +1,25 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.toggle > * + *::before {
+  content: "/";
+  margin-right: 0.35rem;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+.opt {
+  color: var(--ink-2);
+  padding: 0.25rem 0;
+  border-bottom: 3px solid transparent;
+}
+.opt[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--lime);
+}
+.opt:hover {
+  color: var(--ink);
+}

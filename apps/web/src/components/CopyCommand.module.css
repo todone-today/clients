@@ -1,0 +1,38 @@
+.cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 100%;
+  padding: 0.8rem 1rem;
+  font: 500 0.9rem/1.2 var(--mono);
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+  text-align: left;
+  transition: border-color 0.2s var(--ease);
+}
+.cmd:hover {
+  border-color: var(--lime);
+}
+.cmd code {
+  font: inherit;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.prompt {
+  color: var(--lime);
+}
+:root[data-theme="day"] .prompt {
+  color: var(--ink-2);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .prompt {
+    color: var(--ink-2);
+  }
+}
+.icon {
+  display: inline-flex;
+  color: var(--ink-2);
+  flex: none;
+}

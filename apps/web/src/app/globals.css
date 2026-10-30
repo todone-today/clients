@@ -1,0 +1,178 @@
+/* Night is the ground; Day swaps it to cream. Stickers keep their colours and black keylines in both. */
+:root {
+  --ground: #0b0b0b;
+  --ink: #fff8ef;
+  --ink-2: #c9c2b8;
+  --raise: #171717;
+  --hair: #2c2c2c;
+  --shadow: #fff8ef;
+
+  --black: #0b0b0b;
+  --lime: #d4f04a;
+  --butter: #f8dc85;
+  --pink: #f2a7c6;
+  --peri: #8fa2ff;
+  --cyan: #46e0ee;
+  --hot: #ff2e63;
+  --orange: #ff6a2b;
+
+  --display: var(--font-display), "Arial Narrow", sans-serif;
+  --sans: var(--font-sans), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, monospace;
+
+  --key: 2.5px solid var(--black);
+  --lift: 6px 6px 0 var(--shadow);
+  --lift-sm: 3px 3px 0 var(--shadow);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: clamp(16px, 4vw, 56px);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="night"]) {
+    --ground: #fff8ef;
+    --ink: #0b0b0b;
+    --ink-2: #4a4540;
+    --raise: #f3eadb;
+    --hair: #ddd2c0;
+    --shadow: #0b0b0b;
+    color-scheme: light;
+  }
+}
+:root[data-theme="day"] {
+  --ground: #fff8ef;
+  --ink: #0b0b0b;
+  --ink-2: #4a4540;
+  --raise: #f3eadb;
+  --hair: #ddd2c0;
+  --shadow: #0b0b0b;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--lime);
+  color: var(--black);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 2px;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ground);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hair);
+  border: 2px solid var(--ground);
+}
+
+.display {
+  font-family: var(--display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.86;
+}
+
+/* A sticker: colour fill, black keyline, hard offset shadow. */
+.sticker {
+  background: var(--fill, var(--butter));
+  color: var(--black);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+
+/* Buttons press down into their shadow. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.85em 1.4em;
+  font-weight: 700;
+  text-decoration: none;
+  background: var(--fill, var(--butter));
+  color: var(--black);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s var(--ease);
+}
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--shadow);
+}
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+.btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
