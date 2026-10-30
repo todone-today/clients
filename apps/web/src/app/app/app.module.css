@@ -1214,8 +1214,10 @@
   display: grid;
   justify-items: center;
   gap: 0.2rem;
-  width: 5.5rem;
-  padding: 0.7rem 0.4rem 0.5rem;
+  place-content: center;
+  width: 11rem;
+  min-height: 6.5rem;
+  padding: 0.8rem;
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -1245,7 +1247,16 @@
   border-color: var(--hot);
 }
 .title {
-  padding-right: 6.5rem;
+  padding-right: 12rem;
+}
+@media (max-width: 760px) {
+  .bin {
+    width: 6rem;
+    min-height: 4.5rem;
+  }
+  .title {
+    padding-right: 7rem;
+  }
 }
 .undo {
   display: flex;

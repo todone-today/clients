@@ -283,7 +283,7 @@ function ListView({ list, update }: { list: List; update: (id: string, f: (l: Li
           aria-label={armed ? "Click again to delete this list" : "Delete list, or drop a task here to delete it"}
           title={armed ? "Click again to delete this list" : "Drop a task here to delete it. Click to delete the list."}
         >
-          <Trash2 size={22} strokeWidth={2.5} />
+          <Trash2 size={28} strokeWidth={2.5} />
           <span>{armed ? "Delete list?" : "Bin"}</span>
         </button>
         {renaming ? (

@@ -55,7 +55,9 @@ jobs:
           vercel pull --yes --environment=$env --token="$VERCEL_TOKEN"
           # Bring the database schema up to date before the new code goes live.
           if grep -q '^DATABASE_URL=' .vercel/.env.$env.local; then
-            (cd web && npm ci && node --env-file=../.vercel/.env.$env.local scripts/migrate.mts)
+            # Vercel hands sensitive values back as "[SENSITIVE]"; migrating only needs the database, so placeholders do.
+            (cd web && npm ci && BETTER_AUTH_URL=http://localhost BETTER_AUTH_SECRET=migrate-only \
+              node --env-file=../.vercel/.env.$env.local scripts/migrate.mts)
           else
             echo "::warning::DATABASE_URL is not set in Vercel ($env); skipping migrations"
           fi
