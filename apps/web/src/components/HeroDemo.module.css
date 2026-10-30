@@ -97,7 +97,7 @@
 .term {
   position: relative;
   width: min(100%, 34rem);
-  margin-top: -1.5rem;
+  margin-top: 0.25rem;
   transform: rotate(1.5deg);
   background: #111;
   color: #e8e2d8;
@@ -107,6 +107,7 @@
 .bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.8rem;
   padding: 0.55rem 0.9rem;
   font: 500 0.78rem var(--mono);
@@ -156,6 +157,6 @@
   }
   .term {
     width: auto;
-    margin: -0.75rem 0.5rem 0;
+    margin: 0.5rem 0.5rem 0;
   }
 }

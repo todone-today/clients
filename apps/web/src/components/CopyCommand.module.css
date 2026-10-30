@@ -31,6 +31,12 @@
     color: var(--ink-2);
   }
 }
+@media (max-width: 560px) {
+  .cmd code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 .icon {
   display: inline-flex;
   color: var(--ink-2);

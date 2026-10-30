@@ -72,9 +72,6 @@
 .h1 span {
   justify-self: start;
 }
-.h1 span:nth-child(2) {
-  margin-left: 0.25em;
-}
 /* Let the columns shrink below their nowrap headline and install command. */
 .hero > *,
 .terminal > * {
@@ -225,6 +222,13 @@
   justify-items: end;
   font-weight: 700;
 }
+.est {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.8rem;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
 .timer :global(.display) {
   font-size: 5rem;
   font-variant-numeric: tabular-nums;
@@ -313,10 +317,23 @@
 
 /* Close */
 .close {
+  --shadow: var(--black);
   display: grid;
   justify-items: start;
   gap: 2.5rem;
   padding: 6rem var(--gutter) 7rem;
+  background: var(--lime);
+  color: var(--black);
+  border-top: var(--key);
+}
+/* Lettering as a sticker: a black slab under the words. */
+.slab {
+  display: inline-block;
+  margin-top: 0.06em;
+  padding: 0.02em 0.12em 0;
+  background: var(--black);
+  color: var(--lime);
+  transform: rotate(-1.5deg);
 }
 .big {
   font-size: clamp(3.4rem, 10vw, 10rem);
@@ -328,7 +345,6 @@
   align-items: baseline;
   gap: 1.5rem;
   padding: 2rem var(--gutter);
-  border-top: 2px solid var(--hair);
   color: var(--ink-2);
   font-size: 0.9rem;
 }
@@ -378,6 +394,17 @@
 }
 
 @media (max-width: 560px) {
+  .hero {
+    gap: 2rem;
+    padding-top: 1.5rem;
+  }
+  .lede {
+    margin-top: 1.1rem;
+  }
+  .actions {
+    margin-top: 1.4rem;
+    gap: 0.75rem;
+  }
   .nav {
     gap: 1rem;
   }

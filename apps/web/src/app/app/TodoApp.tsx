@@ -47,8 +47,10 @@ export function TodoApp() {
             })}
           </ul>
         )}
-        <NewList onAdd={(name) => setPicked(add(name))} taken={(n) => !!lists?.some((l) => l.name === n)} />
-        <ImportList onImport={(name, tasks) => setPicked(add(name, tasks))} />
+        <div className={s.sideTools}>
+          <NewList onAdd={(name) => setPicked(add(name))} taken={(n) => !!lists?.some((l) => l.name === n)} />
+          <ImportList onImport={(name, tasks) => setPicked(add(name, tasks))} />
+        </div>
       </aside>
 
       <main className={s.main}>
@@ -97,7 +99,7 @@ function ImportList({ onImport }: { onImport: (name: string, tasks: Task[]) => v
   return (
     <div className={s.import}>
       <button className={s.ghost} onClick={() => input.current?.click()}>
-        <Upload size={16} strokeWidth={2.5} /> Import a Markdown list
+        <Upload size={16} strokeWidth={2.5} /> Import<span className={s.long}> a Markdown list</span>
       </button>
       <input
         ref={input}

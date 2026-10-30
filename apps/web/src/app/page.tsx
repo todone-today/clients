@@ -55,7 +55,9 @@ const steps = [
     proof: (
       <div className={s.timer}>
         <span className="display">24:59</span>
-        <span>Write the launch post · ⏱ 2h</span>
+        <span>
+          Write the launch post <b className={s.est}>2h</b>
+        </span>
       </div>
     ),
   },
@@ -140,8 +142,8 @@ export default function Home() {
               <span className={s.lime}>Terminal second.</span>
             </h2>
             <p>
-              The same lists, in a full-screen terminal app with tabs, a calendar and a focus timer. Each folder gets its own
-              list, so the one for this repo is waiting when you open it.
+              Your lists also run in a full-screen terminal app with tabs, a calendar and a focus timer, one list per folder.
+              Today they move between the two as Markdown files: export here, open there. Live sync is coming.
             </p>
             <CopyCommand command={INSTALL} />
             <a className={s.more} href={`${REPO}#readme`}>
@@ -193,9 +195,9 @@ export default function Home() {
           <p className={`display ${s.big}`}>
             Write it down.
             <br />
-            <span className={s.lime}>Tick it off.</span>
+            <span className={s.slab}>Tick it off.</span>
           </p>
-          <Link href="/app" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+          <Link href="/app" className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
             Open the app <ArrowRight size={18} strokeWidth={2.5} />
           </Link>
         </section>
