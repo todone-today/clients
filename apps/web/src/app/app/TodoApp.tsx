@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Lightbulb, Check, Clock, Download, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, Lightbulb, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
@@ -27,7 +27,6 @@ import {
   moveTasks,
   parseMinutes,
   relDue,
-  serialize,
   todayISO,
   uid,
   takeTasks,
@@ -338,12 +337,6 @@ function ListView({ list, update }: { list: List; update: Update }) {
     return () => removeEventListener("keydown", esc);
   }, []);
 
-  const exportMd = () => {
-    const url = URL.createObjectURL(new Blob([serialize(list.tasks)], { type: "text/markdown" }));
-    const a = Object.assign(document.createElement("a"), { href: url, download: `${list.name}.md` });
-    a.click();
-    URL.revokeObjectURL(url);
-  };
   const colors = noteColors(list.tasks);
   const row = {
     listId: list.id,
@@ -414,11 +407,6 @@ function ListView({ list, update }: { list: List; update: Update }) {
             <i style={{ transform: `scaleX(${c.all ? c.done / c.all : 0})` }} />
           </span>
         </p>
-        <div className={s.tools}>
-          <button className={s.ghost} onClick={exportMd}>
-            <Download size={16} strokeWidth={2.5} /> Export .md
-          </button>
-        </div>
       </div>
 
       {binned && (
