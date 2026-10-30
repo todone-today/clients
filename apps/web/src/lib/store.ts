@@ -1,64 +1,114 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
-import { type List, type Task, uid } from "./tasks";
+import { useSyncExternalStore } from "react";
+import { createList, deleteList, fetchLists, saveList } from "@/app/app/actions";
+import { type List, type Task } from "./tasks";
 
-// ponytail: lists live in this browser only until accounts and cloud sync land.
-const KEY = "todone:lists:v1";
+// Lists from before accounts, kept in the browser; imported once into the personal workspace.
+const LOCAL = "todone:lists:v1";
 
-const starter = (): List[] => [
-  {
-    id: uid(),
-    name: "inbox",
-    updated: Date.now(),
-    tasks: [
-      { id: uid(), title: "Tick me off", done: false, sub: [] },
-      {
-        id: uid(),
-        title: "Plan the week",
-        done: false,
-        est: 30,
-        sub: [{ id: uid(), title: "Pick three things that matter", done: false, sub: [] }],
-      },
-    ],
-  },
-];
+// What the UI shows (server state plus edits still in flight), and the last state the server confirmed.
+let cache: List[] | null = null;
+let server: List[] = [];
+let error = "";
+let queue = Promise.resolve();
+let pending = 0;
+const subs = new Set<() => void>();
+const emit = () => subs.forEach((f) => f());
 
-function load(): List[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as List[];
-  } catch {}
-  return starter();
+function show(next: List[]) {
+  cache = next;
+  emit();
 }
 
-// One in-memory copy shared by every component, saved on each change.
-let cache: List[] | null = null;
-const subs = new Set<() => void>();
+// Writes run one at a time so each starts from the version the previous one produced.
+function enqueue(op: () => Promise<void>) {
+  pending++;
+  queue = queue
+    .then(op)
+    .then(() => void (error = ""))
+    .catch(async () => {
+      error = "Couldn't save the last change; showing what is saved.";
+      server = await fetchLists().catch(() => server);
+    })
+    .finally(() => {
+      if (!--pending) show(server);
+    });
+}
 
-const snapshot = () => (cache ??= load());
+const put = (ls: List[], l: List) => (ls.some((x) => x.id === l.id) ? ls.map((x) => (x.id === l.id ? l : x)) : [...ls, l]);
 
-function commit(next: List[]) {
-  cache = next;
+export async function reload(personal: boolean) {
+  cache = null;
+  emit();
+  await queue;
   try {
-    localStorage.setItem(KEY, JSON.stringify(next));
+    server = await fetchLists();
+    error = "";
+  } catch {
+    error = "Couldn't load your lists.";
+  }
+  show(server);
+  if (personal) importLocal();
+}
+
+// Picks up teammates' edits; skipped while our own writes are in flight.
+// ponytail: refreshes on focus only, no live push; add SSE/websockets if teams need to watch edits happen.
+export async function refresh() {
+  if (pending || !cache) return;
+  const next = await fetchLists().catch(() => null);
+  if (next && !pending) show((server = next));
+}
+
+function importLocal() {
+  let local: List[] = [];
+  try {
+    local = JSON.parse(localStorage.getItem(LOCAL) ?? "[]");
   } catch {}
-  subs.forEach((f) => f());
+  if (!local.length) return;
+  for (const l of local) add(l.name, l.tasks);
+  enqueue(async () => localStorage.removeItem(LOCAL));
 }
 
 function subscribe(f: () => void) {
   subs.add(f);
-  // Another tab changed the lists: take its version.
-  const on = (e: StorageEvent) => {
-    if (e.key !== KEY) return;
-    cache = load();
-    f();
-  };
-  addEventListener("storage", on);
-  return () => {
-    subs.delete(f);
-    removeEventListener("storage", on);
-  };
+  return () => void subs.delete(f);
+}
+
+export function add(name: string, tasks: Task[] = [], kind?: "ideas") {
+  const id = crypto.randomUUID();
+  show([...(cache ?? []), { id, name, tasks, updated: Date.now(), version: 0, ...(kind ? { kind } : {}) }]);
+  enqueue(async () => {
+    server = put(server, await createList(id, name, tasks, kind));
+  });
+  return id;
+}
+
+// The edit is a function, so when someone else saved first it is re-applied to their version.
+export function update(id: string, f: (l: List) => List | null) {
+  show(
+    (cache ?? []).flatMap((l) => {
+      if (l.id !== id) return [l];
+      const r = f(l);
+      return r ? [{ ...r, updated: Date.now() }] : [];
+    }),
+  );
+  enqueue(async () => {
+    for (let tries = 0; tries < 3; tries++) {
+      const base = server.find((l) => l.id === id);
+      if (!base) return;
+      const next = f(base);
+      if (!next) {
+        await deleteList(id);
+        server = server.filter((l) => l.id !== id);
+        return;
+      }
+      const r = await saveList(id, base.version, next.name, next.tasks);
+      server = r.list ? put(server, r.list) : server.filter((l) => l.id !== id);
+      if (r.ok) return;
+    }
+    throw new Error("Too many conflicting edits");
+  });
 }
 
 // Maps a task (or subtask) by id; the callback returns the new task, or null to delete it.
@@ -73,24 +123,15 @@ export function mapTask(tasks: Task[], id: string, f: (t: Task) => Task | null):
 }
 
 export function useLists() {
-  // null while rendering on the server: lists exist only in the browser.
-  const lists = useSyncExternalStore(subscribe, snapshot, () => null);
-
-  const update = useCallback((id: string, f: (l: List) => List | null) => {
-    commit(
-      snapshot().flatMap((l) => {
-        if (l.id !== id) return [l];
-        const r = f(l);
-        return r ? [{ ...r, updated: Date.now() }] : [];
-      }),
-    );
-  }, []);
-
-  const add = useCallback((name: string, tasks: Task[] = []) => {
-    const l: List = { id: uid(), name, tasks, updated: Date.now() };
-    commit([...snapshot(), l]);
-    return l.id;
-  }, []);
-
-  return { lists, update, add };
+  const lists = useSyncExternalStore(
+    subscribe,
+    () => cache,
+    () => null,
+  );
+  const err = useSyncExternalStore(
+    subscribe,
+    () => error,
+    () => "",
+  );
+  return { lists, error: err, update, add };
 }

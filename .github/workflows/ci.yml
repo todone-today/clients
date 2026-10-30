@@ -53,6 +53,12 @@ jobs:
           npm i -g vercel@57
           if [ "$GITHUB_REF_NAME" = main ]; then env=production prod=--prod; else env=preview prod=; fi
           vercel pull --yes --environment=$env --token="$VERCEL_TOKEN"
+          # Bring the database schema up to date before the new code goes live.
+          if grep -q '^DATABASE_URL=' .vercel/.env.$env.local; then
+            (cd web && npm ci && node --env-file=../.vercel/.env.$env.local scripts/migrate.mts)
+          else
+            echo "::warning::DATABASE_URL is not set in Vercel ($env); skipping migrations"
+          fi
           vercel build $prod --token="$VERCEL_TOKEN"
           url=$(vercel deploy --prebuilt $prod --token="$VERCEL_TOKEN")
           echo "Deployed $url"

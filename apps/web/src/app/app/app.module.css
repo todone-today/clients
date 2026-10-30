@@ -141,10 +141,33 @@
   color: var(--hot);
 }
 
+.workspace {
+  display: grid;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--hair);
+}
+.workspace > * {
+  min-width: 0;
+}
+.workspace select,
+.add select {
+  padding: 0.5rem 0.6rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--ground);
+  border: 2px solid var(--hair);
+}
+.ghost[aria-pressed="true"] {
+  background: var(--lime);
+  color: var(--black);
+  border-color: var(--black);
+}
+
 /* Main */
 .main {
   padding: 2rem var(--gutter) 5rem;
-  max-width: 56rem;
+  max-width: 76rem;
   width: 100%;
 }
 .listHead {
@@ -292,7 +315,8 @@
 
 .editor {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
   gap: 0.9rem;
   margin: 0.2rem 0 1rem 2.45rem;
   padding: 1rem;
@@ -313,6 +337,34 @@
   color: var(--ink);
   background: var(--ground);
   border: 2px solid var(--hair);
+}
+.editor input {
+  width: 100%;
+  min-width: 0;
+}
+.editor .field {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.quick button {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 2px solid var(--hair);
+}
+.quick button:hover {
+  border-color: var(--ink);
+}
+.quick button[aria-pressed="true"] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--black);
 }
 .editor input:focus-visible {
   outline: none;
@@ -404,4 +456,840 @@
     grid-column: 2;
     flex-wrap: wrap;
   }
+}
+
+/* Integrations */
+.integration {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+  border-top: 2px solid var(--hair);
+}
+.integration h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.integration > p {
+  color: var(--ink-2);
+  max-width: 44rem;
+}
+.integration > input,
+.stack input {
+  padding: 0.7rem 0.9rem;
+  font-weight: 600;
+  background: var(--raise);
+  border: 2px solid var(--hair);
+}
+.integration .add {
+  margin-bottom: 0;
+}
+.stack {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+.stack input {
+  width: 100%;
+}
+.on {
+  align-self: center;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.integration > :global(.btn) {
+  justify-self: start;
+}
+
+.integration > .ghost {
+  justify-self: start;
+}
+
+/* Calendar */
+.calendar {
+  display: grid;
+  gap: 1rem;
+}
+.calBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.calBar h2 {
+  margin: 0 auto 0 0.5rem;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+}
+.seg {
+  display: flex;
+  border: 2px solid var(--ink);
+}
+.seg button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.seg button + button {
+  border-left: 2px solid var(--ink);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--lime);
+  color: var(--black);
+}
+
+/* Month */
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 2px solid var(--hair);
+  border-left: 2px solid var(--hair);
+}
+.calHead {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-right: 2px solid var(--hair);
+  border-bottom: 2px solid var(--hair);
+}
+.day {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-height: 6.5rem;
+  padding: 0.4rem;
+  border-right: 2px solid var(--hair);
+  border-bottom: 2px solid var(--hair);
+}
+.day[data-out="true"] {
+  opacity: 0.4;
+}
+.dayNum {
+  justify-self: start;
+  padding: 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.day[data-today="true"] .dayNum,
+.tgDay[data-today="true"] b {
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.dayName {
+  display: none;
+}
+.calTask {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.35rem;
+}
+.calTask .check {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-width: 2px;
+}
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin: 0.3rem 0.2rem 0;
+  background: var(--lime);
+  border: 2px solid var(--ink);
+}
+.calTitle {
+  display: grid;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.calTitle span:last-child {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.calTitle:hover {
+  text-decoration: underline;
+}
+.calTask[data-done="true"] .calTitle,
+.block[data-done="true"] b {
+  text-decoration: line-through 2px;
+  color: var(--ink-2);
+}
+.calTask[data-late="true"] .calTitle {
+  color: var(--hot);
+}
+
+/* Day and week: a time grid, with the "To plan" tray beside it */
+.planner[data-tray="true"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: 1rem;
+  align-items: start;
+}
+.tg {
+  height: min(70vh, 44rem);
+  overflow-y: auto;
+  border: 2px solid var(--hair);
+}
+.tgHead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ground);
+  border-bottom: 2px solid var(--hair);
+}
+.tgRow {
+  display: grid;
+  grid-template-columns: 3.25rem repeat(var(--days), minmax(0, 1fr));
+  position: relative;
+}
+.tgRow + .tgRow {
+  border-top: 2px solid var(--hair);
+}
+.tgDay {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  border-left: 2px solid var(--hair);
+}
+.tgDay b {
+  display: inline-block;
+  min-width: 1.6rem;
+  padding: 0 0.2rem;
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+.tgLabel {
+  align-self: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: center;
+  text-transform: uppercase;
+}
+.allDay {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  min-height: 2.2rem;
+  padding: 0.25rem;
+  border-left: 2px solid var(--hair);
+}
+.hours {
+  position: relative;
+}
+.hours span {
+  position: absolute;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.col {
+  position: relative;
+  border-left: 2px solid var(--hair);
+  background: repeating-linear-gradient(to bottom, transparent 0 47px, var(--hair) 47px 48px);
+}
+.now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 2px;
+  background: var(--hot);
+}
+.block {
+  position: absolute;
+  display: grid;
+  align-content: start;
+  overflow: hidden;
+  margin-left: 2px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: left;
+  color: var(--black);
+  background: var(--peri);
+  border: 2px solid var(--black);
+  cursor: grab;
+}
+.block span {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.block[data-done="true"] {
+  background: var(--raise);
+}
+.tray {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 10rem;
+  padding: 0.75rem;
+  background: var(--raise);
+  border: 2px dashed var(--hair);
+}
+.tray h3 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tray p {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+.trayItem {
+  display: grid;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+  cursor: grab;
+}
+.trayItem span {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Year */
+.year {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 1.25rem;
+}
+.miniHead {
+  margin-bottom: 0.4rem;
+  font-weight: 800;
+}
+.miniHead:hover {
+  text-decoration: underline;
+}
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.miniGrid button {
+  aspect-ratio: 1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.miniGrid button[data-n="1"] {
+  background: color-mix(in srgb, var(--lime) 35%, transparent);
+}
+.miniGrid button[data-n="2"] {
+  background: color-mix(in srgb, var(--lime) 65%, transparent);
+}
+.miniGrid button[data-n="3"] {
+  color: var(--black);
+  background: var(--lime);
+}
+.miniGrid button[data-today="true"] {
+  outline: 2px solid var(--hot);
+}
+
+@media (max-width: 760px) {
+  /* The month becomes an agenda: only days in this month that have tasks. */
+  .cal {
+    grid-template-columns: 1fr;
+  }
+  .calHead,
+  .day[data-out="true"],
+  .day[data-empty="true"] {
+    display: none;
+  }
+  .day {
+    min-height: 0;
+    padding: 0.6rem 0.5rem;
+  }
+  .dayName {
+    display: inline;
+  }
+  .calTitle {
+    font-size: 0.95rem;
+  }
+  .planner[data-tray="true"] {
+    grid-template-columns: 1fr;
+  }
+  .calBar h2 {
+    flex-basis: 100%;
+    order: -1;
+    margin: 0;
+  }
+}
+
+/* Views in the top bar */
+.tabs {
+  display: flex;
+  border: 2px solid var(--ink);
+}
+.tabs button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+.tabs button + button {
+  border-left: 2px solid var(--ink);
+}
+.tabs button[aria-pressed="true"] {
+  background: var(--lime);
+  color: var(--black);
+}
+
+/* Brainstorm */
+.board {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+.idea {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+}
+.idea:nth-child(odd) {
+  rotate: -0.6deg;
+}
+.idea:nth-child(even) {
+  rotate: 0.5deg;
+}
+.idea textarea {
+  font: 700 1rem/1.4 var(--sans);
+  color: inherit;
+  background: none;
+  border: 0;
+  resize: vertical;
+}
+.idea textarea:focus-visible {
+  outline: 2px solid var(--black);
+}
+.ideaTools {
+  display: flex;
+  gap: 0.35rem;
+}
+.idea {
+  cursor: grab;
+}
+.grip {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.65;
+}
+/* The keyboard route stays out of sight until it is tabbed to. */
+.moveTo:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.idea:has(.moveTo:focus-visible) .grip {
+  display: none;
+}
+.listBtn[data-over] {
+  border-color: var(--pink);
+  background: color-mix(in srgb, var(--pink) 25%, transparent);
+}
+.ideaTools select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem;
+  font-weight: 700;
+  color: var(--black);
+  background: rgb(255 255 255 / 0.5);
+  border: 2px solid var(--black);
+}
+.ideaTools button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  border: 2px solid var(--black);
+}
+.ideaTools button:disabled {
+  opacity: 0.4;
+}
+
+@media (max-width: 760px) {
+  .top {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .tabs {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .tabs button {
+    flex: 1;
+  }
+}
+
+/* The calendar link opened in a browser */
+.shared {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem var(--gutter) 3rem;
+}
+.main[data-wide="true"] {
+  max-width: none;
+}
+
+/* Integrations picker */
+.picker {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 30rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.picker select {
+  padding: 0.7rem 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.code {
+  overflow-x: auto;
+  padding: 0.8rem 1rem;
+  font: 0.8rem/1.6 var(--mono);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+}
+.integration code {
+  font: 0.85em var(--mono);
+}
+
+/* Tasks with the sticker panel on the right */
+.listBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem);
+  gap: 2rem;
+  align-items: start;
+}
+.row {
+  cursor: grab;
+}
+.row[data-over] {
+  outline: 3px dashed var(--lime);
+  outline-offset: 2px;
+}
+/* Shown only while something is being dragged. */
+.unnest {
+  display: none;
+  padding: 0.9rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: center;
+  border: 2px dashed var(--hair);
+}
+.stickers {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 1.1rem;
+}
+.stickers > p {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+.stickGroup h3 {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stickGroup > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.stick {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+  rotate: -1.5deg;
+  transition: rotate 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.stick:nth-child(even) {
+  rotate: 1.2deg;
+}
+.stick[data-kind="long"] {
+  background: var(--cyan);
+}
+.stick:hover {
+  rotate: 0deg;
+  transform: translateY(-2px);
+}
+.stick[data-over] {
+  rotate: 0deg;
+  transform: scale(1.12);
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .listBody {
+    grid-template-columns: 1fr;
+  }
+  /* On small screens the stickers sit above the tasks: open a task, then tap a sticker. */
+  .stickers {
+    position: static;
+    order: -1;
+  }
+  .stickGroup > div {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+  }
+  .stick {
+    flex: none;
+  }
+}
+
+:global(body.is-dragging) .unnest {
+  display: block;
+}
+.unnest[data-over] {
+  color: var(--ink);
+  border-color: var(--lime);
+}
+/* While dragging, columns and cells under the pointer light up. */
+.day[data-over],
+.allDay[data-over],
+.col[data-over],
+.tray[data-over] {
+  background-color: color-mix(in srgb, var(--lime) 18%, transparent);
+}
+/* Stops the page and the sticker strip overflowing: grid children may shrink below their content. */
+.main,
+.listBody > * {
+  min-width: 0;
+}
+
+/* Main tasks as sticky notes on a board; subtasks are a checklist inside. Inside a note the colour
+   tokens switch to dark ink on paper, so checkboxes, chips and the editor follow without extra rules. */
+.listBody .tasks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.1rem;
+  align-items: start;
+}
+.note {
+  --ink: #0b0b0b;
+  --ink-2: #3d3832;
+  --hair: rgb(0 0 0 / 0.22);
+  --ground: #fffdf8;
+  --raise: rgb(255 255 255 / 0.5);
+  padding: 0.5rem 0.85rem 0.6rem;
+  color: var(--ink);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  rotate: -0.8deg;
+  transition: rotate 0.15s var(--ease);
+}
+.note:nth-child(even) {
+  rotate: 0.7deg;
+}
+.note:hover,
+.note[data-open] {
+  rotate: 0deg;
+}
+.note[data-open] {
+  grid-column: 1 / -1;
+}
+.note .row {
+  grid-template-columns: auto minmax(0, 1fr);
+  border-radius: 0;
+}
+.note .chips {
+  grid-column: 2;
+  flex-wrap: wrap;
+}
+.note .chips span {
+  rotate: -2deg;
+}
+.note > .row .taskTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.note .row[data-done="true"] .taskTitle {
+  color: var(--ink-2);
+}
+.note:has(> .row[data-done="true"]) {
+  opacity: 0.6;
+}
+.note .subs {
+  padding-left: 0.4rem;
+  border-top: 2px dashed var(--hair);
+}
+.note .subs .row {
+  padding: 0.35rem 0;
+}
+.note .subs .check {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+.note .editor {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  margin: 0.3rem 0 0.6rem;
+}
+.note .row[data-over] {
+  outline-color: var(--black);
+}
+.listBody .unnest {
+  grid-column: 1 / -1;
+}
+
+/* Date and estimate chips: click to remove. */
+.chips .chip {
+  padding: 0.12rem 0.45rem;
+  font: inherit;
+  white-space: nowrap;
+  border-width: 2px;
+  border-style: solid;
+}
+.chips .chip:not(.due, .late) {
+  border-color: var(--hair);
+}
+.chips .chip::after {
+  content: "";
+}
+.chips .chip:hover::after,
+.chips .chip:focus-visible::after {
+  content: " ×";
+}
+.chips .chip:hover {
+  text-decoration: line-through;
+}
+.note .chips .chip {
+  rotate: -2deg;
+}
+
+/* The bin in the list's top right corner */
+.listHead {
+  position: relative;
+}
+.bin {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  width: 5.5rem;
+  padding: 0.7rem 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  border: 2.5px dashed var(--hair);
+  transition:
+    transform 0.15s var(--ease),
+    color 0.15s,
+    border-color 0.15s;
+}
+.bin:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.bin[data-armed="true"],
+.bin[data-over] {
+  color: var(--black);
+  background: var(--hot);
+  border: 2.5px solid var(--black);
+}
+.bin[data-over] {
+  transform: scale(1.12) rotate(-4deg);
+}
+:global(body.is-dragging) .bin:not([data-over]) {
+  color: var(--hot);
+  border-color: var(--hot);
+}
+.title {
+  padding-right: 6.5rem;
+}
+.undo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.9rem;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+}
+.undo .ghost {
+  margin-left: auto;
+  color: var(--black);
+  border-color: var(--black);
+}
+
+/* A timed block's bottom edge: drag it to stretch the block and set the estimate. */
+.stretch {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.stretch::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 1.4rem;
+  height: 3px;
+  translate: -50% 0;
+  background: var(--black);
+  opacity: 0;
+}
+.block:hover .stretch::after {
+  opacity: 0.6;
+}
+.miniGrid button[data-over] {
+  outline: 2px solid var(--lime);
+  background: color-mix(in srgb, var(--lime) 40%, transparent);
 }

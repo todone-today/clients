@@ -4,19 +4,27 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "local": "pglite-server -d .pglite -p 54329 -m 10 --include-database-url -r \"npm run local:app\"",
+    "local:app": "npm run db:migrate && next dev",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --test src/lib/*.test.ts"
   },
   "dependencies": {
+    "better-auth": "^1.7.14",
     "lucide-react": "^1.65.0",
     "next": "16.4.3",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
+    "@electric-sql/pglite-socket": "^0.2.16",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

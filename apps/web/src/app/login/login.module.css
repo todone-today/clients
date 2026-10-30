@@ -1,0 +1,51 @@
+.page {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2rem;
+  min-height: 100svh;
+  padding: 2rem var(--gutter);
+}
+.mark {
+  font-size: 2.4rem;
+  text-decoration: none;
+}
+.card {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 26rem);
+  padding: 2rem;
+}
+.card h1 {
+  font-size: 2.6rem;
+}
+.card label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.card input {
+  padding: 0.7rem 0.8rem;
+  font-weight: 600;
+  color: var(--black);
+  background: #fff;
+  border: var(--key);
+}
+.card input:focus-visible {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--black);
+}
+.card :global(.btn) {
+  justify-content: center;
+}
+.err {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #b0002f;
+}
+.switch {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+}

@@ -176,3 +176,28 @@ img {
     scroll-behavior: auto !important;
   }
 }
+
+/* The floating label that follows the pointer while dragging (see src/lib/drag.ts). */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  max-width: 16rem;
+  padding: 0.4rem 0.7rem;
+  overflow: hidden;
+  font-weight: 800;
+  color: var(--black);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  rotate: -2deg;
+}
+body.is-dragging,
+body.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
