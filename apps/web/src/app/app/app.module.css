@@ -155,7 +155,7 @@
   padding: 0.5rem 0.6rem;
   font-weight: 700;
   color: var(--ink);
-  background: var(--ground);
+  background-color: var(--ground);
   border: 2px solid var(--hair);
 }
 .ghost[aria-pressed="true"] {
@@ -922,7 +922,7 @@
   padding: 0.3rem;
   font-weight: 700;
   color: var(--black);
-  background: rgb(255 255 255 / 0.5);
+  background-color: rgb(255 255 255 / 0.5);
   border: 2px solid var(--black);
 }
 .ideaTools button {
@@ -974,7 +974,7 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--ink);
-  background: var(--raise);
+  background-color: var(--raise);
   border: 2.5px solid var(--ink);
 }
 .code {

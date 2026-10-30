@@ -58,6 +58,18 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Everything is sized in rem, so this scales the whole UI (about what 90% browser zoom looks like). */
+  font-size: 90%;
+}
+
+/* Dropdowns draw their own chevron with room to breathe, instead of the browser's, which sits on the border. */
+select {
+  appearance: none;
+  padding-right: 2.2rem !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.7rem;
 }
 
 body {
