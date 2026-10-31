@@ -57,6 +57,7 @@ export function Workspaces({
         className={s.ghost}
         aria-pressed={panel === "integrations"}
         onClick={() => onPanel(panel === "integrations" ? null : "integrations")}
+        data-tour="integrations"
       >
         <Plug size={16} strokeWidth={2.5} /> Integrations
       </button>

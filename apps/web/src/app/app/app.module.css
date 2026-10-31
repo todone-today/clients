@@ -1698,3 +1698,78 @@
 .stick[data-kind="rep"] {
   background: var(--lime);
 }
+
+/* The tour: a spotlight cut out of a dimmed page, and a card beside it. Clicks pass through to the page. */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+.tourShade {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+}
+.tourSpot {
+  position: absolute;
+  border: 3px solid var(--lime);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.5);
+  transition:
+    left 0.25s var(--ease),
+    top 0.25s var(--ease),
+    width 0.25s var(--ease),
+    height 0.25s var(--ease);
+}
+.tourCard {
+  position: fixed;
+  display: grid;
+  gap: 0.6rem;
+  max-width: calc(100vw - 2rem);
+  padding: 1.1rem 1.25rem 1rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+  pointer-events: auto;
+}
+.tourCard:focus-visible {
+  outline: 3px solid var(--cyan);
+}
+.tourCard h2 {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.tourCount {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.tourNav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+.tourNav .link {
+  margin-right: auto;
+  color: var(--black);
+}
+.tourNav .ghost {
+  color: var(--black);
+  border-color: var(--black);
+}
+@media (max-width: 560px) {
+  .tourCard {
+    left: 1rem !important;
+    right: 1rem;
+    top: auto !important;
+    bottom: 1rem;
+    width: auto !important;
+    translate: none !important;
+  }
+}
+
+.listBtn {
+  gap: 0.6rem;
+}

@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Lightbulb, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, HelpCircle, Lightbulb, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
@@ -15,6 +15,8 @@ import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Integrations } from "./Integrations";
+import { Tour } from "./Tour";
+import { startOnboarding } from "./actions";
 import { shareCalendar } from "./integration-actions";
 import { Stickers, sticker } from "./Stickers";
 import { Members, type Panel, Workspaces } from "./Workspaces";
@@ -71,6 +73,7 @@ export function TodoApp() {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  const [touring, setTouring] = useState(false);
   // Dragged lists keep their order; lists never dragged come first, newest first.
   const sorted = useMemo(
     () =>
@@ -111,7 +114,14 @@ export function TodoApp() {
   useEffect(() => {
     if (!userId) return;
     // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
-    reload(!orgId).then(() => new URLSearchParams(location.search).has("connect") && setPanel("integrations"));
+    reload(!orgId).then(async () => {
+      if (new URLSearchParams(location.search).has("connect")) return setPanel("integrations");
+      // First visit: demo lists to play with, then the tour.
+      if (!orgId && (await startOnboarding(todayISO()))) {
+        await reload(true);
+        setTouring(true);
+      }
+    });
   }, [userId, orgId]);
   useEffect(() => {
     addEventListener("focus", refresh);
@@ -121,6 +131,7 @@ export function TodoApp() {
   return (
     <div className={s.shell}>
       <Welcome />
+      {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
         <Link href="/" className={s.mark} aria-label="todone home">
           <Logo size={26} />
@@ -132,7 +143,7 @@ export function TodoApp() {
               ["calendar", "Calendar"],
             ] as const
           ).map(([p, name]) => (
-            <button key={name} aria-pressed={panel === p} onClick={() => setPanel(p)}>
+            <button key={name} aria-pressed={panel === p} onClick={() => setPanel(p)} data-tour={p ?? "lists-tab"}>
               {name}
             </button>
           ))}
@@ -141,6 +152,18 @@ export function TodoApp() {
           {error ? <span className={s.err}>{error}</span> : session?.user.email}
         </p>
         <ThemeToggle />
+        <button
+          className={s.ghost}
+          onClick={() => {
+            setPanel(null);
+            setTouring(true);
+          }}
+          aria-label="Take the tour"
+          title="Take the tour"
+          data-tour="tour"
+        >
+          <HelpCircle size={16} strokeWidth={2.5} />
+        </button>
         <button
           className={s.ghost}
           onClick={async () => {
@@ -163,7 +186,12 @@ export function TodoApp() {
           }}
         />
         {/* Brainstorm lives above the lists: a place for loose ideas that isn't a list itself. */}
-        <button className={`${s.listBtn} ${s.ideasBtn}`} aria-current={panel === "ideas"} onClick={() => setPanel("ideas")}>
+        <button
+          className={`${s.listBtn} ${s.ideasBtn}`}
+          aria-current={panel === "ideas"}
+          onClick={() => setPanel("ideas")}
+          data-tour="ideas"
+        >
           <span>
             <Lightbulb size={16} strokeWidth={2.5} aria-hidden /> Brainstorm
           </span>
@@ -171,7 +199,7 @@ export function TodoApp() {
         </button>
         <h2 className={s.sideHead}>Lists</h2>
         {lists && (
-          <ul className={s.lists}>
+          <ul className={s.lists} data-tour="lists">
             {sorted.map((l) => {
               const c = count(l.tasks);
               return (
@@ -359,6 +387,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
         {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click twice to delete the whole list. */}
         <button
           className={s.bin}
+          data-tour="bin"
           data-armed={armed}
           {...binDrop("bin")}
           onClick={() => (armed ? update(list.id, () => null) : setArmed(true))}
@@ -439,6 +468,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
         <div>
           <form
             className={s.add}
+            data-tour="add"
             onSubmit={(e) => {
               e.preventDefault();
               const t = draft.trim();
@@ -463,7 +493,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
           </form>
 
           {list.tasks.length > 0 && (
-            <div className={s.boardBar}>
+            <div className={s.boardBar} data-tour="filters">
               <div className={s.seg} role="group" aria-label="Show">
                 {SHOWS.map(([k, name]) => (
                   <button key={k} aria-pressed={show === k} onClick={() => setShow(k)}>
@@ -485,7 +515,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
           )}
 
           {list.tasks.length ? (
-            <ul className={s.tasks}>
+            <ul className={s.tasks} data-tour="board">
               {board(list.tasks, show, sort, today, nowMin).map((t) => (
                 <TaskRow key={t.id} task={t} {...row} top />
               ))}

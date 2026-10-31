@@ -65,6 +65,7 @@ export function AiImport({
     <div className={s.import}>
       <button
         className={s.ghost}
+        data-tour="ai"
         onClick={() => {
           setInto(current ?? "new");
           setToday(todayISO());

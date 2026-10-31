@@ -70,7 +70,7 @@ export function Stickers({
     </div>
   );
   return (
-    <aside className={s.stickers} aria-label="Stickers">
+    <aside className={s.stickers} aria-label="Stickers" data-tour="stickers">
       <p>
         {selected ? <>Click one to apply it to “{selected}”. </> : null}Drag a task onto a sticker, or a sticker onto a task.
       </p>
