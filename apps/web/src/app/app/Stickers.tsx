@@ -17,6 +17,13 @@ const PRI: [string, string, (today: string) => Partial<Task>][] = [
   ["p2", "Medium", () => ({ pri: 2 })],
   ["p3", "Low", () => ({ pri: 3 })],
 ];
+const REP: [string, string, (today: string) => Partial<Task>][] = [
+  ["r-day", "Daily", () => ({ rep: "every day" })],
+  ["r-weekday", "Weekdays", () => ({ rep: "every weekday" })],
+  ["r-week", "Weekly", () => ({ rep: "every week" })],
+  ["r-month", "Monthly", () => ({ rep: "every month" })],
+  ["r-year", "Yearly", () => ({ rep: "every year" })],
+];
 const LONG: [string, string, (today: string) => Partial<Task>][] = [
   ...[15, 30, 60, 120, 240].map((m): [string, string, () => Partial<Task>] => [
     `est${m}`,
@@ -27,7 +34,7 @@ const LONG: [string, string, (today: string) => Partial<Task>][] = [
 
 // What a sticker does to a task; dates count from today.
 export const sticker = (key: string, today: string): Partial<Task> | null =>
-  [...WHEN, ...LONG, ...PRI].find(([k]) => k === key)?.[2](today) ?? null;
+  [...WHEN, ...LONG, ...PRI, ...REP].find(([k]) => k === key)?.[2](today) ?? null;
 
 // Sticky notes for when and how long: drop a task card on one, or open a task and click one.
 export function Stickers({
@@ -70,6 +77,7 @@ export function Stickers({
       {group("When", WHEN, "when")}
       {group("How long", LONG, "long")}
       {group("Priority", PRI, "pri")}
+      {group("Repeat", REP, "rep")}
     </aside>
   );
 }

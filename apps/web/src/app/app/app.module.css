@@ -1019,6 +1019,10 @@
   top: 1rem;
   display: grid;
   gap: 1.1rem;
+  /* Taller than the window once every group is in: it scrolls on its own, so all stay reachable. */
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 0.25rem 0.5rem 0.5rem 0.25rem;
 }
 .stickers > p {
   font-size: 0.78rem;
@@ -1689,4 +1693,8 @@
 }
 .chips .chip[data-pri="3"] {
   background: var(--peri);
+}
+
+.stick[data-kind="rep"] {
+  background: var(--lime);
 }

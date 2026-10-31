@@ -5,7 +5,7 @@ import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@/lib/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, fmtMinutes, todayISO } from "@/lib/tasks";
+import { type List, type Task, fmtMinutes, tick, todayISO } from "@/lib/tasks";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -115,7 +115,7 @@ export function CalendarView({
           role="checkbox"
           aria-checked={it.task.done}
           aria-label={it.task.title}
-          onClick={() => move(it, { done: !it.task.done })}
+          onClick={() => update?.(it.list.id, (l) => ({ ...l, tasks: tick(l.tasks, it.task.id, today) }))}
         >
           {it.task.done && <Check size={12} strokeWidth={3.5} />}
         </button>

@@ -30,6 +30,7 @@ import {
   todayISO,
   uid,
   takeTasks,
+  tick,
   unnest,
 } from "@/lib/tasks";
 import s from "./app.module.css";
@@ -579,7 +580,7 @@ function TaskRow({
           role="checkbox"
           aria-checked={task.done}
           aria-label={task.title}
-          onClick={() => edit((t) => ({ ...t, done: !t.done }))}
+          onClick={() => setTasks((ts) => tick(ts, task.id, today))}
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
@@ -588,6 +589,16 @@ function TaskRow({
         </button>
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
+          {task.rep ? (
+            <button
+              className={s.chip}
+              onClick={() => edit((t) => ({ ...t, rep: undefined }))}
+              aria-label={`Stop repeating ${task.rep}`}
+              title="Stop repeating"
+            >
+              🔁 {task.rep.replace(/^every /, "")}
+            </button>
+          ) : null}
           {task.pri ? (
             <button
               className={s.chip}
