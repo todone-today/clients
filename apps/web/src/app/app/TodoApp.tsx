@@ -149,9 +149,14 @@ export function TodoApp() {
       }
     });
   }, [userId, orgId]);
+  // Changes from other devices and teammates show up on focus, and every 20s while the tab is visible.
   useEffect(() => {
+    const timer = setInterval(() => document.visibilityState === "visible" && refresh(), 20_000);
     addEventListener("focus", refresh);
-    return () => removeEventListener("focus", refresh);
+    return () => {
+      clearInterval(timer);
+      removeEventListener("focus", refresh);
+    };
   }, []);
 
   return (
