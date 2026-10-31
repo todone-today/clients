@@ -1671,3 +1671,22 @@
   color: var(--ink-2);
   text-transform: uppercase;
 }
+
+/* Priority: stickers and the chip on a note */
+.stick[data-kind="pri"] {
+  background: var(--pink);
+}
+.chips .chip[data-pri] {
+  font-weight: 800;
+  color: var(--black);
+  border-color: var(--black);
+}
+.chips .chip[data-pri="1"] {
+  background: var(--hot);
+}
+.chips .chip[data-pri="2"] {
+  background: var(--orange);
+}
+.chips .chip[data-pri="3"] {
+  background: var(--peri);
+}

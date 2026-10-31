@@ -12,6 +12,11 @@ const WHEN: [string, string, (today: string) => Partial<Task>][] = [
   ["month", "Next month", (d) => ({ due: shiftMonths(d, 1) })],
   ["year", "Next year", (d) => ({ due: shiftMonths(d, 12) })],
 ];
+const PRI: [string, string, (today: string) => Partial<Task>][] = [
+  ["p1", "High", () => ({ pri: 1 })],
+  ["p2", "Medium", () => ({ pri: 2 })],
+  ["p3", "Low", () => ({ pri: 3 })],
+];
 const LONG: [string, string, (today: string) => Partial<Task>][] = [
   ...[15, 30, 60, 120, 240].map((m): [string, string, () => Partial<Task>] => [
     `est${m}`,
@@ -22,7 +27,7 @@ const LONG: [string, string, (today: string) => Partial<Task>][] = [
 
 // What a sticker does to a task; dates count from today.
 export const sticker = (key: string, today: string): Partial<Task> | null =>
-  [...WHEN, ...LONG].find(([k]) => k === key)?.[2](today) ?? null;
+  [...WHEN, ...LONG, ...PRI].find(([k]) => k === key)?.[2](today) ?? null;
 
 // Sticky notes for when and how long: drop a task card on one, or open a task and click one.
 export function Stickers({
@@ -64,6 +69,7 @@ export function Stickers({
       </p>
       {group("When", WHEN, "when")}
       {group("How long", LONG, "long")}
+      {group("Priority", PRI, "pri")}
     </aside>
   );
 }

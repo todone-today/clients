@@ -54,6 +54,7 @@ const noteColors = (tasks: Task[]) =>
       .sort()
       .map((id, i) => [id, NOTES[i % NOTES.length]]),
   );
+const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
 const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
 const count = (ts: Task[]) => {
@@ -258,7 +259,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
   const [selected, setSelected] = useState<string | null>(null); // the task whose editor is open
-  const [show, setShow] = useState<Show>("all");
+  const [show, setShow] = useState<Show>("open");
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   const [binned, setBinned] = useState<{ before: Task[]; text: string } | null>(null);
@@ -460,7 +461,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
             </button>
           </form>
 
-          {list.tasks.length > 1 && (
+          {list.tasks.length > 0 && (
             <div className={s.boardBar}>
               <div className={s.seg} role="group" aria-label="Show">
                 {SHOWS.map(([k, name]) => (
@@ -587,6 +588,17 @@ function TaskRow({
         </button>
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
+          {task.pri ? (
+            <button
+              className={s.chip}
+              data-pri={task.pri}
+              onClick={() => edit((t) => ({ ...t, pri: undefined }))}
+              aria-label={`Remove priority ${PRI_NAME[task.pri]}`}
+              title="Remove priority"
+            >
+              {PRI_NAME[task.pri]}
+            </button>
+          ) : null}
           {task.est ? (
             <button
               className={s.chip}

@@ -22,3 +22,8 @@ test("sorts by due date, estimate or name, undated last", () => {
   assert.equal(names(board(ts, "all", "name", "2026-10-31")), "abcde");
   assert.equal(board(ts, "all", "mine", "2026-10-31"), ts);
 });
+
+test("sorts by priority, none last", () => {
+  const xs = parse("- [ ] low 🔽\n- [ ] none\n- [ ] high ⏫\n- [ ] mid 🔼\n");
+  assert.equal(board(xs, "all", "pri", "2026-10-31").map((t) => t.title).join(" "), "high mid low none");
+});

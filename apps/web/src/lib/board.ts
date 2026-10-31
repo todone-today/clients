@@ -2,7 +2,7 @@ import { type Task, lateBy } from "./tasks.ts";
 
 // Filtering and sorting the board. A note counts for a filter if it or one of its steps does.
 export type Show = "all" | "open" | "done" | "today" | "late" | "undated";
-export type Sort = "mine" | "due" | "est" | "name";
+export type Sort = "mine" | "due" | "est" | "pri" | "name";
 export const SHOWS: [Show, string][] = [
   ["all", "All"],
   ["open", "Open"],
@@ -15,6 +15,7 @@ export const SORTS: [Sort, string][] = [
   ["mine", "My order"],
   ["due", "Due date"],
   ["est", "How long"],
+  ["pri", "Priority"],
   ["name", "A–Z"],
 ];
 export function board(tasks: Task[], show: Show, sort: Sort, today: string, nowMin = 0): Task[] {
@@ -32,6 +33,7 @@ export function board(tasks: Task[], show: Show, sort: Sort, today: string, nowM
     mine: null,
     due: (a, b) => (a.due ?? last).localeCompare(b.due ?? last) || (a.at ?? "").localeCompare(b.at ?? ""),
     est: (a, b) => (a.est ?? Infinity) - (b.est ?? Infinity),
+    pri: (a, b) => (a.pri ?? 4) - (b.pri ?? 4),
     name: (a, b) => a.title.localeCompare(b.title),
   };
   return by[sort] ? [...shown].sort(by[sort]!) : shown;
