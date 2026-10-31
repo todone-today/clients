@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download } from "lucide-react";
+import { Download, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toCSV } from "@/lib/export";
 import { forget } from "@/lib/store";
@@ -54,6 +54,16 @@ export function Account() {
           {user.name ? `${user.name} · ` : ""}
           {user.email}
         </p>
+        <button
+          className={s.ghost}
+          onClick={async () => {
+            await authClient.signOut();
+            forget();
+            router.replace("/login");
+          }}
+        >
+          <LogOut size={16} strokeWidth={2.5} aria-hidden /> Sign out
+        </button>
       </div>
 
       <section className={s.integration}>

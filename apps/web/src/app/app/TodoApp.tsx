@@ -14,7 +14,6 @@ import {
   Check,
   CircleUserRound,
   Clock,
-  LogOut,
   Plus,
   Timer,
   Trash2,
@@ -24,11 +23,12 @@ import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
-import { forget, mapTask, moveToList, refresh, reload, reorder, showSaved, useLists } from "@/lib/store";
+import { mapTask, moveToList, refresh, reload, reorder, showSaved, useLists } from "@/lib/store";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
+import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
 import { Tour } from "./Tour";
 import { startOnboarding } from "./actions";
@@ -228,17 +228,6 @@ export function TodoApp() {
         >
           <HelpCircle size={16} strokeWidth={2.5} />
         </button>
-        <button
-          className={s.ghost}
-          onClick={async () => {
-            await authClient.signOut();
-            forget();
-            router.replace("/login");
-          }}
-        >
-          <LogOut size={16} strokeWidth={2.5} aria-hidden />
-          <span className={s.long}>Sign out</span>
-        </button>
       </header>
 
       {/* On a phone the sidebar is a drawer, opened from the header. */}
@@ -298,6 +287,7 @@ export function TodoApp() {
               open(id);
             }}
           />
+          <Feedback />
         </div>
       </aside>
 

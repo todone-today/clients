@@ -2187,3 +2187,27 @@
   padding: 0.15rem 0;
   font-weight: 600;
 }
+
+/* Feedback dialog */
+.feedback {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+.feedback textarea {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+  resize: vertical;
+}
+.feedback textarea:focus-visible {
+  outline: none;
+  border-color: var(--lime);
+}
+
+.listHead > .ghost {
+  justify-self: start;
+}
