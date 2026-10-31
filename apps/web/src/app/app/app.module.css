@@ -2150,3 +2150,8 @@
 .edEnd .edDelete {
   margin-right: auto; /* Delete on the left, Done on the right */
 }
+
+.idea[data-picked] {
+  outline: 3px dashed var(--ink);
+  outline-offset: 3px;
+}

@@ -116,7 +116,7 @@ export function TodoApp() {
       p.kind === "idea" || (p.kind === "task" && p.listId !== listId) || (p.kind === "list" && p.id !== listId),
     where: (p, _, at) => (p.kind === "list" ? placeOn(at, "y", false) : "inside"),
     drop: (p, listId, at) => {
-      if (p.kind === "idea" && lists) ideaToTask(lists, p.id, listId, update);
+      if (p.kind === "idea" && lists) for (const id of p.ids) ideaToTask(lists, id, listId, update);
       else if (p.kind === "task") moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
       else if (p.kind === "list") {
         const ids = sorted.map((l) => l.id).filter((id) => id !== p.id);

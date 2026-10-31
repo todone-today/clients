@@ -35,14 +35,30 @@ export function Brainstorm({
   const ideas = board?.tasks ?? [];
   const [draft, setDraft] = useState("");
   const [binned, setBinned] = useState<{ before: Task[]; title: string } | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
+  const pick = (id: string) =>
+    setPicked((p) => {
+      const n = new Set(p);
+      if (!n.delete(id)) n.add(id);
+      return n;
+    });
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setPicked(new Set());
+    addEventListener("keydown", esc);
+    return () => removeEventListener("keydown", esc);
+  }, []);
   const setIdeas = (f: (ts: Task[]) => Task[]) => board && update(board.id, (l) => ({ ...l, tasks: f(l.tasks) }));
-  const remove = (id: string) => {
-    const idea = ideas.find((t) => t.id === id);
-    if (!idea) return;
-    setBinned({ before: ideas, title: idea.title });
-    setIdeas((ts) => ts.filter((t) => t.id !== id));
+  const remove = (ids: string[]) => {
+    const gone = ideas.filter((t) => ids.includes(t.id));
+    if (!gone.length) return;
+    setBinned({ before: ideas, title: gone.length > 1 ? `${gone.length} ideas` : `“${gone[0].title}”` });
+    setIdeas((ts) => ts.filter((t) => !ids.includes(t.id)));
+    setPicked(new Set());
   };
-  const binDrop = useDrop("ideas-bin", { accept: (p) => p.kind === "idea", drop: (p) => p.kind === "idea" && remove(p.id) });
+  const binDrop = useDrop("ideas-bin", {
+    accept: (p) => p.kind === "idea",
+    drop: (p) => p.kind === "idea" && remove(p.ids),
+  });
   useEffect(() => {
     if (!binned) return;
     const t = setTimeout(() => setBinned(null), 10_000);
@@ -61,7 +77,7 @@ export function Brainstorm({
       </div>
       {binned && (
         <div className={s.undo} role="status">
-          Deleted “{binned.title}”.
+          Deleted {binned.title}.
           <button
             className={s.ghost}
             onClick={() => {
@@ -70,6 +86,14 @@ export function Brainstorm({
             }}
           >
             Undo
+          </button>
+        </div>
+      )}
+      {picked.size > 0 && (
+        <div className={s.pickBar} role="status">
+          <b>{picked.size} selected.</b> Drag them onto a list or into the bin.
+          <button className={s.ghost} onClick={() => setPicked(new Set())}>
+            Clear <kbd>Esc</kbd>
           </button>
         </div>
       )}
@@ -111,7 +135,9 @@ export function Brainstorm({
               targets={targets}
               onRename={(title) => setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title })))}
               onMove={(listId) => ideaToTask(lists, idea.id, listId, update)}
-              onDelete={() => remove(idea.id)}
+              onDelete={() => remove([idea.id])}
+              picked={picked}
+              onPick={pick}
             />
           ))}
         </ul>
@@ -132,6 +158,8 @@ function Idea({
   onRename,
   onMove,
   onDelete,
+  picked,
+  onPick,
 }: {
   idea: Task;
   color: string;
@@ -139,13 +167,25 @@ function Idea({
   onRename: (title: string) => void;
   onMove: (listId: string) => void;
   onDelete: () => void;
+  picked: Set<string>;
+  onPick: (id: string) => void;
 }) {
+  // Dragging a selected idea carries the whole selection.
+  const ids = picked.has(idea.id) ? [...picked] : [idea.id];
   const [editing, setEditing] = useState(false);
   return (
     <li
       className={s.idea}
       style={{ "--fill": color } as React.CSSProperties}
-      {...draggable({ kind: "idea", id: idea.id }, idea.title)}
+      data-picked={picked.has(idea.id) || undefined}
+      {...draggable({ kind: "idea", id: idea.id, ids }, ids.length > 1 ? `${ids.length} ideas` : idea.title)}
+      // Ctrl/Cmd-click selects instead of anything else.
+      onClickCapture={(e) => {
+        if (!e.metaKey && !e.ctrlKey) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onPick(idea.id);
+      }}
     >
       {editing ? (
         <>

@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 // A task drag carries every selected task; `id` is the one under the pointer.
 export type Payload =
   | { kind: "task"; listId: string; id: string; ids: string[] }
-  | { kind: "idea"; id: string }
+  | { kind: "idea"; id: string; ids: string[] }
   | { kind: "sticker"; key: string }
   | { kind: "list"; id: string };
 export type At = { x: number; y: number; el: HTMLElement };
