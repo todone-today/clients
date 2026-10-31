@@ -49,8 +49,10 @@ function targetAt(x: number, y: number) {
   const el = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-drop]");
   if (!el || !current) return null;
   const [scope, arg] = el.dataset.drop!.split("|");
-  const t = targets.get(scope)?.current;
-  return t && t.accept(current, arg) ? { el, t, arg } : null;
+  const box = targets.get(scope);
+  const t = box?.current;
+  // `box` is stable for a target's lifetime; `t` is replaced on every render of its component.
+  return box && t && t.accept(current, arg) ? { el, t, arg, box } : null;
 }
 
 // Props for a draggable element. `label` is what the floating ghost shows.
@@ -62,7 +64,7 @@ export function draggable(payload: Payload, label: string) {
       const touch = e.pointerType === "touch";
       let ghost: HTMLDivElement | null = null;
       let over: HTMLElement | null = null;
-      let overT: Target | null = null;
+      let overT: { current: Target } | null = null;
       let timer = 0;
 
       const move = (x: number, y: number) => {
@@ -72,9 +74,9 @@ export function draggable(payload: Payload, label: string) {
         const hit = t?.el ?? null;
         if (hit !== over) {
           over?.removeAttribute("data-over");
-          if (overT && overT !== t?.t) overT.leave?.();
+          if (overT && overT !== t?.box) overT.current.leave?.();
         }
-        overT = t?.t ?? null;
+        overT = t?.box ?? null;
         hit?.setAttribute("data-over", t!.t.where?.(current!, t!.arg, { x, y, el: hit }) ?? "");
         over = hit;
       };
@@ -110,7 +112,7 @@ export function draggable(payload: Payload, label: string) {
       const finish = () => {
         clearTimeout(timer);
         over?.removeAttribute("data-over");
-        overT?.leave?.();
+        overT?.current.leave?.();
         ghost?.remove();
         document.body.classList.remove("is-dragging");
         current = null;
