@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
 
 const org = authClient.organization;
-export type Panel = "calendar" | "ideas" | "members" | "integrations" | null;
+export type Panel = "calendar" | "ideas" | "members" | "integrations" | "account" | null;
 
 // Personal lists or a team's; switching changes which lists the server returns.
 export function Workspaces({

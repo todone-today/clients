@@ -12,6 +12,7 @@ import {
   Lightbulb,
   Menu,
   Check,
+  CircleUserRound,
   Clock,
   LogOut,
   Plus,
@@ -24,6 +25,7 @@ import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { mapTask, moveToList, refresh, reload, reorder, useLists } from "@/lib/store";
+import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
@@ -160,7 +162,13 @@ export function TodoApp() {
         <button className={s.menu} onClick={() => setDrawer(true)} aria-label="Lists and workspace" aria-expanded={drawer}>
           <Menu size={18} strokeWidth={2.5} aria-hidden />
           <span>
-            {panel === "ideas" ? "Brainstorm" : panel === "integrations" ? "Integrations" : (list?.name ?? "Lists")}
+            {panel === "ideas"
+              ? "Brainstorm"
+              : panel === "integrations"
+                ? "Integrations"
+                : panel === "account"
+                  ? "Account"
+                  : (list?.name ?? "Lists")}
           </span>
         </button>
         <Link href="/" className={s.mark} aria-label="todone home">
@@ -179,8 +187,17 @@ export function TodoApp() {
           ))}
         </nav>
         <p className={s.local} role="status">
-          {error ? <span className={s.err}>{error}</span> : session?.user.email}
+          {error && <span className={s.err}>{error}</span>}
         </p>
+        <button
+          className={s.ghost}
+          aria-pressed={panel === "account"}
+          onClick={() => show("account")}
+          aria-label={`Account: ${session?.user.email ?? ""}`}
+          title={session?.user.email}
+        >
+          <CircleUserRound size={18} strokeWidth={2.5} aria-hidden />
+        </button>
         <ThemeToggle />
         <button
           className={s.ghost}
@@ -275,6 +292,8 @@ export function TodoApp() {
           <Members key={orgId} />
         ) : panel === "integrations" ? (
           <Integrations key={orgId} />
+        ) : panel === "account" ? (
+          <Account />
         ) : !lists ? null : list ? (
           <ListView key={list.id} list={list} lists={sorted} update={update} />
         ) : (
