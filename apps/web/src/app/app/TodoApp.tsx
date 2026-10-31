@@ -5,9 +5,10 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, HelpCircle, Lightbulb, Menu, Repeat, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, HelpCircle, Lightbulb, Menu, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
+import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { mapTask, moveToList, refresh, reload, reorder, useLists } from "@/lib/store";
@@ -35,6 +36,7 @@ import {
   takeTasks,
   tick,
   unnest,
+  waiting,
 } from "@/lib/tasks";
 import s from "./app.module.css";
 
@@ -61,8 +63,9 @@ const noteColors = (tasks: Task[]) =>
 const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
 const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
-const count = (ts: Task[]) => {
-  const all = ts.flatMap((t) => [t, ...t.sub]);
+// Repeats waiting for their day aren't counted until it comes.
+const count = (ts: Task[], today = todayISO()) => {
+  const all = ts.flatMap((t) => [t, ...t.sub]).filter((t) => !waiting(t, today));
   return { open: all.filter((t) => !t.done).length, done: all.filter((t) => t.done).length, all: all.length };
 };
 
@@ -260,7 +263,7 @@ export function TodoApp() {
         ) : panel === "integrations" ? (
           <Integrations key={orgId} />
         ) : !lists ? null : list ? (
-          <ListView key={list.id} list={list} update={update} />
+          <ListView key={list.id} list={list} lists={sorted} update={update} />
         ) : (
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
           <Brainstorm lists={lists} add={add} update={update} />
@@ -300,7 +303,7 @@ type Update = (id: string, f: (l: List) => List | null) => void;
 
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
-function ListView({ list, update }: { list: List; update: Update }) {
+function ListView({ list, lists, update }: { list: List; lists: { id: string; name: string }[]; update: Update }) {
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -396,6 +399,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
     onPick: pick,
     drop,
     colors,
+    lists,
   };
 
   return (
@@ -518,16 +522,15 @@ function ListView({ list, update }: { list: List; update: Update }) {
                   </button>
                 ))}
               </div>
-              <label className={s.sortBy}>
-                <span>Sort</span>
-                <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                  {SORTS.map(([k, name]) => (
-                    <option key={k} value={k}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className={s.sortBy}>
+                <span aria-hidden>Sort</span>
+                <Select
+                  label="Sort"
+                  value={sort}
+                  options={SORTS.map(([value, label]) => ({ value, label }))}
+                  onChange={(v) => setSort(v as Sort)}
+                />
+              </div>
             </div>
           )}
 
@@ -536,7 +539,16 @@ function ListView({ list, update }: { list: List; update: Update }) {
               {board(list.tasks, show, sort, today, nowMin).map((t) => (
                 <TaskRow key={t.id} task={t} {...row} top />
               ))}
-              {!board(list.tasks, show, sort, today, nowMin).length && (
+              {show === "open" && list.tasks.some((t) => waiting(t, today)) && (
+                <li className={s.noMatch}>
+                  {list.tasks.filter((t) => waiting(t, today)).length} repeating task
+                  {list.tasks.filter((t) => waiting(t, today)).length === 1 ? " comes" : "s come"} back on its day.{" "}
+                  <button className={s.link} onClick={() => setShow("all")}>
+                    Show
+                  </button>
+                </li>
+              )}
+              {!board(list.tasks, show, sort, today, nowMin).length && !list.tasks.some((t) => waiting(t, today)) && (
                 <li className={s.noMatch}>
                   No tasks here.{" "}
                   <button className={s.link} onClick={() => setShow("all")}>
@@ -581,6 +593,7 @@ function TaskRow({
   onPick,
   drop,
   colors,
+  lists,
   top = false,
 }: {
   listId: string;
@@ -594,6 +607,7 @@ function TaskRow({
   onPick: (id: string) => void;
   drop: (arg: string) => object;
   colors: Map<string, string>;
+  lists: { id: string; name: string }[];
   top?: boolean;
 }) {
   const open = selected === task.id;
@@ -601,7 +615,7 @@ function TaskRow({
   const late = lateBy(task, today, nowMin);
   // Dragging a selected task carries the whole selection.
   const ids = picked.has(task.id) ? [...picked] : [task.id];
-  const row = { listId, today, nowMin, setTasks, selected, onSelect, picked, onPick, drop, colors };
+  const row = { listId, today, nowMin, setTasks, selected, onSelect, picked, onPick, drop, colors, lists };
 
   return (
     <li
@@ -644,7 +658,7 @@ function TaskRow({
               aria-label={`Stop repeating ${task.rep}`}
               title="Stop repeating"
             >
-              <Repeat size={12} strokeWidth={3} aria-hidden /> {repeatLabel(task.rep)}
+              {repeatLabel(task.rep)}
             </button>
           ) : null}
           {task.pri ? (
@@ -684,7 +698,17 @@ function TaskRow({
         </span>
       </div>
 
-      {open && <Editor task={task} top={top} edit={edit} setTasks={setTasks} onClose={() => onSelect(null)} />}
+      {open && (
+        <Editor
+          task={task}
+          top={top}
+          edit={edit}
+          setTasks={setTasks}
+          onClose={() => onSelect(null)}
+          listId={listId}
+          lists={lists}
+        />
+      )}
 
       {task.sub.length > 0 && (
         <ul className={s.subs}>
@@ -704,9 +728,13 @@ function Editor({
   edit,
   setTasks,
   onClose,
+  listId,
+  lists,
 }: {
   task: Task;
   top: boolean;
+  listId: string;
+  lists: { id: string; name: string }[];
   edit: (f: (t: Task) => Task | null) => void;
   setTasks: (f: (ts: Task[]) => Task[]) => void;
   onClose: () => void;
@@ -821,10 +849,25 @@ function Editor({
       )}
       {estErr && <p className={s.err}>How long reads like 30m, 2h or 1h30m.</p>}
       <div className={s.edEnd}>
-        <button className={`${s.ghost} ${s.danger}`} onClick={() => edit(() => null)}>
-          <Trash2 size={16} strokeWidth={2.5} /> Delete{task.sub.length ? " with steps" : ""}
+        <button
+          className={s.edDelete}
+          onClick={() => edit(() => null)}
+          aria-label={`Delete ${task.title}${task.sub.length ? " and its steps" : ""}`}
+          title={task.sub.length ? "Delete with its steps" : "Delete"}
+        >
+          <Trash2 size={16} strokeWidth={2.5} aria-hidden />
         </button>
-        <span className={s.open}>Saves as you go</span>
+        {lists.length > 1 && (
+          <div className={s.edList}>
+            <span aria-hidden>List</span>
+            <Select
+              label="Move to list"
+              value={listId}
+              options={lists.map((l) => ({ value: l.id, label: l.name }))}
+              onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
+            />
+          </div>
+        )}
         <button className="btn" onClick={onClose}>
           Done
         </button>

@@ -1902,3 +1902,94 @@
     min-width: 0;
   }
 }
+
+/* An idea's text: plain until double-clicked */
+.ideaText {
+  min-height: 3.5rem;
+  font: 700 1rem/1.4 var(--sans);
+  color: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: grab;
+}
+.ideaText:focus-visible {
+  outline: 2px solid var(--black);
+}
+
+/* While dragging, the bin pins to the screen's top-right corner, so it's reachable however far you've scrolled. */
+:global(body.is-dragging) .bin {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 85;
+  background: var(--ground);
+}
+
+/* The open task's editor sits inside the note: no box of its own, fields like stickers, a dashed rule above. */
+.note .editor {
+  margin: 0.4rem 0 0.2rem;
+  padding: 0.85rem 0 0.2rem;
+  background: none;
+  border: 0;
+  border-top: 2px dashed var(--hair);
+}
+.note .edTitle {
+  font-size: 1.1rem;
+}
+.note .editor input:not(.edTitle) {
+  color: var(--black);
+  background: #fffdf8;
+  border: 2px solid var(--black);
+}
+.note .editor input:not(.edTitle):focus-visible {
+  box-shadow: 3px 3px 0 var(--black);
+}
+.note .editor label > span {
+  color: var(--black);
+  opacity: 0.75;
+}
+.note .edStep {
+  border-color: var(--black);
+  background: rgb(255 255 255 / 0.35);
+}
+.edEnd {
+  flex-wrap: wrap;
+}
+.edDelete {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--black);
+  border: 2px dashed var(--black);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.edDelete:hover,
+.edDelete:focus-visible {
+  color: var(--black);
+  background: var(--hot);
+  border-style: solid;
+}
+.edList {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 10rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.edList > div {
+  flex: 1;
+}
+.note .edList button {
+  color: var(--black);
+  background: #fffdf8;
+  border-color: var(--black);
+}
+.edEnd .btn {
+  margin-left: auto;
+}
