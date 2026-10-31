@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GripVertical, Trash2 } from "lucide-react";
-import { draggable } from "@/lib/drag";
+import { draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
 import { type List, type Task, uid } from "@/lib/tasks";
 import s from "./app.module.css";
@@ -20,6 +20,7 @@ export function ideaToTask(lists: List[], ideaId: string, listId: string, update
 }
 
 // A board for loose ideas. They live in the workspace's "ideas" list until one is turned into a task.
+// Cards drag onto a list (to become a task) or into the bin; double-click a card's text to edit it.
 export function Brainstorm({
   lists,
   add,
@@ -33,14 +34,45 @@ export function Brainstorm({
   const targets = lists.filter((l) => !l.kind);
   const ideas = board?.tasks ?? [];
   const [draft, setDraft] = useState("");
+  const [binned, setBinned] = useState<{ before: Task[]; title: string } | null>(null);
   const setIdeas = (f: (ts: Task[]) => Task[]) => board && update(board.id, (l) => ({ ...l, tasks: f(l.tasks) }));
+  const remove = (id: string) => {
+    const idea = ideas.find((t) => t.id === id);
+    if (!idea) return;
+    setBinned({ before: ideas, title: idea.title });
+    setIdeas((ts) => ts.filter((t) => t.id !== id));
+  };
+  const binDrop = useDrop("ideas-bin", { accept: (p) => p.kind === "idea", drop: (p) => p.kind === "idea" && remove(p.id) });
+  useEffect(() => {
+    if (!binned) return;
+    const t = setTimeout(() => setBinned(null), 10_000);
+    return () => clearTimeout(t);
+  }, [binned]);
 
   return (
     <>
       <div className={s.listHead}>
+        <div className={s.bin} {...binDrop("bin")} aria-label="Bin: drop an idea here to delete it">
+          <Trash2 size={28} strokeWidth={2.5} />
+          <span>Bin</span>
+        </div>
         <h1 className={`display ${s.title}`}>Brainstorm</h1>
         <p className={s.progress}>Dump ideas here, half-formed is fine. Drag a good one onto a list to make it a task.</p>
       </div>
+      {binned && (
+        <div className={s.undo} role="status">
+          Deleted “{binned.title}”.
+          <button
+            className={s.ghost}
+            onClick={() => {
+              setIdeas(() => binned.before);
+              setBinned(null);
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      )}
       <form
         className={s.add}
         onSubmit={(e) => {
@@ -72,55 +104,15 @@ export function Brainstorm({
       {ideas.length ? (
         <ul className={s.board}>
           {ideas.map((idea, i) => (
-            <li
+            <Idea
               key={idea.id}
-              className={s.idea}
-              style={{ "--fill": COLORS[i % COLORS.length] } as React.CSSProperties}
-              {...draggable({ kind: "idea", id: idea.id }, idea.title)}
-            >
-              <label className="sr-only" htmlFor={`idea-${idea.id}`}>
-                Idea
-              </label>
-              <textarea
-                id={`idea-${idea.id}`}
-                defaultValue={idea.title}
-                maxLength={500}
-                rows={3}
-                onBlur={(e) => {
-                  const v = e.target.value.trim();
-                  if (v && v !== idea.title) setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title: v })));
-                }}
-              />
-              <div className={s.ideaTools}>
-                <span className={s.grip} aria-hidden>
-                  <GripVertical size={14} strokeWidth={2.5} /> drag onto a list
-                </span>
-                {/* Keyboard path to the same move; shown when the card has focus. */}
-                <label className="sr-only" htmlFor={`to-${idea.id}`}>
-                  Make it a task in
-                </label>
-                <select
-                  id={`to-${idea.id}`}
-                  className={s.moveTo}
-                  value=""
-                  onChange={(e) => e.target.value && ideaToTask(lists, idea.id, e.target.value, update)}
-                >
-                  <option value="">Move to…</option>
-                  {targets.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  aria-label="Delete idea"
-                  onClick={() => setIdeas((ts) => ts.filter((t) => t.id !== idea.id))}
-                >
-                  <Trash2 size={16} strokeWidth={2.5} />
-                </button>
-              </div>
-            </li>
+              idea={idea}
+              color={COLORS[i % COLORS.length]}
+              targets={targets}
+              onRename={(title) => setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title })))}
+              onMove={(listId) => ideaToTask(lists, idea.id, listId, update)}
+              onDelete={() => remove(idea.id)}
+            />
           ))}
         </ul>
       ) : (
@@ -130,5 +122,94 @@ export function Brainstorm({
         </div>
       )}
     </>
+  );
+}
+
+function Idea({
+  idea,
+  color,
+  targets,
+  onRename,
+  onMove,
+  onDelete,
+}: {
+  idea: Task;
+  color: string;
+  targets: List[];
+  onRename: (title: string) => void;
+  onMove: (listId: string) => void;
+  onDelete: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <li
+      className={s.idea}
+      style={{ "--fill": color } as React.CSSProperties}
+      {...draggable({ kind: "idea", id: idea.id }, idea.title)}
+    >
+      {editing ? (
+        <>
+          <label className="sr-only" htmlFor={`idea-${idea.id}`}>
+            Idea
+          </label>
+          <textarea
+            id={`idea-${idea.id}`}
+            defaultValue={idea.title}
+            maxLength={500}
+            rows={3}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+              if (e.key === "Escape") {
+                e.currentTarget.value = idea.title;
+                setEditing(false);
+              }
+            }}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && v !== idea.title) onRename(v);
+              setEditing(false);
+            }}
+          />
+        </>
+      ) : (
+        // Double-click (or Enter when focused) to edit; a single press is free to start a drag.
+        <button
+          className={s.ideaText}
+          onDoubleClick={() => setEditing(true)}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === "F2") && setEditing(true)}
+          title="Double-click to edit"
+        >
+          {idea.title}
+        </button>
+      )}
+      <div className={s.ideaTools}>
+        <span className={s.grip} aria-hidden>
+          <GripVertical size={14} strokeWidth={2.5} /> drag onto a list or the bin
+        </span>
+        {/* Keyboard path to the same moves; shown when it's tabbed to. */}
+        <label className="sr-only" htmlFor={`to-${idea.id}`}>
+          Make it a task in, or delete
+        </label>
+        <select
+          id={`to-${idea.id}`}
+          className={s.moveTo}
+          value=""
+          onChange={(e) => (e.target.value === "bin" ? onDelete() : e.target.value && onMove(e.target.value))}
+        >
+          <option value="">Move to…</option>
+          {targets.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+          <option value="bin">Delete</option>
+        </select>
+      </div>
+    </li>
   );
 }
