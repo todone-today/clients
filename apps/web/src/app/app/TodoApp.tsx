@@ -5,7 +5,19 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, HelpCircle, Lightbulb, Menu, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import {
+  List as ListIcon,
+  CalendarDays,
+  HelpCircle,
+  Lightbulb,
+  Menu,
+  Check,
+  Clock,
+  LogOut,
+  Plus,
+  Timer,
+  Trash2,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
@@ -841,6 +853,19 @@ function Editor({
             }}
           />
         </label>
+        {lists.length > 1 && (
+          <div className={s.edField}>
+            <span aria-hidden>
+              <ListIcon size={14} strokeWidth={2.5} /> List
+            </span>
+            <Select
+              label="List"
+              value={listId}
+              options={lists.map((l) => ({ value: l.id, label: l.name }))}
+              onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
+            />
+          </div>
+        )}
       </div>
       {top ? (
         <form
@@ -872,25 +897,9 @@ function Editor({
       )}
       {estErr && <p className={s.err}>How long reads like 30m, 2h or 1h30m.</p>}
       <div className={s.edEnd}>
-        <button
-          className={s.edDelete}
-          onClick={() => edit(() => null)}
-          aria-label={`Delete ${task.title}${task.sub.length ? " and its steps" : ""}`}
-          title={task.sub.length ? "Delete with its steps" : "Delete"}
-        >
-          <Trash2 size={16} strokeWidth={2.5} aria-hidden />
+        <button className={s.edDelete} onClick={() => edit(() => null)}>
+          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete{task.sub.length ? " with steps" : ""}
         </button>
-        {lists.length > 1 && (
-          <div className={s.edList}>
-            <span aria-hidden>List</span>
-            <Select
-              label="Move to list"
-              value={listId}
-              options={lists.map((l) => ({ value: l.id, label: l.name }))}
-              onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
-            />
-          </div>
-        )}
         <button className="btn" onClick={onClose}>
           Done
         </button>

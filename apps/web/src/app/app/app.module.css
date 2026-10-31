@@ -2110,3 +2110,43 @@
 .note > .row[data-over="after"] {
   box-shadow: none;
 }
+
+/* Editor: Day, Time, How long and List as one row of fields; Delete and Done below. */
+.edFields {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+.edField {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.edField > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ink-2);
+}
+.note .edField > span {
+  color: var(--black);
+  opacity: 0.75;
+}
+.note .edField button {
+  min-height: 2.45rem;
+  color: var(--black);
+  background: #fffdf8;
+  border: 2px solid var(--black);
+}
+.edDelete {
+  display: inline-flex;
+  gap: 0.4rem;
+  width: auto;
+  height: auto;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.edEnd .edDelete {
+  margin-right: auto; /* Delete on the left, Done on the right */
+}
