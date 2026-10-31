@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarDays, Copy, RefreshCw } from "lucide-react";
+import { Bell, CalendarDays, Copy, RefreshCw } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { label, rangeOf } from "@/lib/calendar";
 import { GOOGLE_SCOPE } from "@/lib/integrations";
@@ -18,10 +18,11 @@ import {
   setNotion,
   syncNow,
 } from "./integration-actions";
+import { pushKey, subscribePush, testPush, unsubscribePush } from "./push-actions";
 import s from "./app.module.css";
 
 type State = Awaited<ReturnType<typeof getIntegrations>>;
-type Key = "google" | "notion" | "markdown" | "link" | "discord" | "apple" | "reminders" | "keep";
+type Key = "notify" | "google" | "notion" | "markdown" | "link" | "discord" | "apple" | "reminders" | "keep";
 type Act = (f: () => Promise<unknown>) => void;
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -66,6 +67,7 @@ export function Integrations() {
   };
 
   const items: { key: Key; name: string; on: boolean }[] = [
+    { key: "notify", name: "Notifications (this device)", on: false },
     { key: "google", name: "Google Calendar", on: st.google.connected },
     { key: "notion", name: "Notion", on: st.notion },
     { key: "markdown", name: "Obsidian & terminal (Markdown)", on: !!st.syncToken },
@@ -118,6 +120,7 @@ export function Integrations() {
       </label>
 
       <section className={s.integration}>
+        {key === "notify" && <Notify />}
         {key === "google" && <Google st={st} busy={busy} act={act} />}
         {key === "notion" && <Notion st={st} busy={busy} act={act} />}
         {key === "markdown" && <Markdown token={st.syncToken} manager={st.manager} act={act} />}
@@ -391,5 +394,82 @@ function SharedViews() {
         ))}
       </ul>
     </div>
+  );
+}
+
+// Push notifications on this device: a reminder shortly before a task's time, and each morning what's due.
+function Notify() {
+  const [state, setState] = useState<"loading" | "unsupported" | "off" | "on" | "blocked" | "unavailable">("loading");
+  const [msg, setMsg] = useState("");
+  const sub = async () => (await navigator.serviceWorker.getRegistration("/"))?.pushManager.getSubscription() ?? null;
+  useEffect(() => {
+    (async () => {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window))
+        return setState("unsupported");
+      if (!(await pushKey())) return setState("unavailable");
+      if (Notification.permission === "denied") return setState("blocked");
+      setState((await sub()) ? "on" : "off");
+    })();
+  }, []);
+
+  const turnOn = async () => {
+    setMsg("");
+    if ((await Notification.requestPermission()) !== "granted") return setState("blocked");
+    const key = await pushKey();
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    const s = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key! });
+    const err = await subscribePush(s.toJSON(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (err) return setMsg(err);
+    setState("on");
+    setMsg(await testPush());
+  };
+  const turnOff = async () => {
+    const s = await sub();
+    if (s) {
+      await unsubscribePush(s.endpoint);
+      await s.unsubscribe();
+    }
+    setState("off");
+    setMsg("");
+  };
+
+  return (
+    <>
+      <h2>Notifications</h2>
+      <p>
+        A nudge about 15 minutes before a task&apos;s time, and at 8 in the morning what&apos;s due today and what&apos;s
+        late. They arrive even when todone is closed. This is per device and just for you.
+      </p>
+      {state === "unsupported" && (
+        <p className={s.open}>
+          This browser can&apos;t receive push notifications. On an iPhone or iPad, add todone to your Home Screen (Share →
+          Add to Home Screen), open it from there, and turn them on.
+        </p>
+      )}
+      {state === "unavailable" && <p className={s.open}>This server isn&apos;t set up to send notifications yet.</p>}
+      {state === "blocked" && (
+        <p className={s.open}>
+          Notifications are blocked for this site. Allow them in the browser&apos;s site settings, then come back.
+        </p>
+      )}
+      {state === "off" && (
+        <button className="btn" onClick={turnOn}>
+          <Bell size={16} strokeWidth={2.5} /> Turn on for this device
+        </button>
+      )}
+      {state === "on" && (
+        <div className={s.tools}>
+          <span className={s.on}>On for this device</span>
+          <button className={s.ghost} onClick={async () => setMsg(await testPush())}>
+            Send a test
+          </button>
+          <button className={`${s.ghost} ${s.danger}`} onClick={turnOff}>
+            Turn off
+          </button>
+        </div>
+      )}
+      {msg && <p className={s.open}>{msg}</p>}
+    </>
   );
 }
