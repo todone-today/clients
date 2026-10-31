@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Copy, Sparkles, Upload, X } from "lucide-react";
+import { Select } from "@/components/Select";
 import { label } from "@/lib/calendar";
 import { type List, type Task, parse, todayISO } from "@/lib/tasks";
 import s from "./app.module.css";
@@ -126,17 +127,13 @@ export function AiImport({
           </li>
           <li>
             <div className={s.aiInto}>
-              <label htmlFor="ai-into">
-                <b>Put them in</b>
-              </label>
-              <select id="ai-into" value={target} onChange={(e) => setInto(e.target.value)}>
-                {lists.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-                <option value="new">A new list…</option>
-              </select>
+              <b aria-hidden>Put them in</b>
+              <Select
+                label="Put them in"
+                value={target}
+                options={[...lists.map((l) => ({ value: l.id, label: l.name })), { value: "new", label: "A new list…" }]}
+                onChange={setInto}
+              />
               {target === "new" && (
                 <input aria-label="New list name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
               )}

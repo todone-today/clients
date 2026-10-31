@@ -77,6 +77,7 @@ export function Select({
         ref={button}
         type="button"
         className={s.button}
+        role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`${label}: ${current?.label ?? placeholder ?? "none"}`}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CalendarDays, Copy, RefreshCw } from "lucide-react";
+import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
 import { label, rangeOf } from "@/lib/calendar";
 import { GOOGLE_SCOPE } from "@/lib/integrations";
@@ -101,23 +102,18 @@ export function Integrations() {
         {msg && <p className={s.open}>{msg}</p>}
       </div>
 
-      <label className={s.picker}>
-        <span>Service</span>
-        <select
+      <div className={s.picker}>
+        <span aria-hidden>Service</span>
+        <Select
+          label="Service"
           value={key}
-          onChange={(e) => {
-            setPick(e.target.value as Key);
+          options={items.map((i) => ({ value: i.key, label: `${i.on ? "● " : ""}${i.name}` }))}
+          onChange={(v) => {
+            setPick(v as Key);
             setMsg("");
           }}
-        >
-          {items.map((i) => (
-            <option key={i.key} value={i.key}>
-              {i.on ? "● " : ""}
-              {i.name}
-            </option>
-          ))}
-        </select>
-      </label>
+        />
+      </div>
 
       <section className={s.integration}>
         {key === "notify" && <Notify />}

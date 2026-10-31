@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Plug, Plus, Trash2, UserMinus, Users } from "lucide-react";
+import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
 
@@ -26,24 +27,18 @@ export function Workspaces({
 
   return (
     <div className={s.workspace}>
-      <label className={s.sideHead} htmlFor="workspace">
+      <span className={s.sideHead} aria-hidden>
         Workspace
-      </label>
-      <select
-        id="workspace"
+      </span>
+      <Select
+        label="Workspace"
         value={orgId ?? ""}
-        onChange={async (e) => {
+        options={[{ value: "", label: "Personal" }, ...(orgs ?? []).map((o) => ({ value: o.id, label: o.name }))]}
+        onChange={async (v) => {
           onSwitch();
-          await org.setActive({ organizationId: e.target.value || null });
+          await org.setActive({ organizationId: v || null });
         }}
-      >
-        <option value="">Personal</option>
-        {orgs?.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
+      />
       {orgId && (
         <button
           className={s.ghost}
@@ -135,33 +130,46 @@ export function Members() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="teammate@example.com"
           />
-          <label className="sr-only" htmlFor="invite-role">
-            Role
-          </label>
-          <select id="invite-role" value={role} onChange={(e) => setRole(e.target.value as "member" | "admin")}>
-            <option value="member">member</option>
-            <option value="admin">admin</option>
-          </select>
+          <Select
+            className={s.roleSelect}
+            label="Role"
+            value={role}
+            options={[
+              { value: "member", label: "Member" },
+              { value: "admin", label: "Admin" },
+            ]}
+            onChange={(v) => setRole(v as "member" | "admin")}
+          />
           <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
             Invite
           </button>
         </form>
       )}
 
-      <ul className={s.tasks}>
+      <ul className={s.people}>
         {o.members.map((m) => (
-          <li key={m.id} className={s.taskItem}>
-            <div className={s.row}>
-              <span className={s.open}>{m.role}</span>
-              <span className={s.taskTitle}>
-                {m.user.name} <span className={s.open}>{m.user.email}</span>
-              </span>
-              {m.id === me.id ? (
-                <button className={`${s.ghost} ${s.danger}`} onClick={() => run(org.leave({ organizationId: o.id }))}>
-                  <UserMinus size={16} strokeWidth={2.5} /> Leave
-                </button>
-              ) : (
-                manager &&
+          <li key={m.id} className={s.person}>
+            <span className={s.avatar} aria-hidden>
+              {(m.user.name || m.user.email).slice(0, 1).toUpperCase()}
+            </span>
+            <span className={s.who}>
+              <b>
+                {m.user.name}
+                {m.id === me.id ? " (you)" : ""}
+              </b>
+              <span>{m.user.email}</span>
+            </span>
+            <span className={s.roleTag} data-role={m.role}>
+              {m.role}
+            </span>
+            {m.id === me.id
+              ? // The only owner can't leave; they delete the team instead.
+                (m.role !== "owner" || o.members.filter((x) => x.role === "owner").length > 1) && (
+                  <button className={`${s.ghost} ${s.danger}`} onClick={() => run(org.leave({ organizationId: o.id }))}>
+                    <UserMinus size={16} strokeWidth={2.5} /> Leave
+                  </button>
+                )
+              : manager &&
                 m.role !== "owner" && (
                   <button
                     className={`${s.ghost} ${s.danger}`}
@@ -169,43 +177,38 @@ export function Members() {
                   >
                     <UserMinus size={16} strokeWidth={2.5} /> Remove
                   </button>
-                )
-              )}
-            </div>
+                )}
           </li>
         ))}
+        {manager &&
+          o.invitations
+            .filter((i) => i.status === "pending")
+            .map((i) => (
+              <li key={i.id} className={s.person} data-pending>
+                <span className={s.avatar} aria-hidden>
+                  {i.email.slice(0, 1).toUpperCase()}
+                </span>
+                <span className={s.who}>
+                  <b>{i.email}</b>
+                  <span>Invited, not joined yet. Send them the link.</span>
+                </span>
+                <span className={s.roleTag} data-role={i.role}>
+                  {i.role}
+                </span>
+                <span className={s.tools}>
+                  <button className={s.ghost} onClick={() => navigator.clipboard.writeText(link(i.id))}>
+                    <Copy size={16} strokeWidth={2.5} /> Copy link
+                  </button>
+                  <button
+                    className={`${s.ghost} ${s.danger}`}
+                    onClick={() => run(org.cancelInvitation({ invitationId: i.id }))}
+                  >
+                    Cancel
+                  </button>
+                </span>
+              </li>
+            ))}
       </ul>
-
-      {manager && o.invitations.some((i) => i.status === "pending") && (
-        <>
-          <h2 className={s.sideHead} style={{ marginTop: "2rem" }}>
-            Pending invites · send them the link
-          </h2>
-          <ul className={s.tasks}>
-            {o.invitations
-              .filter((i) => i.status === "pending")
-              .map((i) => (
-                <li key={i.id} className={s.taskItem}>
-                  <div className={s.row}>
-                    <span className={s.open}>{i.role}</span>
-                    <span className={s.taskTitle}>{i.email}</span>
-                    <span className={s.tools}>
-                      <button className={s.ghost} onClick={() => navigator.clipboard.writeText(link(i.id))}>
-                        <Copy size={16} strokeWidth={2.5} /> Copy link
-                      </button>
-                      <button
-                        className={`${s.ghost} ${s.danger}`}
-                        onClick={() => run(org.cancelInvitation({ invitationId: i.id }))}
-                      >
-                        <Trash2 size={16} strokeWidth={2.5} /> Cancel
-                      </button>
-                    </span>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </>
-      )}
 
       {me.role === "owner" && <DeleteTeam id={o.id} />}
     </>

@@ -1993,3 +1993,99 @@
 .edEnd .btn {
   margin-left: auto;
 }
+
+.roleSelect {
+  width: 7.5rem;
+}
+.add .roleSelect button {
+  height: 100%;
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.picker > div {
+  max-width: 30rem;
+}
+.picker button {
+  padding: 0.7rem 0.8rem;
+  font-size: 1rem;
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.aiInto > div {
+  min-width: 12rem;
+}
+
+.calLists {
+  width: 11rem;
+}
+.calLists button {
+  padding: 0.4rem 0.6rem;
+  border-color: var(--ink);
+}
+/* An open note (and its dropdowns) sits above its neighbours. */
+.note[data-open] {
+  position: relative;
+  z-index: 5;
+}
+
+/* Members and pending invites */
+.people {
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+}
+.person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--raise);
+  border: 2px solid var(--hair);
+}
+.person[data-pending] {
+  background: none;
+  border-style: dashed;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--peri);
+  border: 2px solid var(--black);
+}
+.person[data-pending] .avatar {
+  background: var(--butter);
+}
+.who {
+  display: grid;
+  flex: 1;
+  min-width: 10rem;
+}
+.who span {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.roleTag {
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.roleTag[data-role="member"] {
+  background: var(--raise);
+  color: var(--ink);
+  border-color: var(--hair);
+}
+.roleSelect {
+  width: 8.5rem;
+}
