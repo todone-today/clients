@@ -73,6 +73,7 @@ const noteColors = (tasks: Task[]) =>
       .map((id, i) => [id, NOTES[i % NOTES.length]]),
   );
 const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
+const phoneScreen = () => matchMedia("(max-width: 760px)").matches;
 const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
 // Repeats waiting for their day aren't counted until it comes.
@@ -681,9 +682,26 @@ function TaskRow({
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
-        <button className={s.taskTitle} onClick={() => onSelect(open ? null : task.id)} aria-expanded={open}>
-          {task.title}
-        </button>
+        {open ? (
+          // Open: the title itself is the name field. Enter or clicking away saves.
+          <input
+            className={`${s.taskTitle} ${s.titleField}`}
+            aria-label="Task name"
+            defaultValue={task.title}
+            autoFocus={!phoneScreen()}
+            maxLength={500}
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
+            }}
+          />
+        ) : (
+          <button className={s.taskTitle} onClick={() => onSelect(task.id)} aria-expanded={false}>
+            {task.title}
+          </button>
+        )}
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
           {task.rep ? (
@@ -792,21 +810,6 @@ function Editor({
         onClose();
       }}
     >
-      <label className="sr-only" htmlFor={`title-${task.id}`}>
-        Task name
-      </label>
-      <input
-        id={`title-${task.id}`}
-        className={s.edTitle}
-        defaultValue={task.title}
-        autoFocus={!phone}
-        maxLength={500}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-        onBlur={(e) => {
-          const v = e.target.value.trim();
-          if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
-        }}
-      />
       <div className={s.edFields}>
         <label>
           <span>

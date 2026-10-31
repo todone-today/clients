@@ -2155,3 +2155,20 @@
   outline: 3px dashed var(--ink);
   outline-offset: 3px;
 }
+
+/* An open task's title is its name field, in place. */
+.titleField {
+  width: 100%;
+  min-width: 0;
+  padding: 0.15rem 0.3rem;
+  margin-left: -0.3rem;
+  font: inherit;
+  color: inherit;
+  background: rgb(255 255 255 / 0.55);
+  border: 0;
+  border-bottom: 2.5px solid var(--black);
+}
+.titleField:focus-visible {
+  outline: none;
+  background: #fffdf8;
+}
