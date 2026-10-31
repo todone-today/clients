@@ -27,3 +27,10 @@ test("sorts by priority, none last", () => {
   const xs = parse("- [ ] low 🔽\n- [ ] none\n- [ ] high ⏫\n- [ ] mid 🔼\n");
   assert.equal(board(xs, "all", "pri", "2026-10-31").map((t) => t.title).join(" "), "high mid low none");
 });
+
+test("a repeating task waits for its day before showing as open", () => {
+  const xs = parse("- [x] Stretch 📅 2026-10-31\n- [ ] Stretch 🔁 every day 📅 2026-11-01\n- [ ] Plan 📅 2026-11-05\n");
+  assert.equal(board(xs, "open", "mine", "2026-10-31").map((t) => t.title).join(","), "Plan"); // tomorrow's repeat waits
+  assert.equal(board(xs, "open", "mine", "2026-11-01").map((t) => t.title).join(","), "Stretch,Plan");
+  assert.equal(board(xs, "all", "mine", "2026-10-31").length, 3);
+});
