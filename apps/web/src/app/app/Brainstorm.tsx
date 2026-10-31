@@ -52,7 +52,7 @@ export function Brainstorm({
   return (
     <>
       <div className={s.listHead}>
-        <div className={s.bin} {...binDrop("bin")} aria-label="Bin: drop an idea here to delete it">
+        <div className={s.bin} data-bin {...binDrop("bin")} aria-label="Bin: drop an idea here to delete it">
           <Trash2 size={28} strokeWidth={2.5} />
           <span>Bin</span>
         </div>

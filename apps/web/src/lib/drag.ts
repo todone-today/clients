@@ -85,6 +85,11 @@ export function draggable(payload: Payload, label: string) {
         ghost = Object.assign(document.createElement("div"), { className: "drag-ghost", textContent: label });
         document.body.append(ghost);
         document.body.classList.add("is-dragging");
+        // A bin scrolled out of view floats into the corner for this drag; one in view stays put.
+        for (const bin of document.querySelectorAll<HTMLElement>("[data-bin]")) {
+          const r = bin.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > innerHeight) bin.setAttribute("data-float", "");
+        }
         getSelection()?.removeAllRanges();
         move(x, y);
       };
@@ -115,6 +120,7 @@ export function draggable(payload: Payload, label: string) {
         overT?.current.leave?.();
         ghost?.remove();
         document.body.classList.remove("is-dragging");
+        document.querySelectorAll("[data-float]").forEach((b) => b.removeAttribute("data-float"));
         current = null;
         ghost = null;
         removeEventListener("pointermove", onMove);

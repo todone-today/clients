@@ -1917,8 +1917,8 @@
   outline: 2px solid var(--black);
 }
 
-/* While dragging, the bin pins to the screen's top-right corner, so it's reachable however far you've scrolled. */
-:global(body.is-dragging) .bin {
+/* While dragging with the bin scrolled out of view, it floats to the screen's top-right corner. */
+.bin[data-float] {
   position: fixed;
   top: 1rem;
   right: 1rem;

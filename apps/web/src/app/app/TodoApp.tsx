@@ -425,6 +425,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         <button
           className={s.bin}
           data-tour="bin"
+          data-bin
           data-armed={armed}
           {...binDrop("bin")}
           onClick={() => (armed ? update(list.id, () => null) : setArmed(true))}
