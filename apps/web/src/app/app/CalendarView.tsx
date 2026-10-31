@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Select } from "@/components/Select";
 import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@/lib/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
@@ -40,7 +41,10 @@ export function CalendarView({
   const [at, setAt] = useState(() => (/^\d{4}-\d{2}-\d{2}$/.test(start?.at ?? "") ? start!.at! : today));
   const [shared, setShared] = useState("");
 
-  const all: Item[] = lists.flatMap((list) => list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })));
+  // Which lists the calendar shows: all of them, or one.
+  const [only, setOnly] = useState("all");
+  const shown = only === "all" ? lists : lists.filter((l) => l.id === only);
+  const all: Item[] = shown.flatMap((list) => list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })));
   const byDay = new Map<string, Item[]>();
   for (const it of all) if (it.task.due) byDay.set(it.task.due, [...(byDay.get(it.task.due) ?? []), it]);
   for (const items of byDay.values()) items.sort((a, b) => (a.task.at ?? "").localeCompare(b.task.at ?? ""));
@@ -157,6 +161,15 @@ export function CalendarView({
               </button>
             ))}
           </div>
+        )}
+        {!locked && lists.length > 1 && (
+          <Select
+            className={s.calLists}
+            label="Show lists"
+            value={lists.some((l) => l.id === only) ? only : "all"}
+            options={[{ value: "all", label: "All lists" }, ...lists.map((l) => ({ value: l.id, label: l.name }))]}
+            onChange={setOnly}
+          />
         )}
         {share && (
           <button
