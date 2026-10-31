@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, HelpCircle, Lightbulb, Repeat, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CalendarDays, HelpCircle, Lightbulb, Menu, Repeat, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
@@ -75,6 +75,12 @@ export function TodoApp() {
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [touring, setTouring] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  // Anything that changes the view closes the phone drawer.
+  const show = (p: Panel) => {
+    setPanel(p);
+    setDrawer(false);
+  };
   // Dragged lists keep their order; lists never dragged come first, newest first.
   const sorted = useMemo(
     () =>
@@ -107,6 +113,7 @@ export function TodoApp() {
   const open = (id: string) => {
     setPicked(id);
     setPanel(null);
+    setDrawer(false);
   };
 
   useEffect(() => {
@@ -134,6 +141,12 @@ export function TodoApp() {
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
+        <button className={s.menu} onClick={() => setDrawer(true)} aria-label="Lists and workspace" aria-expanded={drawer}>
+          <Menu size={18} strokeWidth={2.5} aria-hidden />
+          <span>
+            {panel === "ideas" ? "Brainstorm" : panel === "integrations" ? "Integrations" : (list?.name ?? "Lists")}
+          </span>
+        </button>
         <Link href="/" className={s.mark} aria-label="todone home">
           <Logo size={26} />
         </Link>
@@ -172,15 +185,18 @@ export function TodoApp() {
             router.replace("/login");
           }}
         >
-          <LogOut size={16} strokeWidth={2.5} /> Sign out
+          <LogOut size={16} strokeWidth={2.5} aria-hidden />
+          <span className={s.long}>Sign out</span>
         </button>
       </header>
 
-      <aside className={s.side} aria-label="Lists">
+      {/* On a phone the sidebar is a drawer, opened from the header. */}
+      {drawer && <div className={s.backdrop} onClick={() => setDrawer(false)} aria-hidden />}
+      <aside className={s.side} aria-label="Lists" data-open={drawer}>
         <Workspaces
           orgId={orgId}
           panel={panel}
-          onPanel={setPanel}
+          onPanel={show}
           onSwitch={() => {
             setPicked(null);
             setPanel(null);
@@ -190,7 +206,7 @@ export function TodoApp() {
         <button
           className={`${s.listBtn} ${s.ideasBtn}`}
           aria-current={panel === "ideas"}
-          onClick={() => setPanel("ideas")}
+          onClick={() => show("ideas")}
           data-tour="ideas"
         >
           <span>
@@ -542,6 +558,7 @@ function ListView({ list, update }: { list: List; update: Update }) {
           )}
         </div>
         <Stickers
+          active={!!selected || picked.size > 0}
           selected={
             picked.size > 1 ? `${picked.size} tasks` : (findTask(list.tasks, [...picked][0] ?? selected)?.title ?? null)
           }
@@ -696,8 +713,15 @@ function Editor({
 }) {
   const [step, setStep] = useState("");
   const [estErr, setEstErr] = useState(false);
+  // On a phone, don't throw up the keyboard; bring the task to the top, clear of the sticker sheet.
+  const box = useRef<HTMLDivElement>(null);
+  const [phone] = useState(() => matchMedia("(max-width: 760px)").matches);
+  useEffect(() => {
+    if (phone) box.current?.closest("li")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [phone]);
   return (
     <div
+      ref={box}
       className={s.editor}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
@@ -712,7 +736,7 @@ function Editor({
         id={`title-${task.id}`}
         className={s.edTitle}
         defaultValue={task.title}
-        autoFocus
+        autoFocus={!phone}
         maxLength={500}
         onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
         onBlur={(e) => {

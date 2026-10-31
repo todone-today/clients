@@ -40,9 +40,12 @@ export const sticker = (key: string, today: string): Partial<Task> | null =>
 // Sticky notes for when and how long: drop a task card on one, or open a task and click one.
 export function Stickers({
   selected,
+  active,
   onApply,
 }: {
   selected: string | null;
+  // A task is open or selected: on a phone the stickers then rise as a sheet to tap.
+  active: boolean;
   onApply: (key: string, taskIds?: string[]) => void;
 }) {
   const drop = useDrop("stickers", {
@@ -71,9 +74,9 @@ export function Stickers({
     </div>
   );
   return (
-    <aside className={s.stickers} aria-label="Stickers" data-tour="stickers">
+    <aside className={s.stickers} aria-label="Stickers" data-tour="stickers" data-active={active}>
       <p>
-        {selected ? <>Click one to apply it to “{selected}”. </> : null}Drag a task onto a sticker, or a sticker onto a task.
+        {selected ? <>Tap or click one to apply it to “{selected}”. </> : null}Drag a task onto a sticker, or a sticker onto a task.
       </p>
       {group("When", WHEN, "when")}
       {group("How long", LONG, "long")}

@@ -396,7 +396,7 @@
 
 @media (max-width: 760px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .local {
     display: none;
@@ -1776,4 +1776,129 @@
 
 .chips .chip svg {
   vertical-align: -1px;
+}
+
+/* ---------- Phones ---------- */
+.menu,
+.backdrop {
+  display: none;
+}
+@media (max-width: 760px) {
+  /* Header: menu, logo, then the icons; the view tabs sit on their own row. */
+  .top {
+    padding: 0.6rem var(--gutter);
+  }
+  .menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 45vw;
+    padding: 0.4rem 0.55rem;
+    font-weight: 800;
+    border: 2px solid var(--ink);
+  }
+  .menu span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .top .mark {
+    display: none;
+  }
+
+  /* The sidebar becomes a drawer from the left. */
+  .side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 70;
+    width: min(85vw, 20rem);
+    padding: 1.25rem 1rem;
+    overflow-y: auto;
+    background: var(--ground);
+    border-right: var(--key);
+    border-bottom: 0;
+    transform: translateX(-105%);
+    transition: transform 0.25s var(--ease);
+  }
+  .side[data-open="true"] {
+    transform: none;
+    box-shadow: var(--lift);
+  }
+  .side .sideHead {
+    display: block;
+  }
+  .side .lists {
+    display: grid;
+    overflow: visible;
+  }
+  .side .sideTools {
+    flex-direction: column;
+  }
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  /* Stickers: out of the way until a task is open or selected, then a sheet along the bottom. */
+  .stickers {
+    display: none;
+  }
+  .stickers[data-active="true"] {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 55;
+    display: grid;
+    gap: 0.6rem;
+    max-height: 42dvh;
+    padding: 0.75rem var(--gutter) calc(0.75rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--ground);
+    border-top: var(--key);
+    box-shadow: 0 -6px 0 var(--shadow);
+  }
+  .main:has(.stickers[data-active="true"]) {
+    padding-bottom: 45dvh;
+  }
+
+  /* Wide rows scroll inside themselves instead of widening the page. */
+  .boardBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .boardBar .seg {
+    overflow-x: auto;
+  }
+  .boardBar .seg button {
+    flex: none;
+  }
+  .tg {
+    overflow-x: auto;
+  }
+  .tg > * {
+    min-width: 40rem;
+  }
+  .calBar h2 {
+    font-size: 1.5rem;
+  }
+
+  /* A long press drags a note; don't select its text or open the iOS callout instead. */
+  .row,
+  .stick,
+  .idea {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .listHead .progress {
+    margin-right: 7rem;
+  }
+  .stickers > * {
+    min-width: 0;
+  }
 }
