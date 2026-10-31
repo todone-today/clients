@@ -337,20 +337,36 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   // While sorted, the screen isn't your order, so edges nest too instead of reordering.
   const place = (arg: string, at: At) =>
     !isTop(arg) ? placeOn(at, "y", false) : sort === "mine" ? placeOn(at, "x") : ("inside" as const);
+  // While a note is dragged over another's left or right edge, an empty slot opens there and the
+  // neighbours shift aside; the slot is a drop target too, so the gap holds while the pointer is in it.
+  const [gap, setGap] = useState<{ target: string; place: "before" | "after"; ids: string[] } | null>(null);
   const drop = useDrop(`list-${list.id}`, {
     accept: (p, arg) =>
       p.kind === "sticker"
-        ? arg !== "unnest"
+        ? arg !== "unnest" && arg !== "gap"
         : p.kind === "task" &&
           p.listId === list.id &&
           !p.ids.includes(arg) &&
-          (arg === "unnest" ? p.ids.some((id) => !isTop(id)) : !!findTask(list.tasks, arg)),
-    where: (p, arg, at) => (p.kind === "task" && arg !== "unnest" ? place(arg, at) : "inside"),
+          (arg === "gap" ? !!gap : arg === "unnest" ? p.ids.some((id) => !isTop(id)) : !!findTask(list.tasks, arg)),
+    where: (p, arg, at) => {
+      if (p.kind !== "task" || arg === "unnest") return "inside";
+      if (arg === "gap") return "inside";
+      const where = place(arg, at);
+      const slot = isTop(arg) && where !== "inside" ? { target: arg, place: where, ids: p.ids } : null;
+      setGap((g) => (g?.target === slot?.target && g?.place === slot?.place ? g : slot));
+      return where;
+    },
+    leave: () => setGap(null),
     drop: (p, arg, at) => {
+      setGap(null);
       if (p.kind === "sticker") applySticker(p.key, picked.has(arg) ? [...picked] : [arg]);
       else if (p.kind === "task") {
         setTasks((ts) =>
-          arg === "unnest" ? p.ids.reduce((acc, id) => unnest(acc, id), ts) : moveTasks(ts, p.ids, arg, place(arg, at)),
+          arg === "gap" && gap
+            ? moveTasks(ts, p.ids, gap.target, gap.place)
+            : arg === "unnest"
+              ? p.ids.reduce((acc, id) => unnest(acc, id), ts)
+              : moveTasks(ts, p.ids, arg, place(arg, at)),
         );
         setPicked(new Set());
       }
@@ -536,9 +552,12 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
 
           {list.tasks.length ? (
             <ul className={s.tasks} data-tour="board">
-              {board(list.tasks, show, sort, today, nowMin).map((t) => (
-                <TaskRow key={t.id} task={t} {...row} top />
-              ))}
+              {board(list.tasks, show, sort, today, nowMin).flatMap((t) => {
+                const note = <TaskRow key={t.id} task={t} {...row} top dragged={!!gap?.ids.includes(t.id)} />;
+                if (gap?.target !== t.id) return [note];
+                const slot = <li key="gap" className={s.slot} {...drop("gap")} aria-hidden />;
+                return gap.place === "before" ? [slot, note] : [note, slot];
+              })}
               {show === "open" && list.tasks.some((t) => waiting(t, today)) && (
                 <li className={s.noMatch}>
                   {list.tasks.filter((t) => waiting(t, today)).length} repeating task
@@ -595,6 +614,7 @@ function TaskRow({
   colors,
   lists,
   top = false,
+  dragged = false,
 }: {
   listId: string;
   task: Task;
@@ -609,6 +629,7 @@ function TaskRow({
   colors: Map<string, string>;
   lists: { id: string; name: string }[];
   top?: boolean;
+  dragged?: boolean; // the note being moved, faded while its new slot is shown
 }) {
   const open = selected === task.id;
   const edit = (f: (t: Task) => Task | null) => setTasks((ts) => mapTask(ts, task.id, f));
@@ -621,6 +642,7 @@ function TaskRow({
     <li
       className={top ? s.note : s.taskItem}
       data-open={open || undefined}
+      data-dragged={dragged || undefined}
       style={top ? ({ "--fill": colors.get(task.id) } as React.CSSProperties) : undefined}
     >
       <div

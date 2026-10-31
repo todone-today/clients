@@ -2089,3 +2089,24 @@
 .roleSelect {
   width: 8.5rem;
 }
+
+/* The slot a dragged note will land in, and the note itself while it's on the move. */
+.slot {
+  min-height: 6rem;
+  border: 3px dashed var(--ink);
+  background: color-mix(in srgb, var(--lime) 30%, transparent);
+  animation: slot-open 0.18s var(--ease);
+}
+@keyframes slot-open {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+.note[data-dragged] {
+  opacity: 0.35;
+}
+.note > .row[data-over="before"],
+.note > .row[data-over="after"] {
+  box-shadow: none;
+}
