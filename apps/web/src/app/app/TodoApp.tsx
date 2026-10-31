@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, HelpCircle, Lightbulb, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
+import { CalendarDays, HelpCircle, Lightbulb, Repeat, Check, Clock, LogOut, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
@@ -29,6 +29,7 @@ import {
   moveTasks,
   parseMinutes,
   relDue,
+  repeatLabel,
   todayISO,
   uid,
   takeTasks,
@@ -626,7 +627,7 @@ function TaskRow({
               aria-label={`Stop repeating ${task.rep}`}
               title="Stop repeating"
             >
-              🔁 {task.rep.replace(/^every /, "")}
+              <Repeat size={12} strokeWidth={3} aria-hidden /> {repeatLabel(task.rep)}
             </button>
           ) : null}
           {task.pri ? (

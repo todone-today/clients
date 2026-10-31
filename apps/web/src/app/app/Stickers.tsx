@@ -20,6 +20,7 @@ const PRI: [string, string, (today: string) => Partial<Task>][] = [
 const REP: [string, string, (today: string) => Partial<Task>][] = [
   ["r-day", "Daily", () => ({ rep: "every day" })],
   ["r-weekday", "Weekdays", () => ({ rep: "every weekday" })],
+  ["r-weekend", "Weekends", () => ({ rep: "every weekend" })],
   ["r-week", "Weekly", () => ({ rep: "every week" })],
   ["r-month", "Monthly", () => ({ rep: "every month" })],
   ["r-year", "Yearly", () => ({ rep: "every year" })],

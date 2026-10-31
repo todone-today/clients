@@ -1773,3 +1773,7 @@
 .listBtn {
   gap: 0.6rem;
 }
+
+.chips .chip svg {
+  vertical-align: -1px;
+}
