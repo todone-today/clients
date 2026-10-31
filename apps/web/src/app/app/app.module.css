@@ -2172,3 +2172,18 @@
   outline: none;
   background: #fffdf8;
 }
+
+/* A task without a date or estimate doesn't reserve a line for chips; steps sit close together. */
+.chips:empty {
+  display: none;
+}
+.note .row {
+  row-gap: 0.35rem;
+}
+.note .subs .row {
+  padding: 0.2rem 0;
+}
+.note .subs .taskTitle {
+  padding: 0.15rem 0;
+  font-weight: 600;
+}
