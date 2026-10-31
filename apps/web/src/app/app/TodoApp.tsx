@@ -24,7 +24,7 @@ import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
-import { mapTask, moveToList, refresh, reload, reorder, useLists } from "@/lib/store";
+import { forget, mapTask, moveToList, refresh, reload, reorder, showSaved, useLists } from "@/lib/store";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -86,7 +86,7 @@ const count = (ts: Task[], today = todayISO()) => {
 
 export function TodoApp() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, error: offline, refetch } = authClient.useSession();
   const orgId = session?.session.activeOrganizationId ?? null;
   const userId = session?.user.id;
   const { lists, error, update, add } = useLists();
@@ -135,8 +135,20 @@ export function TodoApp() {
   };
 
   useEffect(() => {
-    if (!isPending && !userId) router.replace("/login?next=/app");
-  }, [isPending, userId, router]);
+    if (!isPending && !userId && !offline) router.replace("/login?next=/app");
+  }, [isPending, userId, offline, router]);
+  // The service worker keeps the app openable offline (and shows push notifications).
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") navigator.serviceWorker?.register("/sw.js").catch(() => {});
+  }, []);
+  // Opened without a connection: show the lists as last saved, and pick up properly once it's back.
+  useEffect(() => {
+    if (!offline || userId) return;
+    if (!navigator.onLine) showSaved();
+    const back = () => refetch();
+    addEventListener("online", back, { once: true });
+    return () => removeEventListener("online", back);
+  }, [offline, userId, refetch]);
   useEffect(() => {
     if (!userId) return;
     // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
@@ -220,6 +232,7 @@ export function TodoApp() {
           className={s.ghost}
           onClick={async () => {
             await authClient.signOut();
+            forget();
             router.replace("/login");
           }}
         >

@@ -6,6 +6,9 @@ import { type List, type Task } from "./tasks";
 
 // Lists from before accounts, kept in the browser; imported once into the personal workspace.
 const LOCAL = "todone:lists:v1";
+// The lists as the server last confirmed them, shown when the app opens offline. Cleared on sign-out.
+const SAVED = "todone:saved";
+const OFFLINE = "You're offline. Changes save when you're back.";
 
 // What the UI shows (server state plus edits still in flight), and the last state the server confirmed.
 let cache: List[] | null = null;
@@ -18,14 +21,38 @@ const emit = () => subs.forEach((f) => f());
 
 function show(next: List[]) {
   cache = next;
+  if (next === server)
+    try {
+      localStorage.setItem(SAVED, JSON.stringify(server));
+    } catch {}
   emit();
+}
+
+export function forget() {
+  try {
+    localStorage.removeItem(SAVED);
+  } catch {}
+}
+
+// Offline, a write waits for the connection and then runs; the tab has to stay open until it does.
+async function attempt(op: () => Promise<void>) {
+  for (;;) {
+    try {
+      return await op();
+    } catch (e) {
+      if (navigator.onLine) throw e;
+      error = OFFLINE;
+      emit();
+      await new Promise((r) => addEventListener("online", r, { once: true }));
+    }
+  }
 }
 
 // Writes run one at a time so each starts from the version the previous one produced.
 function enqueue(op: () => Promise<void>) {
   pending++;
   queue = queue
-    .then(op)
+    .then(() => attempt(op))
     .then(() => void (error = ""))
     .catch(async () => {
       error = "Couldn't save the last change; showing what is saved.";
@@ -46,18 +73,30 @@ export async function reload(personal: boolean) {
     server = await fetchLists();
     error = "";
   } catch {
-    error = "Couldn't load your lists.";
+    if (navigator.onLine) error = "Couldn't load your lists.";
+    else return showSaved();
   }
   show(server);
   if (personal) importLocal();
 }
 
+export function showSaved() {
+  try {
+    server = JSON.parse(localStorage.getItem(SAVED) ?? "[]");
+  } catch {}
+  error = OFFLINE;
+  show(server);
+}
+
 // Picks up teammates' edits; skipped while our own writes are in flight.
-// ponytail: refreshes on focus only, no live push; add SSE/websockets if teams need to watch edits happen.
+// ponytail: polled (focus and every 20s), no live push; add SSE/websockets if teams need to watch edits happen.
 export async function refresh() {
   if (pending || !cache) return;
   const next = await fetchLists().catch(() => null);
-  if (next && !pending) show((server = next));
+  if (next && !pending) {
+    if (error === OFFLINE) error = "";
+    show((server = next));
+  }
 }
 
 function importLocal() {

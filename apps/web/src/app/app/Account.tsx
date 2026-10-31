@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toCSV } from "@/lib/export";
+import { forget } from "@/lib/store";
 import { exportData } from "./actions";
 import s from "./app.module.css";
 
@@ -92,6 +93,7 @@ export function Account() {
                     ? "For safety, sign out and in again, then delete."
                     : (r.error.message ?? "Couldn't delete your account."),
                 );
+              forget();
               router.replace("/");
             }}
           >
