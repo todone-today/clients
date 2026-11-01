@@ -474,3 +474,14 @@
     font-size: 1.7rem;
   }
 }
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+.foot .legal a {
+  margin-left: 0;
+  font-weight: 600;
+  color: var(--ink-2);
+}

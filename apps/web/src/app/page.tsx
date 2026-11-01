@@ -6,7 +6,7 @@ import { GithubMark } from "@/components/GithubMark";
 import { CopyCommand } from "@/components/CopyCommand";
 import { HeroDemo } from "@/components/HeroDemo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { INSTALL, REPO } from "@/lib/brand";
+import { INSTALL, LEGAL_DOCS, REPO } from "@/lib/brand";
 import s from "./page.module.css";
 
 const steps = [
@@ -279,6 +279,13 @@ export default function Home() {
       <footer className={s.foot}>
         <Logo size={22} />
         <span>Free and open source, GPL-3.0.</span>
+        <nav className={s.legal} aria-label="Policies">
+          {LEGAL_DOCS.map(([href, name]) => (
+            <Link key={href} href={href}>
+              {name}
+            </Link>
+          ))}
+        </nav>
         <a href={REPO}>GitHub</a>
       </footer>
     </>

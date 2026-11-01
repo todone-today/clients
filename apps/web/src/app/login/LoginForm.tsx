@@ -67,6 +67,15 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
             autoComplete={mode === "in" ? "current-password" : "new-password"}
           />
         </label>
+        {mode === "up" && (
+          <label className={s.agree}>
+            <input type="checkbox" name="agree" required />
+            <span>
+              I&apos;m 18 or older and agree to the <Link href="/terms">Terms</Link> and{" "}
+              <Link href="/privacy">Privacy Policy</Link>.
+            </span>
+          </label>
+        )}
         {err && (
           <p className={s.err} role="alert">
             {err}
@@ -86,6 +95,12 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
           >
             <GithubMark /> Continue with GitHub
           </button>
+        )}
+        {github && mode === "up" && (
+          <p className={s.fine}>
+            Signing up with GitHub means you&apos;re 18 or older and agree to the <Link href="/terms">Terms</Link> and{" "}
+            <Link href="/privacy">Privacy Policy</Link>.
+          </p>
         )}
         <button
           type="button"

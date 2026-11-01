@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, LogOut } from "lucide-react";
@@ -65,6 +66,30 @@ export function Account() {
           <LogOut size={16} strokeWidth={2.5} aria-hidden /> Sign out
         </button>
       </div>
+
+      <section className={s.integration}>
+        <h2>Your name</h2>
+        <form
+          className={s.add}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const name = String(new FormData(e.currentTarget).get("name")).trim();
+            if (!name || name === user.name) return;
+            setBusy("name");
+            const r = await authClient.updateUser({ name });
+            setBusy("");
+            setErr(r.error ? (r.error.message ?? "Couldn't save your name.") : "");
+          }}
+        >
+          <input name="name" aria-label="Your name" defaultValue={user.name} maxLength={80} required />
+          <button className="btn" disabled={!!busy}>
+            {busy === "name" ? "Saving…" : "Save"}
+          </button>
+        </form>
+        <p>
+          To change your email, write to us. <Link href="/privacy">Privacy Policy</Link> · <Link href="/terms">Terms</Link>
+        </p>
+      </section>
 
       <section className={s.integration}>
         <h2>Export everything</h2>

@@ -1,0 +1,73 @@
+.page {
+  min-height: 100svh;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 2rem;
+  padding: 1rem var(--gutter);
+  border-bottom: 2px solid var(--hair);
+}
+.mark {
+  text-decoration: none;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.nav a {
+  color: var(--ink-2);
+}
+.nav a:hover {
+  color: var(--ink);
+}
+.doc {
+  display: grid;
+  gap: 1rem;
+  max-width: 52rem;
+  padding: 2.5rem var(--gutter) 5rem;
+  line-height: 1.6;
+}
+.doc h1 {
+  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  line-height: 1;
+}
+.doc h2 {
+  margin-top: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.doc ul {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1.2rem;
+}
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.doc th,
+.doc td {
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+  border: 2px solid var(--hair);
+}
+.doc code {
+  font: 0.85em var(--mono);
+  overflow-wrap: anywhere;
+}
+.lead {
+  font-size: 1.1rem;
+  color: var(--ink-2);
+}
+.updated {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
