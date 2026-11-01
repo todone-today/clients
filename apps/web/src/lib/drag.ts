@@ -66,6 +66,15 @@ export function draggable(payload: Payload, label: string) {
       let over: HTMLElement | null = null;
       let overT: { current: Target } | null = null;
       let timer = 0;
+      // Bins where they sit on the page, so scrolling mid-drag can float or settle them again.
+      let bins: { el: HTMLElement; top: number; bottom: number }[] = [];
+      // A bin stays put while at least half of it is on screen; otherwise it floats into the corner.
+      const placeBins = () => {
+        for (const b of bins) {
+          const shown = Math.min(b.bottom - scrollY, innerHeight) - Math.max(b.top - scrollY, 0);
+          b.el.toggleAttribute("data-float", shown < (b.bottom - b.top) / 2);
+        }
+      };
 
       const move = (x: number, y: number) => {
         if (!ghost) return;
@@ -85,11 +94,12 @@ export function draggable(payload: Payload, label: string) {
         ghost = Object.assign(document.createElement("div"), { className: "drag-ghost", textContent: label });
         document.body.append(ghost);
         document.body.classList.add("is-dragging");
-        // A bin scrolled out of view floats into the corner for this drag; one in view stays put.
-        for (const bin of document.querySelectorAll<HTMLElement>("[data-bin]")) {
-          const r = bin.getBoundingClientRect();
-          if (r.bottom < 0 || r.top > innerHeight) bin.setAttribute("data-float", "");
-        }
+        bins = [...document.querySelectorAll<HTMLElement>("[data-bin]")].map((el) => {
+          const r = el.getBoundingClientRect();
+          return { el, top: r.top + scrollY, bottom: r.bottom + scrollY };
+        });
+        placeBins();
+        addEventListener("scroll", placeBins, { passive: true });
         getSelection()?.removeAllRanges();
         move(x, y);
       };
@@ -120,7 +130,8 @@ export function draggable(payload: Payload, label: string) {
         overT?.current.leave?.();
         ghost?.remove();
         document.body.classList.remove("is-dragging");
-        document.querySelectorAll("[data-float]").forEach((b) => b.removeAttribute("data-float"));
+        removeEventListener("scroll", placeBins);
+        bins.forEach((b) => b.el.removeAttribute("data-float"));
         current = null;
         ghost = null;
         removeEventListener("pointermove", onMove);

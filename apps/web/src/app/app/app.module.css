@@ -1917,7 +1917,7 @@
   outline: 2px solid var(--black);
 }
 
-/* While dragging with the bin scrolled out of view, it floats to the screen's top-right corner. */
+/* While dragging with the bin mostly scrolled out of view, it floats to the screen's top-right corner. */
 .bin[data-float] {
   position: fixed;
   top: 1rem;
