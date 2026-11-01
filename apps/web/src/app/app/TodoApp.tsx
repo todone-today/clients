@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   List as ListIcon,
   CalendarDays,
@@ -380,6 +380,28 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   // While a note is dragged over another's left or right edge, an empty slot opens there and the
   // neighbours shift aside; the slot is a drop target too, so the gap holds while the pointer is in it.
   const [gap, setGap] = useState<{ target: string; place: "before" | "after"; ids: string[] } | null>(null);
+  // Notes glide to their new spots when the slot opens or moves, or a drop lands, like icons on a home screen:
+  // after each render, any note whose place changed starts from where it was and slides over.
+  const boardRef = useRef<HTMLUListElement>(null);
+  const spots = useRef(new Map<string, { x: number; y: number }>());
+  useLayoutEffect(() => {
+    const ul = boardRef.current;
+    if (!ul) return;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const next = new Map<string, { x: number; y: number }>();
+    for (const el of ul.querySelectorAll<HTMLElement>(":scope > [data-id]")) {
+      // Offsets ignore transforms, so a note mid-slide still reports where it's heading.
+      const at = { x: el.offsetLeft, y: el.offsetTop };
+      const was = spots.current.get(el.dataset.id!);
+      next.set(el.dataset.id!, at);
+      if (was && !still && (was.x !== at.x || was.y !== at.y))
+        el.animate([{ transform: `translate(${was.x - at.x}px, ${was.y - at.y}px)` }, { transform: "none" }], {
+          duration: 220,
+          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        });
+    }
+    spots.current = next;
+  });
   const drop = useDrop(`list-${list.id}`, {
     accept: (p, arg) =>
       p.kind === "sticker"
@@ -592,7 +614,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           )}
 
           {list.tasks.length ? (
-            <ul className={s.tasks} data-tour="board">
+            <ul className={s.tasks} data-tour="board" ref={boardRef}>
               {board(list.tasks, show, sort, today, nowMin).flatMap((t) => {
                 const note = <TaskRow key={t.id} task={t} {...row} top dragged={!!gap?.ids.includes(t.id)} />;
                 if (gap?.target !== t.id) return [note];
@@ -682,6 +704,7 @@ function TaskRow({
   return (
     <li
       className={top ? s.note : s.taskItem}
+      data-id={top ? task.id : undefined}
       data-open={open || undefined}
       data-dragged={dragged || undefined}
       style={top ? ({ "--fill": colors.get(task.id) } as React.CSSProperties) : undefined}

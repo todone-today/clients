@@ -2100,8 +2100,32 @@
     transform: scale(0.9);
   }
 }
+/* While a task is dragged, the other notes jiggle like home-screen icons; the one being moved is a ghost. */
 .note[data-dragged] {
-  opacity: 0.35;
+  opacity: 0.3;
+  filter: grayscale(0.6);
+}
+:global(body[data-drag="task"]) .note:not([data-dragged]) {
+  animation: jiggle 0.32s ease-in-out infinite alternate;
+}
+:global(body[data-drag="task"]) .note:nth-child(3n + 1):not([data-dragged]) {
+  animation-delay: -0.11s;
+}
+:global(body[data-drag="task"]) .note:nth-child(3n + 2):not([data-dragged]) {
+  animation-delay: -0.22s;
+}
+@keyframes jiggle {
+  from {
+    rotate: -1.2deg;
+  }
+  to {
+    rotate: 1.2deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :global(body[data-drag="task"]) .note:not([data-dragged]) {
+    animation: none;
+  }
 }
 .note > .row[data-over="before"],
 .note > .row[data-over="after"] {

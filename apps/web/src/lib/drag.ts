@@ -94,6 +94,7 @@ export function draggable(payload: Payload, label: string) {
         ghost = Object.assign(document.createElement("div"), { className: "drag-ghost", textContent: label });
         document.body.append(ghost);
         document.body.classList.add("is-dragging");
+        document.body.dataset.drag = payload.kind;
         bins = [...document.querySelectorAll<HTMLElement>("[data-bin]")].map((el) => {
           const r = el.getBoundingClientRect();
           return { el, top: r.top + scrollY, bottom: r.bottom + scrollY };
@@ -130,6 +131,7 @@ export function draggable(payload: Payload, label: string) {
         overT?.current.leave?.();
         ghost?.remove();
         document.body.classList.remove("is-dragging");
+        delete document.body.dataset.drag;
         removeEventListener("scroll", placeBins);
         bins.forEach((b) => b.el.removeAttribute("data-float"));
         current = null;
