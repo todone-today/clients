@@ -291,7 +291,7 @@ export function TodoApp() {
         </div>
       </aside>
 
-      <main className={s.main} data-wide={panel === "calendar"}>
+      <main className={s.main}>
         {panel === "calendar" ? (
           lists && <CalendarView lists={lists.filter((l) => !l.kind)} update={update} onOpen={open} share={shareCalendar} />
         ) : panel === "ideas" ? (

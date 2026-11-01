@@ -168,7 +168,6 @@
 /* Main */
 .main {
   padding: 2rem var(--gutter) 5rem;
-  max-width: 76rem;
   width: 100%;
 }
 .listHead {
@@ -956,10 +955,6 @@
   gap: 1.25rem;
   padding: 1.25rem var(--gutter) 3rem;
 }
-.main[data-wide="true"] {
-  max-width: none;
-}
-
 /* Integrations picker */
 .picker {
   display: grid;
@@ -1050,7 +1045,9 @@
   border: 2px solid var(--black);
   box-shadow: var(--lift-sm);
   rotate: -1.5deg;
-  transition: rotate 0.15s var(--ease), transform 0.15s var(--ease);
+  transition:
+    rotate 0.15s var(--ease),
+    transform 0.15s var(--ease);
 }
 .stick:nth-child(even) {
   rotate: 1.2deg;
