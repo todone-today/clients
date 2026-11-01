@@ -5,19 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import {
-  List as ListIcon,
-  CalendarDays,
-  HelpCircle,
-  Lightbulb,
-  Menu,
-  Check,
-  CircleUserRound,
-  Clock,
-  Plus,
-  Timer,
-  Trash2,
-} from "lucide-react";
+import { List as ListIcon, CalendarDays, Lightbulb, Menu, Check, Clock, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
@@ -207,26 +195,23 @@ export function TodoApp() {
           {error && <span className={s.err}>{error}</span>}
         </p>
         <button
-          className={s.ghost}
-          aria-pressed={panel === "account"}
-          onClick={() => show("account")}
-          aria-label={`Account: ${session?.user.email ?? ""}`}
-          title={session?.user.email}
-        >
-          <CircleUserRound size={18} strokeWidth={2.5} aria-hidden />
-        </button>
-        <ThemeToggle />
-        <button
-          className={s.ghost}
+          className={s.topLink}
           onClick={() => {
             setPanel(null);
             setTouring(true);
           }}
-          aria-label="Take the tour"
-          title="Take the tour"
           data-tour="tour"
         >
-          <HelpCircle size={16} strokeWidth={2.5} />
+          Tour
+        </button>
+        <ThemeToggle />
+        <button
+          className={s.topLink}
+          aria-pressed={panel === "account"}
+          onClick={() => show("account")}
+          title={session?.user.email}
+        >
+          Account
         </button>
       </header>
 
