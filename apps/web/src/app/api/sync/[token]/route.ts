@@ -1,6 +1,6 @@
 import { workspaceLists } from "@/lib/access";
 import { db } from "@/lib/db";
-import { serialize } from "@/lib/tasks";
+import { serialize } from "@todone/sdk/tasks";
 
 // Two-way Markdown sync for Obsidian and other editors: every list in the workspace, as Markdown.
 export async function GET(_: Request, ctx: RouteContext<"/api/sync/[token]">) {

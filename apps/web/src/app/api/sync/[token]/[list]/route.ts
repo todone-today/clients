@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { type Task, keepIds, parse, serialize, validName, validTasks } from "@/lib/tasks";
+import { type Task, keepIds, parse, serialize, validName, validTasks } from "@todone/sdk/tasks";
 
 type Row = { id: string; tasks: Task[]; version: number };
 

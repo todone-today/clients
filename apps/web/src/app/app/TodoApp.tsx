@@ -39,7 +39,7 @@ import {
   tick,
   unnest,
   waiting,
-} from "@/lib/tasks";
+} from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.

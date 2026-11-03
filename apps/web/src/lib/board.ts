@@ -1,4 +1,4 @@
-import { type Task, lateBy, waiting } from "./tasks.ts";
+import { type Task, lateBy, waiting } from "@todone/sdk/tasks";
 
 // Filtering and sorting the board. A note counts for a filter if it or one of its steps does.
 export type Show = "all" | "open" | "done" | "today" | "late" | "undated";

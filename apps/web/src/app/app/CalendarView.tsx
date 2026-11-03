@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Select } from "@/components/Select";
-import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@/lib/calendar";
+import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@todone/sdk/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, fmtMinutes, tick, todayISO } from "@/lib/tasks";
+import { type List, type Task, fmtMinutes, tick, todayISO } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";

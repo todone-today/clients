@@ -13,6 +13,7 @@
     "test": "node --test src/lib/*.test.ts"
   },
   "dependencies": {
+    "@todone/sdk": "file:../../../sdk",
     "better-auth": "^1.7.14",
     "lucide-react": "^1.65.0",
     "next": "16.4.3",

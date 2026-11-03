@@ -1,8 +1,8 @@
 "use client";
 
-import { addDays, shiftMonths } from "@/lib/calendar";
+import { addDays, shiftMonths } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
-import type { Task } from "@/lib/tasks";
+import type { Task } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 const WHEN: [string, string, (today: string) => Partial<Task>][] = [

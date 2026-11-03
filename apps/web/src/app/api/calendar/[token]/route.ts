@@ -1,6 +1,6 @@
 import { workspaceLists } from "@/lib/access";
 import { db } from "@/lib/db";
-import { toICS } from "@/lib/integrations";
+import { toICS } from "@todone/sdk/integrations";
 
 // A secret-URL calendar feed: subscribe from Google Calendar, Apple Calendar or Outlook.
 export async function GET(req: Request, ctx: RouteContext<"/api/calendar/[token]">) {

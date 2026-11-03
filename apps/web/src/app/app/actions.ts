@@ -5,10 +5,10 @@ import { after } from "next/server";
 import { MINE, who } from "@/lib/access";
 import { db } from "@/lib/db";
 import { demoLists } from "@/lib/demo";
-import type { Export } from "@/lib/export";
+import type { Export } from "@todone/sdk/export";
 import { notifyDiscord } from "@/lib/notify";
 import { autoSync } from "@/lib/sync-all";
-import { type List, type Task, validName, validTasks } from "@/lib/tasks";
+import { type List, type Task, validName, validTasks } from "@todone/sdk/tasks";
 
 type Row = {
   id: string;

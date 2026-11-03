@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Bell, CalendarDays, Copy, RefreshCw } from "lucide-react";
 import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
-import { label, rangeOf } from "@/lib/calendar";
-import { GOOGLE_SCOPE } from "@/lib/integrations";
+import { label, rangeOf } from "@todone/sdk/calendar";
+import { GOOGLE_SCOPE } from "@todone/sdk/integrations";
 import { refresh } from "@/lib/store";
 import {
   connectGoogle,

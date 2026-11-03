@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { GripVertical, Trash2 } from "lucide-react";
 import { draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, uid } from "@/lib/tasks";
+import { type List, type Task, uid } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type Update = (id: string, f: (l: List) => List | null) => void;

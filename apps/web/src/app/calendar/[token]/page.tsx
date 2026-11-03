@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { workspaceLists } from "@/lib/access";
-import { type CalView, rangeOf } from "@/lib/calendar";
+import { type CalView, rangeOf } from "@todone/sdk/calendar";
 import { db } from "@/lib/db";
 import { CalendarView } from "../../app/CalendarView";
 import s from "../../app/app.module.css";

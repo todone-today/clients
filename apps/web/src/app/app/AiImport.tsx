@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import { Copy, Sparkles, Upload, X } from "lucide-react";
 import { Select } from "@/components/Select";
-import { label } from "@/lib/calendar";
-import { type List, type Task, parse, todayISO } from "@/lib/tasks";
+import { label } from "@todone/sdk/calendar";
+import { type List, type Task, parse, todayISO } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 // The prompt people paste into any AI chat; it answers in the list format todone reads.

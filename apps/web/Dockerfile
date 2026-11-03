@@ -1,8 +1,10 @@
 FROM node:24-alpine
-WORKDIR /app
-COPY package.json package-lock.json ./
+# Built from the repo root: the app depends on sdk/ (file:../../../sdk), so it keeps that layout.
+WORKDIR /repo/clients/apps/web
+COPY sdk /repo/sdk
+COPY clients/apps/web/package.json clients/apps/web/package-lock.json ./
 RUN npm ci
-COPY . .
+COPY clients/apps/web .
 RUN npm run build
 ENV NODE_ENV=production PORT=3000
 EXPOSE 3000

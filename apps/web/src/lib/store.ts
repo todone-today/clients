@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { createList, deleteList, fetchLists, reorderLists, saveList } from "@/app/app/actions";
-import { type List, type Task } from "./tasks";
+import { type List, type Task } from "@todone/sdk/tasks";
 
 // Lists from before accounts, kept in the browser; imported once into the personal workspace.
 const LOCAL = "todone:lists:v1";

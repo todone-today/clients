@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { toCSV } from "@/lib/export";
+import { toCSV } from "@todone/sdk/export";
 import { forget } from "@/lib/store";
 import { exportData } from "./actions";
 import s from "./app.module.css";

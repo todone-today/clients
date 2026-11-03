@@ -5,8 +5,8 @@ import { who } from "@/lib/access";
 import { hasGoogle } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { createCalendar } from "@/lib/google";
-import { type CalView, VIEWS } from "@/lib/calendar";
-import { validDiscordWebhook } from "@/lib/integrations";
+import { type CalView, VIEWS } from "@todone/sdk/calendar";
+import { validDiscordWebhook } from "@todone/sdk/integrations";
 import { notionId, prepareDatabase } from "@/lib/notion";
 import { syncWorkspace } from "@/lib/sync-all";
 
