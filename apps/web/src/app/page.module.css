@@ -72,9 +72,8 @@
 .h1 span {
   justify-self: start;
 }
-/* Let the columns shrink below their nowrap headline and install command. */
-.hero > *,
-.terminal > * {
+/* Let the columns shrink below their nowrap headline. */
+.hero > * {
   min-width: 0;
 }
 .lede {
@@ -243,87 +242,132 @@
   white-space: pre-wrap;
 }
 
-/* Terminal */
-.terminal {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 5rem);
+/* Works with */
+.works {
   padding: 6rem var(--gutter);
   background: var(--raise);
   border-block: 2px solid var(--hair);
 }
-.termCopy p {
-  max-width: 32rem;
-  margin: -1rem 0 2rem;
-  color: var(--ink-2);
+.tiles {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 1.75rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+.tiles li {
+  padding: 1.5rem;
+}
+.tiles li:nth-child(odd) {
+  transform: rotate(-1deg);
+}
+.tiles li:nth-child(even) {
+  transform: rotate(0.8deg);
+}
+.tiles h3 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+.tiles p {
+  font-weight: 600;
+}
+
+/* The hero's board: sticky notes as they look in the app. */
+.board {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.7rem;
+  align-content: start;
+  min-height: 8.5rem;
+  padding: 1.1rem;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift);
+  animation: slap 0.7s var(--ease) both;
+}
+.note:nth-child(odd) {
+  rotate: -1.6deg;
+}
+.note:nth-child(even) {
+  rotate: 1.2deg;
+  animation-delay: 0.1s;
+}
+.note b {
+  font-size: 1.15rem;
+}
+.note[data-done="true"] b {
+  text-decoration: line-through 2.5px;
+}
+.box {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.2rem;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+}
+.note[data-done="true"] .box {
+  background: var(--black);
+}
+.noteChips {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.noteChips i {
+  padding: 0.15rem 0.5rem;
+  font: normal 700 0.78rem var(--sans);
+  background: #fff8ef;
+  border: 2px solid var(--black);
 }
 .more {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  margin-top: 1.25rem;
+  gap: 0.4rem;
   font-weight: 700;
 }
-.shot {
-  border: var(--key);
-  box-shadow: 10px 10px 0 var(--lime);
-  transform: rotate(1.2deg);
-  background: #1b1c22;
-}
-.shot video {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 
-/* The terminal app's screens */
-.screens {
-  grid-column: 1 / -1;
-  list-style: none;
+.week {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.5rem;
-  margin-top: 3.5rem;
+  grid-template-columns: repeat(5, 3.2rem);
+  gap: 0.3rem;
 }
-.screens img {
+.week span {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-height: 5rem;
+  padding: 0.3rem;
+  font: 700 0.75rem var(--mono);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.week i {
   display: block;
-  width: 100%;
-  height: auto;
-  margin-bottom: 0.9rem;
-  background: #1b1c22;
-  border: var(--key);
-  box-shadow: var(--lift-sm);
+  background: var(--lime);
+  border: 2px solid var(--black);
 }
-.screens h3 {
-  font-size: 1.8rem;
-}
-.screens p {
-  margin-top: 0.3rem;
-  font-size: 0.95rem;
-  color: var(--ink-2);
-}
-.keys {
+.faces {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.8rem;
-  font-size: 0.85rem;
 }
-.keys kbd {
-  padding: 0.05rem 0.4rem;
-  font: 700 0.8rem var(--mono);
-  color: var(--ink);
-  border: 2px solid var(--hair);
-}
-@media (max-width: 900px) {
-  .screens {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 520px) {
-  .screens {
-    grid-template-columns: 1fr;
-  }
+.faces span {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-left: -0.6rem;
+  font-weight: 800;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+  border-radius: 50%;
 }
 
 /* Open source */
@@ -413,8 +457,7 @@
   .links {
     display: none;
   }
-  .hero,
-  .terminal {
+  .hero {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }

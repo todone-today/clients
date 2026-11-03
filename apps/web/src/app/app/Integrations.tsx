@@ -71,7 +71,7 @@ export function Integrations() {
     { key: "notify", name: "Notifications (this device)", on: false },
     { key: "google", name: "Google Calendar", on: st.google.connected },
     { key: "notion", name: "Notion", on: st.notion },
-    { key: "markdown", name: "Obsidian & terminal (Markdown)", on: !!st.syncToken },
+    { key: "markdown", name: "Obsidian & Markdown", on: !!st.syncToken },
     { key: "link", name: "Calendar link (Outlook, any app)", on: !!st.icsToken },
     { key: "apple", name: "Apple Calendar", on: !!st.icsToken },
     { key: "discord", name: "Discord", on: st.discord },
@@ -129,7 +129,8 @@ export function Integrations() {
           <>
             <h2>Apple Reminders</h2>
             <p>
-              Apple offers no web API for Reminders. The todone terminal app on a Mac syncs lists with Reminders, both ways.
+              Apple offers no web API for Reminders, so todone can&apos;t connect to it. Turn on notifications for reminders
+              on this device, or subscribe Apple Calendar to your calendar link.
             </p>
           </>
         )}
@@ -234,7 +235,7 @@ function Markdown({ token, manager, act }: { token: string | null; manager: bool
   const base = token && `${location.origin}/api/sync/${token}`;
   return (
     <>
-      <h2>Obsidian &amp; terminal Markdown</h2>
+      <h2>Obsidian &amp; Markdown</h2>
       <p>
         A private address that reads and writes this workspace&apos;s lists as Obsidian Tasks Markdown. Pull a list into your
         vault, edit it in Obsidian, push it back. Tasks keep their links to Notion and Google by title.

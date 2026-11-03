@@ -6,13 +6,6 @@ on:
   pull_request:
 
 jobs:
-  cli:
-    # test.sh drives the TUI through macOS `script` and BSD `date`.
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: sh test.sh
-
   web:
     runs-on: ubuntu-latest
     defaults:
@@ -33,7 +26,7 @@ jobs:
   deploy:
     # develop -> preview at todone-develop.vercel.app, main -> production.
     if: github.event_name == 'push'
-    needs: [cli, web]
+    needs: [web]
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

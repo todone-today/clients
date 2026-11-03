@@ -1,12 +1,9 @@
-import Image from "next/image";
 import { Logo } from "@/components/Logo";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { GithubMark } from "@/components/GithubMark";
-import { CopyCommand } from "@/components/CopyCommand";
-import { HeroDemo } from "@/components/HeroDemo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { INSTALL, LEGAL_DOCS, REPO } from "@/lib/brand";
+import { LEGAL_DOCS, REPO } from "@/lib/brand";
 import s from "./page.module.css";
 
 const steps = [
@@ -26,7 +23,7 @@ const steps = [
     n: 2,
     fill: "var(--peri)",
     title: "Break it down",
-    line: "Big task, small steps. Subtasks sit under their task and move with it.",
+    line: "Drop one note on another and it becomes a step. Steps tick off with their task.",
     proof: (
       <ul className={s.tree}>
         <li>Plan the trip</li>
@@ -40,10 +37,10 @@ const steps = [
     n: 3,
     fill: "var(--butter)",
     title: "Give it a day",
-    line: "Due dates the way you say them, and a month calendar of what lands when.",
+    line: "Drag a task onto a sticker, or a sticker onto a task: when, how long, how urgent, how often.",
     proof: (
       <div className={s.chips}>
-        {["today", "tom", "fri", "+3", "11-02"].map((c) => (
+        {["Today", "Tomorrow", "30 min", "High", "Weekly"].map((c) => (
           <span key={c}>{c}</span>
         ))}
       </div>
@@ -52,73 +49,46 @@ const steps = [
   {
     n: 4,
     fill: "var(--pink)",
-    title: "Sit with it",
-    line: "Start a focus timer on any task. The minutes you spend are written back onto it.",
+    title: "Plan the week",
+    line: "Day, week, month or year. Drag tasks onto a time and stretch them to fit.",
     proof: (
-      <div className={s.timer}>
-        <span className="display">24:59</span>
-        <span>
-          Write the launch post <b className={s.est}>2h</b>
-        </span>
+      <div className={s.week} aria-hidden>
+        {["Mon", "Tue", "Wed", "Thu", "Fri"].map((d, i) => (
+          <span key={d}>
+            {d}
+            {i % 2 === 0 && <i style={{ height: `${1.4 + i * 0.5}rem` }} />}
+          </span>
+        ))}
       </div>
     ),
   },
   {
     n: 5,
     fill: "var(--cyan)",
-    title: "Take it anywhere",
-    line: "Every list is a Markdown file. Open it in the terminal, in Obsidian, in any editor.",
-    proof: <pre className={s.md}>{"- [x] Book flights\n- [ ] Pack ⏱ 45m 📅 2026-11-02"}</pre>,
+    title: "Do it together",
+    line: "Make a team, invite people, and share lists, a calendar and reminders.",
+    proof: (
+      <div className={s.faces} aria-hidden>
+        {["A", "K", "M", "+"].map((c) => (
+          <span key={c}>{c}</span>
+        ))}
+      </div>
+    ),
   },
 ];
 
-// The terminal app's screens, from the real recording in demo/demo.tape.
-const screens = [
-  {
-    img: "home",
-    title: "Home",
-    line: "Every list with what's open and how far along it is.",
-    alt: "The terminal app's home screen: three lists with open counts and progress bars",
-    keys: [
-      ["n", "new list"],
-      ["s", "find"],
-      ["enter", "open"],
-    ],
-  },
-  {
-    img: "list",
-    title: "List",
-    line: "Subtasks, estimates against time spent, and when each is due.",
-    alt: "A list in the terminal app with subtasks, estimates and due days, one task late",
-    keys: [
-      ["x", "tick"],
-      ["a", "subtask"],
-      ["t", "due"],
-      ["h", "estimate"],
-    ],
-  },
-  {
-    img: "calendar",
-    title: "Calendar",
-    line: "A month of everything due, across every list.",
-    alt: "The terminal app's month calendar with dots on days that have tasks",
-    keys: [
-      ["h l", "day"],
-      ["j k", "week"],
-      ["[ ]", "month"],
-    ],
-  },
-  {
-    img: "focus",
-    title: "Focus",
-    line: "A timer on one task. The minutes are written back onto it.",
-    alt: "The terminal app's focus timer counting down on a task, 40 minutes of 2 hours spent",
-    keys: [
-      ["p", "start"],
-      ["space", "break"],
-      ["x", "done"],
-    ],
-  },
+// What it connects to, as it is in the app's Integrations panel.
+const works = [
+  ["Google Calendar", "Two-way: dated tasks become events, and moved events move the task.", "var(--lime)"],
+  ["Apple & Outlook calendars", "Subscribe to a private calendar feed of everything that's due.", "var(--butter)"],
+  ["Notion", "Sync a list with a Notion database, both ways.", "var(--peri)"],
+  [
+    "Obsidian & Markdown",
+    "Every list is Markdown with Obsidian Tasks fields. Pull it, edit it, push it back.",
+    "var(--cyan)",
+  ],
+  ["Discord", "Post to a channel when tasks are added or done.", "var(--pink)"],
+  ["Reminders", "Push notifications on this device when something's due, even with the app closed.", "var(--orange)"],
 ];
 
 export default function Home() {
@@ -130,7 +100,7 @@ export default function Home() {
         </Link>
         <nav className={s.links} aria-label="Sections">
           <a href="#how">How it works</a>
-          <a href="#terminal">Terminal</a>
+          <a href="#works">Integrations</a>
           <a href="#open">Open source</a>
         </nav>
         <div className={s.end}>
@@ -150,17 +120,38 @@ export default function Home() {
               <span>get done.</span>
             </h1>
             <p className={s.lede}>
-              A todo app for the browser and the terminal. Subtasks, due dates, estimates, a calendar and a focus timer, all
-              saved as plain Markdown you own.
+              Sticky notes you drag onto a day, a calendar you plan the week on, and teams to share it with. It works
+              offline, and it&apos;s open source.
             </p>
             <div className={s.actions}>
               <Link href="/app" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
                 Start a list <ArrowRight size={18} strokeWidth={2.5} />
               </Link>
-              <CopyCommand command={INSTALL} />
+              <a className={s.more} href={REPO}>
+                <GithubMark /> Source on GitHub
+              </a>
             </div>
           </div>
-          <HeroDemo />
+          <ul className={s.board} aria-label="A list in todone: four sticky notes">
+            {(
+              [
+                ["Write the launch post", "var(--butter)", ["Today", "2 hr"], false],
+                ["Plan the trip", "var(--pink)", ["Fri"], false],
+                ["Call the landlord", "var(--cyan)", ["High"], true],
+                ["Stretch", "var(--lime)", ["Daily", "15 min"], false],
+              ] as const
+            ).map(([title, fill, chips, done]) => (
+              <li key={title} className={s.note} style={{ "--fill": fill } as React.CSSProperties} data-done={done}>
+                <span className={s.box} aria-hidden />
+                <b>{title}</b>
+                <span className={s.noteChips}>
+                  {chips.map((c) => (
+                    <i key={c}>{c}</i>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section id="how" className={s.how}>
@@ -185,54 +176,17 @@ export default function Home() {
           </ol>
         </section>
 
-        <section id="terminal" className={s.terminal}>
-          <div className={s.termCopy}>
-            <h2 className={`display ${s.h2}`}>
-              Web first.
-              <br />
-              <span className={s.lime}>Terminal second.</span>
-            </h2>
-            <p>
-              The same lists in a full-screen terminal app: tabs, subtasks, due dates, estimates, a calendar and a focus
-              timer, all from the keyboard. Lists are Markdown files, one per folder, and sync with the web app.
-            </p>
-            <CopyCommand command={INSTALL} />
-            <a className={s.more} href={`${REPO}#readme`}>
-              Every key and command <ArrowUpRight size={16} strokeWidth={2.5} />
-            </a>
-          </div>
-          <div className={s.shot}>
-            <video
-              src="/demo/demo.mp4"
-              poster="/demo/list.png"
-              width={1280}
-              height={760}
-              autoPlay
-              muted
-              loop
-              playsInline
-              aria-label="The terminal app: a list with subtasks, due dates and estimates, a focus timer, the calendar and the home screen"
-            />
-          </div>
-          <ul className={s.screens}>
-            {screens.map((sc) => (
-              <li key={sc.img}>
-                <Image
-                  src={`/demo/${sc.img}.png`}
-                  alt={sc.alt}
-                  width={1280}
-                  height={760}
-                  sizes="(max-width: 760px) 100vw, 25vw"
-                />
-                <h3 className="display">{sc.title}</h3>
-                <p>{sc.line}</p>
-                <p className={s.keys}>
-                  {sc.keys.map(([k, what]) => (
-                    <span key={k}>
-                      <kbd>{k}</kbd> {what}
-                    </span>
-                  ))}
-                </p>
+        <section id="works" className={s.works}>
+          <h2 className={`display ${s.h2}`}>
+            Works with
+            <br />
+            <span className={s.lime}>what you use.</span>
+          </h2>
+          <ul className={s.tiles}>
+            {works.map(([name, line, fill]) => (
+              <li key={name} className="sticker" style={{ "--fill": fill } as React.CSSProperties}>
+                <h3 className="display">{name}</h3>
+                <p>{line}</p>
               </li>
             ))}
           </ul>
@@ -245,7 +199,7 @@ export default function Home() {
           <div className={s.deal}>
             <article className={`sticker ${s.term1}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
               <h3 className="display">Open source</h3>
-              <p>The web app and the terminal app, GPL-3.0. Read every line, change what you want.</p>
+              <p>Every part of todone is GPL-3.0. Read every line, change what you want.</p>
               <a href={REPO}>
                 <GithubMark /> Source on GitHub
               </a>

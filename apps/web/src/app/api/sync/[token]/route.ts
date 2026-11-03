@@ -2,7 +2,7 @@ import { workspaceLists } from "@/lib/access";
 import { db } from "@/lib/db";
 import { serialize } from "@/lib/tasks";
 
-// Two-way Markdown sync for Obsidian and the terminal app: every list in the workspace, as Markdown.
+// Two-way Markdown sync for Obsidian and other editors: every list in the workspace, as Markdown.
 export async function GET(_: Request, ctx: RouteContext<"/api/sync/[token]">) {
   const { rows } = await db.query<{ id: string }>(`select id from workspace where "syncToken" = $1`, [
     (await ctx.params).token,
