@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web
+        working-directory: clients/apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: clients/apps/web/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm test
@@ -49,8 +49,8 @@ jobs:
           # Bring the database schema up to date before the new code goes live.
           if grep -q '^DATABASE_URL=' .vercel/.env.$env.local; then
             # Vercel hands sensitive values back as "[SENSITIVE]"; migrating only needs the database, so placeholders do.
-            (cd web && npm ci && BETTER_AUTH_URL=http://localhost BETTER_AUTH_SECRET=migrate-only \
-              node --env-file=../.vercel/.env.$env.local scripts/migrate.mts)
+            (cd clients/apps/web && npm ci && BETTER_AUTH_URL=http://localhost BETTER_AUTH_SECRET=migrate-only \
+              node --env-file=../../../.vercel/.env.$env.local scripts/migrate.mts)
           else
             echo "::warning::DATABASE_URL is not set in Vercel ($env); skipping migrations"
           fi
