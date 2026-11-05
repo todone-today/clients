@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T13:16:59+00:00",
+  "title": "Design System: todone",
+  "extensions": {
+    "colorMeta": {
+      "black": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "tonalRamp": [
+          "oklch(15% 0.005 70)",
+          "oklch(27% 0.005 70)",
+          "oklch(39% 0.005 70)",
+          "oklch(51% 0.005 70)",
+          "oklch(63% 0.005 70)",
+          "oklch(75% 0.005 70)",
+          "oklch(86% 0.005 70)",
+          "oklch(95% 0.005 70)"
+        ]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Cream",
+        "tonalRamp": [
+          "oklch(15% 0.015 75)",
+          "oklch(27% 0.015 75)",
+          "oklch(39% 0.015 75)",
+          "oklch(51% 0.015 75)",
+          "oklch(63% 0.015 75)",
+          "oklch(75% 0.015 75)",
+          "oklch(86% 0.015 75)",
+          "oklch(95% 0.015 75)"
+        ]
+      },
+      "ink-2-night": {
+        "role": "neutral",
+        "displayName": "Warm Grey (Night)",
+        "tonalRamp": [
+          "oklch(15% 0.015 75)",
+          "oklch(27% 0.015 75)",
+          "oklch(39% 0.015 75)",
+          "oklch(51% 0.015 75)",
+          "oklch(63% 0.015 75)",
+          "oklch(75% 0.015 75)",
+          "oklch(86% 0.015 75)",
+          "oklch(95% 0.015 75)"
+        ]
+      },
+      "raise-night": {
+        "role": "neutral",
+        "displayName": "Raise (Night)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(86% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "hair-night": {
+        "role": "neutral",
+        "displayName": "Hairline (Night)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(86% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink-2-day": {
+        "role": "neutral",
+        "displayName": "Warm Grey (Day)",
+        "tonalRamp": [
+          "oklch(15% 0.012 60)",
+          "oklch(27% 0.012 60)",
+          "oklch(39% 0.012 60)",
+          "oklch(51% 0.012 60)",
+          "oklch(63% 0.012 60)",
+          "oklch(75% 0.012 60)",
+          "oklch(86% 0.012 60)",
+          "oklch(95% 0.012 60)"
+        ]
+      },
+      "raise-day": {
+        "role": "neutral",
+        "displayName": "Raise (Day)",
+        "tonalRamp": [
+          "oklch(15% 0.025 80)",
+          "oklch(27% 0.025 80)",
+          "oklch(39% 0.025 80)",
+          "oklch(51% 0.025 80)",
+          "oklch(63% 0.025 80)",
+          "oklch(75% 0.025 80)",
+          "oklch(86% 0.025 80)",
+          "oklch(95% 0.025 80)"
+        ]
+      },
+      "hair-day": {
+        "role": "neutral",
+        "displayName": "Hairline (Day)",
+        "tonalRamp": [
+          "oklch(15% 0.025 80)",
+          "oklch(27% 0.025 80)",
+          "oklch(39% 0.025 80)",
+          "oklch(51% 0.025 80)",
+          "oklch(63% 0.025 80)",
+          "oklch(75% 0.025 80)",
+          "oklch(86% 0.025 80)",
+          "oklch(95% 0.025 80)"
+        ]
+      },
+      "lime": {
+        "role": "primary",
+        "displayName": "Tick Lime",
+        "tonalRamp": [
+          "oklch(15% 0.19 118)",
+          "oklch(27% 0.19 118)",
+          "oklch(39% 0.19 118)",
+          "oklch(51% 0.19 118)",
+          "oklch(63% 0.19 118)",
+          "oklch(75% 0.19 118)",
+          "oklch(86% 0.19 118)",
+          "oklch(95% 0.19 118)"
+        ]
+      },
+      "butter": {
+        "role": "secondary",
+        "displayName": "Butter",
+        "tonalRamp": [
+          "oklch(15% 0.11 88)",
+          "oklch(27% 0.11 88)",
+          "oklch(39% 0.11 88)",
+          "oklch(51% 0.11 88)",
+          "oklch(63% 0.11 88)",
+          "oklch(75% 0.11 88)",
+          "oklch(86% 0.11 88)",
+          "oklch(95% 0.11 88)"
+        ]
+      },
+      "pink": {
+        "role": "secondary",
+        "displayName": "Pink",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(27% 0.1 350)",
+          "oklch(39% 0.1 350)",
+          "oklch(51% 0.1 350)",
+          "oklch(63% 0.1 350)",
+          "oklch(75% 0.1 350)",
+          "oklch(86% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "peri": {
+        "role": "secondary",
+        "displayName": "Periwinkle",
+        "tonalRamp": [
+          "oklch(15% 0.15 275)",
+          "oklch(27% 0.15 275)",
+          "oklch(39% 0.15 275)",
+          "oklch(51% 0.15 275)",
+          "oklch(63% 0.15 275)",
+          "oklch(75% 0.15 275)",
+          "oklch(86% 0.15 275)",
+          "oklch(95% 0.15 275)"
+        ]
+      },
+      "cyan": {
+        "role": "secondary",
+        "displayName": "Cyan",
+        "tonalRamp": [
+          "oklch(15% 0.13 200)",
+          "oklch(27% 0.13 200)",
+          "oklch(39% 0.13 200)",
+          "oklch(51% 0.13 200)",
+          "oklch(63% 0.13 200)",
+          "oklch(75% 0.13 200)",
+          "oklch(86% 0.13 200)",
+          "oklch(95% 0.13 200)"
+        ]
+      },
+      "hot": {
+        "role": "tertiary",
+        "displayName": "Hot Pink",
+        "tonalRamp": [
+          "oklch(15% 0.24 15)",
+          "oklch(27% 0.24 15)",
+          "oklch(39% 0.24 15)",
+          "oklch(51% 0.24 15)",
+          "oklch(63% 0.24 15)",
+          "oklch(75% 0.24 15)",
+          "oklch(86% 0.24 15)",
+          "oklch(95% 0.24 15)"
+        ]
+      },
+      "terminal": {
+        "role": "neutral",
+        "displayName": "Terminal",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(86% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "terminal-ink": {
+        "role": "neutral",
+        "displayName": "Terminal Ink",
+        "tonalRamp": [
+          "oklch(15% 0.015 75)",
+          "oklch(27% 0.015 75)",
+          "oklch(39% 0.015 75)",
+          "oklch(51% 0.015 75)",
+          "oklch(63% 0.015 75)",
+          "oklch(75% 0.015 75)",
+          "oklch(86% 0.015 75)",
+          "oklch(95% 0.015 75)"
+        ]
+      }
+    },
+    "themes": {
+      "note": "Night is :root. Day applies with data-theme=day, or when no theme is saved and the OS prefers light. Sticker fills and keylines do not change.",
+      "night": {
+        "--ground": "#0b0b0b",
+        "--ink": "#fff8ef",
+        "--ink-2": "#c9c2b8",
+        "--raise": "#171717",
+        "--hair": "#2c2c2c",
+        "--shadow": "#fff8ef"
+      },
+      "day": {
+        "--ground": "#fff8ef",
+        "--ink": "#0b0b0b",
+        "--ink-2": "#4a4540",
+        "--raise": "#f3eadb",
+        "--hair": "#ddd2c0",
+        "--shadow": "#0b0b0b"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headline, uppercase, stacked lines; close band runs to clamp(3.4rem, 10vw, 10rem)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings and the app list title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Step and card titles, wordmark, big tabular numerals."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running copy; 600 on sticker fills."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, nav links, toggle, chips."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Install command, terminal pane, Markdown proof only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "6px 6px 0 var(--shadow)",
+        "purpose": "Resting stickers. Resolves at :root; redefine when --shadow changes."
+      },
+      {
+        "name": "lift-sm",
+        "value": "3px 3px 0 var(--shadow)",
+        "purpose": "Buttons and active list item at rest. Resolves at :root; redefine when --shadow changes."
+      },
+      {
+        "name": "lift-hover",
+        "value": "5px 5px 0 var(--shadow)",
+        "purpose": "Button hover, paired with translate(-2px, -2px)."
+      },
+      {
+        "name": "pressed",
+        "value": "0 0 0 var(--shadow)",
+        "purpose": "Button active, paired with translate(3px, 3px)."
+      },
+      {
+        "name": "lift-peri",
+        "value": "6px 6px 0 var(--peri)",
+        "purpose": "Hero terminal pane."
+      },
+      {
+        "name": "lift-lime-lg",
+        "value": "10px 10px 0 var(--lime)",
+        "purpose": "CLI recording frame."
+      },
+      {
+        "name": "focus-lime",
+        "value": "4px 4px 0 var(--lime)",
+        "purpose": "Focused add-task field."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All state transitions."
+      },
+      {
+        "name": "press",
+        "value": "transform 0.18s, box-shadow 0.18s",
+        "purpose": "Button lift and press."
+      },
+      {
+        "name": "slap",
+        "value": "0.7s, from translateY(-14px) rotate(-7deg) scale(1.04)",
+        "purpose": "Hero stickers land once on load; second sticker delayed 0.12s."
+      },
+      {
+        "name": "wobble",
+        "value": "rotate(-6deg) scale(1.08), 0.25s",
+        "purpose": "Checkbox hover."
+      },
+      {
+        "name": "flash",
+        "value": "1.1s, from lime at 35% mix",
+        "purpose": "Changed Markdown line in the terminal pane."
+      },
+      {
+        "name": "progress",
+        "value": "transform 0.4s",
+        "purpose": "App progress bar fill."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "durations to 0.01ms",
+        "purpose": "prefers-reduced-motion: reduce disables all animation and transition."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "landing-stack",
+        "value": "1000px"
+      },
+      {
+        "name": "demo-straighten",
+        "value": "900px"
+      },
+      {
+        "name": "app-stack",
+        "value": "760px"
+      },
+      {
+        "name": "phone",
+        "value": "560px"
+      }
+    ],
+    "focus": {
+      "value": "outline: 3px solid var(--cyan); outline-offset: 3px",
+      "purpose": "Global focus-visible ring."
+    },
+    "keyline": {
+      "value": "2.5px solid var(--black)",
+      "purpose": "--key; every sticker, checkbox and sticker chip."
+    }
+  },
+  "components": [
+    {
+      "name": "Sticker Button",
+      "kind": "button",
+      "refersTo": "button-sticker",
+      "description": "Default action; fill set per instance via --fill, butter by default.",
+      "html": "<button class=\"ds-btn\">Star on GitHub</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.85em 1.4em; font: 700 1rem var(--sans, system-ui); background: var(--fill, #f8dc85); color: #0b0b0b; border: 2.5px solid #0b0b0b; border-radius: 0; box-shadow: 3px 3px 0 var(--shadow, #fff8ef); cursor: pointer; transition: transform 0.18s cubic-bezier(0.16,1,0.3,1), box-shadow 0.18s cubic-bezier(0.16,1,0.3,1); } .ds-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--shadow, #fff8ef); } .ds-btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--shadow, #fff8ef); } .ds-btn:focus-visible { outline: 3px solid #46e0ee; outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Sticker Button",
+      "kind": "button",
+      "refersTo": "button-sticker-primary",
+      "description": "The one primary action per view, lime fill.",
+      "html": "<button class=\"ds-btn-primary\">Open the app</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.85em 1.4em; font: 700 1rem var(--sans, system-ui); background: #d4f04a; color: #0b0b0b; border: 2.5px solid #0b0b0b; border-radius: 0; box-shadow: 3px 3px 0 var(--shadow, #fff8ef); cursor: pointer; transition: transform 0.18s cubic-bezier(0.16,1,0.3,1), box-shadow 0.18s cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--shadow, #fff8ef); } .ds-btn-primary:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--shadow, #fff8ef); } .ds-btn-primary:focus-visible { outline: 3px solid #46e0ee; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet app tool; danger variant in hot pink.",
+      "html": "<button class=\"ds-ghost\">Export</button> <button class=\"ds-ghost ds-danger\">Delete list</button>",
+      "css": ".ds-ghost { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.7rem; font: 700 0.875rem var(--sans, system-ui); color: var(--ink, #fff8ef); background: none; border: 2px solid var(--hair, #2c2c2c); border-radius: 0; cursor: pointer; transition: border-color 0.15s cubic-bezier(0.16,1,0.3,1); } .ds-ghost:hover { border-color: var(--ink, #fff8ef); } .ds-ghost:focus-visible { outline: 3px solid #46e0ee; outline-offset: 3px; } .ds-danger { color: #ff2e63; } .ds-danger:hover { border-color: #ff2e63; }"
+    },
+    {
+      "name": "Sticker Card",
+      "kind": "card",
+      "refersTo": "sticker",
+      "description": "Flat fill, black keyline, hard lift, slight tilt (landing only).",
+      "html": "<article class=\"ds-sticker\"><h3 class=\"ds-display\">Self-host it</h3><p>Your server, your Markdown files.</p></article>",
+      "css": ".ds-sticker { max-width: 20rem; padding: 1.75rem; background: var(--fill, #8fa2ff); color: #0b0b0b; border: 2.5px solid #0b0b0b; box-shadow: 6px 6px 0 var(--shadow, #fff8ef); transform: rotate(1.2deg); font: 600 1.0625rem/1.55 var(--sans, system-ui); } .ds-display { font: 900 2.6rem/0.86 var(--display, 'Arial Narrow', sans-serif); text-transform: uppercase; letter-spacing: -0.01em; margin: 0 0 0.75rem; }"
+    },
+    {
+      "name": "Add Task Field",
+      "kind": "input",
+      "refersTo": "input-add",
+      "description": "App capture field; lime border and lime hard shadow on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Add a task\">",
+      "css": ".ds-input { width: 100%; padding: 0.85rem 1rem; font: 600 1.0625rem var(--sans, system-ui); color: var(--ink, #fff8ef); background: var(--raise, #171717); border: 2.5px solid var(--ink, #fff8ef); border-radius: 0; } .ds-input:focus-visible { outline: none; border-color: #d4f04a; box-shadow: 4px 4px 0 #d4f04a; }"
+    },
+    {
+      "name": "Task Row",
+      "kind": "custom",
+      "refersTo": "list-item",
+      "description": "App row: keyline checkbox (lime when done, wobble on hover), title, due and late chips.",
+      "html": "<div class=\"ds-row\"><button class=\"ds-check\" role=\"checkbox\" aria-checked=\"true\" aria-label=\"Done\"></button><span class=\"ds-title\">Book flights</span><span class=\"ds-chips\"><span class=\"ds-due\">Nov 2</span><span class=\"ds-late\">late</span></span></div>",
+      "css": ".ds-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.85rem; padding: 0.6rem 0; font: 600 1.0625rem var(--sans, system-ui); color: var(--ink, #fff8ef); } .ds-check { width: 1.6rem; height: 1.6rem; background: var(--ground, #0b0b0b); border: 2.5px solid var(--ink, #fff8ef); border-radius: 0; cursor: pointer; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-check:hover { transform: rotate(-6deg) scale(1.08); } .ds-check:focus-visible { outline: 3px solid #46e0ee; outline-offset: 3px; } .ds-check[aria-checked=\"true\"] { background: #d4f04a; border-color: #0b0b0b; } .ds-check[aria-checked=\"true\"] + .ds-title { text-decoration: line-through 2px; color: var(--ink-2, #c9c2b8); } .ds-chips { display: flex; gap: 0.4rem; font: 700 0.78rem var(--sans, system-ui); font-variant-numeric: tabular-nums; } .ds-chips span { padding: 0.12rem 0.45rem; color: #0b0b0b; border: 2px solid #0b0b0b; } .ds-due { background: #f8dc85; } .ds-late { background: #ff2e63; }"
+    },
+    {
+      "name": "Terminal Pane",
+      "kind": "custom",
+      "refersTo": "terminal",
+      "description": "The same list as Markdown; dark in both themes, peri hard shadow.",
+      "html": "<div class=\"ds-term\"><div class=\"ds-bar\"><span class=\"ds-dots\"><i></i><i></i><i></i></span>groceries.md</div><pre class=\"ds-code\"><b class=\"ds-on\">- [x]</b> Book flights\n<b>- [ ]</b> Pack</pre></div>",
+      "css": ".ds-term { max-width: 34rem; background: #111111; color: #e8e2d8; border: 2.5px solid #0b0b0b; box-shadow: 6px 6px 0 #8fa2ff; transform: rotate(1.5deg); } .ds-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.9rem; font: 500 0.78rem var(--mono, ui-monospace, monospace); color: #9b958c; border-bottom: 2px solid #2a2a2a; } .ds-dots { display: inline-flex; gap: 0.35rem; } .ds-dots i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #3a3a3a; } .ds-code { margin: 0; padding: 0.9rem 1rem 1.1rem; font: 400 0.85rem/1.7 var(--mono, ui-monospace, monospace); } .ds-code b { color: #6b655c; } .ds-code b.ds-on { color: #d4f04a; }"
+    },
+    {
+      "name": "Day/Night Toggle",
+      "kind": "nav",
+      "refersTo": "theme-toggle",
+      "description": "Two text options split by a slash; active option ink with lime underline.",
+      "html": "<div class=\"ds-toggle\"><button class=\"ds-opt\" aria-pressed=\"false\">Day</button><span class=\"ds-sep\">/</span><button class=\"ds-opt\" aria-pressed=\"true\">Night</button></div>",
+      "css": ".ds-toggle { display: inline-flex; align-items: center; gap: 0.35rem; font: 700 0.875rem var(--sans, system-ui); } .ds-sep { color: var(--ink-2, #c9c2b8); font-weight: 400; } .ds-opt { font: inherit; color: var(--ink-2, #c9c2b8); background: none; border: 0; border-bottom: 3px solid transparent; padding: 0.25rem 0; cursor: pointer; } .ds-opt:hover { color: var(--ink, #fff8ef); } .ds-opt[aria-pressed=\"true\"] { color: var(--ink, #fff8ef); border-bottom-color: #d4f04a; } .ds-opt:focus-visible { outline: 3px solid #46e0ee; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sticker Stack",
+    "overview": "**Creative North Star: \"The Sticker Stack\"**\n\nA todo list is a stack of loud, physical stickers you slap down and tick off. Every object is a flat block of colour with a black keyline and a hard offset shadow, set slightly askew, sitting on a near-black ground. The world is user-pinned to two neobrutalist references (zagged.com and two7square.com); the hard shadows, keylines and tilt are its native materials, not decoration to be trimmed.\n\nNight is the default ground. Day swaps the ground to cream and the shadows to black; it applies when the visitor picks it on the Day/Night toggle, or when no choice is saved and the OS prefers light. Stickers keep their fills and black keylines in both themes. Display type is giant condensed uppercase; body type is a sturdy grotesk; anything that is literally a command or Markdown is mono, shown in a dark terminal pane, because the terminal is the same list seen a second time.\n\nThe landing page (Persuade) carries the loud version: tilted stickers, a slap-in entrance, a lime close band. The app (Operate) keeps the same materials but holds still: rows are untilted, colour marks state, and the only motion is the checkbox wobble and the progress fill.\n\nThe product name is a working name and will change. It is set only in `clients/apps/web/src/lib/brand.ts` and rendered as live display type; no surface may bake it into a raster, a CSS `content` string, or copy outside that constant.",
+    "keyCharacteristics": [
+      "Near-black ground, cream ink, whole-block accent fills.",
+      "2.5px black keyline on every sticker, chip and checkbox.",
+      "Hard offset shadows with zero blur, cream on Night and black on Day.",
+      "Small tilts (about -2deg to +1.5deg) on Persuade objects; none on Operate rows.",
+      "Square corners everywhere.",
+      "Condensed uppercase display at poster scale against a plain grotesk body."
+    ],
+    "rules": [
+      {
+        "name": "The Lime Means Done Rule",
+        "body": "Lime marks completion, the current list, and the primary action. Do not spend it on decoration that has no state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Day Highlighter Rule",
+        "body": "Lime text only works on Night. On Day the same emphasis becomes a lime marker block behind ink-coloured text, cloned across line breaks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hot Is Trouble Rule",
+        "body": "Hot pink appears only for delete, late, invalid and error.",
+        "section": "colors"
+      },
+      {
+        "name": "The All-Caps Display Rule",
+        "body": "Display type is always uppercase, 900, line-height 0.86, tracking -0.01em. Body and labels are never uppercase.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Is Literal Rule",
+        "body": "Mono is for text a user could paste into a terminal or find in their Markdown file, nothing else.",
+        "section": "typography"
+      },
+      {
+        "name": "The Overlap Rule",
+        "body": "Stickers may overlap each other (the hero terminal pane tucks under the demo card), but text never sits on top of another sticker's text.",
+        "section": "layout"
+      },
+      {
+        "name": "The Press-Down Rule",
+        "body": "Buttons rise slightly on hover and press flat into their shadow on click.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Lift Redefinition Rule",
+        "body": "`--lift` and `--lift-sm` resolve at `:root`. Any section that changes `--shadow` (such as the lime close band setting it to black) must redefine `--lift` and `--lift-sm` too, or its buttons keep the root shadow colour.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Sticker Rule",
+        "body": "If it has a keyline, it has square corners.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Still App Rule",
+        "body": "Tilt belongs to the landing page. In the app, rows, fields and panels stay straight; only a checkbox wobbles (-6deg) on hover.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do give every sticker, chip and checkbox a black keyline (2.5px on stickers) and square corners.",
+      "Do use hard offset shadows with zero blur, cream on Night and black on Day.",
+      "Do redefine `--lift` and `--lift-sm` wherever a section changes `--shadow`.",
+      "Do turn lime emphasis text into a lime marker block behind ink text on Day.",
+      "Do read the product name from `clients/apps/web/src/lib/brand.ts` and render it as live text.",
+      "Do keep text on sticker fills black, whatever the fill."
+    ],
+    "donts": [
+      "Don't round corners on stickers, buttons, chips, fields or panels.",
+      "Don't use blurred or ambient shadows, or gradients as depth.",
+      "Don't set lime text on the Day ground.",
+      "Don't tilt rows, fields or panels in the app.",
+      "Don't use hot pink for anything but delete, late, invalid and error.",
+      "Don't hardcode the product name in copy, CSS or images."
+    ]
+  }
+}
