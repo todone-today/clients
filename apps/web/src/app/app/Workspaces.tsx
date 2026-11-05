@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Plug, Plus, Trash2, UserMinus, Users } from "lucide-react";
+import { Copy, Plug, Plus, Settings, UserMinus } from "lucide-react";
 import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
@@ -58,7 +58,7 @@ export function Workspaces({
           aria-pressed={panel === "members"}
           onClick={() => onPanel(panel === "members" ? null : "members")}
         >
-          <Users size={16} strokeWidth={2.5} /> Members
+          <Settings size={16} strokeWidth={2.5} /> Team settings
         </button>
       )}
       <button
@@ -115,6 +115,7 @@ export function Members() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"member" | "admin">("member");
   const [msg, setMsg] = useState("");
+  const [renaming, setRenaming] = useState(false);
   if (!o || !me) return null;
   const manager = me.role === "owner" || me.role === "admin";
   const link = (id: string) => `${location.origin}/invite/${id}`;
@@ -128,128 +129,196 @@ export function Members() {
   return (
     <>
       <div className={s.listHead}>
-        <h1 className={`display ${s.title}`}>{o.name}</h1>
+        {/* Owners and admins rename the team by clicking its name; Enter or clicking away saves, Esc cancels. */}
+        {renaming ? (
+          <>
+            <label className="sr-only" htmlFor="team-name">
+              Team name
+            </label>
+            <input
+              id="team-name"
+              defaultValue={o.name}
+              autoFocus
+              maxLength={60}
+              className={`display ${s.title} ${s.titleEdit}`}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") {
+                  e.currentTarget.value = o.name;
+                  setRenaming(false);
+                }
+              }}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && v !== o.name) run(org.update({ organizationId: o.id, data: { name: v } }));
+                setRenaming(false);
+              }}
+            />
+          </>
+        ) : manager ? (
+          <h1 className={`display ${s.title}`}>
+            <button className={s.titleBtn} onClick={() => setRenaming(true)} title="Click to rename">
+              {o.name}
+            </button>
+          </h1>
+        ) : (
+          <h1 className={`display ${s.title}`}>{o.name}</h1>
+        )}
         <p className={s.progress}>
           {o.members.length} member{o.members.length === 1 ? "" : "s"} · you are {me.role}
         </p>
         {msg && <p className={s.err}>{msg}</p>}
       </div>
 
-      {manager && (
-        <form
-          className={s.add}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (await run(org.inviteMember({ email: email.trim(), role }))) setEmail("");
-          }}
-        >
-          <label className="sr-only" htmlFor="invite-email">
-            Invite by email
-          </label>
-          <input
-            id="invite-email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="teammate@example.com"
-          />
-          <Select
-            className={s.roleSelect}
-            label="Role"
-            value={role}
-            options={[
-              { value: "member", label: "Member" },
-              { value: "admin", label: "Admin" },
-            ]}
-            onChange={(v) => setRole(v as "member" | "admin")}
-          />
-          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
-            Invite
-          </button>
-        </form>
-      )}
+      <section className={s.integration}>
+        <h2>Members</h2>
+        {manager && (
+          <form
+            className={s.add}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (await run(org.inviteMember({ email: email.trim(), role }))) setEmail("");
+            }}
+          >
+            <label className="sr-only" htmlFor="invite-email">
+              Invite by email
+            </label>
+            <input
+              id="invite-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="teammate@example.com"
+            />
+            <Select
+              className={s.roleSelect}
+              label="Role"
+              value={role}
+              options={[
+                { value: "member", label: "Member" },
+                { value: "admin", label: "Admin" },
+              ]}
+              onChange={(v) => setRole(v as "member" | "admin")}
+            />
+            <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+              Invite
+            </button>
+          </form>
+        )}
 
-      <ul className={s.people}>
-        {o.members.map((m) => (
-          <li key={m.id} className={s.person}>
-            <span className={s.avatar} aria-hidden>
-              {(m.user.name || m.user.email).slice(0, 1).toUpperCase()}
-            </span>
-            <span className={s.who}>
-              <b>
-                {m.user.name}
-                {m.id === me.id ? " (you)" : ""}
-              </b>
-              <span>{m.user.email}</span>
-            </span>
-            <span className={s.roleTag} data-role={m.role}>
-              {m.role}
-            </span>
-            {m.id === me.id
-              ? // The only owner can't leave; they delete the team instead.
-                (m.role !== "owner" || o.members.filter((x) => x.role === "owner").length > 1) && (
-                  <button className={`${s.ghost} ${s.danger}`} onClick={() => run(org.leave({ organizationId: o.id }))}>
-                    <UserMinus size={16} strokeWidth={2.5} /> Leave
-                  </button>
-                )
-              : manager &&
-                m.role !== "owner" && (
-                  <button
-                    className={`${s.ghost} ${s.danger}`}
-                    onClick={() => run(org.removeMember({ memberIdOrEmail: m.id }))}
-                  >
-                    <UserMinus size={16} strokeWidth={2.5} /> Remove
-                  </button>
-                )}
-          </li>
-        ))}
-        {manager &&
-          o.invitations
-            .filter((i) => i.status === "pending")
-            .map((i) => (
-              <li key={i.id} className={s.person} data-pending>
-                <span className={s.avatar} aria-hidden>
-                  {i.email.slice(0, 1).toUpperCase()}
-                </span>
-                <span className={s.who}>
-                  <b>{i.email}</b>
-                  <span>Invited, not joined yet. Send them the link.</span>
-                </span>
-                <span className={s.roleTag} data-role={i.role}>
-                  {i.role}
-                </span>
-                <span className={s.tools}>
-                  <button className={s.ghost} onClick={() => navigator.clipboard.writeText(link(i.id))}>
-                    <Copy size={16} strokeWidth={2.5} /> Copy link
-                  </button>
-                  <button
-                    className={`${s.ghost} ${s.danger}`}
-                    onClick={() => run(org.cancelInvitation({ invitationId: i.id }))}
-                  >
-                    Cancel
-                  </button>
-                </span>
-              </li>
-            ))}
-      </ul>
+        <ul className={s.people}>
+          {o.members.map((m) => (
+            <li key={m.id} className={s.person}>
+              <span className={s.avatar} aria-hidden>
+                {(m.user.name || m.user.email).slice(0, 1).toUpperCase()}
+              </span>
+              <span className={s.who}>
+                <b>
+                  {m.user.name}
+                  {m.id === me.id ? " (you)" : ""}
+                </b>
+                <span>{m.user.email}</span>
+              </span>
+              <span className={s.roleTag} data-role={m.role}>
+                {m.role}
+              </span>
+              {m.id === me.id
+                ? // The only owner can't leave; they delete the team instead.
+                  (m.role !== "owner" || o.members.filter((x) => x.role === "owner").length > 1) && (
+                    <button className={`${s.ghost} ${s.danger}`} onClick={() => run(org.leave({ organizationId: o.id }))}>
+                      <UserMinus size={16} strokeWidth={2.5} /> Leave
+                    </button>
+                  )
+                : manager &&
+                  m.role !== "owner" && (
+                    <button
+                      className={`${s.ghost} ${s.danger}`}
+                      onClick={() => run(org.removeMember({ memberIdOrEmail: m.id }))}
+                    >
+                      <UserMinus size={16} strokeWidth={2.5} /> Remove
+                    </button>
+                  )}
+            </li>
+          ))}
+          {manager &&
+            o.invitations
+              .filter((i) => i.status === "pending")
+              .map((i) => (
+                <li key={i.id} className={s.person} data-pending>
+                  <span className={s.avatar} aria-hidden>
+                    {i.email.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className={s.who}>
+                    <b>{i.email}</b>
+                    <span>Invited, not joined yet. Send them the link.</span>
+                  </span>
+                  <span className={s.roleTag} data-role={i.role}>
+                    {i.role}
+                  </span>
+                  <span className={s.tools}>
+                    <button className={s.ghost} onClick={() => navigator.clipboard.writeText(link(i.id))}>
+                      <Copy size={16} strokeWidth={2.5} /> Copy link
+                    </button>
+                    <button
+                      className={`${s.ghost} ${s.danger}`}
+                      onClick={() => run(org.cancelInvitation({ invitationId: i.id }))}
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                </li>
+              ))}
+        </ul>
+      </section>
 
-      {me.role === "owner" && <DeleteTeam id={o.id} />}
+      {me.role === "owner" && <DeleteTeam id={o.id} name={o.name} />}
     </>
   );
 }
 
-function DeleteTeam({ id }: { id: string }) {
-  const [armed, setArmed] = useState(false);
+// Deleting sits apart from everything else, says what goes, and asks once more before it happens.
+function DeleteTeam({ id, name }: { id: string; name: string }) {
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   return (
-    <p style={{ marginTop: "3rem" }}>
-      <button
-        className={`${s.ghost} ${s.danger}`}
-        onClick={() => (armed ? org.delete({ organizationId: id }) : setArmed(true))}
-        onBlur={() => setArmed(false)}
-      >
-        <Trash2 size={16} strokeWidth={2.5} /> {armed ? "Click again: deletes the team and its lists" : "Delete team"}
-      </button>
-    </p>
+    <section className={s.integration}>
+      <h2>Delete this team</h2>
+      <p>
+        Deletes “{name}” for everyone in it: its lists, integrations and calendar links, for good. To keep a copy, export it
+        from your Account first.
+      </p>
+      {!confirm ? (
+        <button className={`${s.ghost} ${s.danger}`} onClick={() => setConfirm(true)}>
+          Delete team…
+        </button>
+      ) : (
+        <div className={s.tools}>
+          <button
+            className="btn"
+            style={{ "--fill": "var(--hot)" } as React.CSSProperties}
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              const r = await org.delete({ organizationId: id });
+              if (r.error) {
+                setBusy(false);
+                return setErr(r.error.message ?? "Couldn't delete the team.");
+              }
+              // Back to your personal lists.
+              await org.setActive({ organizationId: null });
+            }}
+          >
+            {busy ? "Deleting…" : `Delete “${name}”`}
+          </button>
+          <button className={s.ghost} onClick={() => setConfirm(false)}>
+            Keep it
+          </button>
+        </div>
+      )}
+      {err && <p className={s.err}>{err}</p>}
+    </section>
   );
 }
