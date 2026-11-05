@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { draggable, useDrop } from "@/lib/drag";
+import { draggable, placeOn, useDrop } from "@/lib/drag";
+import { useGlide } from "@/lib/glide";
 import { fmtMinutes, relDue, repeatLabel, todayISO, type Task } from "@todone/sdk/tasks";
 import { sticker } from "../app/Stickers";
 import s from "./landing.module.css";
 
 // The first screen is a working board: the app's own stickers dropped onto notes do exactly what they do in
-// todone. Drag one, or pick one and then click a note (keyboard and touch both work that way).
+// todone (drag one, or pick one and then click a note), notes tick off, and dragging a note up or down opens a
+// slot where it will land while the others slide aside, as on a real list.
 type Note = { id: string; title: string; fill: string; task: Partial<Task>; done?: boolean };
 
 const NOTES: Note[] = [
@@ -54,10 +56,33 @@ export function HeroBoard() {
     setLanded(id);
     setTimeout(() => setLanded((l) => (l === id ? null : l)), 700);
   };
+  const glide = useGlide<HTMLDivElement>();
+  const [gap, setGap] = useState<{ target: string; place: "before" | "after"; id: string } | null>(null);
+  const isNote = (id: string) => notes.some((n) => n.id === id);
   const drop = useDrop("hero", {
-    accept: (p) => p.kind === "sticker",
-    drop: (p, id) => p.kind === "sticker" && apply(p.key, id),
+    accept: (p, id) =>
+      p.kind === "sticker" ? id !== "gap" : p.kind === "demo" && isNote(p.id) && (id === "gap" ? !!gap : id !== p.id),
+    where: (p, id, at) => {
+      if (p.kind !== "demo" || id === "gap") return "inside";
+      const place = placeOn(at, "y", false) as "before" | "after";
+      setGap((g) => (g?.target === id && g.place === place ? g : { target: id, place, id: p.id }));
+      return place;
+    },
+    leave: () => setGap(null),
+    drop: (p, id, at) => {
+      setGap(null);
+      if (p.kind === "sticker") return apply(p.key, id);
+      if (p.kind !== "demo") return;
+      const to = id === "gap" && gap ? gap : { target: id, place: placeOn(at, "y", false) as "before" | "after" };
+      setNotes((ns) => {
+        const moved = ns.find((n) => n.id === p.id)!;
+        const rest = ns.filter((n) => n.id !== p.id);
+        const at = rest.findIndex((n) => n.id === to.target) + (to.place === "after" ? 1 : 0);
+        return [...rest.slice(0, at), moved, ...rest.slice(at)];
+      });
+    },
   });
+  const tickNote = (id: string) => setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, done: !n.done } : n)));
 
   return (
     <div className={s.hero} data-holding={held ? "" : undefined}>
@@ -83,27 +108,46 @@ export function HeroBoard() {
           </div>
         </div>
 
-        {notes.map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            className={s.note}
-            style={{ "--fill": n.fill } as React.CSSProperties}
-            data-done={n.done || undefined}
-            data-landed={landed === n.id || undefined}
-            {...drop(n.id)}
-            onClick={() => held && apply(held, n.id)}
-            aria-label={held ? `Put the sticker on “${n.title}”` : n.title}
-          >
-            <span className={s.box} aria-hidden />
-            <b>{n.title}</b>
-            <span className={s.chips}>
-              {chips(n.task, today).map((c) => (
-                <i key={c}>{c}</i>
-              ))}
-            </span>
-          </button>
-        ))}
+        <div className={s.stack} ref={glide}>
+          {notes.flatMap((n) => {
+            const note = (
+              <div
+                key={n.id}
+                data-id={n.id}
+                className={s.note}
+                style={{ "--fill": n.fill } as React.CSSProperties}
+                data-done={n.done || undefined}
+                data-landed={landed === n.id || undefined}
+                data-dragged={gap?.id === n.id || undefined}
+                data-holding={held ? "" : undefined}
+                {...drop(n.id)}
+                {...draggable({ kind: "demo", id: n.id }, n.title)}
+                onClick={() => held && apply(held, n.id)}
+              >
+                <button
+                  type="button"
+                  className={s.box}
+                  aria-pressed={!!n.done}
+                  aria-label={held ? `Put the sticker on “${n.title}”` : `Tick off “${n.title}”`}
+                  onClick={(e) => {
+                    if (held) return;
+                    e.stopPropagation();
+                    tickNote(n.id);
+                  }}
+                />
+                <b>{n.title}</b>
+                <span className={s.chips}>
+                  {chips(n.task, today).map((c) => (
+                    <i key={c}>{c}</i>
+                  ))}
+                </span>
+              </div>
+            );
+            if (gap?.target !== n.id) return [note];
+            const slot = <div key="gap" className={s.heroSlot} {...drop("gap")} aria-hidden />;
+            return gap.place === "before" ? [slot, note] : [note, slot];
+          })}
+        </div>
       </div>
 
       <aside className={s.sheet} aria-label="Stickers">

@@ -76,7 +76,7 @@ export function WeekDemo() {
     setHeld(null);
   };
   const drop = useDrop("week", {
-    accept: (p) => p.kind === "demo",
+    accept: (p) => p.kind === "demo" && blocks.some((b) => b.id === p.id),
     drop: (p, day) => p.kind === "demo" && move(p.id, Number(day)),
   });
   return (

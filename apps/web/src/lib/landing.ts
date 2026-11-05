@@ -197,4 +197,4 @@ export const PLUS_YEAR_INR = 899;
 
 // A one-off way to back the roadmap: three years of Plus, paid once. Not lifetime cloud, which would promise
 // hosting costs forever.
-export const FOUNDING = { name: "Founding member", inr: "₹1,999", usd: "$59", per: "once, for 3 years of Plus" };
+export const FOUNDING = { name: "Founding member", inr: "₹1,999", usd: "$59", yearly: "₹2,697" };

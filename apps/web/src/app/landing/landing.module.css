@@ -98,20 +98,61 @@
 .note:nth-child(odd) {
   rotate: 1deg;
 }
-button.note {
+/* The four task notes, stacked; they reorder by drag with a slot showing where one will land. */
+.stack {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+}
+.stack > .note {
   cursor: grab;
 }
-button.note:hover,
-button.note[data-over] {
+.stack > .note:hover {
   rotate: 0deg;
   transform: translateY(-3px);
 }
-button.note[data-over] {
+.stack > .note[data-over="inside"],
+.stack > .note[data-holding]:hover {
   outline: 3px dashed var(--black);
   outline-offset: 5px;
-}
-.hero[data-holding] button.note {
   cursor: copy;
+}
+.stack > .note[data-over="before"],
+.stack > .note[data-over="after"] {
+  outline: none;
+}
+.stack > .note[data-dragged] {
+  opacity: 0.3;
+  filter: grayscale(0.6);
+}
+.heroSlot {
+  min-height: 4.5rem;
+  border: 3px dashed var(--ink);
+  background: color-mix(in srgb, var(--lime) 30%, transparent);
+  animation: slotOpen 0.18s var(--ease);
+}
+@keyframes slotOpen {
+  from {
+    opacity: 0;
+    transform: scaleY(0.6);
+  }
+}
+/* While a note is being moved, the others jiggle like home-screen icons. */
+.stack:has(.heroSlot) > .note:not([data-dragged]) {
+  animation: noteJiggle 0.32s ease-in-out infinite alternate;
+}
+.stack:has(.heroSlot) > .note:nth-child(even):not([data-dragged]) {
+  animation-delay: -0.16s;
+}
+@keyframes noteJiggle {
+  from {
+    rotate: -1.2deg;
+  }
+  to {
+    rotate: 1.2deg;
+  }
 }
 .note b {
   font-size: 1.15rem;
@@ -124,8 +165,14 @@ button.note[data-over] {
   width: 1.25rem;
   height: 1.25rem;
   margin-top: 0.15rem;
+  padding: 0;
   background: #fff8ef;
   border: 2.5px solid var(--black);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+button.box:hover {
+  transform: scale(1.12);
 }
 .note[data-done] .box {
   background: var(--black);
@@ -767,6 +814,10 @@ button.note[data-over] {
     grid-column: 1 / -1;
     grid-row: auto;
   }
+  .stack {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
   /* On a narrow screen the sheet becomes a strip of stickers after the notes, with a one-line hint. */
   .sheet {
     position: sticky;
@@ -843,7 +894,8 @@ button.note[data-over] {
   .way {
     transition: none;
   }
-  .note[data-landed] {
+  .note[data-landed],
+  .stack:has(.heroSlot) > .note:not([data-dragged]) {
     animation: none;
   }
 }
