@@ -1097,9 +1097,11 @@ button.box:hover {
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
+  filter: grayscale(var(--grey, 1));
   transition:
     transform 0.3s var(--ease),
-    box-shadow 0.3s var(--ease);
+    box-shadow 0.3s var(--ease),
+    filter 0.25s linear;
 }
 .ladder li:nth-child(odd) {
   rotate: -0.5deg;

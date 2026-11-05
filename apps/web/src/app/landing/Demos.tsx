@@ -271,12 +271,18 @@ export function Goals() {
   const before = (i: number) => GOALS.slice(0, i).reduce((a, g) => a + g.inr, 0);
   const got = GOALS.map((g, i) => Math.max(0, Math.min(raised - before(i), g.inr)));
   const ifReached = GOALS.filter((_, i) => members * PLUS_YEAR_INR >= before(i + 1)).length;
+  // How much of each goal the slider's amount covers: a goal colours in as it fills, grey until then.
+  const covered = GOALS.map((g, i) => Math.max(0, Math.min((members * PLUS_YEAR_INR - before(i)) / g.inr, 1)));
   return (
     <div className={s.goals}>
       <ol className={s.ladder}>
         {GOALS.map((g, i) => {
           return (
-            <li key={g.key} style={{ "--fill": g.fill } as React.CSSProperties} data-hit={i < ifReached || undefined}>
+            <li
+              key={g.key}
+              style={{ "--fill": g.fill, "--grey": 1 - covered[i] } as React.CSSProperties}
+              data-hit={i < ifReached || undefined}
+            >
               <div className={s.goalHead}>
                 <b className="display">{g.name}</b>
                 <span>{inr(g.inr)}</span>
