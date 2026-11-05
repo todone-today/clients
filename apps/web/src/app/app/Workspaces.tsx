@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
 
 const org = authClient.organization;
+const NEW = "__new";
 export type Panel = "calendar" | "ideas" | "members" | "integrations" | "account" | null;
 
 // Personal lists or a team's; switching changes which lists the server returns.
@@ -24,6 +25,13 @@ export function Workspaces({
   const { data: orgs } = authClient.useListOrganizations();
   const [name, setName] = useState("");
   const [err, setErr] = useState("");
+  // "New team…" in the dropdown opens a name field just for that; it closes once the team is made or on Esc.
+  const [creating, setCreating] = useState(false);
+  const stop = () => {
+    setCreating(false);
+    setName("");
+    setErr("");
+  };
 
   return (
     <div className={s.workspace}>
@@ -33,8 +41,13 @@ export function Workspaces({
       <Select
         label="Workspace"
         value={orgId ?? ""}
-        options={[{ value: "", label: "Personal" }, ...(orgs ?? []).map((o) => ({ value: o.id, label: o.name }))]}
+        options={[
+          { value: "", label: "Personal" },
+          ...(orgs ?? []).map((o) => ({ value: o.id, label: o.name })),
+          { value: NEW, label: "+ New team…" },
+        ]}
         onChange={async (v) => {
+          if (v === NEW) return setCreating(true);
           onSwitch();
           await org.setActive({ organizationId: v || null });
         }}
@@ -56,31 +69,42 @@ export function Workspaces({
       >
         <Plug size={16} strokeWidth={2.5} /> Integrations
       </button>
-      <form
-        className={s.newList}
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const n = name.trim();
-          if (!n) return;
-          const slug = `${n
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .slice(0, 40)}-${crypto.randomUUID().slice(0, 6)}`;
-          onSwitch();
-          const r = await org.create({ name: n, slug });
-          setErr(r.error?.message ?? "");
-          if (!r.error) setName("");
-        }}
-      >
-        <label className="sr-only" htmlFor="new-team">
-          New team
-        </label>
-        <input id="new-team" value={name} onChange={(e) => setName(e.target.value)} placeholder="New team" maxLength={60} />
-        <button aria-label="Create team" disabled={!name.trim()}>
-          <Plus size={18} strokeWidth={2.5} />
-        </button>
-        {err && <p className={s.err}>{err}</p>}
-      </form>
+      {creating && (
+        <form
+          className={s.newList}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const n = name.trim();
+            if (!n) return;
+            const slug = `${n
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .slice(0, 40)}-${crypto.randomUUID().slice(0, 6)}`;
+            onSwitch();
+            const r = await org.create({ name: n, slug });
+            setErr(r.error?.message ?? "");
+            if (!r.error) stop();
+          }}
+          onKeyDown={(e) => e.key === "Escape" && stop()}
+        >
+          <label className="sr-only" htmlFor="new-team">
+            New team
+          </label>
+          <input
+            id="new-team"
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => !name.trim() && stop()}
+            placeholder="Team name, Enter to create"
+            maxLength={60}
+          />
+          <button aria-label="Create team" disabled={!name.trim()}>
+            <Plus size={18} strokeWidth={2.5} />
+          </button>
+          {err && <p className={s.err}>{err}</p>}
+        </form>
+      )}
     </div>
   );
 }

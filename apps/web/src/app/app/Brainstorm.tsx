@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { draggable, useDrop } from "@/lib/drag";
+import { draggable, placeOn, useDrop } from "@/lib/drag";
+import { useGlide } from "@/lib/glide";
+import { binSound } from "@/lib/sound";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, uid } from "@todone/sdk/tasks";
+import { type List, type Task, moveTasks, uid } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type Update = (id: string, f: (l: List) => List | null) => void;
@@ -48,6 +50,7 @@ export function Brainstorm({
     return () => removeEventListener("keydown", esc);
   }, []);
   const setIdeas = (f: (ts: Task[]) => Task[]) => board && update(board.id, (l) => ({ ...l, tasks: f(l.tasks) }));
+  const [armed, setArmed] = useState(false);
   const remove = (ids: string[]) => {
     const gone = ideas.filter((t) => ids.includes(t.id));
     if (!gone.length) return;
@@ -55,9 +58,26 @@ export function Brainstorm({
     setIdeas((ts) => ts.filter((t) => !ids.includes(t.id)));
     setPicked(new Set());
   };
+  // Dropping an idea on another's left or right half puts it next to that one; the cards glide over.
+  const glide = useGlide<HTMLUListElement>();
+  const dropOnIdea = useDrop("ideas", {
+    accept: (p, id) => p.kind === "idea" && !p.ids.includes(id),
+    where: (_, __, at) => placeOn(at, "x", false),
+    drop: (p, id, at) => {
+      if (p.kind !== "idea") return;
+      setIdeas((ts) => moveTasks(ts, p.ids, id, placeOn(at, "x", false)));
+      setPicked(new Set());
+    },
+  });
+  // Colours follow each idea, not its place, so moving one doesn't repaint the rest.
+  const colors = new Map([...ideas.map((t) => t.id)].sort().map((id, i) => [id, COLORS[i % COLORS.length]]));
   const binDrop = useDrop("ideas-bin", {
     accept: (p) => p.kind === "idea",
-    drop: (p) => p.kind === "idea" && remove(p.ids),
+    drop: (p) => {
+      if (p.kind !== "idea") return;
+      remove(p.ids);
+      binSound();
+    },
   });
   useEffect(() => {
     if (!binned) return;
@@ -68,10 +88,26 @@ export function Brainstorm({
   return (
     <>
       <div className={s.listHead}>
-        <div className={s.bin} data-bin {...binDrop("bin")} aria-label="Bin: drop an idea here to delete it">
+        {/* Drop ideas here to delete them; click twice to clear them all. Undo brings them back either way. */}
+        <button
+          className={s.bin}
+          data-bin
+          data-armed={armed}
+          {...binDrop("bin")}
+          disabled={!ideas.length}
+          onClick={() => {
+            if (!armed) return setArmed(true);
+            remove(ideas.map((t) => t.id));
+            binSound();
+            setArmed(false);
+          }}
+          onBlur={() => setArmed(false)}
+          aria-label={armed ? "Click again to delete every idea" : "Delete all ideas, or drop ideas here to delete them"}
+          title={armed ? "Click again to delete every idea" : "Drop ideas here to delete them. Click to clear them all."}
+        >
           <Trash2 size={28} strokeWidth={2.5} />
-          <span>Bin</span>
-        </div>
+          <span>{armed ? "Clear all?" : "Bin"}</span>
+        </button>
         <h1 className={`display ${s.title}`}>Brainstorm</h1>
         <p className={s.progress}>Dump ideas here, half-formed is fine. Drag a good one onto a list to make it a task.</p>
       </div>
@@ -126,12 +162,13 @@ export function Brainstorm({
       </form>
 
       {ideas.length ? (
-        <ul className={s.board}>
-          {ideas.map((idea, i) => (
+        <ul className={s.board} ref={glide}>
+          {ideas.map((idea) => (
             <Idea
               key={idea.id}
               idea={idea}
-              color={COLORS[i % COLORS.length]}
+              color={colors.get(idea.id)!}
+              drop={dropOnIdea(idea.id)}
               targets={targets}
               onRename={(title) => setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title })))}
               onMove={(listId) => ideaToTask(lists, idea.id, listId, update)}
@@ -160,7 +197,9 @@ function Idea({
   onDelete,
   picked,
   onPick,
+  drop,
 }: {
+  drop: { "data-drop": string };
   idea: Task;
   color: string;
   targets: List[];
@@ -176,6 +215,8 @@ function Idea({
   return (
     <li
       className={s.idea}
+      data-id={idea.id}
+      {...drop}
       style={{ "--fill": color } as React.CSSProperties}
       data-picked={picked.has(idea.id) || undefined}
       {...draggable({ kind: "idea", id: idea.id, ids }, ids.length > 1 ? `${ids.length} ideas` : idea.title)}

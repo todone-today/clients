@@ -2248,3 +2248,15 @@
   color: var(--ink);
   border-bottom-color: var(--lime);
 }
+
+/* Where a dragged idea will land: a black bar on the side of the card it goes next to. */
+.idea[data-over="before"] {
+  box-shadow:
+    -10px 0 0 -4px var(--black),
+    var(--lift-sm);
+}
+.idea[data-over="after"] {
+  box-shadow:
+    10px 0 0 -4px var(--black),
+    var(--lift-sm);
+}

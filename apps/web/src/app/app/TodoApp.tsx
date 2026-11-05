@@ -4,13 +4,15 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { List as ListIcon, CalendarDays, Lightbulb, Menu, Check, Clock, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
+import { useGlide } from "@/lib/glide";
+import { binSound } from "@/lib/sound";
 import { mapTask, moveToList, refresh, reload, reorder, showSaved, useLists } from "@/lib/store";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
@@ -365,28 +367,8 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   // While a note is dragged over another's left or right edge, an empty slot opens there and the
   // neighbours shift aside; the slot is a drop target too, so the gap holds while the pointer is in it.
   const [gap, setGap] = useState<{ target: string; place: "before" | "after"; ids: string[] } | null>(null);
-  // Notes glide to their new spots when the slot opens or moves, or a drop lands, like icons on a home screen:
-  // after each render, any note whose place changed starts from where it was and slides over.
-  const boardRef = useRef<HTMLUListElement>(null);
-  const spots = useRef(new Map<string, { x: number; y: number }>());
-  useLayoutEffect(() => {
-    const ul = boardRef.current;
-    if (!ul) return;
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const next = new Map<string, { x: number; y: number }>();
-    for (const el of ul.querySelectorAll<HTMLElement>(":scope > [data-id]")) {
-      // Offsets ignore transforms, so a note mid-slide still reports where it's heading.
-      const at = { x: el.offsetLeft, y: el.offsetTop };
-      const was = spots.current.get(el.dataset.id!);
-      next.set(el.dataset.id!, at);
-      if (was && !still && (was.x !== at.x || was.y !== at.y))
-        el.animate([{ transform: `translate(${was.x - at.x}px, ${was.y - at.y}px)` }, { transform: "none" }], {
-          duration: 220,
-          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        });
-    }
-    spots.current = next;
-  });
+  // Notes glide to their new spots when the slot opens or moves, or a drop lands.
+  const boardRef = useGlide<HTMLUListElement>();
   const drop = useDrop(`list-${list.id}`, {
     accept: (p, arg) =>
       p.kind === "sticker"
@@ -427,6 +409,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       if (p.kind === "task") {
         const gone = flatten(before).filter((t) => p.ids.includes(t.id));
         setTasks((ts) => p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts));
+        binSound();
         setBinned({ before, text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.` });
         setPicked(new Set());
       } else if (p.kind === "sticker") {
@@ -435,6 +418,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         const day = relDue(due, today);
         if (!gone.length) return setBinned({ before, text: `Nothing is due ${day}.` });
         setTasks((ts) => gone.reduce((acc, t) => mapTask(acc, t.id, () => null), ts));
+        binSound();
         setBinned({ before, text: `Deleted ${gone.length} task${gone.length === 1 ? "" : "s"} due ${day}.` });
       }
     },
