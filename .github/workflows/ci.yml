@@ -2,61 +2,31 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
 
 jobs:
-  sdk:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: sdk
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-
-  server:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-
   web:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: clients/apps/web
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: clients/apps/web/package-lock.json
+          cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm test
       - run: npm run build
 
   deploy:
-    # develop -> preview at todone-develop.vercel.app, main -> production at todone.today.
+    # main -> production at todone.today. The database is migrated by the server repo's deploy.
     if: github.event_name == 'push'
-    needs: [sdk, server, web]
+    needs: [web]
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -74,19 +44,4 @@ jobs:
             exit 0
           fi
           npm i -g vercel@57
-          if [ "$GITHUB_REF_NAME" = main ]; then env=production prod=--prod; else env=preview prod=; fi
-          vercel pull --yes --environment=$env --token="$VERCEL_TOKEN"
-          # Bring the database schema up to date before the new code goes live.
-          if grep -q '^DATABASE_URL=' .vercel/.env.$env.local; then
-            # Vercel hands sensitive values back as "[SENSITIVE]"; migrating only needs the database, so placeholders do.
-            (cd server && npm ci && BETTER_AUTH_URL=http://localhost BETTER_AUTH_SECRET=migrate-only \
-              node --env-file=../.vercel/.env.$env.local scripts/migrate.ts)
-          else
-            echo "::warning::DATABASE_URL is not set in Vercel ($env); skipping migrations"
-          fi
-          vercel build $prod --token="$VERCEL_TOKEN"
-          url=$(vercel deploy --prebuilt $prod --token="$VERCEL_TOKEN")
-          echo "Deployed $url"
-          if [ "$GITHUB_REF_NAME" = develop ]; then
-            vercel alias set "$url" todone-develop.vercel.app --token="$VERCEL_TOKEN"
-          fi
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN"
