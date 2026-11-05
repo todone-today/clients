@@ -28,10 +28,10 @@ export const SHOTS = {
     ratio: "16 / 10",
   },
   mobile: {
-    src: null,
+    src: "/landing/mobile.webp",
     alt: "Concept: todone's mobile app on two phones, today's notes and quick capture",
     label: "Concept render: todone on a phone",
-    ratio: "4 / 5",
+    ratio: "928 / 1152",
     concept: true,
     prompt:
       "Photoreal product photography of two modern smartphones, one upright and one leaning against it, on a cream " +
@@ -41,10 +41,10 @@ export const SHOTS = {
       "playful, premium, Gen Z editorial styling. No other logos, no hands. Portrait 4:5.",
   },
   desk: {
-    src: null,
+    src: "/landing/desk.webp",
     alt: "Concept: a todone e-ink display on a desk next to a laptop and coffee, showing today's tasks",
     label: "Concept render: desk display",
-    ratio: "4 / 3",
+    ratio: "1200 / 896",
     concept: true,
     prompt:
       LOOK +
@@ -52,10 +52,10 @@ export const SHOTS = {
       "keyboard with one lime keycap, a ceramic coffee cup and a small plant; warm morning window light. Landscape 4:3.",
   },
   fridge: {
-    src: null,
+    src: "/landing/fridge.webp",
     alt: "Concept: a todone e-ink display on a fridge door showing the household's shared list",
     label: "Concept render: fridge display",
-    ratio: "4 / 3",
+    ratio: "1200 / 896",
     concept: true,
     prompt:
       LOOK +
@@ -64,10 +64,10 @@ export const SHOTS = {
       "'Home' (groceries, bills, plants). Landscape 4:3.",
   },
   bag: {
-    src: null,
+    src: "/landing/bag.webp",
     alt: "Concept: a small todone e-ink display clipped to a backpack strap, showing the next three tasks",
     label: "Concept render: bag clip",
-    ratio: "4 / 5",
+    ratio: "928 / 1152",
     concept: true,
     prompt:
       LOOK +
