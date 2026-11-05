@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GripVertical, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
 import { type List, type Task, uid } from "@todone/sdk/tasks";
