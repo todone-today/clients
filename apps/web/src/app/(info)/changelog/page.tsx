@@ -7,6 +7,15 @@ export const metadata: Metadata = { title: "Changelog", description: "What's new
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "6 November 2026",
+    title: "Your account, safer",
+    items: [
+      "New accounts confirm their email with a link; unconfirmed accounts are deleted after 7 days, and a banner says when.",
+      "Forgot your password? Reset it from the sign-in page. Or change it on your Account page.",
+      "Profile pictures from Gravatar, for you and your teammates.",
+    ],
+  },
+  {
+    date: "6 November 2026",
     title: "A homepage you can play with",
     items: [
       "New tagline: Todos. Done right.",

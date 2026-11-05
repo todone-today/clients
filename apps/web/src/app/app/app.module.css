@@ -2055,6 +2055,26 @@
   background: var(--peri);
   border: 2px solid var(--black);
 }
+.avatar {
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.me {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.me .avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.4rem;
+  border-width: 2.5px;
+  box-shadow: var(--lift-sm);
+}
 .person[data-pending] .avatar {
   background: var(--butter);
 }
@@ -2280,6 +2300,23 @@
   background: var(--butter);
   border-bottom: 2px solid var(--hair);
 }
-.shell:has(.demoBar) {
+.verifyBar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.55rem var(--gutter);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--black);
+  background: var(--pink);
+  border-bottom: 2px solid var(--black);
+}
+.verifyBar .link {
+  color: var(--black);
+}
+.shell:has(.demoBar),
+.shell:has(.verifyBar) {
   grid-template-rows: auto auto 1fr;
 }

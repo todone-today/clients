@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Plug, Plus, Settings, UserMinus } from "lucide-react";
 import { Select } from "@/components/Select";
+import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
 
@@ -211,9 +212,7 @@ export function Members() {
         <ul className={s.people}>
           {o.members.map((m) => (
             <li key={m.id} className={s.person}>
-              <span className={s.avatar} aria-hidden>
-                {(m.user.name || m.user.email).slice(0, 1).toUpperCase()}
-              </span>
+              <Avatar className={s.avatar} image={m.user.image} name={m.user.name || m.user.email} />
               <span className={s.who}>
                 <b>
                   {m.user.name}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, LogOut } from "lucide-react";
+import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { toCSV } from "@todone/sdk/export";
 import { forget } from "@/lib/store";
@@ -51,10 +52,14 @@ export function Account() {
     <>
       <div className={s.listHead}>
         <h1 className={`display ${s.title}`}>Account</h1>
-        <p className={s.progress}>
-          {user.name ? `${user.name} · ` : ""}
-          {user.email}
-        </p>
+        <div className={s.me}>
+          <Avatar className={s.avatar} image={user.image} name={user.name || user.email} />
+          <p className={s.progress}>
+            {user.name ? `${user.name} · ` : ""}
+            {user.email}
+            {user.emailVerified ? " · confirmed" : ""}
+          </p>
+        </div>
         <button
           className={s.ghost}
           onClick={async () => {
@@ -90,6 +95,8 @@ export function Account() {
           To change your email, write to us. <Link href="/privacy">Privacy Policy</Link> · <Link href="/terms">Terms</Link>
         </p>
       </section>
+
+      {hasPassword && <ChangePassword />}
 
       <section className={s.integration}>
         <h2>Export everything</h2>
@@ -157,5 +164,72 @@ export function Account() {
       </section>
       {err && <p className={s.err}>{err}</p>}
     </>
+  );
+}
+
+// Change the password while signed in; other devices are signed out so an old password stops working there.
+function ChangePassword() {
+  const [state, setState] = useState<"" | "saving" | "done">("");
+  const [err, setErr] = useState("");
+  return (
+    <section className={s.integration}>
+      <h2>Password</h2>
+      <form
+        className={s.stack}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const f = new FormData(form);
+          const next = String(f.get("next"));
+          if (next !== String(f.get("again"))) return setErr("The two new passwords don't match.");
+          setState("saving");
+          const r = await authClient.changePassword({
+            currentPassword: String(f.get("current")),
+            newPassword: next,
+            revokeOtherSessions: true,
+          });
+          if (r.error) {
+            setState("");
+            return setErr(r.error.message ?? "Couldn't change your password.");
+          }
+          form.reset();
+          setErr("");
+          setState("done");
+        }}
+      >
+        <input
+          name="current"
+          type="password"
+          aria-label="Current password"
+          placeholder="Current password"
+          autoComplete="current-password"
+          required
+        />
+        <input
+          name="next"
+          type="password"
+          aria-label="New password"
+          placeholder="New password (8 or more characters)"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
+        <input
+          name="again"
+          type="password"
+          aria-label="New password again"
+          placeholder="New password again"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
+        <button className="btn" disabled={state === "saving"}>
+          {state === "saving" ? "Saving…" : "Change password"}
+        </button>
+        {state === "done" && <p role="status">Changed. Other devices have been signed out.</p>}
+        {err && <p className={s.err}>{err}</p>}
+      </form>
+      <p>Forgotten it? Sign out and use &ldquo;Forgot password?&rdquo; on the sign-in page.</p>
+    </section>
   );
 }

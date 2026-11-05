@@ -69,3 +69,12 @@
   font-size: 0.8rem;
   color: var(--ink-2);
 }
+
+.forgot {
+  justify-self: end;
+  margin-top: -0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

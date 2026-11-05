@@ -14,8 +14,17 @@ const safeNext = () => {
   return n.startsWith("/") && !n.startsWith("//") ? n : "/app";
 };
 
-export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, string, string] }) {
-  const [mode, setMode] = useState<"in" | "up">("in");
+export function LoginForm({
+  github,
+  canReset,
+  haiku,
+}: {
+  github: boolean;
+  canReset: boolean; // the server sends email, so "Forgot password?" can work
+  haiku: [string, string, string];
+}) {
+  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -32,6 +41,13 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
           const email = String(f.get("email")).trim();
           const password = String(f.get("password"));
           setBusy(true);
+          if (mode === "reset") {
+            // Same answer whether or not the email has an account, so the form can't be used to find accounts.
+            const r = await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
+            setBusy(false);
+            if (r.error) return setErr(r.error.message ?? "That didn't work. Try again.");
+            return setSent(true);
+          }
           const r =
             mode === "in"
               ? await authClient.signIn.email({ email, password })
@@ -46,7 +62,14 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
           location.assign(safeNext());
         }}
       >
-        <h1 className="display">{mode === "in" ? "Welcome back" : "Make an account"}</h1>
+        <h1 className="display">{mode === "in" ? "Welcome back" : mode === "up" ? "Make an account" : "Reset password"}</h1>
+        {mode === "reset" && (
+          <p className={s.fine}>
+            {sent
+              ? "If that email has an account, a link to choose a new password is on its way. It works for an hour."
+              : "Enter your account's email and we'll send you a link to choose a new password."}
+          </p>
+        )}
         {mode === "up" && (
           <label>
             <span>Name</span>
@@ -57,16 +80,31 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
           <span>Email</span>
           <input name="email" type="email" required autoComplete="email" />
         </label>
-        <label>
-          <span>Password</span>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete={mode === "in" ? "current-password" : "new-password"}
-          />
-        </label>
+        {mode !== "reset" && (
+          <label>
+            <span>Password</span>
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={8}
+              autoComplete={mode === "in" ? "current-password" : "new-password"}
+            />
+          </label>
+        )}
+        {mode === "in" && canReset && (
+          <button
+            type="button"
+            className={s.forgot}
+            onClick={() => {
+              setMode("reset");
+              setErr("");
+              setSent(false);
+            }}
+          >
+            Forgot password?
+          </button>
+        )}
         {mode === "up" && (
           <label className={s.agree}>
             <input type="checkbox" name="agree" required />
@@ -81,10 +119,12 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
             {err}
           </p>
         )}
-        <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={busy}>
-          {mode === "in" ? "Sign in" : "Sign up"}
-        </button>
-        {github && (
+        {!(mode === "reset" && sent) && (
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={busy}>
+            {mode === "in" ? "Sign in" : mode === "up" ? "Sign up" : "Send the link"}
+          </button>
+        )}
+        {github && mode !== "reset" && (
           <button
             type="button"
             className="btn"
@@ -110,7 +150,7 @@ export function LoginForm({ github, haiku }: { github: boolean; haiku: [string, 
             setErr("");
           }}
         >
-          {mode === "in" ? "New here? Make an account" : "Have an account? Sign in"}
+          {mode === "in" ? "New here? Make an account" : mode === "up" ? "Have an account? Sign in" : "Back to sign in"}
         </button>
       </form>
     </main>

@@ -21,6 +21,7 @@ import { CalendarView } from "./CalendarView";
 import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
 import { Tour } from "./Tour";
+import { VerifyBanner } from "./VerifyBanner";
 import { startOnboarding } from "./actions";
 import { shareCalendar } from "./integration-actions";
 import { Stickers, sticker } from "./Stickers";
@@ -232,6 +233,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </button>
         )}
       </header>
+      {!demo && session && (
+        <VerifyBanner email={session.user.email} verified={session.user.emailVerified} created={session.user.createdAt} />
+      )}
       {demo && (
         <p className={s.demoBar} role="note">
           This is a demo with sample lists. Try anything: changes stay in this tab and vanish when you close it.

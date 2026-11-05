@@ -79,6 +79,11 @@ export default function Privacy() {
       <ul>
         <li>Vercel, which hosts the app.</li>
         <li>Neon, which hosts the database.</li>
+        <li>Resend, which sends our emails (confirming your address, resetting your password).</li>
+        <li>
+          Gravatar (Automattic), for profile pictures: your browser asks it for the picture matching a scrambled (hashed)
+          form of your email. If you have no Gravatar, you see your initial.
+        </li>
         <li>GitHub and Google, if you sign in with them or connect Google Calendar.</li>
         <li>Notion and Discord, if you connect them.</li>
         <li>Your browser&apos;s push service (Apple, Google or Mozilla), for reminders you turn on.</li>
@@ -91,7 +96,8 @@ export default function Privacy() {
 
       <h2>How long we keep it</h2>
       <p>
-        Until you delete it or your account. Deleting a task, list or team removes it; deleting your account removes your
+        Until you delete it or your account. Accounts whose email isn&apos;t confirmed within 7 days of signing up are
+        deleted, with everything in them. Deleting a task, list or team removes it; deleting your account removes your
         account, personal lists, settings, sessions, connected-service tokens, push addresses and feedback straight away,
         along with any team where you&apos;re the only member. Copies can stay in our database provider&apos;s backups for up
         to 30 days before they roll off.

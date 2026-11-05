@@ -21,7 +21,7 @@ async function Login() {
   await connection();
   const config: Config = await fetch(`${server()}/api/config`, { cache: "no-store" })
     .then((r) => r.json())
-    .catch(() => ({ github: false, google: false }));
+    .catch(() => ({ github: false, google: false, verifiesEmail: false }));
   // A fresh haiku per visit, picked here so server and browser agree on it.
-  return <LoginForm github={config.github} haiku={pickHaiku()} />;
+  return <LoginForm github={config.github} canReset={!!config.verifiesEmail} haiku={pickHaiku()} />;
 }
