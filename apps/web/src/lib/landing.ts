@@ -1,9 +1,18 @@
-// Everything on the landing page that changes without a redesign: image URLs, the mobile funding target and
-// progress, the plans and where payments go. Edit values here; the layout follows.
+// Everything on the landing page that changes without a redesign: image URLs, the funding goals and progress, the
+// plans and where payments go. Edit values here; the layout follows.
 
 // An image slot: set `src` to any URL (or a file in /public) and the slot shows it; leave it null and it shows a
-// labelled placeholder of the same shape. `concept` marks pictures of things that don't exist yet.
-export type Shot = { src: string | null; alt: string; label: string; ratio: string; concept?: boolean };
+// labelled placeholder of the same shape. `concept` marks pictures of things that don't exist yet. `prompt` is the
+// brief to generate the image from (any image model), so a replacement matches the page.
+export type Shot = { src: string | null; alt: string; label: string; ratio: string; concept?: boolean; prompt?: string };
+
+// Shared art direction for the product renders, so every shot reads as one campaign.
+const LOOK =
+  "Photoreal product photography, editorial and premium, natural daylight with soft shadows, shallow depth of field, " +
+  "shot for a design-led brand aimed at young working professionals and Gen Z. The device is a matte off-black e-ink " +
+  "display with a thin bezel and a small lime-green (#d4f04a) accent; its paper-white screen shows a todo list titled " +
+  "'Today' with crisp black text, square checkboxes, one item ticked off, and a small checked-box logo with the word " +
+  "'todone' in a tall condensed bold typeface. No other logos, no people's faces, no text besides the screen. ";
 
 export const SHOTS = {
   board: {
@@ -19,50 +28,124 @@ export const SHOTS = {
     ratio: "16 / 10",
   },
   mobile: {
-    src: "/landing/concept-mobile.webp",
-    alt: "Concept: todone's mobile app, a Today screen with three tasks and a task's details with its steps",
-    label: "Concept: todone on a phone",
-    ratio: "586 / 540",
+    src: null,
+    alt: "Concept: todone's mobile app on two phones, today's notes and quick capture",
+    label: "Concept render: todone on a phone",
+    ratio: "4 / 5",
     concept: true,
+    prompt:
+      "Photoreal product photography of two modern smartphones, one upright and one leaning against it, on a cream " +
+      "surface with a hard black shadow, flat lime-green (#d4f04a) backdrop. Screens show a todo app made of colourful " +
+      "sticky notes (butter yellow, pink, cyan, lime) with thick black outlines and hard offset shadows; the front " +
+      "phone shows 'Today' with three notes and one ticked, the back phone shows one note opened into steps. Bold, " +
+      "playful, premium, Gen Z editorial styling. No other logos, no hands. Portrait 4:5.",
   },
-  pocket: {
-    src: "/landing/concept-pocket.webp",
-    alt: "Concept: a small e-ink reader on a stand showing today's tasks, one ticked off",
-    label: "Concept render: pocket e-reader",
-    ratio: "612 / 476",
+  desk: {
+    src: null,
+    alt: "Concept: a todone e-ink display on a desk next to a laptop and coffee, showing today's tasks",
+    label: "Concept render: desk display",
+    ratio: "4 / 3",
     concept: true,
+    prompt:
+      LOOK +
+      "Scene: a 7-inch todone display on a slim aluminium stand on a clean wooden desk, beside a laptop, a mechanical " +
+      "keyboard with one lime keycap, a ceramic coffee cup and a small plant; warm morning window light. Landscape 4:3.",
   },
-  household: {
-    src: "/landing/concept-household.webp",
-    alt: "Concept: an e-ink display on a fridge door showing the family's tasks",
-    label: "Concept render: household display",
-    ratio: "924 / 476",
+  fridge: {
+    src: null,
+    alt: "Concept: a todone e-ink display on a fridge door showing the household's shared list",
+    label: "Concept render: fridge display",
+    ratio: "4 / 3",
     concept: true,
+    prompt:
+      LOOK +
+      "Scene: a 10-inch todone display magnetically mounted on a matte sage-green fridge door in a bright modern flat " +
+      "kitchen, with a couple of colourful magnets and a polaroid nearby; the screen shows a shared list titled " +
+      "'Home' (groceries, bills, plants). Landscape 4:3.",
+  },
+  bag: {
+    src: null,
+    alt: "Concept: a small todone e-ink display clipped to a backpack strap, showing the next three tasks",
+    label: "Concept render: bag clip",
+    ratio: "4 / 5",
+    concept: true,
+    prompt:
+      LOOK +
+      "Scene: a palm-sized todone display in a rugged rounded case with a carabiner clip, hanging from the strap of a " +
+      "black technical backpack, on a city street at golden hour with a blurred metro station behind; the screen " +
+      "shows 'Next' with three tasks. Streetwear, Gen Z editorial mood. Portrait 4:5.",
   },
 } satisfies Record<string, Shot>;
 
-// Mobile publishing accounts: Google Play Console ($25 once) and the Apple Developer Program ($99 a year).
-// `raisedUsd` is what members' purchases have actually raised; update it from Razorpay. Once it reaches the
-// target, set `done` and the section steps aside.
+// The kickstarter: each goal unlocks the next step, funded by members' Plus, Team and Founding purchases.
+// App-store fees are what Google and Apple charge (converted at about ₹88 to $1); hardware amounts are our
+// estimates for prototype R&D only (panels, boards, enclosures, a few iterations), not manufacturing.
+// `raisedInr` is what members have actually raised; update it from Razorpay. Set `done` to hide the section.
 export const FUNDING = {
-  targetUsd: 124,
-  raisedUsd: 0,
+  raisedInr: 0,
   done: false,
-  parts: [
-    ["Google Play Console", "$25 once"],
-    ["Apple Developer Program", "$99 a year"],
-  ],
-} as const;
+};
+
+export type Goal = { key: string; name: string; inr: number; what: string; fill: string; kind: "fee" | "rnd" };
+
+export const GOALS: Goal[] = [
+  {
+    key: "android",
+    name: "Android app",
+    inr: 2200,
+    what: "Google Play Console: $25, once. Puts todone on the Play Store.",
+    fill: "var(--lime)",
+    kind: "fee",
+  },
+  {
+    key: "iphone",
+    name: "iPhone app",
+    inr: 8800,
+    what: "Apple Developer Program: $99 a year. Puts todone on the App Store.",
+    fill: "var(--cyan)",
+    kind: "fee",
+  },
+  {
+    key: "desk",
+    name: "Desk display",
+    inr: 25000,
+    what: "A 7-inch e-ink panel, ESP32 board, stand and enclosure prototypes, three rounds of iteration.",
+    fill: "var(--butter)",
+    kind: "rnd",
+  },
+  {
+    key: "fridge",
+    name: "Fridge display",
+    inr: 50000,
+    what: "A larger 10–13-inch e-ink panel, magnetic mount, battery that lasts months, shared household lists.",
+    fill: "var(--pink)",
+    kind: "rnd",
+  },
+  {
+    key: "bag",
+    name: "Bag clip",
+    inr: 75000,
+    what: "A palm-sized device: custom circuit board runs, a rugged clip-on case and a battery for days away from a charger.",
+    fill: "var(--peri)",
+    kind: "rnd",
+  },
+];
 
 // Razorpay payment page (UPI, cards, netbanking). Empty until it's live; buttons then say "Opening soon".
 export const PAY_URL = "";
 
+export type Billing = "month" | "half" | "year";
+export const BILLING: [Billing, string][] = [
+  ["month", "Monthly"],
+  ["half", "6 months"],
+  ["year", "Yearly"],
+];
+
 export type Plan = {
   name: string;
-  inr: string;
-  usd: string;
+  // Price per billing period, in rupees and dollars; null on Free.
+  price: Record<Billing, [string, string]> | null;
   per: string;
-  note: string;
   points: string[];
   fill: string;
   lead?: boolean;
@@ -72,11 +155,9 @@ export type Plan = {
 export const PLANS: Plan[] = [
   {
     name: "Free",
-    inr: "₹0",
-    usd: "$0",
+    price: null,
     per: "forever",
     fill: "#fff8ef",
-    note: "Everything todone does, synced across your devices.",
     points: [
       "Up to 10 lists",
       "One team of up to 5 people",
@@ -86,11 +167,9 @@ export const PLANS: Plan[] = [
   },
   {
     name: "Plus",
-    inr: "₹899",
-    usd: "$29",
-    per: "a year",
+    price: { month: ["₹99", "$3"], half: ["₹499", "$16"], year: ["₹899", "$29"] },
+    per: "",
     fill: "var(--lime)",
-    note: "Or ₹99 / $3 a month, ₹499 / $16 for six months.",
     points: [
       "Unlimited lists",
       "Teams of up to 10 people",
@@ -101,11 +180,9 @@ export const PLANS: Plan[] = [
   },
   {
     name: "Team",
-    inr: "₹1,499",
-    usd: "$49",
-    per: "a person, a year",
+    price: { month: ["₹149", "$5"], half: ["₹799", "$26"], year: ["₹1,499", "$49"] },
+    per: "a person",
     fill: "var(--cyan)",
-    note: "Or ₹149 / $5 a person a month, ₹799 / $26 for six months.",
     points: [
       "Everything in Plus",
       "Unlimited people and teams",
@@ -115,6 +192,9 @@ export const PLANS: Plan[] = [
   },
 ];
 
-// A one-off way to back the mobile apps: three years of Plus, paid once. Not lifetime cloud, which would
-// promise hosting costs forever.
+// Yearly Plus in rupees, for the funding calculator.
+export const PLUS_YEAR_INR = 899;
+
+// A one-off way to back the roadmap: three years of Plus, paid once. Not lifetime cloud, which would promise
+// hosting costs forever.
 export const FOUNDING = { name: "Founding member", inr: "₹1,999", usd: "$59", per: "once, for 3 years of Plus" };

@@ -6,6 +6,17 @@ export const metadata: Metadata = { title: "Changelog", description: "What's new
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "6 November 2026",
+    title: "A homepage you can play with",
+    items: [
+      "New tagline: Todos. Done right.",
+      "Every section of the homepage works: tick steps, drag the week around, go offline and back, connect tools, switch billing.",
+      "The roadmap: the web app now, Android and iPhone next, then hardware for your desk, fridge and bag.",
+      "Goals you can help unlock, in rupees, funded by Plus, Team and Founding members.",
+      "Plans and prices, with checkout through Razorpay opening soon.",
+    ],
+  },
+  {
     date: "5 November 2026",
     title: "todone.today",
     items: [

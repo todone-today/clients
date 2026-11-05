@@ -272,9 +272,6 @@ button.note[data-over] {
 .dark {
   align-self: start;
 }
-.dark > .offline {
-  color: #fff8ef;
-}
 .dark .stepNote,
 .shared {
   justify-self: start;
@@ -305,14 +302,10 @@ button.note[data-over] {
   border-top: 2px dashed rgb(11 11 11 / 0.35);
   font-weight: 600;
 }
-.stepNote li,
-.shared li,
 .lane li {
   position: relative;
   padding-left: 1.7rem;
 }
-.stepNote li::before,
-.shared li::before,
 .lane li::before {
   content: "";
   position: absolute;
@@ -323,12 +316,6 @@ button.note[data-over] {
   background: #fff8ef;
   border: 2.5px solid var(--black);
 }
-.stepNote li[data-done],
-.shared li[data-done] {
-  text-decoration: line-through 2px;
-}
-.stepNote li[data-done]::before,
-.shared li[data-done]::before,
 .lane li[data-done]::before {
   background: var(--black);
 }
@@ -366,52 +353,6 @@ button.note[data-over] {
 .week span {
   font: 700 0.75rem var(--mono);
   color: var(--ink-2);
-}
-.week i {
-  padding: 0.3rem 0.4rem;
-  overflow: hidden;
-  font: normal 700 0.78rem/1.2 var(--sans);
-  color: var(--black);
-  background: var(--fill);
-  border: 2px solid var(--black);
-  box-shadow: var(--lift-sm);
-}
-.offline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-self: start;
-  padding: 0.6rem 0.9rem;
-  font-weight: 700;
-  color: #fff8ef;
-  background: var(--black);
-}
-
-.tools {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-}
-.tools li {
-  display: grid;
-  padding: 0.65rem 0.9rem;
-  color: var(--black);
-  background: var(--butter);
-  border: var(--key);
-  box-shadow: var(--lift-sm);
-}
-.tools li:nth-child(3n + 2) {
-  background: var(--pink);
-  rotate: 1deg;
-}
-.tools li:nth-child(3n) {
-  background: var(--cyan);
-  rotate: -1deg;
-}
-.tools span {
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 /* ---------- Why: copy beside the real board ---------- */
@@ -542,53 +483,6 @@ button.note[data-over] {
   border: var(--key);
 }
 
-.fund {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 2rem 3rem;
-  margin-top: 3.5rem;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-  background: var(--raise);
-  border: 2.5px dashed var(--ink-2);
-}
-.fund h3 {
-  font-size: clamp(2rem, 3.5vw, 3rem);
-}
-.fund > div > p {
-  margin: 1rem 0;
-  max-width: 38rem;
-  color: var(--ink-2);
-}
-.parts {
-  list-style: none;
-  display: grid;
-  gap: 0.4rem;
-  max-width: 26rem;
-}
-.parts li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 2px solid var(--hair);
-}
-.parts b {
-  font-variant-numeric: tabular-nums;
-}
-.meter {
-  display: grid;
-  gap: 0.9rem;
-  align-content: center;
-  justify-items: start;
-}
-.meter > p:first-child {
-  font-size: clamp(3rem, 6vw, 4.5rem);
-  font-variant-numeric: tabular-nums;
-}
-.meter > p:first-child span {
-  font-size: 0.45em;
-  color: var(--ink-2);
-}
 .bar {
   width: 100%;
   height: 1.4rem;
@@ -644,27 +538,6 @@ button.note[data-over] {
   color: #fff8ef;
   background: #111;
   border-color: #2c2c2c;
-}
-.devices {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  align-items: end;
-}
-.device {
-  display: grid;
-  gap: 1rem;
-  margin: 0;
-}
-.device .shot {
-  border: 2.5px solid #2c2c2c;
-}
-.device figcaption {
-  max-width: 34rem;
-  color: #c9c2b8;
-}
-.device b {
-  color: #fff8ef;
 }
 
 /* ---------- Pricing ---------- */
@@ -914,8 +787,8 @@ button.note[data-over] {
     grid-column: 1 / -1;
   }
   .why,
-  .fund,
-  .devices,
+  .goals,
+  .place,
   .lanes,
   .plans {
     grid-template-columns: minmax(0, 1fr);
@@ -972,5 +845,386 @@ button.note[data-over] {
   }
   .note[data-landed] {
     animation: none;
+  }
+}
+
+/* ---------- Hands-on pieces (Demos.tsx) ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.15rem 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.row [data-done] {
+  text-decoration: line-through 2px;
+}
+.row small {
+  margin-left: auto;
+  padding: 0 0.4rem;
+  font: 800 0.7rem var(--sans);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.tick {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+  transition: transform 0.2s var(--ease);
+}
+.tick[data-on] {
+  background: var(--black);
+  animation: tickPop 0.35s var(--ease);
+}
+@keyframes tickPop {
+  40% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+}
+.stepNote > .row b {
+  font-size: 1.15rem;
+}
+.try {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgb(11 11 11 / 0.7);
+}
+.weekWrap .try {
+  margin-top: 0.6rem;
+  color: var(--ink-2);
+}
+.faces i[data-you] {
+  width: auto;
+  padding: 0 0.5rem;
+  border-radius: 0;
+  background: var(--lime);
+}
+
+.block {
+  overflow: hidden;
+  padding: 0.3rem 0.4rem;
+  font: 700 0.78rem/1.2 var(--sans);
+  text-align: left;
+  color: var(--black);
+  background: var(--fill);
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+  cursor: grab;
+  transition: transform 0.2s var(--ease);
+}
+.block:hover {
+  transform: translate(-1px, -1px);
+}
+.block[aria-pressed="true"] {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.week > div[data-over],
+.week > div[data-holding] {
+  background: color-mix(in srgb, var(--lime) 25%, transparent);
+  outline: 2px dashed var(--ink-2);
+}
+.week > div {
+  padding: 0.2rem;
+  cursor: default;
+}
+
+.offlineDemo {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+}
+.offlineDemo ul {
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  width: min(100%, 22rem);
+  padding: 0.9rem 1rem;
+  background: #fff8ef;
+  border: var(--key);
+  font-weight: 600;
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  font: 800 0.9rem var(--sans);
+  color: #fff8ef;
+  background: var(--black);
+  border: var(--key);
+  cursor: pointer;
+}
+.switch[aria-pressed="true"] {
+  color: var(--black);
+  background: #fff8ef;
+}
+.syncState {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.toolsDemo {
+  display: grid;
+  gap: 1.1rem;
+}
+.tools {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  color: var(--black);
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.tools li:nth-child(odd) button {
+  rotate: -1deg;
+}
+.tools li:nth-child(even) button {
+  rotate: 1deg;
+}
+.tools button:hover {
+  transform: translate(-2px, -2px);
+}
+.tools button[aria-pressed="true"] {
+  background: var(--lime);
+}
+.brand {
+  flex: none;
+}
+.toolNote {
+  max-width: 44rem;
+  color: var(--ink-2);
+}
+.toolNote b {
+  color: var(--ink);
+}
+
+/* The goal ladder and its what-if calculator. */
+.funding {
+  padding: 7rem var(--gutter) 6rem;
+}
+.funding h2 {
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
+}
+.goals {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 2rem 3rem;
+  align-items: start;
+}
+.ladder {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  counter-reset: goal;
+}
+.ladder li {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.1rem 1.25rem;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.ladder li:nth-child(odd) {
+  rotate: -0.5deg;
+}
+.ladder li:nth-child(even) {
+  rotate: 0.5deg;
+}
+.ladder li[data-hit] {
+  transform: translateX(0.6rem);
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+.goalHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.goalHead b {
+  font-size: 1.9rem;
+}
+.goalHead span {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ladder p {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.ladder small {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgb(11 11 11 / 0.7);
+}
+.ladder .bar {
+  height: 0.9rem;
+  background: #fff8ef;
+  border-color: var(--black);
+}
+.ladder .bar i {
+  background: var(--black);
+}
+.calc {
+  position: sticky;
+  top: 6rem;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  padding: 1.75rem;
+  background: var(--raise);
+  border: 2.5px dashed var(--ink-2);
+}
+.calc > p:first-child {
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  font-variant-numeric: tabular-nums;
+}
+.calc > p:first-child span {
+  font-size: 0.4em;
+  color: var(--ink-2);
+}
+.calc label {
+  font-weight: 700;
+}
+.calc input[type="range"] {
+  width: 100%;
+  accent-color: var(--lime);
+}
+.calcOut {
+  font-size: 1.05rem;
+}
+
+/* Billing switch above the plans. */
+.billing {
+  display: inline-flex;
+  margin-bottom: 1.75rem;
+  border: var(--key);
+  border-color: var(--ink);
+}
+.billing button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  font: 800 0.95rem var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.billing button + button {
+  border-left: 2px solid var(--ink);
+}
+.billing button[aria-checked="true"] {
+  color: var(--black);
+  background: var(--lime);
+}
+.billing small {
+  font-size: 0.72rem;
+}
+
+/* Hardware: tabs by where it lives. */
+.hwDemo {
+  display: grid;
+  gap: 1.5rem;
+}
+.places {
+  display: flex;
+  gap: 0.8rem;
+}
+.places button {
+  padding: 0.55rem 1.1rem;
+  font: 800 1rem var(--sans);
+  color: #fff8ef;
+  border: 2.5px solid #fff8ef;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.places button:hover {
+  transform: translateY(-2px);
+}
+.places button[aria-selected="true"] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--lime);
+}
+.place {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 2rem 3rem;
+  align-items: center;
+}
+.place .shot {
+  border: 2.5px solid #2c2c2c;
+  max-height: 34rem;
+}
+.place h3 {
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+}
+.place p {
+  margin-top: 0.8rem;
+  max-width: 30rem;
+  color: #c9c2b8;
+}
+.goalTag {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  font-weight: 800;
+  color: var(--black) !important;
+  background: var(--butter);
+}
+@media (max-width: 560px) {
+  .goalHead b {
+    font-size: 1.5rem;
+  }
+  .billing button {
+    padding: 0.55rem 0.7rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tick[data-on] {
+    animation: none;
+  }
+  .ladder li,
+  .block,
+  .tools button {
+    transition: none;
+  }
+}
+/* Phone layouts for the hands-on pieces (after their base rules, so they win). */
+@media (max-width: 900px) {
+  .goals,
+  .place {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .calc {
+    position: static;
+  }
+  .ladder li[data-hit] {
+    transform: none;
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
   }
 }

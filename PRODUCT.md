@@ -25,8 +25,8 @@ Open source (GPL-3.0) and self-hostable, with a hosted cloud at todone.today. To
 ## Roadmap
 
 1. **Web app (now):** everything under Capabilities.
-2. **Native mobile (next):** Android and iOS apps with mobile-first capture, push reminders, cross-device sync, OS integrations, widgets and quick actions. Publishing needs a Google Play Console account ($25 one-time) and the Apple Developer Program ($99 a year): a $124 community funding target, which covers the accounts only, not development. Contributions come from members' plan purchases through Razorpay/UPI (not live yet). The site shows real progress only (starts at $0, updated by hand in `apps/web/src/lib/landing.ts`), and the section is removed once the target is reached.
-3. **Hardware (exploratory, no commitment):** e-ink devices that show the day's tasks without a phone: a pocket e-reader for today's tasks with check-off, a household display for fridge, desk or wall with family lists and schedules, desk displays, e-ink calendars. An early e-paper firmware prototype exists for an ESP32-S3 e-paper board; nothing is for sale.
+2. **Native mobile (next):** Android and iOS apps with mobile-first capture, push reminders, cross-device sync, OS integrations, widgets and quick actions. Members' purchases fund a goal ladder in INR, in order: Android (Google Play $25 ≈ ₹2,200), iPhone (Apple $99/yr ≈ ₹8,800), then hardware prototype R&D estimates: desk ₹25,000, fridge ₹50,000, bag ₹75,000. App-store amounts are fees; hardware amounts are R&D estimates, not manufacturing. Contributions come from members' plan purchases through Razorpay/UPI (not live yet). The site shows real progress only (starts at $0, updated by hand in `apps/web/src/lib/landing.ts`), and the section is removed once the target is reached.
+3. **Hardware (after the mobile apps; prototypes, not for sale):** calm e-ink devices where people look: a desk display, a fridge display for the household, a bag clip. Also e-ink calendars and smart home later. An early e-paper firmware prototype exists for an ESP32-S3 board. Product shots on the site are concept renders, labelled as such.
 
 ## Operating Context
 

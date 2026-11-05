@@ -10,7 +10,9 @@ export type Payload =
   | { kind: "task"; listId: string; id: string; ids: string[] }
   | { kind: "idea"; id: string; ids: string[] }
   | { kind: "sticker"; key: string }
-  | { kind: "list"; id: string };
+  | { kind: "list"; id: string }
+  // The landing page's demo pieces (e.g. a block on the week strip).
+  | { kind: "demo"; id: string };
 export type At = { x: number; y: number; el: HTMLElement };
 type Target = {
   accept: (p: Payload, arg: string) => boolean;
