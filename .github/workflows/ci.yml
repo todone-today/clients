@@ -54,7 +54,7 @@ jobs:
       - run: npm run build
 
   deploy:
-    # develop -> preview at todone-develop.vercel.app, main -> production.
+    # develop -> preview at todone-develop.vercel.app, main -> production at todone.today.
     if: github.event_name == 'push'
     needs: [sdk, server, web]
     runs-on: ubuntu-latest
