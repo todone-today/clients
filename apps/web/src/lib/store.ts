@@ -16,12 +16,14 @@ let server: List[] = [];
 let error = "";
 let queue = Promise.resolve();
 let pending = 0;
+// The demo at /demo: the same app on sample lists, with every change kept in this tab only.
+let demo = false;
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
 
 function show(next: List[]) {
   cache = next;
-  if (next === server)
+  if (next === server && !demo)
     try {
       localStorage.setItem(SAVED, JSON.stringify(server));
     } catch {}
@@ -50,6 +52,7 @@ async function attempt(op: () => Promise<void>) {
 
 // Writes run one at a time so each starts from the version the previous one produced.
 function enqueue(op: () => Promise<void>) {
+  if (demo) return;
   pending++;
   queue = queue
     .then(() => attempt(op))
@@ -80,6 +83,12 @@ export async function reload(personal: boolean) {
   if (personal) importLocal();
 }
 
+export function startDemo(lists: List[]) {
+  demo = true;
+  error = "";
+  show((server = lists));
+}
+
 export function showSaved() {
   try {
     server = JSON.parse(localStorage.getItem(SAVED) ?? "[]");
@@ -91,7 +100,7 @@ export function showSaved() {
 // Picks up teammates' edits; skipped while our own writes are in flight.
 // ponytail: polled (focus and every 20s), no live push; add SSE/websockets if teams need to watch edits happen.
 export async function refresh() {
-  if (pending || !cache) return;
+  if (demo || pending || !cache) return;
   const next = await fetchLists().catch(() => null);
   if (next && !pending) {
     if (error === OFFLINE) error = "";

@@ -13,7 +13,7 @@ import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
-import { mapTask, moveToList, refresh, reload, reorder, showSaved, useLists } from "@/lib/store";
+import { mapTask, moveToList, refresh, reload, reorder, showSaved, startDemo, useLists } from "@/lib/store";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -74,7 +74,8 @@ const count = (ts: Task[], today = todayISO()) => {
   return { open: all.filter((t) => !t.done).length, done: all.filter((t) => t.done).length, all: all.length };
 };
 
-export function TodoApp() {
+// `demo`: the app on sample lists with no account (todone.today/demo); changes stay in this tab.
+export function TodoApp({ demo = false }: { demo?: boolean }) {
   const router = useRouter();
   const { data: session, isPending, error: offline, refetch } = authClient.useSession();
   const orgId = session?.session.activeOrganizationId ?? null;
@@ -125,22 +126,31 @@ export function TodoApp() {
   };
 
   useEffect(() => {
-    if (!isPending && !userId && !offline) router.replace("/login?next=/app");
-  }, [isPending, userId, offline, router]);
+    if (!demo && !isPending && !userId && !offline) router.replace("/login?next=/app");
+  }, [demo, isPending, userId, offline, router]);
+  useEffect(() => {
+    if (!demo) return;
+    fetch(`/api/demo?today=${todayISO()}`)
+      .then((r) => r.json())
+      .then((ls: { name: string; tasks: Task[]; kind?: "ideas" }[]) => {
+        startDemo(ls.map((l, i) => ({ ...l, id: uid(), version: 0, updated: 0, position: i + 1 })));
+        setTouring(true);
+      });
+  }, [demo]);
   // The service worker keeps the app openable offline (and shows push notifications).
   useEffect(() => {
     if (process.env.NODE_ENV === "production") navigator.serviceWorker?.register("/sw.js").catch(() => {});
   }, []);
   // Opened without a connection: show the lists as last saved, and pick up properly once it's back.
   useEffect(() => {
-    if (!offline || userId) return;
+    if (demo || !offline || userId) return;
     if (!navigator.onLine) showSaved();
     const back = () => refetch();
     addEventListener("online", back, { once: true });
     return () => removeEventListener("online", back);
-  }, [offline, userId, refetch]);
+  }, [demo, offline, userId, refetch]);
   useEffect(() => {
-    if (!userId) return;
+    if (demo || !userId) return;
     // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
     reload(!orgId).then(async () => {
       if (new URLSearchParams(location.search).has("connect")) return setPanel("integrations");
@@ -150,7 +160,7 @@ export function TodoApp() {
         setTouring(true);
       }
     });
-  }, [userId, orgId]);
+  }, [demo, userId, orgId]);
   // Changes from other devices and teammates show up on focus, and every 20s while the tab is visible.
   useEffect(() => {
     const timer = setInterval(() => document.visibilityState === "visible" && refresh(), 20_000);
@@ -207,28 +217,41 @@ export function TodoApp() {
           Tour
         </button>
         <ThemeToggle />
-        <button
-          className={s.topLink}
-          aria-pressed={panel === "account"}
-          onClick={() => show("account")}
-          title={session?.user.email}
-        >
-          Account
-        </button>
+        {demo ? (
+          <Link href="/login" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            Make an account
+          </Link>
+        ) : (
+          <button
+            className={s.topLink}
+            aria-pressed={panel === "account"}
+            onClick={() => show("account")}
+            title={session?.user.email}
+          >
+            Account
+          </button>
+        )}
       </header>
+      {demo && (
+        <p className={s.demoBar} role="note">
+          This is a demo with sample lists. Try anything: changes stay in this tab and vanish when you close it.
+        </p>
+      )}
 
       {/* On a phone the sidebar is a drawer, opened from the header. */}
       {drawer && <div className={s.backdrop} onClick={() => setDrawer(false)} aria-hidden />}
       <aside className={s.side} aria-label="Lists" data-open={drawer}>
-        <Workspaces
-          orgId={orgId}
-          panel={panel}
-          onPanel={show}
-          onSwitch={() => {
-            setPicked(null);
-            setPanel(null);
-          }}
-        />
+        {!demo && (
+          <Workspaces
+            orgId={orgId}
+            panel={panel}
+            onPanel={show}
+            onSwitch={() => {
+              setPicked(null);
+              setPanel(null);
+            }}
+          />
+        )}
         {/* Brainstorm lives above the lists: a place for loose ideas that isn't a list itself. */}
         <button
           className={`${s.listBtn} ${s.ideasBtn}`}
@@ -274,13 +297,20 @@ export function TodoApp() {
               open(id);
             }}
           />
-          <Feedback />
+          {!demo && <Feedback />}
         </div>
       </aside>
 
       <main className={s.main}>
         {panel === "calendar" ? (
-          lists && <CalendarView lists={lists.filter((l) => !l.kind)} update={update} onOpen={open} share={shareCalendar} />
+          lists && (
+            <CalendarView
+              lists={lists.filter((l) => !l.kind)}
+              update={update}
+              onOpen={open}
+              share={demo ? undefined : shareCalendar}
+            />
+          )
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} />
         ) : panel === "members" && orgId ? (

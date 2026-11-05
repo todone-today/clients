@@ -71,3 +71,47 @@
   font-size: 0.85rem;
   color: var(--ink-2);
 }
+.date {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.status {
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+}
+.status li {
+  display: grid;
+  grid-template-columns: 8rem 6rem 1fr;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--raise);
+  border: 2px solid var(--hair);
+}
+.status li span {
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.status li[data-ok="true"] span {
+  color: inherit;
+  text-decoration: underline 3px var(--lime);
+}
+.status li[data-ok="false"] {
+  border-color: var(--hot);
+}
+.status li[data-ok="false"] span {
+  color: var(--hot);
+}
+.status small {
+  color: var(--ink-2);
+}
+@media (max-width: 560px) {
+  .status li {
+    grid-template-columns: 1fr auto;
+  }
+  .status small {
+    grid-column: 1 / -1;
+  }
+}

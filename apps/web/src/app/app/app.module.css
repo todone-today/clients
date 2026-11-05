@@ -2269,3 +2269,17 @@
 .aiSteps .aiLists li {
   display: list-item;
 }
+
+/* The demo's note under the header. */
+.demoBar {
+  grid-column: 1 / -1;
+  padding: 0.5rem var(--gutter);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--butter);
+  border-bottom: 2px solid var(--hair);
+}
+.shell:has(.demoBar) {
+  grid-template-rows: auto auto 1fr;
+}

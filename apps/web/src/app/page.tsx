@@ -127,6 +127,9 @@ export default function Home() {
               <Link href="/app" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
                 Start a list <ArrowRight size={18} strokeWidth={2.5} />
               </Link>
+              <Link href="/demo" className="btn">
+                Try the demo
+              </Link>
               <a className={s.more} href={REPO}>
                 <GithubMark /> Source on GitHub
               </a>
@@ -233,8 +236,8 @@ export default function Home() {
       <footer className={s.foot}>
         <Logo size={22} />
         <span>Free and open source, GPL-3.0.</span>
-        <nav className={s.legal} aria-label="Policies">
-          {LEGAL_DOCS.map(([href, name]) => (
+        <nav className={s.legal} aria-label="More">
+          {[["/docs", "Guide"], ["/changelog", "Changelog"], ["/status", "Status"], ...LEGAL_DOCS].map(([href, name]) => (
             <Link key={href} href={href}>
               {name}
             </Link>
