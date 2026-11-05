@@ -228,9 +228,6 @@ function Idea({
         </button>
       )}
       <div className={s.ideaTools}>
-        <span className={s.grip} aria-hidden>
-          <GripVertical size={14} strokeWidth={2.5} /> drag onto a list or the bin
-        </span>
         {/* Keyboard path to the same moves; shown when it's tabbed to. */}
         <label className="sr-only" htmlFor={`to-${idea.id}`}>
           Make it a task in, or delete
