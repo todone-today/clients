@@ -58,14 +58,24 @@ export function Brainstorm({
     setIdeas((ts) => ts.filter((t) => !ids.includes(t.id)));
     setPicked(new Set());
   };
-  // Dropping an idea on another's left or right half puts it next to that one; the cards glide over.
+  // Dragging an idea over another's left or right half opens a slot there and the others slide aside, as on
+  // a list's board; the slot is a drop target too, so the gap holds while the pointer is in it.
   const glide = useGlide<HTMLUListElement>();
+  const [gap, setGap] = useState<{ target: string; place: "before" | "after"; ids: string[] } | null>(null);
   const dropOnIdea = useDrop("ideas", {
-    accept: (p, id) => p.kind === "idea" && !p.ids.includes(id),
-    where: (_, __, at) => placeOn(at, "x", false),
+    accept: (p, id) => p.kind === "idea" && (id === "gap" ? !!gap : !p.ids.includes(id)),
+    where: (p, id, at) => {
+      if (p.kind !== "idea" || id === "gap") return "inside";
+      const place = placeOn(at, "x", false) as "before" | "after";
+      setGap((g) => (g?.target === id && g.place === place ? g : { target: id, place, ids: p.ids }));
+      return place;
+    },
+    leave: () => setGap(null),
     drop: (p, id, at) => {
+      setGap(null);
       if (p.kind !== "idea") return;
-      setIdeas((ts) => moveTasks(ts, p.ids, id, placeOn(at, "x", false)));
+      const to = id === "gap" && gap ? gap : { target: id, place: placeOn(at, "x", false) };
+      setIdeas((ts) => moveTasks(ts, p.ids, to.target, to.place));
       setPicked(new Set());
     },
   });
@@ -163,20 +173,26 @@ export function Brainstorm({
 
       {ideas.length ? (
         <ul className={s.board} ref={glide}>
-          {ideas.map((idea) => (
-            <Idea
-              key={idea.id}
-              idea={idea}
-              color={colors.get(idea.id)!}
-              drop={dropOnIdea(idea.id)}
-              targets={targets}
-              onRename={(title) => setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title })))}
-              onMove={(listId) => ideaToTask(lists, idea.id, listId, update)}
-              onDelete={() => remove([idea.id])}
-              picked={picked}
-              onPick={pick}
-            />
-          ))}
+          {ideas.flatMap((idea) => {
+            const card = (
+              <Idea
+                key={idea.id}
+                idea={idea}
+                color={colors.get(idea.id)!}
+                drop={dropOnIdea(idea.id)}
+                dragged={!!gap?.ids.includes(idea.id)}
+                targets={targets}
+                onRename={(title) => setIdeas((ts) => mapTask(ts, idea.id, (t) => ({ ...t, title })))}
+                onMove={(listId) => ideaToTask(lists, idea.id, listId, update)}
+                onDelete={() => remove([idea.id])}
+                picked={picked}
+                onPick={pick}
+              />
+            );
+            if (gap?.target !== idea.id) return [card];
+            const slot = <li key="gap" className={s.slot} {...dropOnIdea("gap")} aria-hidden />;
+            return gap.place === "before" ? [slot, card] : [card, slot];
+          })}
         </ul>
       ) : (
         <div className={s.empty}>
@@ -198,8 +214,10 @@ function Idea({
   picked,
   onPick,
   drop,
+  dragged,
 }: {
   drop: { "data-drop": string };
+  dragged: boolean;
   idea: Task;
   color: string;
   targets: List[];
@@ -216,6 +234,7 @@ function Idea({
     <li
       className={s.idea}
       data-id={idea.id}
+      data-dragged={dragged || undefined}
       {...drop}
       style={{ "--fill": color } as React.CSSProperties}
       data-picked={picked.has(idea.id) || undefined}
