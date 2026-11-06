@@ -190,9 +190,16 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                   : (list?.name ?? "Lists")}
           </span>
         </button>
-        <Link href="/" className={s.mark} aria-label="todone home">
-          <Logo size={26} />
-        </Link>
+        {demo ? (
+          <Link href="/" className={s.mark} aria-label="todone home">
+            <Logo size={26} />
+          </Link>
+        ) : (
+          // Signed in, the logo is the app's home: back to your lists, not the marketing page.
+          <button className={s.mark} onClick={() => setPanel(null)} aria-label="Your lists">
+            <Logo size={26} />
+          </button>
+        )}
         <nav className={s.tabs} aria-label="Views">
           {(
             [
