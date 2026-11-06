@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Bell, CalendarDays, Check, Cloud, CloudOff, Wifi, WifiOff } from "lucide-react";
 import { siApple, siDiscord, siGooglecalendar, siNotion, siObsidian, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
 import { BILLING, FUNDING, GOALS, PAY_URL, PLANS, PLUS_YEAR_INR, SHOTS, type Billing } from "@/lib/landing";
-import { Shot } from "./Shot";
 import s from "./landing.module.css";
 
 // The landing page's hands-on pieces: every section can be poked, and each behaves the way todone does.
+
+// The hardware concepts in 3D (three.js), loaded only in the browser when the section shows.
+const Device3D = dynamic(() => import("./Device3D"), { ssr: false, loading: () => <div className="device3d" /> });
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -479,7 +482,10 @@ export function Hardware() {
         ))}
       </div>
       <div className={s.place} role="tabpanel" aria-label={name}>
-        <Shot shot={shot} sizes="(max-width: 900px) 100vw, 60vw" />
+        <figure className={s.stage}>
+          <Device3D key={PLACES[at][0]} place={PLACES[at][0] as "desk" | "fridge" | "bag"} label={shot.alt} />
+          <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
+        </figure>
         <div>
           <h3 className="display">{title}</h3>
           <p>{line}</p>
