@@ -217,6 +217,10 @@ export default function Home() {
             Rather run it yourself? <a href={`${REPO}/server`}>Self-host todone</a> with Docker Compose: every feature, no
             limits, no licence key.
           </p>
+          <p className={s.selfhost}>
+            Want todone run for your company? Email <a href="mailto:hello@todone.today">hello@todone.today</a> and tell us
+            what you need.
+          </p>
         </section>
 
         {/* Community: four ways in. */}
