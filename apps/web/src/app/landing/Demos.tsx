@@ -527,7 +527,7 @@ export function Hardware() {
             <h3 className="display">{title}</h3>
             <p>{line}</p>
             <p className={s.goalTag}>
-              Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototypes
+              Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototype R&amp;D · sold separately later
             </p>
           </div>
         </div>

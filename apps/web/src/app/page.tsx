@@ -209,8 +209,9 @@ export default function Home() {
               Your tasks, off your phone.
             </h2>
             <p>
-              Calm e-ink screens that show the day without asking for your attention, wherever you&apos;ll see them. These
-              are concepts we&apos;re prototyping after the mobile apps; nothing is for sale yet.
+              Calm e-ink screens that show the day without asking for your attention, wherever you&apos;ll see them. They
+              come after the mobile apps and will be <b>sold separately</b> from the app. Right now they&apos;re concepts:
+              your Plus, Team or Founding membership funds their prototype R&amp;D, one goal at a time.
             </p>
           </div>
           <Hardware />
