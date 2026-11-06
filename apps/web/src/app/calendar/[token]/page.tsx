@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import type { SharedView } from "@todone/sdk/api";
-import { server } from "@/lib/server";
+import { proxyHeaders, server } from "@/lib/server";
 import { CalendarView } from "../../app/CalendarView";
 import s from "../../app/app.module.css";
 
@@ -23,7 +23,7 @@ export default function SharedCalendar({ params, searchParams }: PageProps<"/cal
 async function Shared({ params, searchParams }: PageProps<"/calendar/[token]">) {
   await connection();
   const { token } = await params;
-  const r = await fetch(`${server()}/api/shared/${encodeURIComponent(token)}`, { cache: "no-store" });
+  const r = await fetch(`${server()}/api/shared/${encodeURIComponent(token)}`, { cache: "no-store", headers: proxyHeaders() });
   if (r.status === 404) notFound();
   if (!r.ok) throw new Error(`The server said ${r.status}`);
   const shared: SharedView = await r.json();
