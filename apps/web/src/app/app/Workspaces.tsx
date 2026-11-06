@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Plug, Plus, Settings, UserMinus } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Copy, KeyRound, Plug, Plus, Settings, UserMinus } from "lucide-react";
 import { Select } from "@/components/Select";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
+import { confirmMember, fingerprint, type Member, teamKey, teamMembers } from "@/lib/vault";
 import s from "./app.module.css";
 
 const org = authClient.organization;
@@ -113,6 +114,21 @@ export function Workspaces({
 export function Members() {
   const { data: o, refetch } = authClient.useActiveOrganization();
   const { data: me } = authClient.useActiveMember();
+  // Who has the team's key (end-to-end encryption): newcomers need a teammate who has it to confirm them.
+  const [keys, setKeys] = useState<Map<string, Member>>(new Map());
+  const [mine, setMine] = useState(false);
+  const loadKeys = useCallback(
+    (id: string) =>
+      Promise.all([teamMembers(id).catch(() => []), teamKey(id, true).catch(() => null)]).then(([ms, k]) => {
+        setKeys(new Map(ms.map((m) => [m.userId, m])));
+        setMine(!!k);
+      }),
+    [],
+  );
+  const count = o?.members.length;
+  useEffect(() => {
+    if (o?.id) void loadKeys(o.id);
+  }, [o?.id, count, loadKeys]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"member" | "admin">("member");
   const [msg, setMsg] = useState("");
@@ -223,6 +239,9 @@ export function Members() {
               <span className={s.roleTag} data-role={m.role}>
                 {m.role}
               </span>
+              {keys.get(m.userId) && !keys.get(m.userId)!.hasKey && (
+                <Confirm member={keys.get(m.userId)!} org={o.id} canGive={mine} onDone={() => loadKeys(o.id)} />
+              )}
               {m.id === me.id
                 ? // The only owner can't leave; they delete the team instead.
                   (m.role !== "owner" || o.members.filter((x) => x.role === "owner").length > 1) && (
@@ -278,6 +297,39 @@ export function Members() {
 }
 
 // Deleting sits apart from everything else, says what goes, and asks once more before it happens.
+// A member who joined but can't open the team's encrypted lists yet. Someone holding the key confirms them: their
+// public key gets a copy. Compare the fingerprint with theirs (Account → End-to-end encryption) to be sure.
+function Confirm({ member, org, canGive, onDone }: { member: Member; org: string; canGive: boolean; onDone: () => void }) {
+  const [print, setPrint] = useState("");
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    if (member.publicKey) fingerprint(member.publicKey).then(setPrint);
+  }, [member.publicKey]);
+  if (!canGive) return <span className={s.roleTag}>waiting for the key</span>;
+  return (
+    <span className={s.confirm}>
+      <button
+        className="btn"
+        style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+        title={print ? `Their key's fingerprint: ${print}` : undefined}
+        onClick={async () => {
+          setErr("");
+          try {
+            await confirmMember(org, member);
+            onDone();
+          } catch (x) {
+            setErr(x instanceof Error ? x.message : "Couldn't confirm.");
+          }
+        }}
+      >
+        <KeyRound size={16} strokeWidth={2.5} aria-hidden /> Confirm
+      </button>
+      {print && <code>{print}</code>}
+      {err && <span className={s.err}>{err}</span>}
+    </span>
+  );
+}
+
 function DeleteTeam({ id, name }: { id: string; name: string }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);

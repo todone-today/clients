@@ -7,6 +7,19 @@ export const metadata: Metadata = { title: "Changelog", description: "What's new
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "6 November 2026",
+    title: "End-to-end encrypted",
+    items: [
+      "Your lists, tasks, steps and ideas are encrypted on your device before they're saved. Our servers only hold scrambled data; we can't read it.",
+      "Your password never leaves your browser. Sign-up gives you a recovery key: it's the only way back in if you forget your password, so keep it safe. See it again under Account.",
+      "Already have an account? Sign in once as usual and your lists are encrypted for you; you'll get your recovery key then.",
+      "Teams share a key only members hold. A teammate confirms each new member, with a fingerprint to check.",
+      "Integrations, the calendar feed and shared links only see lists you switch off encryption for, under a list's name.",
+      "Reminders now come from todone itself while a tab is open, since the server can't see what's due.",
+      "Sign in with email and password; GitHub sign-in is gone (Google Calendar still connects).",
+    ],
+  },
+  {
+    date: "6 November 2026",
     title: "Your account, safer",
     items: [
       "New accounts confirm their email with a link; unconfirmed accounts are deleted after 7 days, and a banner says when.",

@@ -33,16 +33,29 @@ export default function Privacy() {
         </thead>
         <tbody>
           <tr>
-            <td>Your name, email and password (stored only as a salted hash)</td>
+            <td>
+              Your name and email. Your password never reaches us: your browser sends only a one-way hash derived from it,
+              which we hash again
+            </td>
             <td>To make your account and sign you in.</td>
           </tr>
           <tr>
-            <td>Your GitHub or Google account ID, name, email and picture, if you sign in with them</td>
-            <td>To sign you in without a password.</td>
+            <td>
+              Your lists, tasks and ideas, <b>end-to-end encrypted</b>: we store them scrambled and can&apos;t read them.
+              Lists you switch off encryption for (to use integrations) are stored readable
+            </td>
+            <td>This is the app: to store them and show them to you and the teams you share them with.</td>
           </tr>
           <tr>
-            <td>Your lists, tasks, ideas, teams, invitations and settings</td>
-            <td>This is the app: to store them and show them to you and the teams you share them with.</td>
+            <td>
+              Your encryption keys, locked by your password and by your recovery key, and your public key (so teammates
+              can share a team&apos;s key with you)
+            </td>
+            <td>So you can open your lists on any device. We can&apos;t unlock them.</td>
+          </tr>
+          <tr>
+            <td>Your teams, invitations and settings</td>
+            <td>To run teams and the features you turn on.</td>
           </tr>
           <tr>
             <td>The IP address and browser of each signed-in session</td>
@@ -51,10 +64,6 @@ export default function Privacy() {
           <tr>
             <td>Tokens for services you connect (Google Calendar, Notion, a Discord webhook)</td>
             <td>To sync with those services, only when you turn it on.</td>
-          </tr>
-          <tr>
-            <td>A push address for each device where you turn on reminders</td>
-            <td>To send the reminders you asked for.</td>
           </tr>
           <tr>
             <td>Feedback you send, with the page you sent it from and your browser</td>
@@ -89,9 +98,8 @@ export default function Privacy() {
           Gravatar (Automattic), for profile pictures: your browser asks it for the picture matching a scrambled (hashed)
           form of your email. If you have no Gravatar, you see your initial.
         </li>
-        <li>GitHub and Google, if you sign in with them or connect Google Calendar.</li>
+        <li>Google, if you connect Google Calendar.</li>
         <li>Notion and Discord, if you connect them.</li>
-        <li>Your browser&apos;s push service (Apple, Google or Mozilla), for reminders you turn on.</li>
       </ul>
       <p>
         These providers may store data outside India. We only use providers that protect it, and we don&apos;t transfer it to
@@ -103,7 +111,7 @@ export default function Privacy() {
       <p>
         Until you delete it or your account. Accounts whose email isn&apos;t confirmed within 7 days of signing up are
         deleted, with everything in them. Deleting a task, list or team removes it; deleting your account removes your
-        account, personal lists, settings, sessions, connected-service tokens, push addresses and feedback straight away,
+        account, personal lists, settings, sessions, connected-service tokens, keys and feedback straight away,
         along with any team where you&apos;re the only member. Copies can stay in our database provider&apos;s backups for up
         to 30 days before they roll off.
       </p>
@@ -146,8 +154,10 @@ export default function Privacy() {
 
       <h2>Security</h2>
       <p>
-        Connections are encrypted, passwords are hashed, and access is limited to what each account and team may see. If a
-        breach affects your data, we&apos;ll tell you and the Data Protection Board as the law requires.
+        Your lists are end-to-end encrypted in your browser (AES-256), with a key that only your password or recovery key
+        can open; we never receive either. Connections are encrypted too, and access is limited to what each account and
+        team may see. This also means we can&apos;t recover your lists if you lose both your password and your recovery
+        key. If a breach affects your data, we&apos;ll tell you and the Data Protection Board as the law requires.
       </p>
 
       <h2>Cookies</h2>

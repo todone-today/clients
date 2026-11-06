@@ -1355,3 +1355,18 @@ button.box:hover {
     outline-offset: 3px;
   }
 }
+
+/* ---------- Privacy (zero knowledge) ---------- */
+.zk {
+  padding: 6rem var(--gutter);
+}
+.zk h2 {
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
+  text-wrap: balance;
+}
+.zk .way {
+  cursor: default;
+}
+.zk .way:hover {
+  transform: none;
+}

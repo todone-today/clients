@@ -19,7 +19,7 @@ import {
   setNotion,
   syncNow,
 } from "./integration-actions";
-import { pushKey, subscribePush, testPush, unsubscribePush } from "./push-actions";
+import { canNotify, notify, remindersOn, setReminders } from "@/lib/remind";
 import s from "./app.module.css";
 
 type State = Awaited<ReturnType<typeof getIntegrations>>;
@@ -86,6 +86,10 @@ export function Integrations() {
         <h1 className={`display ${s.title}`}>Integrations</h1>
         <p className={s.progress}>
           {off ? "Only team owners and admins can change these." : "For this workspace. Teammates share them."}
+        </p>
+        <p className={s.open}>
+          Your lists are end-to-end encrypted, so our server can&apos;t read them, and neither can these integrations. They
+          only see lists you switch off encryption for: click &ldquo;End-to-end encrypted&rdquo; under a list&apos;s name.
         </p>
         {(st.google.connected || st.notion) && (
           <div className={s.tools}>
@@ -394,57 +398,39 @@ function SharedViews() {
   );
 }
 
-// Push notifications on this device: a reminder shortly before a task's time, and each morning what's due.
+// Reminders on this device, from the open app: lists are end-to-end encrypted, so the server can't see what's due.
 function Notify() {
-  const [state, setState] = useState<"loading" | "unsupported" | "off" | "on" | "blocked" | "unavailable">("loading");
-  const [msg, setMsg] = useState("");
-  const sub = async () => (await navigator.serviceWorker.getRegistration("/"))?.pushManager.getSubscription() ?? null;
+  const [state, setState] = useState<"loading" | "unsupported" | "off" | "on" | "blocked">("loading");
+  // Read once mounted (the browser's permission isn't known while rendering on the server).
   useEffect(() => {
-    (async () => {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window))
-        return setState("unsupported");
-      if (!(await pushKey())) return setState("unavailable");
-      if (Notification.permission === "denied") return setState("blocked");
-      setState((await sub()) ? "on" : "off");
-    })();
+    Promise.resolve().then(() =>
+      setState(
+        !canNotify() ? "unsupported" : Notification.permission === "denied" ? "blocked" : remindersOn() ? "on" : "off",
+      ),
+    );
   }, []);
 
   const turnOn = async () => {
-    setMsg("");
     if ((await Notification.requestPermission()) !== "granted") return setState("blocked");
-    const key = await pushKey();
-    const reg = await navigator.serviceWorker.register("/sw.js");
-    await navigator.serviceWorker.ready;
-    const s = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key! });
-    const err = await subscribePush(s.toJSON(), Intl.DateTimeFormat().resolvedOptions().timeZone);
-    if (err) return setMsg(err);
+    setReminders(true);
     setState("on");
-    setMsg(await testPush());
-  };
-  const turnOff = async () => {
-    const s = await sub();
-    if (s) {
-      await unsubscribePush(s.endpoint);
-      await s.unsubscribe();
-    }
-    setState("off");
-    setMsg("");
+    notify("Reminders are on", "todone will nudge you here before a task's time, while a todone tab is open.", "test");
   };
 
   return (
     <>
-      <h2>Notifications</h2>
+      <h2>Reminders</h2>
       <p>
         A nudge about 15 minutes before a task&apos;s time, and at 8 in the morning what&apos;s due today and what&apos;s
-        late. They arrive even when todone is closed. This is per device and just for you.
+        late. Your lists are end-to-end encrypted, so our server can&apos;t see what&apos;s due: reminders come from todone
+        itself, <b>while a todone tab is open</b> on this device (a pinned tab works well).
       </p>
       {state === "unsupported" && (
         <p className={s.open}>
-          This browser can&apos;t receive push notifications. On an iPhone or iPad, add todone to your Home Screen (Share →
-          Add to Home Screen), open it from there, and turn them on.
+          This browser can&apos;t show notifications. On an iPhone or iPad, add todone to your Home Screen (Share → Add to
+          Home Screen) and open it from there.
         </p>
       )}
-      {state === "unavailable" && <p className={s.open}>This server isn&apos;t set up to send notifications yet.</p>}
       {state === "blocked" && (
         <p className={s.open}>
           Notifications are blocked for this site. Allow them in the browser&apos;s site settings, then come back.
@@ -458,15 +444,20 @@ function Notify() {
       {state === "on" && (
         <div className={s.tools}>
           <span className={s.on}>On for this device</span>
-          <button className={s.ghost} onClick={async () => setMsg(await testPush())}>
+          <button className={s.ghost} onClick={() => notify("A test from todone", "Reminders work here.", "test")}>
             Send a test
           </button>
-          <button className={`${s.ghost} ${s.danger}`} onClick={turnOff}>
+          <button
+            className={`${s.ghost} ${s.danger}`}
+            onClick={() => {
+              setReminders(false);
+              setState("off");
+            }}
+          >
             Turn off
           </button>
         </div>
       )}
-      {msg && <p className={s.open}>{msg}</p>}
     </>
   );
 }

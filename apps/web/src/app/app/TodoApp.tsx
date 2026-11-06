@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { List as ListIcon, CalendarDays, Lightbulb, Menu, Check, Clock, Info, Plus, Timer, Trash2 } from "lucide-react";
+import { List as ListIcon, CalendarDays, Lightbulb, Lock, LockOpen, Menu, Check, Clock, Info, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -23,7 +23,10 @@ import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
 import { Tour } from "./Tour";
 import { VerifyBanner } from "./VerifyBanner";
-import { startOnboarding } from "./actions";
+import { encryptPlainLists, setWorkspace, startOnboarding, waitingForTeamKey } from "./actions";
+import { Unlock } from "./Unlock";
+import { loadVault, startTeam, teamKey, teamMembers } from "@/lib/vault";
+import { remindNow } from "@/lib/remind";
 import { shareCalendar } from "./integration-actions";
 import { Stickers, sticker } from "./Stickers";
 import { Members, type Panel, Workspaces } from "./Workspaces";
@@ -87,6 +90,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [touring, setTouring] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  // End-to-end encryption: whether this browser holds the keys ("locked": ask for the password), and whether the
+  // open team still has to give you its key.
+  const [vault, setVault] = useState<"checking" | "open" | "locked">("checking");
+  const [teamWait, setTeamWait] = useState(false);
   // Anything that changes the view closes the phone drawer.
   const show = (p: Panel) => {
     setPanel(p);
@@ -143,26 +150,48 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   useEffect(() => {
     if (process.env.NODE_ENV === "production") navigator.serviceWorker?.register("/sw.js").catch(() => {});
   }, []);
-  // Opened without a connection: show the lists as last saved, and pick up properly once it's back.
+  useEffect(() => {
+    if (demo || !userId) return;
+    loadVault(userId).then((ok) => setVault(ok ? "open" : "locked"));
+  }, [demo, userId]);
+  // Opened without a connection: show the lists as last saved (decrypted with this device's key), and pick up
+  // properly once it's back.
   useEffect(() => {
     if (demo || !offline || userId) return;
-    if (!navigator.onLine) showSaved();
+    if (!navigator.onLine) loadVault().then((ok) => void (ok && showSaved()));
     const back = () => refetch();
     addEventListener("online", back, { once: true });
     return () => removeEventListener("online", back);
   }, [demo, offline, userId, refetch]);
   useEffect(() => {
-    if (demo || !userId) return;
-    // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
-    reload(!orgId).then(async () => {
+    if (demo || !userId || vault !== "open") return;
+    setWorkspace(orgId);
+    (async () => {
+      // A team from before encryption has no key yet: the first member to open it makes one and encrypts its lists.
+      if (orgId && !(await teamKey(orgId)) && !(await teamMembers(orgId)).some((m) => m.hasKey)) {
+        await startTeam(orgId);
+        await encryptPlainLists(orgId);
+      }
+      await reload(!orgId);
+      setTeamWait(!!orgId && (waitingForTeamKey() || !(await teamKey(orgId))));
+      // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
       if (new URLSearchParams(location.search).has("connect")) return setPanel("integrations");
-      // First visit: demo lists to play with, then the tour.
-      if (!orgId && (await startOnboarding(todayISO()))) {
-        await reload(true);
+      // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
+      if (!orgId && (await startOnboarding())) {
+        const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] = await fetch(
+          `/api/demo?today=${todayISO()}`,
+        ).then((r) => r.json());
+        reorder(demoLists.map((l) => add(l.name, l.tasks, l.kind)));
         setTouring(true);
       }
-    });
-  }, [demo, userId, orgId]);
+    })().catch(() => {});
+  }, [demo, userId, orgId, vault, add]);
+  // Reminders come from the open app (the server can't read what's due): a check every minute.
+  useEffect(() => {
+    if (demo) return;
+    const t = setInterval(() => remindNow(lists ?? []), 60_000);
+    return () => clearInterval(t);
+  }, [demo, lists]);
   // Changes from other devices and teammates show up on focus, and every 20s while the tab is visible.
   useEffect(() => {
     const timer = setInterval(() => document.visibilityState === "visible" && refresh(), 20_000);
@@ -172,6 +201,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       removeEventListener("focus", refresh);
     };
   }, []);
+
+  if (!demo && session && vault === "locked")
+    return <Unlock userId={session.user.id} email={session.user.email} onDone={() => setVault("open")} />;
 
   return (
     <div className={s.shell}>
@@ -248,6 +280,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       </header>
       {!demo && session && (
         <VerifyBanner email={session.user.email} verified={session.user.emailVerified} created={session.user.createdAt} />
+      )}
+      {teamWait && (
+        <p className={s.demoBar} role="note">
+          This team&apos;s lists are end-to-end encrypted. A teammate who has the team&apos;s key needs to confirm you
+          (Workspace → the team → Members) before you can see or add to them.
+        </p>
       )}
       {demo && (
         <p className={s.demoBar} role="note">
@@ -374,6 +412,41 @@ function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name
 }
 
 type Update = (id: string, f: (l: List) => List | null) => void;
+
+// Each list is end-to-end encrypted unless its owner switches that off, so integrations, the calendar feed and
+// shared links can use it. Switching off asks twice: the server can then read the list.
+function Privacy({ list, update }: { list: List; update: Update }) {
+  const [armed, setArmed] = useState(false);
+  if (list.plain)
+    return (
+      <button
+        className={s.privacy}
+        data-plain
+        onClick={() => update(list.id, (l) => ({ ...l, plain: false }))}
+        title="Encrypt this list again; integrations and shared links stop seeing it"
+      >
+        <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Not encrypted: integrations can read it · <u>Encrypt</u>
+      </button>
+    );
+  return (
+    <button
+      className={s.privacy}
+      data-armed={armed || undefined}
+      onClick={() => {
+        if (!armed) return setArmed(true);
+        update(list.id, (l) => ({ ...l, plain: true }));
+        setArmed(false);
+      }}
+      onBlur={() => setArmed(false)}
+      title="Only you (and your team) can read this list"
+    >
+      <Lock size={14} strokeWidth={2.5} aria-hidden />{" "}
+      {armed
+        ? "Switch off encryption so integrations can use it? Our server could read this list. Click again"
+        : "End-to-end encrypted"}
+    </button>
+  );
+}
 
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
@@ -554,6 +627,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
             <i style={{ transform: `scaleX(${c.all ? c.done / c.all : 0})` }} />
           </span>
         </p>
+        <Privacy list={list} update={update} />
       </div>
 
       {binned && (

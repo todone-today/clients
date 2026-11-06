@@ -78,3 +78,32 @@
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
+
+/* The recovery key: big, monospaced, easy to copy by hand. */
+.recovery {
+  display: block;
+  padding: 0.9rem 1rem;
+  font: 700 1.05rem/1.6 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  color: var(--black);
+  background: #fff;
+  border: 2.5px solid var(--black);
+  user-select: all;
+}
+.recoveryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.recoveryActions .btn,
+.recoveryActions :global(.btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.04em;
+}

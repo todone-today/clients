@@ -3,10 +3,12 @@
 import { useSyncExternalStore } from "react";
 import { createList, deleteList, fetchLists, reorderLists, saveList } from "@/app/app/actions";
 import { type List, type Task } from "@todone/sdk/tasks";
+import { lockVault, openCache, sealCache } from "./vault";
 
 // Lists from before accounts, kept in the browser; imported once into the personal workspace.
 const LOCAL = "todone:lists:v1";
-// The lists as the server last confirmed them, shown when the app opens offline. Cleared on sign-out.
+// The lists as the server last confirmed them, shown when the app opens offline: encrypted with your key, like
+// everything else. Cleared on sign-out.
 const SAVED = "todone:saved";
 const OFFLINE = "You're offline. Changes save when you're back.";
 
@@ -24,16 +26,18 @@ const emit = () => subs.forEach((f) => f());
 function show(next: List[]) {
   cache = next;
   if (next === server && !demo)
-    try {
-      localStorage.setItem(SAVED, JSON.stringify(server));
-    } catch {}
+    sealCache(server)
+      .then((blob) => blob && localStorage.setItem(SAVED, blob))
+      .catch(() => {});
   emit();
 }
 
-export function forget() {
+// Signing out: this browser forgets the lists and the keys.
+export async function forget() {
   try {
     localStorage.removeItem(SAVED);
   } catch {}
+  await lockVault();
 }
 
 // Offline, a write waits for the connection and then runs; the tab has to stay open until it does.
@@ -89,10 +93,15 @@ export function startDemo(lists: List[]) {
   show((server = lists));
 }
 
-export function showSaved() {
-  try {
-    server = JSON.parse(localStorage.getItem(SAVED) ?? "[]");
-  } catch {}
+export async function showSaved() {
+  const blob = (() => {
+    try {
+      return localStorage.getItem(SAVED);
+    } catch {
+      return null;
+    }
+  })();
+  server = (blob && (await openCache<List[]>(blob))) || server;
   error = OFFLINE;
   show(server);
 }
@@ -151,7 +160,7 @@ export function update(id: string, f: (l: List) => List | null) {
         server = server.filter((l) => l.id !== id);
         return;
       }
-      const r = await saveList(id, base.version, next.name, next.tasks);
+      const r = await saveList(id, base.version, next.name, next.tasks, next.plain);
       server = r.list ? put(server, r.list) : server.filter((l) => l.id !== id);
       if (r.ok) return;
     }

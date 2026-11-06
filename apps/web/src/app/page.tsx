@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Bug, GitPullRequest, Lightbulb } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bug, EyeOff, GitPullRequest, KeyRound, Lightbulb, Lock } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { GithubMark } from "@/components/GithubMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,6 +21,7 @@ export default function Home() {
         </Link>
         <nav className={s.links} aria-label="Sections">
           <a href="#features">What it does</a>
+          <a href="#privacy">Privacy</a>
           <a href="#roadmap">Roadmap</a>
           <a href="#pricing">Pricing</a>
           <Link href="/docs">Guide</Link>
@@ -89,8 +90,8 @@ export default function Home() {
                 drop on.
               </li>
               <li>
-                <b>Your lists are yours.</b> Open source under GPL-3.0, Markdown inside, export any time, or run it on your
-                own server.
+                <b>Your lists are yours.</b> End-to-end encrypted, open source under GPL-3.0, export any time, or run it on
+                your own server.
               </li>
               <li>
                 <b>Calm by design.</b> No streaks, no badges, no feed. A board, a calendar, and done.
@@ -102,6 +103,44 @@ export default function Home() {
           </div>
           <Shot shot={SHOTS.board} sizes="(max-width: 900px) 100vw, 55vw" className={s.boardShot} />
           <Shot shot={SHOTS.boardMobile} sizes="80vw" className={s.phoneShot} />
+        </section>
+
+        {/* Privacy: zero knowledge, said plainly, including what the server can still see. */}
+        <section id="privacy" className={s.zk} aria-labelledby="zk-h">
+          <h2 id="zk-h" className="display">
+            For your eyes only.
+          </h2>
+          <p className={s.sub}>
+            todone is end-to-end encrypted. Your lists are locked on your device before they&apos;re saved, so our servers
+            only ever hold scrambled data. We can&apos;t read your plans, and neither can anyone who breaks in.
+          </p>
+          <div className={s.ways}>
+            <div className={s.way} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+              <Lock size={22} strokeWidth={2.5} aria-hidden />
+              <b>Encrypted on your device</b>
+              <span>List names, tasks, steps, notes and ideas, with AES-256. Teams share a key only members hold.</span>
+            </div>
+            <div className={s.way} style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
+              <EyeOff size={22} strokeWidth={2.5} aria-hidden />
+              <b>We never see your password</b>
+              <span>It unlocks your key in the browser; the server only gets a one-way hash of it.</span>
+            </div>
+            <div className={s.way} style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+              <KeyRound size={22} strokeWidth={2.5} aria-hidden />
+              <b>A recovery key, just for you</b>
+              <span>Forget your password and it gets you back in. Nobody else can, us included.</span>
+            </div>
+            <div className={s.way} style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
+              <GitPullRequest size={22} strokeWidth={2.5} aria-hidden />
+              <b>Open source, checkable</b>
+              <span>The encryption is in our public code for anyone to read.</span>
+            </div>
+          </div>
+          <p className={s.provisional}>
+            What we can still see: your email and name, which teams you&apos;re in, how many lists you have, roughly how
+            big they are and when they change. Lists you choose to connect to integrations (calendar feed, Google, Notion,
+            Discord) are stored readable so those can work; each list says which it is.
+          </p>
         </section>
 
         {/* The roadmap: three lists on the same board, in order. */}
@@ -119,6 +158,7 @@ export default function Home() {
               <p className={s.laneSub}>Web app, live</p>
               <ul>
                 {[
+                  "End-to-end encrypted",
                   "Sticky-note lists with steps",
                   "Calendar and planning",
                   "Teams and shared lists",

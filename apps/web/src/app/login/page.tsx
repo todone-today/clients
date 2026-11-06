@@ -23,5 +23,5 @@ async function Login() {
     .then((r) => r.json())
     .catch(() => ({ github: false, google: false, verifiesEmail: false }));
   // A fresh haiku per visit, picked here so server and browser agree on it.
-  return <LoginForm github={config.github} canReset={!!config.verifiesEmail} haiku={pickHaiku()} />;
+  return <LoginForm canReset={!!config.verifiesEmail} haiku={pickHaiku()} />;
 }

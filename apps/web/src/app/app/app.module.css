@@ -2419,3 +2419,54 @@
     display: inline;
   }
 }
+
+/* Account: the recovery key, shown after the password. */
+.recoveryKey {
+  display: block;
+  padding: 0.8rem 1rem;
+  font: 700 1rem/1.6 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  color: var(--black);
+  background: var(--butter);
+  border: 2.5px solid var(--black);
+  user-select: all;
+}
+
+/* Team members waiting for the team key: Confirm, with the fingerprint to compare. */
+.confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.confirm code {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+/* Under a list's name: end-to-end encrypted (the default), or switched off for integrations. */
+.privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  padding: 0.15rem 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: left;
+}
+.privacy:hover {
+  color: var(--ink);
+}
+.privacy[data-armed] {
+  color: var(--hot);
+}
+.privacy[data-plain] {
+  color: var(--ink);
+  padding: 0.15rem 0.45rem;
+  background: var(--butter);
+  border: 2px solid var(--black);
+  color: var(--black);
+}
