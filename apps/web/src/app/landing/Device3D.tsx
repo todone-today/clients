@@ -25,7 +25,7 @@ const C = {
 
 // What each device's screen says. Desk and bag follow the homepage's notes once they're in (see hero-sync).
 type Line = { t: string; done: boolean; tag?: string; fill?: string };
-const SCREENS: Record<Place, { head: string; tasks: Line[]; wide: boolean }> = {
+const SCREENS: Record<Place, { head: string; tasks: Line[]; wide: boolean; people?: string[] }> = {
   desk: {
     head: "TODAY",
     wide: true,
@@ -38,12 +38,13 @@ const SCREENS: Record<Place, { head: string; tasks: Line[]; wide: boolean }> = {
   },
   fridge: {
     head: "HOME",
-    wide: false,
+    wide: true,
+    people: ["A", "K", "S"],
     tasks: [
-      { t: "Milk and eggs", done: false },
-      { t: "Pay electricity bill", done: false, tag: "Fri" },
-      { t: "Water the plants", done: true },
-      { t: "Book the plumber", done: false },
+      { t: "Milk and eggs", done: false, tag: "A", fill: "butter" },
+      { t: "Pay electricity bill", done: false, tag: "Fri", fill: "pink" },
+      { t: "Water the plants", done: true, tag: "S", fill: "cyan" },
+      { t: "Diyas for Saturday", done: false, fill: "lime" },
     ],
   },
   bag: {
@@ -70,7 +71,7 @@ const INK: Record<string, string> = {
 // TODAY with progress, tasks as coloured notes with their stickers, and what's next with the week. The fridge and
 // the bag show a plainer list.
 function screenTexture(place: Place) {
-  const { head, wide } = SCREENS[place];
+  const { head, wide, people } = SCREENS[place];
   const W = wide ? 1024 : 640;
   const H = wide ? 768 : 860;
   const cv = document.createElement("canvas");
@@ -158,7 +159,25 @@ function screenTexture(place: Place) {
     g.fillText(head, pad, hy);
     const done = tasks.filter((x) => x.done).length;
     if (wide) {
-      const px = pad + g.measureText(head).width + lb * 1.2;
+      let px = pad + g.measureText(head).width + lb * 1.2;
+      // Who shares this list: little round initials.
+      (people ?? []).forEach((p, i) => {
+        const r = lb * 0.62;
+        const cx = px + r + i * r * 1.55;
+        const cy = hy - hs * 0.32;
+        g.fillStyle = ["#f6dc8c", "#f2b0cb", "#7fe0ea"][i % 3];
+        g.beginPath();
+        g.arc(cx, cy, r, 0, Math.PI * 2);
+        g.fill();
+        g.lineWidth = lb * 0.09;
+        g.stroke();
+        g.fillStyle = "#111";
+        g.font = `800 ${r * 1.05}px ${sans}`;
+        g.textAlign = "center";
+        g.fillText(p, cx, cy + r * 0.38);
+        g.textAlign = "left";
+      });
+      if (people?.length) px += people.length * lb * 0.96 + lb * 0.8;
       g.font = `700 ${lb * 0.85}px ${sans}`;
       g.fillText(`${done} of ${tasks.length} done`, px, hy - hs * 0.42);
       const bw = W * 0.2;
@@ -261,9 +280,9 @@ const at = (o: THREE.Object3D, x: number, y: number, z: number, ry = 0, rx = 0, 
 function device(place: Place) {
   const g = new THREE.Group();
   const { tex, aspect, draw } = screenTexture(place);
-  const h = place === "desk" ? 1.25 : place === "fridge" ? 0.82 : 0.4;
+  const h = place === "desk" ? 1.25 : place === "fridge" ? 0.66 : 0.4;
   const w = h * aspect;
-  const t = place === "bag" ? 0.09 : place === "fridge" ? 0.035 : 0.07;
+  const t = place === "bag" ? 0.09 : place === "fridge" ? 0.05 : 0.07;
   const bezel = place === "bag" ? 0.045 : place === "desk" ? 0.085 : 0.035;
   const slab = box(w + bezel * 2, h + bezel * 2, t, place === "bag" ? 0.07 : place === "desk" ? 0.1 : 0.035, C.body, 0.02);
   g.add(slab);
@@ -284,7 +303,7 @@ function device(place: Place) {
     stand.position.set(w * 0.4, 0, -t / 2);
     g.add(stand);
   } else if (place === "fridge") {
-    g.add(at(box(0.03, h * 0.7, t * 1.3, 0.012, C.lime, 0.012), w / 2 + bezel + 0.012, 0, 0));
+    g.add(at(box(0.05, h * 0.75, t * 1.25, 0.02, C.lime, 0.012), -(w / 2 + bezel + 0.02), 0, 0));
   } else {
     // A lime carabiner above the case.
     const ring = part(new THREE.TorusGeometry(0.075, 0.017, 10, 28), C.lime, 0.01);
@@ -344,15 +363,95 @@ function home(place: Place) {
     add(at(box(0.44, 0.22, 0.34, 0.1, 0xffffff, 0.015), 2.75, 0.11, 0.0, -0.3));
     land = { pos: new THREE.Vector3(0.05, 0.82, -0.55), rot: new THREE.Euler(-0.18, -0.2, 0) };
   } else if (place === "fridge") {
-    add(at(box(1.35, 2.9, 1.0, 0.08, C.cyan), 0, -0.25, -0.5));
-    add(at(box(1.3, 0.03, 0.02, 0.01, C.ink, 0), 0, 0.55, 0.005));
-    add(at(box(0.07, 0.6, 0.08, 0.03, C.cream), 0.55, 0.9, 0.05));
-    add(at(box(0.07, 0.9, 0.08, 0.03, C.cream), 0.55, -0.1, 0.05));
-    // A few magnets.
-    add(at(box(0.12, 0.12, 0.04, 0.03, C.pink), -0.45, -0.25, 0.02, 0, 0, 0.3));
-    add(at(box(0.14, 0.1, 0.04, 0.03, C.butter), -0.2, -0.45, 0.02, 0, 0, -0.2));
-    add(at(box(0.1, 0.1, 0.04, 0.05, C.lime), 0.2, -0.3, 0.02));
-    land = { pos: new THREE.Vector3(-0.1, 0.05, 0.04), rot: new THREE.Euler(0, 0, 0) };
+    const CREAM = 0xf2e8d2;
+    const WOOD = 0xc98d58;
+    const paper = (w: number, h: number, x: number, y: number, rz: number, fill = 0xfffdf6) =>
+      add(at(box(w, h, 0.012, 0.01, fill, 0.008), x, y, 0.012, 0, 0, rz));
+    const pin = (x: number, y: number, color: number) =>
+      add(at(part(new THREE.CylinderGeometry(0.045, 0.045, 0.04, 16), color, 0.008), x, y, 0.04, 0, Math.PI / 2));
+    // The kitchen behind: a warm wall, shelves with jars and mugs, a counter, plants.
+    add(at(box(26, 12, 0.1, 0.02, 0xf1dcbb, 0), 0, 0.5, -1.9));
+    for (const y of [1.25, 0.25]) add(at(box(2.6, 0.08, 0.6, 0.02, WOOD, 0.012), 3.0, y, -1.5));
+    const JARS = [0xe9b98b, 0xd9a06b, 0xc7d6c0, 0xf0c6a8];
+    for (let i = 0; i < 6; i++) {
+      add(
+        at(
+          part(new THREE.CylinderGeometry(0.12, 0.12, 0.3 + (i % 3) * 0.06, 16), JARS[i % 4], 0.01),
+          2.0 + i * 0.36,
+          1.45 + (i % 3) * 0.03,
+          -1.45,
+        ),
+      );
+      add(
+        at(
+          part(new THREE.CylinderGeometry(0.125, 0.125, 0.05, 16), 0x6b4a32, 0.006),
+          2.0 + i * 0.36,
+          1.63 + (i % 3) * 0.06,
+          -1.45,
+        ),
+      );
+    }
+    for (let i = 0; i < 3; i++)
+      add(
+        at(
+          part(new THREE.CylinderGeometry(0.13, 0.11, 0.24, 16), [0xfffdf6, 0xd28b56, 0xfffdf6][i], 0.01),
+          2.4 + i * 0.5,
+          0.41,
+          -1.45,
+        ),
+      );
+    add(at(box(3.4, 0.12, 1.0, 0.02, WOOD, 0.012), 3.1, -1.05, -1.2));
+    add(at(box(3.4, 1.2, 0.95, 0.03, 0xf6efe0, 0.012), 3.1, -1.7, -1.2));
+    const leafy = (x: number, y: number, z: number, s = 1) => {
+      add(at(part(new THREE.CylinderGeometry(0.22 * s, 0.17 * s, 0.32 * s, 18), 0xe07b4c, 0.01), x, y + 0.16 * s, z));
+      for (let i = 0; i < 7; i++) {
+        const a2 = (i / 7) * Math.PI * 2;
+        const leaf = part(new THREE.SphereGeometry(0.13 * s, 10, 8), i % 2 ? 0x5cb86c : 0x3f9e57, 0.008);
+        leaf.scale.set(0.6, 1.5, 0.35);
+        leaf.position.set(x + Math.cos(a2) * 0.14 * s, y + 0.5 * s, z + Math.sin(a2) * 0.1 * s);
+        leaf.rotation.set(Math.sin(a2) * 0.6, 0, -Math.cos(a2) * 0.6);
+        add(leaf);
+      }
+    };
+    leafy(4.0, 1.29, -1.45, 1.1);
+    leafy(2.4, -0.99, -1.0);
+    leafy(3.9, -0.99, -1.0, 1.25);
+    // The fridge: cream, tall, upper door with a long handle, freezer below.
+    add(at(box(2.7, 5.2, 1.7, 0.16, CREAM, 0.025), -0.1, -0.1, -0.86));
+    add(at(box(2.65, 0.035, 0.03, 0.01, 0x8b8273, 0), -0.1, -1.55, 0.0));
+    add(at(box(0.2, 1.15, 0.16, 0.08, 0xe7dcc2, 0.018), -0.95, -0.85, 0.09));
+    // On the door: lime magnets, polaroids, pinned notes, a stack of sticky notes, a drawing.
+    add(at(box(0.26, 0.26, 0.06, 0.05, C.lime, 0.012), -0.75, 1.55, 0.03, 0, 0, 0.12));
+    add(at(box(0.13, 0.13, 0.05, 0.03, C.lime, 0.01), -0.32, 1.12, 0.03));
+    add(at(box(0.12, 0.12, 0.05, 0.03, C.lime, 0.01), 0.05, 1.32, 0.03, 0, 0, -0.2));
+    add(at(box(0.12, 0.12, 0.05, 0.03, C.lime, 0.01), 0.15, -0.52, 0.03));
+    paper(0.44, 0.52, 0.55, 1.42, -0.12);
+    add(at(box(0.34, 0.33, 0.014, 0.01, 0x2b2b2b, 0), 0.56, 1.47, 0.02, 0, 0, -0.12));
+    paper(0.44, 0.52, 0.95, 1.36, 0.07);
+    add(at(box(0.34, 0.33, 0.014, 0.01, 0x7cc6ea, 0), 0.95, 1.41, 0.02, 0, 0, 0.07));
+    paper(0.36, 0.42, -0.78, 0.05, 0.12);
+    pin(-0.78, 0.22, 0xe0614f);
+    paper(0.34, 0.38, 0.95, -0.02, -0.1);
+    pin(0.95, 0.14, 0xe0614f);
+    [0xff9a62, 0xf2a7c6, C.cyan, C.lime].forEach((c, i) =>
+      add(
+        at(
+          box(0.5, 0.18, 0.012 + i * 0.002, 0.02, c, 0.008),
+          -0.22 + i * 0.02,
+          -0.72 - i * 0.16,
+          0.014 + i * 0.004,
+          0,
+          0,
+          0.08 - i * 0.05,
+        ),
+      ),
+    );
+    pin(-0.2, -0.62, 0xe0614f);
+    paper(0.36, 0.44, 0.7, -0.85, 0.05);
+    add(at(box(0.3, 0.3, 0.014, 0.01, 0x2b2b2b, 0), 0.7, -0.81, 0.02, 0, 0, 0.05));
+    paper(0.42, 0.36, 0.98, -1.25, -0.08);
+    add(at(part(new THREE.CylinderGeometry(0.06, 0.06, 0.012, 16), 0xffd44a, 0.006), 1.06, -1.2, 0.025, 0, Math.PI / 2));
+    land = { pos: new THREE.Vector3(0.18, 0.55, 0.04), rot: new THREE.Euler(0, 0, 0) };
   } else {
     // A backpack: body, front pocket, top handle, a shoulder strap with a loop.
     add(at(box(1.15, 1.45, 0.55, 0.22, C.pink), 0, 0, -0.3));
@@ -409,7 +508,7 @@ export default function Device3D({
     // Framing per scene.
     const view = {
       desk: { cam: [0.6, 3.3, 4.7], look: [0.25, 0.35, -0.2] },
-      fridge: { cam: [1.6, 0.6, 7.4], look: [0, -0.25, 0] },
+      fridge: { cam: [2.7, 0.9, 5.3], look: [0.5, 0.2, 0] },
       bag: { cam: [1.1, 0.6, 4.6], look: [-0.1, 0, 0] },
     }[place];
     camera.position.set(...(view.cam as [number, number, number]));
@@ -429,7 +528,8 @@ export default function Device3D({
       const spin = clamp(t / 1.3);
       const pop = clamp((t - 1.1) / 0.8);
       const fly = clamp((t - 1.7) / 1.0);
-      pieces.forEach((p, i) => p.scale.setScalar(Math.max(0.001, back(clamp(pop * 1.4 - i * 0.06)))));
+      // Pieces pop in one after another, spread over the same time however many there are.
+      pieces.forEach((p, i) => p.scale.setScalar(Math.max(0.001, back(clamp((pop - (i / pieces.length) * 0.45) / 0.55)))));
       const f = ease(fly);
       dev.position.lerpVectors(start, land.pos, f);
       dev.scale.setScalar(THREE.MathUtils.lerp(1.25, 1, f) * (fly > 0 && fly < 1 ? 1 : 1));
