@@ -646,6 +646,17 @@ button.box:hover {
 .planNote {
   font-size: 0.9rem;
 }
+.price .was {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration-thickness: 3px;
+  opacity: 0.65;
+}
+.renew {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
 .provisional {
   margin-top: 1.5rem;
   font-size: 0.9rem;

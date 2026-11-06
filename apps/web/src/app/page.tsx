@@ -208,7 +208,7 @@ export default function Home() {
           <div className={s.founding}>
             <p>
               <b>{FOUNDING.name}:</b> {FOUNDING.inr} / {FOUNDING.usd} once for three years of Plus, instead of{" "}
-              {FOUNDING.yearly} paying yearly. It all goes to the goals above straight away. Not a lifetime plan: after three
+              {FOUNDING.yearly} paying yearly at launch prices. It all goes to the goals above straight away. Not a lifetime plan: after three
               years it carries on as ordinary Plus, or stops.
             </p>
             <Pay fill="var(--butter)">Become a founding member</Pay>

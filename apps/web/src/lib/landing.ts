@@ -145,6 +145,8 @@ export type Plan = {
   name: string;
   // Price per billing period, in rupees and dollars; null on Free.
   price: Record<Billing, [string, string]> | null;
+  // Launch price for the first term of a longer plan; it renews at `price`. Shown with the renewal, always.
+  intro?: Partial<Record<Billing, [string, string]>>;
   per: string;
   points: string[];
   fill: string;
@@ -168,6 +170,7 @@ export const PLANS: Plan[] = [
   {
     name: "Plus",
     price: { month: ["₹99", "$3"], half: ["₹499", "$16"], year: ["₹899", "$29"] },
+    intro: { half: ["₹349", "$11"], year: ["₹599", "$19"] },
     per: "",
     fill: "var(--lime)",
     points: [
@@ -181,6 +184,7 @@ export const PLANS: Plan[] = [
   {
     name: "Team",
     price: { month: ["₹149", "$5"], half: ["₹799", "$26"], year: ["₹1,499", "$49"] },
+    intro: { half: ["₹549", "$18"], year: ["₹999", "$33"] },
     per: "a person",
     fill: "var(--cyan)",
     points: [
@@ -192,9 +196,9 @@ export const PLANS: Plan[] = [
   },
 ];
 
-// Yearly Plus in rupees, for the funding calculator.
-export const PLUS_YEAR_INR = 899;
+// What a new member pays for a year of Plus (the launch price), for the funding calculator.
+export const PLUS_YEAR_INR = 599;
 
 // A one-off way to back the roadmap: three years of Plus, paid once. Not lifetime cloud, which would promise
 // hosting costs forever.
-export const FOUNDING = { name: "Founding member", inr: "₹1,999", usd: "$59", yearly: "₹2,697" };
+export const FOUNDING = { name: "Founding member", inr: "₹1,999", usd: "$59", yearly: "₹2,397" };

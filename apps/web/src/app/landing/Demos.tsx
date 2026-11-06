@@ -359,6 +359,19 @@ export function Pay({ children, fill = "var(--lime)" }: { children: React.ReactN
 
 // Plans with a billing switch.
 const PER: Record<Billing, string> = { month: "a month", half: "for 6 months", year: "a year" };
+// "₹1,499" → 1499
+const amount = (s: string) => Number(s.replace(/[^\d]/g, ""));
+const MONTHS: Record<Billing, number> = { month: 1, half: 6, year: 12 };
+const TERM: Record<Billing, string> = { month: "", half: "first 6 months", year: "first year" };
+const AGAIN: Record<Billing, string> = { month: "", half: "every 6 months", year: "a year" };
+
+// Saving on the first term against paying monthly for as long, rounded down so it never overstates.
+function saving(b: Billing) {
+  const plus = PLANS.find((p) => p.lead)!;
+  const first = plus.intro?.[b] ?? plus.price![b];
+  return Math.floor((1 - amount(first[0]) / (amount(plus.price!.month[0]) * MONTHS[b])) * 100);
+}
+
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>("year");
   return (
@@ -367,14 +380,15 @@ export function Pricing() {
         {BILLING.map(([k, label]) => (
           <button key={k} type="button" role="radio" aria-checked={billing === k} onClick={() => setBilling(k)}>
             {label}
-            {k === "year" && <small>save 25%</small>}
+            {k !== "month" && <small>save {saving(k)}%</small>}
           </button>
         ))}
       </div>
       <div className={s.plans}>
         {PLANS.map((p) => {
-          const [rs, usd] = p.price ? p.price[billing] : ["₹0", "$0"];
-          const per = p.price ? [p.per, PER[billing]].filter(Boolean).join(", ") : p.per;
+          const intro = p.intro?.[billing];
+          const [rs, usd] = intro ?? (p.price ? p.price[billing] : ["₹0", "$0"]);
+          const per = p.price ? [p.per, intro ? TERM[billing] : PER[billing]].filter(Boolean).join(", ") : p.per;
           return (
             <div
               key={p.name}
@@ -384,8 +398,15 @@ export function Pricing() {
             >
               <h3 className="display">{p.name}</h3>
               <p className={s.price}>
-                <b className="display">{rs}</b> <span>/ {usd}</span> <small>{per}</small>
+                {intro && <s className={s.was}>{p.price![billing][0]}</s>} <b className="display">{rs}</b>{" "}
+                <span>/ {usd}</span> <small>{per}</small>
               </p>
+              {intro && (
+                <p className={s.renew}>
+                  <b>Launch price.</b> Then {p.price![billing][0]} / {p.price![billing][1]}
+                  {p.per && ` ${p.per},`} {AGAIN[billing]}; cancel any time.
+                </p>
+              )}
               <ul>
                 {p.points.map((t) => (
                   <li key={t}>
