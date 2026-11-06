@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { addDays, shiftMonths } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
-import { type Task, fmtMinutes, parseMinutes } from "@todone/sdk/tasks";
+import { type Task, fmtMinutes, parseMinutes, todayISO } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 const WHEN: [string, string, (today: string) => Partial<Task>][] = [
@@ -39,15 +39,13 @@ export const sticker = (key: string, today: string): Partial<Task> | null =>
   [...WHEN, ...LONG, ...PRI, ...REP].find(([k]) => k === key)?.[2](today) ?? null;
 
 // The right-hand sidebar: sticky notes for when, how long, priority and repeat (drop a task card on one, or pick a
-// task and click one), each with a Custom row for anything the stickers don't cover. The picked task's own details
-// (`panel`: name, list, steps) sit on top, so a card never has to open up.
+// task and click one), each with a Custom row for anything the stickers don't cover, so a card never has to open up.
 export function Stickers({
   selected,
   active,
   onApply,
   task,
   edit,
-  panel,
 }: {
   selected: string | null;
   // A task is open or selected: on a phone the stickers then rise as a sheet to tap.
@@ -55,7 +53,6 @@ export function Stickers({
   onApply: (key: string, taskIds?: string[]) => void;
   task?: Task | null;
   edit?: (f: (t: Task) => Task | null) => void;
-  panel?: React.ReactNode;
 }) {
   const [estErr, setEstErr] = useState(false);
   const drop = useDrop("stickers", {
@@ -80,60 +77,74 @@ export function Stickers({
             {name}
           </button>
         ))}
+        {custom}
       </div>
-      {custom && task && edit && <div className={s.custom}>{custom}</div>}
     </div>
   );
-  // Custom values for the picked task: any day and time, any length.
-  const when = task && edit && (
-    <>
-      <label>
-        <span>Custom day</span>
-        <input
-          key={`d${task.id}${task.due}`}
-          type="date"
-          defaultValue={task.due ?? ""}
-          onChange={(e) =>
-            edit((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
-          }
-        />
-      </label>
-      <label>
-        <span>Time</span>
-        <input
-          key={`t${task.id}${task.at}`}
-          type="time"
-          step={900}
-          disabled={!task.due}
-          title={task.due ? undefined : "Give it a day first"}
-          defaultValue={task.at ?? ""}
-          onChange={(e) => edit((t) => ({ ...t, at: e.target.value || undefined }))}
-        />
-      </label>
-    </>
-  );
-  const long = task && edit && (
-    <label>
-      <span>Custom</span>
+  // Custom stickers for the picked task: any day (the date picker opens), any length (typed right on the sticker).
+  const dateRef = useRef<HTMLInputElement>(null);
+  const [typing, setTyping] = useState(false);
+  const off = !task || !edit;
+  const when = (
+    <span className={s.stick} data-kind="when" data-custom aria-disabled={off}>
+      <button
+        type="button"
+        onClick={() => !off && (dateRef.current?.showPicker?.() ?? dateRef.current?.click())}
+        title={off ? "Pick a task first" : "Pick any day"}
+      >
+        {task?.due && !WHEN.some(([, , f]) => f(todayISO()).due === task.due) ? new Date(`${task.due}T12:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Custom…"}
+      </button>
       <input
-        key={`e${task.id}${task.est}`}
-        defaultValue={task.est ? fmtMinutes(task.est) : ""}
-        placeholder="45m, 1h30m"
-        aria-invalid={estErr}
-        title={estErr ? "Reads like 30m, 2h or 1h30m" : undefined}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-        onBlur={(e) => {
-          const v = e.target.value.trim();
-          const m = v ? parseMinutes(v) : 0;
-          setEstErr(m === null);
-          if (m !== null && m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
-        }}
+        ref={dateRef}
+        type="date"
+        tabIndex={-1}
+        aria-label="Custom day"
+        value={task?.due ?? ""}
+        onChange={(e) =>
+          edit?.((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
+        }
       />
-    </label>
+    </span>
+  );
+  const long = typing && task && edit ? (
+    <input
+      className={s.stick}
+      data-kind="long"
+      data-custom
+      autoFocus
+      aria-label="Custom length"
+      defaultValue={task.est ? fmtMinutes(task.est) : ""}
+      placeholder="45m"
+      aria-invalid={estErr}
+      title="Like 45m, 2h or 1h30m"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") setTyping(false);
+      }}
+      onBlur={(e) => {
+        const v = e.target.value.trim();
+        const m = v ? parseMinutes(v) : 0;
+        setEstErr(m === null);
+        if (m === null) return;
+        if (m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
+        setTyping(false);
+      }}
+    />
+  ) : (
+    <button
+      type="button"
+      className={s.stick}
+      data-kind="long"
+      data-custom
+      aria-disabled={off}
+      title={off ? "Pick a task first" : "Type any length"}
+      onClick={() => !off && setTyping(true)}
+    >
+      {task?.est && ![15, 30, 60, 120, 240].includes(task.est) ? fmtMinutes(task.est) : "Custom…"}
+    </button>
   );
   return (
     <aside className={s.stickers} aria-label="Stickers" data-tour="stickers" data-active={active}>
-      {panel}
       <p>
         {selected ? <>Tap or click one to apply it to “{selected}”. </> : null}Drag a task onto a sticker, or a sticker onto a task.
       </p>

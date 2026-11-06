@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { List as ListIcon, Lightbulb, Lock, LockOpen, Menu, Check, Info, Plus, Trash2 } from "lucide-react";
+import { Lightbulb, Lock, LockOpen, Menu, Check, Info, Plus, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -747,19 +747,6 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           onApply={(key, taskIds) => applySticker(key, taskIds ?? (picked.size ? [...picked] : selected ? [selected] : []))}
           task={picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)}
           edit={selected ? (f) => setTasks((ts) => mapTask(ts, selected, f)) : undefined}
-          panel={
-            selected && findTask(list.tasks, selected) && picked.size <= 1 ? (
-              <Editor
-                task={findTask(list.tasks, selected)!}
-                top={list.tasks.some((t) => t.id === selected)}
-                edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
-                setTasks={setTasks}
-                onClose={() => setSelected(null)}
-                listId={list.id}
-                lists={lists}
-              />
-            ) : null
-          }
         />
       </div>
     </>
@@ -798,6 +785,7 @@ function TaskRow({
   dragged?: boolean; // the note being moved, faded while its new slot is shown
 }) {
   const open = selected === task.id;
+  const [renaming, setRenaming] = useState(false);
   const edit = (f: (t: Task) => Task | null) => setTasks((ts) => mapTask(ts, task.id, f));
   const late = lateBy(task, today, nowMin);
   // Dragging a selected task carries the whole selection.
@@ -835,10 +823,37 @@ function TaskRow({
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
-        {/* Picking a task shows its details in the sidebar; the card itself never opens up. */}
-        <button className={s.taskTitle} onClick={() => onSelect(open ? null : task.id)} aria-pressed={open}>
-          {task.title}
-        </button>
+        {/* Click picks the task (its stickers and custom values are in the sidebar); double-click renames it. */}
+        {renaming ? (
+          <input
+            className={`${s.taskTitle} ${s.titleField}`}
+            aria-label="Task name"
+            defaultValue={task.title}
+            autoFocus
+            maxLength={500}
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+              if (e.key === "Escape") setRenaming(false);
+            }}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
+              setRenaming(false);
+            }}
+          />
+        ) : (
+          <button
+            className={s.taskTitle}
+            onClick={() => onSelect(open ? null : task.id)}
+            onDoubleClick={() => setRenaming(true)}
+            onKeyDown={(e) => e.key === "Escape" && open && onSelect(null)}
+            aria-pressed={open}
+            title="Click to pick, double-click to rename"
+          >
+            {task.title}
+          </button>
+        )}
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
           {task.rep ? (
@@ -899,104 +914,3 @@ function TaskRow({
   );
 }
 
-// The picked task's details, at the top of the sidebar: name, list, steps, delete. Day, time and how long are the
-// Custom rows under the stickers. Changes save as you go; Esc or Done puts the task down.
-function Editor({
-  task,
-  top,
-  edit,
-  setTasks,
-  onClose,
-  listId,
-  lists,
-}: {
-  task: Task;
-  top: boolean;
-  listId: string;
-  lists: { id: string; name: string }[];
-  edit: (f: (t: Task) => Task | null) => void;
-  setTasks: (f: (ts: Task[]) => Task[]) => void;
-  onClose: () => void;
-}) {
-  const [step, setStep] = useState("");
-  return (
-    <section
-      className={s.editor}
-      aria-label="Picked task"
-      onKeyDown={(e) => {
-        if (e.key !== "Escape") return;
-        e.stopPropagation();
-        onClose();
-      }}
-    >
-      <input
-        key={task.id + task.title}
-        className={s.edTitle}
-        aria-label="Task name"
-        defaultValue={task.title}
-        maxLength={500}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-        onBlur={(e) => {
-          const v = e.target.value.trim();
-          if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
-        }}
-      />
-      {lists.length > 1 && (
-        <div className={s.edField}>
-          <span aria-hidden>
-            <ListIcon size={14} strokeWidth={2.5} /> List
-          </span>
-          <Select
-            label="List"
-            value={listId}
-            options={lists.map((l) => ({ value: l.id, label: l.name }))}
-            onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
-          />
-        </div>
-      )}
-      {top ? (
-        <form
-          className={s.edStep}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const v = step.trim();
-            if (!v) return;
-            edit((t) => ({ ...t, sub: [...t.sub, { id: uid(), title: v, done: false, sub: [] }] }));
-            setStep("");
-          }}
-        >
-          <Plus size={16} strokeWidth={2.5} aria-hidden />
-          <label className="sr-only" htmlFor={`step-${task.id}`}>
-            Add a step
-          </label>
-          <input
-            id={`step-${task.id}`}
-            value={step}
-            onChange={(e) => setStep(e.target.value)}
-            placeholder="Add a step, press enter"
-            autoComplete="off"
-          />
-        </form>
-      ) : (
-        <button className={s.ghost} onClick={() => setTasks((ts) => unnest(ts, task.id))}>
-          Make it a main task
-        </button>
-      )}
-      <div className={s.edEnd}>
-        <button
-          className={s.edDelete}
-          title={task.sub.length ? "Deletes its steps too" : undefined}
-          onClick={() => {
-            edit(() => null);
-            onClose();
-          }}
-        >
-          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
-        </button>
-        <button className="btn" onClick={onClose}>
-          Done
-        </button>
-      </div>
-    </section>
-  );
-}

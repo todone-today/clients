@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 import { useState } from "react";
+import { AuthShell } from "./AuthDialog";
 import { authClient } from "@/lib/auth-client";
 import { greet } from "@/components/Welcome";
 import { adopt, derive, newAccount, setupLegacy, unlockWith } from "@/lib/vault";
@@ -36,13 +36,15 @@ export function LoginForm({
     greet(haiku);
     location.assign(safeNext());
   };
-  if (recovery) return <RecoveryKey value={recovery} onDone={enter} />;
+  if (recovery)
+    return (
+      <AuthShell locked>
+        <RecoveryKey value={recovery} onDone={enter} bare />
+      </AuthShell>
+    );
 
   return (
-    <main className={s.page}>
-      <Link href="/" className={s.mark} aria-label="Home">
-        <Logo size={34} />
-      </Link>
+    <AuthShell>
       <form
         className={`sticker ${s.card}`}
         onSubmit={async (e) => {
@@ -180,6 +182,6 @@ export function LoginForm({
           {mode === "in" ? "New here? Make an account" : mode === "up" ? "Have an account? Sign in" : "Back to sign in"}
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

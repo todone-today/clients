@@ -4,15 +4,20 @@ import { Suspense } from "react";
 import type { Config } from "@todone/sdk/api";
 import { proxyHeaders, server } from "@/lib/server";
 import { pickHaiku } from "@/lib/haiku";
+import Home from "../page";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Sign in" };
 
+// The homepage, with sign-in popped up over it.
 export default function LoginPage() {
   return (
-    <Suspense>
-      <Login />
-    </Suspense>
+    <>
+      <Home />
+      <Suspense>
+        <Login />
+      </Suspense>
+    </>
   );
 }
 

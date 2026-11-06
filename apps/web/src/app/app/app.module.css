@@ -2506,41 +2506,32 @@
 .stickers .edEnd .btn {
   padding: 0.35rem 0.8rem;
 }
-/* Custom rows under a sticker group: any day and time, any length. */
-.custom {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.6rem;
+/* Custom stickers: the same as the rest. The day one hides a date input behind it for the picker; the length one
+   turns into a small field to type in. */
+.stick[data-custom] {
+  position: relative;
 }
-.custom label {
-  display: grid;
-  flex: 1 1 7rem;
-  gap: 0.2rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: var(--ink-2);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.stick[data-custom] > button {
+  font: inherit;
+  color: inherit;
 }
-.custom input {
-  min-width: 0;
-  padding: 0.35rem 0.45rem;
+.stick[data-custom] input[type="date"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+input.stick[data-custom] {
+  width: 5.5rem;
+  font: inherit;
   font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink);
-  text-transform: none;
-  letter-spacing: 0;
-  background: var(--ground);
-  border: 2px solid var(--hair);
+  font-weight: 800;
 }
-.custom input:focus-visible {
-  outline: none;
-  border-color: var(--ink);
+input.stick[data-custom]:focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
 }
-.custom input[aria-invalid="true"] {
-  border-color: var(--hot);
-}
-.custom input:disabled {
-  opacity: 0.45;
+input.stick[data-custom][aria-invalid="true"] {
+  outline: 3px solid var(--hot);
 }
