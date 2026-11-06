@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Select } from "@/components/Select";
 import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@todone/sdk/calendar";
@@ -340,10 +340,14 @@ function TimeGrid({
     addEventListener("pointermove", onMove);
     addEventListener("pointerup", onUp);
   };
-  const scroller = useRef<HTMLDivElement>(null);
   const [now, setNow] = useState<number | null>(null);
+  // "All day" shows a few per day (open ones first) so the hours stay in view; "+N more" opens every day.
+  const [allOpen, setAllOpen] = useState(false);
+  const ALL_DAY = 3;
+  const allDay = (d: string) =>
+    (byDay.get(d) ?? []).filter((it) => !it.task.at).sort((x, y) => Number(x.task.done) - Number(y.task.done));
+  const folds = days.some((d) => allDay(d).length > ALL_DAY);
   useEffect(() => {
-    scroller.current?.scrollTo({ top: 7 * HOUR });
     const tick = () => setNow(new Date().getHours() * 60 + new Date().getMinutes());
     tick();
     const t = setInterval(tick, 60_000);
@@ -351,7 +355,7 @@ function TimeGrid({
   }, []);
 
   return (
-    <div className={s.tg} ref={scroller} style={{ "--days": days.length } as React.CSSProperties}>
+    <div className={s.tg} style={{ "--days": days.length } as React.CSSProperties}>
       <div className={s.tgHead}>
         <div className={s.tgRow}>
           <span />
@@ -362,12 +366,28 @@ function TimeGrid({
           ))}
         </div>
         <div className={s.tgRow}>
-          <span className={s.tgLabel}>all day</span>
-          {days.map((d) => (
-            <div key={d} className={s.allDay} {...drop(`all:${d}`)}>
-              {(byDay.get(d) ?? []).filter((it) => !it.task.at).map((it) => chip(it, false))}
-            </div>
-          ))}
+          <span className={s.tgLabel}>
+            all day
+            {folds && allOpen && (
+              <button className={s.allMore} onClick={() => setAllOpen(false)}>
+                Show less
+              </button>
+            )}
+          </span>
+          {days.map((d) => {
+            const items = allDay(d);
+            const hidden = allOpen ? 0 : Math.max(0, items.length - ALL_DAY);
+            return (
+              <div key={d} className={s.allDay} {...drop(`all:${d}`)}>
+                {(hidden ? items.slice(0, ALL_DAY) : items).map((it) => chip(it, false))}
+                {hidden > 0 && (
+                  <button className={s.allMore} onClick={() => setAllOpen(true)}>
+                    +{hidden} more
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className={s.tgRow} style={{ height: 24 * HOUR }}>
