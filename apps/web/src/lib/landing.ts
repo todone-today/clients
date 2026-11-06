@@ -19,7 +19,7 @@ export const SHOTS = {
     src: "/landing/board.jpg",
     alt: "todone's board: a list of sticky notes with steps, dates and stickers for when, how long and priority",
     label: "The board on desktop",
-    ratio: "1440 / 682",
+    ratio: "16 / 9",
   },
   calendar: {
     src: null,

@@ -223,8 +223,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         </button>
         <ThemeToggle tile={s.tile} />
         {demo ? (
-          <Link href="/login" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
-            Make an account
+          <Link href="/login" className={`btn ${s.signUp}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            <span className={s.wide}>Make an account</span>
+            <span className={s.narrow}>Sign up</span>
           </Link>
         ) : (
           <button

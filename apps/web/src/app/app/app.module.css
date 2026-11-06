@@ -2389,3 +2389,33 @@
     transition: none;
   }
 }
+
+/* Phones: one tidy top row (menu, Tour, theme, account), and the progress line on one line. */
+.signUp .narrow {
+  display: none;
+}
+.progress {
+  white-space: nowrap;
+}
+.progress .bar {
+  flex: 1 1 4rem;
+  max-width: 14rem;
+}
+@media (max-width: 760px) {
+  .top {
+    gap: 0.5rem;
+  }
+  .top .menu {
+    max-width: 40vw;
+  }
+  .signUp {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  .signUp .wide {
+    display: none;
+  }
+  .signUp .narrow {
+    display: inline;
+  }
+}
