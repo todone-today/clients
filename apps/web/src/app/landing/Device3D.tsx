@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { onHero } from "@/lib/hero-sync";
 
 export type Place = "desk" | "fridge" | "bag";
 
@@ -56,61 +57,65 @@ const SCREENS: Record<Place, { head: string; tasks: [string, boolean][]; wide: b
 
 // The e-ink screen, drawn on a canvas: paper white, the checked-box logo, a condensed heading, square checkboxes.
 function screenTexture(place: Place) {
-  const { head, tasks, wide } = SCREENS[place];
+  const { head, wide } = SCREENS[place];
   const W = wide ? 1024 : 640;
   const H = wide ? 640 : 860;
   const cv = document.createElement("canvas");
   cv.width = W;
   cv.height = H;
   const g = cv.getContext("2d")!;
-  const css = getComputedStyle(document.body);
-  const display = css.getPropertyValue("--font-display").trim() || "Impact";
-  const sans = css.getPropertyValue("--font-sans").trim() || "Helvetica";
-  g.fillStyle = "#f4f1ea";
-  g.fillRect(0, 0, W, H);
-  const pad = W * 0.08;
-  // Logo: a checked box and "todone".
-  const lb = W * 0.055;
-  g.lineWidth = lb * 0.18;
-  g.strokeStyle = "#111";
-  g.strokeRect(pad, pad, lb, lb);
-  g.beginPath();
-  g.moveTo(pad + lb * 0.2, pad + lb * 0.52);
-  g.lineTo(pad + lb * 0.42, pad + lb * 0.74);
-  g.lineTo(pad + lb * 0.82, pad + lb * 0.24);
-  g.stroke();
-  g.fillStyle = "#111";
-  g.font = `900 ${lb * 1.05}px ${display}`;
-  g.textBaseline = "middle";
-  g.fillText("TODONE", pad + lb * 1.45, pad + lb * 0.55);
-  // Heading.
-  const hs = W * (wide ? 0.13 : 0.16);
-  g.font = `900 ${hs}px ${display}`;
-  g.textBaseline = "alphabetic";
-  const hy = pad + lb + hs * 1.15;
-  g.fillText(head, pad, hy);
-  // Tasks.
-  const ts = W * (wide ? 0.05 : 0.068);
-  const gap = ts * 2.05;
-  g.font = `700 ${ts}px ${sans}`;
-  tasks.forEach(([t, done], i) => {
-    const y = hy + gap * (i + 1.05);
-    const b = ts * 0.95;
-    g.lineWidth = ts * 0.13;
-    if (done) g.fillRect(pad, y - b, b, b);
-    else g.strokeRect(pad, y - b, b, b);
-    g.fillStyle = done ? "#777" : "#111";
-    g.fillText(t, pad + b * 1.6, y - b * 0.08);
-    if (done) {
-      const w = g.measureText(t).width;
-      g.fillRect(pad + b * 1.6, y - b * 0.42, w, ts * 0.09);
-    }
-    g.fillStyle = "#111";
-  });
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
-  return { tex, aspect: W / H };
+  const draw = (tasks: [string, boolean][]) => {
+    const css = getComputedStyle(document.body);
+    const display = css.getPropertyValue("--font-display").trim() || "Impact";
+    const sans = css.getPropertyValue("--font-sans").trim() || "Helvetica";
+    g.fillStyle = "#f4f1ea";
+    g.fillRect(0, 0, W, H);
+    const pad = W * 0.08;
+    // Logo: a checked box and "todone".
+    const lb = W * 0.055;
+    g.lineWidth = lb * 0.18;
+    g.strokeStyle = "#111";
+    g.strokeRect(pad, pad, lb, lb);
+    g.beginPath();
+    g.moveTo(pad + lb * 0.2, pad + lb * 0.52);
+    g.lineTo(pad + lb * 0.42, pad + lb * 0.74);
+    g.lineTo(pad + lb * 0.82, pad + lb * 0.24);
+    g.stroke();
+    g.fillStyle = "#111";
+    g.font = `900 ${lb * 1.05}px ${display}`;
+    g.textBaseline = "middle";
+    g.fillText("TODONE", pad + lb * 1.45, pad + lb * 0.55);
+    // Heading.
+    const hs = W * (wide ? 0.13 : 0.16);
+    g.font = `900 ${hs}px ${display}`;
+    g.textBaseline = "alphabetic";
+    const hy = pad + lb + hs * 1.15;
+    g.fillText(head, pad, hy);
+    // Tasks.
+    const ts = W * (wide ? 0.05 : 0.068);
+    const gap = ts * 2.05;
+    g.font = `700 ${ts}px ${sans}`;
+    tasks.forEach(([t, done], i) => {
+      const y = hy + gap * (i + 1.05);
+      const b = ts * 0.95;
+      g.lineWidth = ts * 0.13;
+      if (done) g.fillRect(pad, y - b, b, b);
+      else g.strokeRect(pad, y - b, b, b);
+      g.fillStyle = done ? "#777" : "#111";
+      g.fillText(t, pad + b * 1.6, y - b * 0.08);
+      if (done) {
+        const w = g.measureText(t).width;
+        g.fillRect(pad + b * 1.6, y - b * 0.42, w, ts * 0.09);
+      }
+      g.fillStyle = "#111";
+    });
+    tex.needsUpdate = true;
+  };
+  draw(SCREENS[place].tasks);
+  return { tex, aspect: W / H, draw };
 }
 
 // Cel-shaded colour with a thick black outline (an inverted hull), like todone's stickers.
@@ -132,7 +137,11 @@ function part(geo: THREE.BufferGeometry, color: number, outline = 0.025) {
     const s = new THREE.Vector3();
     geo.boundingBox!.getSize(s);
     const o = new THREE.Mesh(geo, outlineMat);
-    o.scale.set(1 + (2 * outline) / Math.max(s.x, 0.01), 1 + (2 * outline) / Math.max(s.y, 0.01), 1 + (2 * outline) / Math.max(s.z, 0.01));
+    o.scale.set(
+      1 + (2 * outline) / Math.max(s.x, 0.01),
+      1 + (2 * outline) / Math.max(s.y, 0.01),
+      1 + (2 * outline) / Math.max(s.z, 0.01),
+    );
     m.add(o);
   }
   return m;
@@ -148,7 +157,7 @@ const at = (o: THREE.Object3D, x: number, y: number, z: number, ry = 0, rx = 0, 
 // The device: a matte black slab with the screen on its face, a lime detail, and what holds it (stand, magnets, clip).
 function device(place: Place) {
   const g = new THREE.Group();
-  const { tex, aspect } = screenTexture(place);
+  const { tex, aspect, draw } = screenTexture(place);
   const h = place === "desk" ? 0.62 : place === "fridge" ? 0.82 : 0.4;
   const w = h * aspect;
   const t = place === "bag" ? 0.09 : place === "fridge" ? 0.035 : 0.06;
@@ -171,7 +180,7 @@ function device(place: Place) {
     g.add(at(ring, 0, h / 2 + bezel + 0.1, 0));
     g.add(at(box(0.08, 0.04, t * 0.8, 0.015, C.body, 0.01), 0, h / 2 + bezel + 0.005, 0));
   }
-  return g;
+  return { group: g, draw };
 }
 
 // Each device's home, and where the device lands in it.
@@ -250,13 +259,13 @@ export default function Device3D({ place, label }: { place: Place; label: string
     scene.add(world);
     const { group, pieces, land } = home(place);
     world.add(group);
-    const dev = device(place);
+    const { group: dev, draw } = device(place);
     world.add(dev);
     // Framing per scene.
     const view = {
-      desk: { cam: [0.4, 1.5, 6.0], look: [0, -0.2, 0] },
-      fridge: { cam: [1.4, 0.5, 6.6], look: [0, -0.25, 0] },
-      bag: { cam: [0.9, 0.5, 3.9], look: [-0.1, 0, 0] },
+      desk: { cam: [0.5, 1.7, 6.6], look: [0, -0.25, 0] },
+      fridge: { cam: [1.6, 0.6, 7.4], look: [0, -0.25, 0] },
+      bag: { cam: [1.1, 0.6, 4.6], look: [-0.1, 0, 0] },
     }[place];
     camera.position.set(...(view.cam as [number, number, number]));
     camera.lookAt(...(view.look as [number, number, number]));
@@ -285,7 +294,9 @@ export default function Device3D({ place, label }: { place: Place; label: string
         THREE.MathUtils.lerp(0, land.rot.z, f),
       );
       // A small settle once it lands.
-      if (fly >= 1) dev.position.y = land.pos.y + Math.sin(Math.min(t - 2.7, 0.6) * Math.PI * 3.3) * 0.02 * Math.max(0, 1 - (t - 2.7) / 0.6);
+      if (fly >= 1)
+        dev.position.y =
+          land.pos.y + Math.sin(Math.min(t - 2.7, 0.6) * Math.PI * 3.3) * 0.02 * Math.max(0, 1 - (t - 2.7) / 0.6);
       return fly >= 1 && t > 3.3;
     };
 
@@ -310,6 +321,16 @@ export default function Device3D({ place, label }: { place: Place; label: string
       camera.updateProjectionMatrix();
       go();
     };
+    // Desk and bag show the homepage's notes, live: tick one up top and the screen follows. (The fridge keeps its
+    // household list.)
+    const unsync =
+      place === "fridge"
+        ? () => {}
+        : onHero((ts) => {
+            const list = ts.map((x): [string, boolean] => [x.title, x.done]);
+            draw(place === "bag" ? [...list.filter((x) => !x[1]), ...list.filter((x) => x[1])].slice(0, 3) : list);
+            go();
+          });
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     const io = new IntersectionObserver(([e]) => {
@@ -338,6 +359,7 @@ export default function Device3D({ place, label }: { place: Place; label: string
 
     return () => {
       cancelAnimationFrame(raf);
+      unsync();
       ro.disconnect();
       io.disconnect();
       el.removeEventListener("pointerdown", down);

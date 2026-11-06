@@ -1307,17 +1307,16 @@ button.box:hover {
   border: 2.5px solid #2c2c2c;
   max-height: 34rem;
 }
-/* The 3D hardware scene: a lit stage on the dark section. Drag sideways turns it; vertical swipes still scroll. */
+/* The 3D hardware scene sits straight on the dark section (no frame), at a size that fits next to the copy.
+   Drag sideways turns it; vertical swipes still scroll. */
 .stage {
   position: relative;
   margin: 0;
-  background: radial-gradient(ellipse at 50% 60%, #2a2a2a 0%, #151515 65%);
-  border: 2.5px solid #2c2c2c;
 }
 .stage :global(.device3d) {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 34rem;
+  aspect-ratio: 16 / 11;
+  max-height: 26rem;
   cursor: grab;
   touch-action: pan-y;
 }
