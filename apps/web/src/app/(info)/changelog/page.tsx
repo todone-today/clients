@@ -12,6 +12,7 @@ const ENTRIES: { date: string; title: string; items: string[] }[] = [
       "New accounts confirm their email with a link; unconfirmed accounts are deleted after 7 days, and a banner says when.",
       "Forgot your password? Reset it from the sign-in page. Or change it on your Account page.",
       "Profile pictures from Gravatar, for you and your teammates.",
+      "Sign-in and sign-up slow down after too many tries, and the site sends stricter security headers.",
     ],
   },
   {
