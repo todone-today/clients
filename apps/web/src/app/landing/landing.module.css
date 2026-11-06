@@ -1285,6 +1285,23 @@ button.box:hover {
   position: sticky;
   top: 6rem;
 }
+/* The copy beside the scene follows the same scroll (--p, 0–1 through this device's part): the heading slides in as
+   the device spins in, the line after it, and the goal pops in as the device lands. */
+.placeCopy[data-synced] > * {
+  --in: clamp(0, calc((var(--p, 1) - var(--from)) * 6), 1);
+  opacity: var(--in);
+  translate: 0 calc((1 - var(--in)) * 18px);
+}
+.placeCopy[data-synced] > :nth-child(1) {
+  --from: 0.02;
+}
+.placeCopy[data-synced] > :nth-child(2) {
+  --from: 0.16;
+}
+.placeCopy[data-synced] > :nth-child(3) {
+  --from: 0.4;
+  scale: calc(0.85 + var(--in) * 0.15);
+}
 .places {
   display: flex;
   gap: 0.8rem;

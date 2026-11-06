@@ -370,7 +370,8 @@ const TERM: Record<Billing, string> = { month: "", half: "first 6 months", year:
 const AGAIN: Record<Billing, string> = { month: "", half: "every 6 months", year: "a year" };
 
 // The launch price's discount on the normal price for the same term, rounded down.
-const off = (intro: [string, string], normal: [string, string]) => Math.floor((1 - amount(intro[0]) / amount(normal[0])) * 100);
+const off = (intro: [string, string], normal: [string, string]) =>
+  Math.floor((1 - amount(intro[0]) / amount(normal[0])) * 100);
 
 // Saving on the first term against paying monthly for as long, rounded down so it never overstates.
 function saving(b: Billing) {
@@ -474,6 +475,7 @@ export function Hardware() {
   // Device3D's `scroll`). The stage stays pinned meanwhile. Reduced motion: plain tabs, no pinning.
   const track = useRef<HTMLDivElement>(null);
   const scroll = useRef<number | null>(null);
+  const copy = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(false);
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -483,6 +485,7 @@ export function Hardware() {
       const p = Math.min(Math.max(-r.top / Math.max(r.height - innerHeight, 1), 0), 0.9999);
       const i = Math.floor(p * PLACES.length);
       scroll.current = p * PLACES.length - i;
+      copy.current?.style.setProperty("--p", String(scroll.current));
       setAt(i);
     };
     Promise.resolve().then(() => {
@@ -520,7 +523,7 @@ export function Hardware() {
             />
             <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
           </figure>
-          <div>
+          <div ref={copy} className={s.placeCopy} data-synced={pinned || undefined}>
             <h3 className="display">{title}</h3>
             <p>{line}</p>
             <p className={s.goalTag}>

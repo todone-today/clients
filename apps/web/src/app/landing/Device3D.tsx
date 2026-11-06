@@ -576,6 +576,10 @@ export default function Device3D({
 
     // The scene: 0–1.3s the device spins in mid-air; 1.1–1.9s its home pops in; 1.7–2.7s it glides into place.
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const camFrom = camera.position.clone();
+    const lookFrom = new THREE.Vector3(...(view.look as [number, number, number]));
+    const camTo = land.pos.clone().add(new THREE.Vector3(0.35, 0.1, 1.15));
+    const lookAt = new THREE.Vector3();
     // It spins in a little way in front of the scene, toward the camera, then flies to its place.
     const start = new THREE.Vector3(...(view.look as [number, number, number])).lerp(camera.position, 0.4);
     let t0 = -1;
@@ -620,6 +624,18 @@ export default function Device3D({
           ? Math.sin((now - t0) / 2600) * 0.12
           : 0;
       world.rotation.y += (drag + turn - world.rotation.y) * 0.12;
+      // The bag clip is small: once it has landed, the camera moves in on it.
+      if (place === "bag") {
+        const k = still
+          ? 1
+          : scrolled
+            ? Math.min(Math.max((s - 0.5) / 0.4, 0), 1)
+            : Math.min(Math.max((t - 2.8) / 1.4, 0), 1);
+        const e = ease(k);
+        camera.position.lerpVectors(camFrom, camTo, e);
+        lookAt.lerpVectors(lookFrom, land.pos, e * 0.85);
+        camera.lookAt(lookAt);
+      }
       renderer.render(scene, camera);
       if (visible && (scrolled || !(still && !dragging && Math.abs(drag - world.rotation.y) < 0.001)))
         raf = requestAnimationFrame(frame);
