@@ -580,8 +580,16 @@ export default function Device3D({
     const lookFrom = new THREE.Vector3(...(view.look as [number, number, number]));
     const camTo = land.pos.clone().add(new THREE.Vector3(0.35, 0.1, 1.15));
     const lookAt = new THREE.Vector3();
-    // It spins in a little way in front of the scene, toward the camera, then flies to its place.
+    // It spins in a little way in front of the scene, toward the camera, then flies to its place. `face`: the angle
+    // that points its screen straight at the camera there.
     const start = new THREE.Vector3(...(view.look as [number, number, number])).lerp(camera.position, 0.4);
+    const facer = new THREE.Object3D();
+    facer.position.copy(start);
+    facer.lookAt(camera.position);
+    const face = facer.quaternion.clone();
+    const landQ = new THREE.Quaternion().setFromEuler(land.rot);
+    const spinQ = new THREE.Quaternion();
+    const UP = new THREE.Vector3(0, 1, 0);
     let t0 = -1;
     let drag = 0;
     let dragging = false;
@@ -598,11 +606,10 @@ export default function Device3D({
       const f = ease(fly);
       dev.position.lerpVectors(start, land.pos, f);
       dev.scale.setScalar(THREE.MathUtils.lerp(1.25, 1, f) * (fly > 0 && fly < 1 ? 1 : 1));
-      dev.rotation.set(
-        THREE.MathUtils.lerp(0.15, land.rot.x, f),
-        THREE.MathUtils.lerp(-Math.PI * 2 * (1 - ease(spin)) + 0.4, land.rot.y, f),
-        THREE.MathUtils.lerp(0, land.rot.z, f),
-      );
+      // It starts square to the camera, makes one full turn about its own upright axis (ending square again), then
+      // turns smoothly into its landing angle.
+      spinQ.setFromAxisAngle(UP, Math.PI * 2 * spin * spin * (3 - 2 * spin)); // eases in and out: square at both ends
+      dev.quaternion.copy(face).multiply(spinQ).slerp(landQ, f);
       // A small settle once it lands.
       if (fly >= 1)
         dev.position.y =
@@ -619,7 +626,7 @@ export default function Device3D({
       const done = pose(t);
       // After landing: scrolling on turns the scene; without scroll, a gentle sway. Dragging adds to either.
       const turn = scrolled
-        ? THREE.MathUtils.lerp(-0.45, 0.45, Math.min(Math.max((s - 0.55) / 0.45, 0), 1))
+        ? THREE.MathUtils.lerp(0, 0.5, Math.min(Math.max((s - 0.55) / 0.45, 0), 1))
         : done && !dragging && !still
           ? Math.sin((now - t0) / 2600) * 0.12
           : 0;

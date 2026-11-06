@@ -1303,8 +1303,13 @@ button.box:hover {
   scale: calc(0.85 + var(--in) * 0.15);
 }
 .places {
-  display: flex;
+  display: none; /* scrolling steps through the devices; the tabs are only for reduced motion, where it doesn't */
   gap: 0.8rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .places {
+    display: flex;
+  }
 }
 .places button {
   padding: 0.55rem 1.1rem;
