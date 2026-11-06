@@ -77,8 +77,12 @@ export default function Privacy() {
       <h2>Who else handles it</h2>
       <p>We use these providers to run the service. They process data for us and only as needed:</p>
       <ul>
-        <li>Vercel, which hosts the app.</li>
-        <li>Neon, which hosts the database.</li>
+        <li>Vercel, which hosts the website.</li>
+        <li>Contabo, which hosts our server and database.</li>
+        <li>
+          Sentry, which receives error reports so we can fix bugs. They describe what broke in the code, not you: no
+          email, IP address, list contents or page addresses. Stored in the EU.
+        </li>
         <li>Resend, which sends our emails (confirming your address, resetting your password).</li>
         <li>
           Gravatar (Automattic), for profile pictures: your browser asks it for the picture matching a scrambled (hashed)
