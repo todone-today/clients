@@ -115,3 +115,30 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Status page: 30 days of uptime, one bar a day. */
+.uptime {
+  margin: 1.25rem 0;
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(30, 1fr);
+  gap: 3px;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+.days li {
+  height: 2rem;
+  background: var(--lime);
+  border: 2px solid var(--hair);
+}
+.days li[data-level="dip"] {
+  background: var(--butter);
+}
+.days li[data-level="down"] {
+  background: var(--hot);
+}
+.days li[data-level="none"] {
+  background: var(--raise);
+}
