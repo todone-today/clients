@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { List as ListIcon, CalendarDays, Lightbulb, Lock, LockOpen, Menu, Check, Clock, Info, Plus, Timer, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { List as ListIcon, Lightbulb, Lock, LockOpen, Menu, Check, Info, Plus, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -37,7 +37,6 @@ import {
   lateBy,
   lateLabel,
   moveTasks,
-  parseMinutes,
   relDue,
   repeatLabel,
   todayISO,
@@ -70,7 +69,6 @@ const noteColors = (tasks: Task[]) =>
       .map((id, i) => [id, NOTES[i % NOTES.length]]),
   );
 const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
-const phoneScreen = () => matchMedia("(max-width: 760px)").matches;
 const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
 // Repeats waiting for their day aren't counted until it comes.
@@ -747,6 +745,21 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
             picked.size > 1 ? `${picked.size} tasks` : (findTask(list.tasks, [...picked][0] ?? selected)?.title ?? null)
           }
           onApply={(key, taskIds) => applySticker(key, taskIds ?? (picked.size ? [...picked] : selected ? [selected] : []))}
+          task={picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)}
+          edit={selected ? (f) => setTasks((ts) => mapTask(ts, selected, f)) : undefined}
+          panel={
+            selected && findTask(list.tasks, selected) && picked.size <= 1 ? (
+              <Editor
+                task={findTask(list.tasks, selected)!}
+                top={list.tasks.some((t) => t.id === selected)}
+                edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
+                setTasks={setTasks}
+                onClose={() => setSelected(null)}
+                listId={list.id}
+                lists={lists}
+              />
+            ) : null
+          }
         />
       </div>
     </>
@@ -822,26 +835,10 @@ function TaskRow({
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
-        {open ? (
-          // Open: the title itself is the name field. Enter or clicking away saves.
-          <input
-            className={`${s.taskTitle} ${s.titleField}`}
-            aria-label="Task name"
-            defaultValue={task.title}
-            autoFocus={!phoneScreen()}
-            maxLength={500}
-            onFocus={(e) => e.target.select()}
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
-            }}
-          />
-        ) : (
-          <button className={s.taskTitle} onClick={() => onSelect(task.id)} aria-expanded={false}>
-            {task.title}
-          </button>
-        )}
+        {/* Picking a task shows its details in the sidebar; the card itself never opens up. */}
+        <button className={s.taskTitle} onClick={() => onSelect(open ? null : task.id)} aria-pressed={open}>
+          {task.title}
+        </button>
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
           {task.rep ? (
@@ -891,18 +888,6 @@ function TaskRow({
         </span>
       </div>
 
-      {open && (
-        <Editor
-          task={task}
-          top={top}
-          edit={edit}
-          setTasks={setTasks}
-          onClose={() => onSelect(null)}
-          listId={listId}
-          lists={lists}
-        />
-      )}
-
       {task.sub.length > 0 && (
         <ul className={s.subs}>
           {task.sub.map((x) => (
@@ -914,7 +899,8 @@ function TaskRow({
   );
 }
 
-// Everything about one task in one place; changes save as you go. Esc or Done closes it.
+// The picked task's details, at the top of the sidebar: name, list, steps, delete. Day, time and how long are the
+// Custom rows under the stickers. Changes save as you go; Esc or Done puts the task down.
 function Editor({
   task,
   top,
@@ -933,83 +919,41 @@ function Editor({
   onClose: () => void;
 }) {
   const [step, setStep] = useState("");
-  const [estErr, setEstErr] = useState(false);
-  // On a phone, don't throw up the keyboard; bring the task to the top, clear of the sticker sheet.
-  const box = useRef<HTMLDivElement>(null);
-  const [phone] = useState(() => matchMedia("(max-width: 760px)").matches);
-  useEffect(() => {
-    if (phone) box.current?.closest("li")?.scrollIntoView({ block: "start", behavior: "smooth" });
-  }, [phone]);
   return (
-    <div
-      ref={box}
+    <section
       className={s.editor}
+      aria-label="Picked task"
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
         e.stopPropagation();
         onClose();
       }}
     >
-      <div className={s.edFields}>
-        <label>
-          <span>
-            <CalendarDays size={14} strokeWidth={2.5} /> Day
+      <input
+        key={task.id + task.title}
+        className={s.edTitle}
+        aria-label="Task name"
+        defaultValue={task.title}
+        maxLength={500}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+        onBlur={(e) => {
+          const v = e.target.value.trim();
+          if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
+        }}
+      />
+      {lists.length > 1 && (
+        <div className={s.edField}>
+          <span aria-hidden>
+            <ListIcon size={14} strokeWidth={2.5} /> List
           </span>
-          <input
-            key={task.due}
-            type="date"
-            defaultValue={task.due ?? ""}
-            onChange={(e) =>
-              edit((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
-            }
+          <Select
+            label="List"
+            value={listId}
+            options={lists.map((l) => ({ value: l.id, label: l.name }))}
+            onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
           />
-        </label>
-        <label>
-          <span>
-            <Clock size={14} strokeWidth={2.5} /> Time
-          </span>
-          <input
-            key={task.at}
-            type="time"
-            step={900}
-            disabled={!task.due}
-            title={task.due ? undefined : "Give it a day first"}
-            defaultValue={task.at ?? ""}
-            onChange={(e) => edit((t) => ({ ...t, at: e.target.value || undefined }))}
-          />
-        </label>
-        <label>
-          <span>
-            <Timer size={14} strokeWidth={2.5} /> How long
-          </span>
-          <input
-            key={task.est}
-            defaultValue={task.est ? fmtMinutes(task.est) : ""}
-            placeholder="45m, 1h30m"
-            aria-invalid={estErr}
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              const m = v ? parseMinutes(v) : 0;
-              setEstErr(m === null);
-              if (m !== null && m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
-            }}
-          />
-        </label>
-        {lists.length > 1 && (
-          <div className={s.edField}>
-            <span aria-hidden>
-              <ListIcon size={14} strokeWidth={2.5} /> List
-            </span>
-            <Select
-              label="List"
-              value={listId}
-              options={lists.map((l) => ({ value: l.id, label: l.name }))}
-              onChange={(to) => moveToList(listId, to, (ts) => takeTasks(ts, [task.id]))}
-            />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
       {top ? (
         <form
           className={s.edStep}
@@ -1038,15 +982,21 @@ function Editor({
           Make it a main task
         </button>
       )}
-      {estErr && <p className={s.err}>How long reads like 30m, 2h or 1h30m.</p>}
       <div className={s.edEnd}>
-        <button className={s.edDelete} onClick={() => edit(() => null)}>
-          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete{task.sub.length ? " with steps" : ""}
+        <button
+          className={s.edDelete}
+          title={task.sub.length ? "Deletes its steps too" : undefined}
+          onClick={() => {
+            edit(() => null);
+            onClose();
+          }}
+        >
+          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
         </button>
         <button className="btn" onClick={onClose}>
           Done
         </button>
       </div>
-    </div>
+    </section>
   );
 }
