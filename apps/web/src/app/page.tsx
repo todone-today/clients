@@ -101,6 +101,7 @@ export default function Home() {
             </Link>
           </div>
           <Shot shot={SHOTS.board} sizes="(max-width: 900px) 100vw, 55vw" className={s.boardShot} />
+          <Shot shot={SHOTS.boardMobile} sizes="80vw" className={s.phoneShot} />
         </section>
 
         {/* The roadmap: three lists on the same board, in order. */}

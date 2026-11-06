@@ -21,6 +21,13 @@ export const SHOTS = {
     label: "The board on desktop",
     ratio: "16 / 9",
   },
+  // The same board on a phone (captured at 390 px wide), shown instead of the desktop shot on small screens.
+  boardMobile: {
+    src: "/landing/board-mobile.jpg",
+    alt: "todone on a phone: the list's sticky notes with steps and stickers, one tidy row of controls on top",
+    label: "The board on a phone",
+    ratio: "390 / 700",
+  },
   calendar: {
     src: null,
     alt: "todone's week calendar with tasks placed on times and a To plan tray",

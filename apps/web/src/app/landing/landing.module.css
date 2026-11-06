@@ -442,6 +442,27 @@ button.box:hover {
   box-shadow: 10px 10px 0 var(--lime);
   rotate: 1deg;
 }
+/* On phones the board shows as it really looks on a phone, in a phone frame, instead of a shrunken desktop. */
+.phoneShot {
+  display: none;
+  justify-self: center;
+  width: min(78vw, 19rem);
+  border: 9px solid var(--black);
+  border-radius: 2.2rem;
+  box-shadow: 10px 10px 0 var(--lime);
+  rotate: -2deg;
+}
+.phoneShot img {
+  object-position: top;
+}
+@media (max-width: 760px) {
+  .boardShot {
+    display: none;
+  }
+  .phoneShot {
+    display: block;
+  }
+}
 
 /* ---------- Image slots ---------- */
 .shot {
