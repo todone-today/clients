@@ -31,8 +31,9 @@ export function StepsDemo() {
         className={s.row}
         aria-pressed={done}
         onClick={() => {
+          // Steps follow their task both ways: tick it and they're done, untick it and they're open again.
+          setSteps((st) => st.map(([t]) => [t, !done]));
           setDone(!done);
-          if (!done) setSteps((st) => st.map(([t]) => [t, true]));
         }}
       >
         <Box on={done} />
@@ -53,7 +54,7 @@ export function StepsDemo() {
           </li>
         ))}
       </ul>
-      <p className={s.try}>Tick the task and its steps go with it.</p>
+      <p className={s.try}>Tick or untick the task and its steps go with it.</p>
     </div>
   );
 }
@@ -365,6 +366,9 @@ const MONTHS: Record<Billing, number> = { month: 1, half: 6, year: 12 };
 const TERM: Record<Billing, string> = { month: "", half: "first 6 months", year: "first year" };
 const AGAIN: Record<Billing, string> = { month: "", half: "every 6 months", year: "a year" };
 
+// The launch price's discount on the normal price for the same term, rounded down.
+const off = (intro: [string, string], normal: [string, string]) => Math.floor((1 - amount(intro[0]) / amount(normal[0])) * 100);
+
 // Saving on the first term against paying monthly for as long, rounded down so it never overstates.
 function saving(b: Billing) {
   const plus = PLANS.find((p) => p.lead)!;
@@ -397,6 +401,13 @@ export function Pricing() {
               style={{ "--fill": p.fill } as React.CSSProperties}
             >
               <h3 className="display">{p.name}</h3>
+              {intro && (
+                <p className={s.deal} aria-label={`Launch deal: ${off(intro, p.price![billing])}% off the ${TERM[billing]}`}>
+                  <span>Launch deal</span>
+                  <b className="display">−{off(intro, p.price![billing])}%</b>
+                  <span>{TERM[billing]}!</span>
+                </p>
+              )}
               <p className={s.price}>
                 {intro && <s className={s.was}>{p.price![billing][0]}</s>} <b className="display">{rs}</b>{" "}
                 <span>/ {usd}</span> <small>{per}</small>
