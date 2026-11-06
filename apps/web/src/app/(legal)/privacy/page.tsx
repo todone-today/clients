@@ -79,6 +79,7 @@ export default function Privacy() {
       <ul>
         <li>Vercel, which hosts the website.</li>
         <li>Contabo, which hosts our server and database.</li>
+        <li>Cloudflare, which stores encrypted backups of the database; only we hold the key.</li>
         <li>
           Sentry, which receives error reports so we can fix bugs. They describe what broke in the code, not you: no
           email, IP address, list contents or page addresses. Stored in the EU.
