@@ -18,5 +18,6 @@ export async function POST(req: Request) {
     headers: { "content-type": "application/x-sentry-envelope" },
     body,
   });
+  if (!r.ok) console.error("sentry tunnel", r.status, r.headers.get("x-sentry-error"), (await r.text()).slice(0, 300));
   return new Response(null, { status: r.status });
 }
