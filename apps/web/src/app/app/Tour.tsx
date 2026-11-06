@@ -69,7 +69,7 @@ const STEPS: Step[] = [
     title: "Notifications and more",
     body: "Turn on reminders on this device, and connect Google Calendar, Notion, Obsidian or Discord.",
   },
-  { target: "tour", panel: null, title: "That's it", body: "Click “Tour” up here to see this again. Have fun." },
+  { target: "tour", panel: null, title: "That's it", body: "Click the i up here to see this again. Have fun." },
 ];
 
 export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: () => void }) {

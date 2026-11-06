@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { Moon, Sun } from "lucide-react";
 import s from "./ThemeToggle.module.css";
 
 type Theme = "day" | "night";
@@ -21,8 +22,18 @@ function pick(t: Theme) {
   dispatchEvent(new Event("themechange"));
 }
 
-export function ThemeToggle() {
+// `tile`: one square button (sun or moon) that flips the theme, styled by the given class; otherwise Day / Night.
+export function ThemeToggle({ tile }: { tile?: string }) {
   const theme = useSyncExternalStore(subscribe, current, () => null);
+
+  if (tile) {
+    const next = theme === "night" ? "day" : "night";
+    return (
+      <button className={tile} onClick={() => pick(next)} aria-label={`Switch to ${next}`} title={`Switch to ${next}`}>
+        {theme === "night" ? <Moon size={18} strokeWidth={2.5} aria-hidden /> : <Sun size={18} strokeWidth={2.5} aria-hidden />}
+      </button>
+    );
+  }
 
   return (
     <div className={s.toggle} role="group" aria-label="Theme">

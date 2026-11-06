@@ -2320,3 +2320,46 @@
 .shell:has(.verifyBar) {
   grid-template-rows: auto auto 1fr;
 }
+
+/* Top bar: Tour, theme and Account as square stickers, keyline and hard shadow like the Account picture. */
+.tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  overflow: hidden;
+  color: var(--black);
+  background: var(--fill, var(--butter));
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift-sm);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.tile:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.tile:active,
+.tile[aria-pressed="true"] {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow);
+}
+.tile > span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 800;
+  background: var(--peri);
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+}

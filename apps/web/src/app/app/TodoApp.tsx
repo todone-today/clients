@@ -5,8 +5,9 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { List as ListIcon, CalendarDays, Lightbulb, Menu, Check, Clock, Plus, Timer, Trash2 } from "lucide-react";
+import { List as ListIcon, CalendarDays, Lightbulb, Menu, Check, Clock, Info, Plus, Timer, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
 import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
@@ -208,28 +209,32 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           {error && <span className={s.err}>{error}</span>}
         </p>
         <button
-          className={s.topLink}
+          className={s.tile}
+          style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
           onClick={() => {
             setPanel(null);
             setTouring(true);
           }}
           data-tour="tour"
+          aria-label="Tour"
+          title="Tour"
         >
-          Tour
+          <Info size={18} strokeWidth={2.5} aria-hidden />
         </button>
-        <ThemeToggle />
+        <ThemeToggle tile={s.tile} />
         {demo ? (
           <Link href="/login" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
             Make an account
           </Link>
         ) : (
           <button
-            className={s.topLink}
+            className={s.tile}
             aria-pressed={panel === "account"}
             onClick={() => show("account")}
+            aria-label="Account"
             title={session?.user.email}
           >
-            Account
+            <Avatar image={session?.user.image} name={session?.user.name || session?.user.email || "?"} />
           </button>
         )}
       </header>
