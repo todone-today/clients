@@ -85,8 +85,8 @@ export const SHOTS = {
 } satisfies Record<string, Shot>;
 
 // The kickstarter: each goal unlocks the next step, funded by members' Plus, Team and Founding purchases.
-// App-store fees are what Google and Apple charge (converted at about ₹88 to $1); hardware amounts are our
-// estimates for prototype R&D only (panels, boards, enclosures, a few iterations), not manufacturing.
+// App-store fees are what Google and Apple charge (converted at about ₹88 to $1). Hardware goals are three prototype
+// units' worth of parts each (Indian retail prices, Nov 2026), for trial and error; not manufacturing.
 // `raisedInr` is what members have actually raised; update it from Razorpay. Set `done` to hide the section.
 export const FUNDING = {
   raisedInr: 0,
@@ -115,24 +115,24 @@ export const GOALS: Goal[] = [
   {
     key: "desk",
     name: "Desk display",
-    inr: 25000,
-    what: "A 7-inch e-ink panel, ESP32 board, stand and enclosure prototypes, three rounds of iteration.",
+    inr: 46500,
+    what: "Three prototypes' worth of parts: a 7.3-inch colour e-ink panel, ESP32-S3 board, battery, stand and printed case (≈ ₹15,500 each).",
     fill: "var(--butter)",
     kind: "rnd",
   },
   {
     key: "fridge",
     name: "Fridge display",
-    inr: 50000,
-    what: "A larger 10–13-inch e-ink panel, magnetic mount, battery that lasts months, shared household lists.",
+    inr: 22500,
+    what: "Three prototypes' worth of parts: a 4.2-inch colour e-ink panel, ESP32-S3 board, battery, magnets and printed case (≈ ₹7,500 each).",
     fill: "var(--pink)",
     kind: "rnd",
   },
   {
     key: "bag",
     name: "Bag clip",
-    inr: 75000,
-    what: "A palm-sized device: custom circuit board runs, a rugged clip-on case and a battery for days away from a charger.",
+    inr: 18900,
+    what: "Three prototypes' worth of parts: a 2.9-inch e-ink panel, a small ESP32-S3 board, battery, carabiner and a rugged printed case (≈ ₹6,300 each).",
     fill: "var(--peri)",
     kind: "rnd",
   },
