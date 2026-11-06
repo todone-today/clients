@@ -162,7 +162,7 @@ export const PLANS: Plan[] = [
     fill: "#fff8ef",
     points: [
       "Up to 10 lists",
-      "One team of up to 5 people",
+      "Personal use: no teams or sharing",
       "Calendar, Brainstorm, integrations",
       "Offline, export any time",
     ],
