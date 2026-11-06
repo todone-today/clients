@@ -51,9 +51,9 @@ const SCREENS: Record<Place, { head: string; tasks: Line[]; wide: boolean; peopl
     head: "NEXT",
     wide: false,
     tasks: [
-      { t: "Pick up charger", done: false },
-      { t: "Call Mom 18:30", done: false },
-      { t: "Gym", done: true },
+      { t: "Pick up charger", done: false, fill: "butter" },
+      { t: "Call Mom", done: false, tag: "18:30", fill: "pink" },
+      { t: "Gym", done: true, fill: "cyan" },
     ],
   },
 };
@@ -193,7 +193,7 @@ function screenTexture(place: Place) {
     shown.forEach((x, i) => {
       const y = top + i * (rowH + (wide ? ts * 0.35 : 0));
       const b = ts * 1.05;
-      if (wide) {
+      {
         // A coloured note strip, like the board.
         g.fillStyle = INK[x.fill ?? ["butter", "pink", "cyan", "lime"][i % 4]] ?? INK.butter;
         g.lineWidth = ts * 0.11;
@@ -202,11 +202,11 @@ function screenTexture(place: Place) {
         g.fill();
         g.stroke();
       }
-      const cy = wide ? y + (rowH - b) / 2 : y;
-      check(pad + (wide ? ts * 0.55 : 0), cy, b, x.done);
+      const cy = y + (rowH - b) / 2;
+      check(pad + ts * 0.55, cy, b, x.done);
       g.fillStyle = "#111";
       g.font = `700 ${ts}px ${sans}`;
-      const tx = pad + b + (wide ? ts * 1.15 : ts * 0.6);
+      const tx = pad + b + ts * 1.15;
       const by = cy + b * 0.82;
       g.fillText(x.t, tx, by);
       const w = g.measureText(x.t).width;
@@ -280,36 +280,39 @@ const at = (o: THREE.Object3D, x: number, y: number, z: number, ry = 0, rx = 0, 
 function device(place: Place) {
   const g = new THREE.Group();
   const { tex, aspect, draw } = screenTexture(place);
-  const h = place === "desk" ? 1.25 : place === "fridge" ? 0.66 : 0.4;
+  // Real sizes (see the scene scales in home()): 7" desk, 4.2" fridge, 2.9" bag panels.
+  const h = place === "desk" ? 0.52 : place === "fridge" ? 0.25 : 0.23;
   const w = h * aspect;
-  const t = place === "bag" ? 0.09 : place === "fridge" ? 0.05 : 0.07;
-  const bezel = place === "bag" ? 0.045 : place === "desk" ? 0.085 : 0.035;
-  const slab = box(w + bezel * 2, h + bezel * 2, t, place === "bag" ? 0.07 : place === "desk" ? 0.1 : 0.035, C.body, 0.02);
+  const t = place === "bag" ? 0.055 : place === "fridge" ? 0.03 : 0.045;
+  const bezel = place === "bag" ? 0.03 : place === "desk" ? 0.045 : 0.022;
+  const slab = box(w + bezel * 2, h + bezel * 2, t, place === "bag" ? 0.04 : place === "desk" ? 0.05 : 0.02, C.body, 0.01);
   g.add(slab);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex }));
   screen.position.z = t / 2 + 0.002;
   g.add(screen);
   if (place === "desk") {
     // A lime tab on the left edge, and an origami folio stand folded into a triangle behind.
-    g.add(at(box(0.06, 0.26, t * 1.15, 0.02, C.lime, 0.014), -(w / 2 + bezel + 0.02), 0.12, 0));
+    g.add(at(box(0.028, 0.13, t * 1.15, 0.01, C.lime, 0.007), -(w / 2 + bezel + 0.01), 0.06, 0));
     const fold = new THREE.Shape();
     const H2 = h / 2 + bezel;
     fold.moveTo(0, -H2);
-    fold.lineTo(-0.55, -H2);
+    fold.lineTo(-0.24, -H2);
     fold.lineTo(0, 0.05);
     fold.closePath();
-    const stand = part(new THREE.ExtrudeGeometry(fold, { depth: w * 0.8, bevelEnabled: false }), 0x2b2b2b, 0.015);
+    const stand = part(new THREE.ExtrudeGeometry(fold, { depth: w * 0.8, bevelEnabled: false }), 0x2b2b2b, 0.008);
     stand.rotation.y = -Math.PI / 2;
     stand.position.set(w * 0.4, 0, -t / 2);
     g.add(stand);
   } else if (place === "fridge") {
-    g.add(at(box(0.05, h * 0.75, t * 1.25, 0.02, C.lime, 0.012), -(w / 2 + bezel + 0.02), 0, 0));
+    g.add(at(box(0.016, h * 0.75, t * 1.25, 0.006, C.lime, 0.005), -(w / 2 + bezel + 0.007), 0, 0));
   } else {
     // A lime carabiner above the case.
-    const ring = part(new THREE.TorusGeometry(0.075, 0.017, 10, 28), C.lime, 0.01);
-    ring.scale.set(1, 1.5, 1);
-    g.add(at(ring, 0, h / 2 + bezel + 0.1, 0));
-    g.add(at(box(0.08, 0.04, t * 0.8, 0.015, C.body, 0.01), 0, h / 2 + bezel + 0.005, 0));
+    // A rugged case: a lime rim around the bezel, and a lime carabiner above.
+    g.add(at(box(w + bezel * 2 + 0.014, h + bezel * 2 + 0.014, t * 0.6, 0.045, C.lime, 0.006), 0, 0, -t * 0.25));
+    const ring = part(new THREE.TorusGeometry(0.045, 0.01, 10, 28), C.lime, 0.006);
+    ring.scale.set(1, 1.7, 1);
+    g.add(at(ring, 0, h / 2 + bezel + 0.075, 0));
+    g.add(at(box(0.05, 0.025, t * 0.8, 0.01, C.body, 0.006), 0, h / 2 + bezel + 0.004, 0));
   }
   return { group: g, draw };
 }
@@ -324,7 +327,7 @@ function home(place: Place) {
     const DESK = 0xf7b8d2;
     const PAD = 0x9fd3f2;
     add(at(box(16, 0.12, 11, 0.04, DESK, 0), 0, -0.06, -1.5));
-    add(at(box(3.6, 0.03, 1.9, 0.1, PAD, 0.015), 1.1, 0.015, 0.75));
+    add(at(box(2.6, 0.03, 1.3, 0.08, PAD, 0.012), 0.55, 0.015, 0.45));
     // A pastel mechanical keyboard on the pad.
     const kb = new THREE.Group();
     kb.add(at(box(2.1, 0.09, 0.78, 0.07, 0xe6defa, 0.018), 0, 0.045, 0));
@@ -336,16 +339,16 @@ function home(place: Place) {
         kb.add(at(key, -0.9 + c * 0.138, 0.12, -0.27 + r * 0.135));
       }
     kb.add(at(box(0.8, 0.06, 0.112, 0.025, 0xffe066, 0.008), 0.0, 0.12, -0.27 + 4 * 0.135));
-    add(at(kb, 1.25, 0.03, 0.95, -0.28));
+    add(at(kb, 0.75, 0.03, 0.5, -0.28));
     // A pastel laptop, open, back left.
     const lap = new THREE.Group();
     lap.add(at(box(1.5, 0.05, 1.0, 0.05, 0xcfeaf6, 0.018), 0, 0.025, 0));
     lap.add(at(box(1.5, 1.0, 0.04, 0.05, 0xd9d0f7, 0.018), 0, 0.5, -0.5, 0, -0.32));
-    add(at(lap, -1.85, 0, -0.75, 0.5));
+    add(at(lap, -1.15, 0, -0.75, 0.45));
     // A takeaway cup with a lid, front left.
-    add(at(part(new THREE.CylinderGeometry(0.23, 0.17, 0.66, 28), 0xf3a3bf), -1.95, 0.33, 1.05));
-    add(at(part(new THREE.CylinderGeometry(0.255, 0.245, 0.08, 28), 0xf9c7d8), -1.95, 0.7, 1.05));
-    add(at(part(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 20), 0xf3a3bf, 0.01), -1.95, 0.75, 1.05));
+    add(at(part(new THREE.CylinderGeometry(0.23, 0.17, 0.66, 28), 0xf3a3bf), -0.8, 0.33, 0.45));
+    add(at(part(new THREE.CylinderGeometry(0.255, 0.245, 0.08, 28), 0xf9c7d8), -0.8, 0.7, 0.45));
+    add(at(part(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 20), 0xf3a3bf, 0.01), -0.8, 0.75, 0.45));
     // A spiky plant in a terracotta pot, back right.
     const plant = new THREE.Group();
     plant.add(at(part(new THREE.CylinderGeometry(0.3, 0.23, 0.42, 24), 0xe07b4c), 0, 0.21, 0));
@@ -358,10 +361,10 @@ function home(place: Place) {
       plant.add(leaf);
     }
     plant.add(at(part(new THREE.ConeGeometry(0.06, 0.85, 6), 0x56b86a, 0.012), 0, 0.85, 0));
-    add(at(plant, 2.4, 0, -1.2));
+    add(at(plant, 1.05, 0, -0.85));
     // An earbuds case.
-    add(at(box(0.44, 0.22, 0.34, 0.1, 0xffffff, 0.015), 2.75, 0.11, 0.0, -0.3));
-    land = { pos: new THREE.Vector3(0.05, 0.82, -0.55), rot: new THREE.Euler(-0.18, -0.2, 0) };
+    add(at(box(0.26, 0.13, 0.2, 0.06, 0xffffff, 0.01), 0.75, 0.065, -0.15, -0.3));
+    land = { pos: new THREE.Vector3(0.0, 0.31, -0.3), rot: new THREE.Euler(-0.18, -0.15, 0) };
   } else if (place === "fridge") {
     const CREAM = 0xf2e8d2;
     const WOOD = 0xc98d58;
@@ -420,25 +423,26 @@ function home(place: Place) {
     add(at(box(2.7, 5.2, 1.7, 0.16, CREAM, 0.025), -0.1, -0.1, -0.86));
     add(at(box(2.65, 0.035, 0.03, 0.01, 0x8b8273, 0), -0.1, -1.55, 0.0));
     add(at(box(0.2, 1.15, 0.16, 0.08, 0xe7dcc2, 0.018), -0.95, -0.85, 0.09));
-    // On the door: lime magnets, polaroids, pinned notes, a stack of sticky notes, a drawing.
-    add(at(box(0.26, 0.26, 0.06, 0.05, C.lime, 0.012), -0.75, 1.55, 0.03, 0, 0, 0.12));
-    add(at(box(0.13, 0.13, 0.05, 0.03, C.lime, 0.01), -0.32, 1.12, 0.03));
-    add(at(box(0.12, 0.12, 0.05, 0.03, C.lime, 0.01), 0.05, 1.32, 0.03, 0, 0, -0.2));
-    add(at(box(0.12, 0.12, 0.05, 0.03, C.lime, 0.01), 0.15, -0.52, 0.03));
-    paper(0.44, 0.52, 0.55, 1.42, -0.12);
-    add(at(box(0.34, 0.33, 0.014, 0.01, 0x2b2b2b, 0), 0.56, 1.47, 0.02, 0, 0, -0.12));
-    paper(0.44, 0.52, 0.95, 1.36, 0.07);
-    add(at(box(0.34, 0.33, 0.014, 0.01, 0x7cc6ea, 0), 0.95, 1.41, 0.02, 0, 0, 0.07));
-    paper(0.36, 0.42, -0.78, 0.05, 0.12);
-    pin(-0.78, 0.22, 0xe0614f);
-    paper(0.34, 0.38, 0.95, -0.02, -0.1);
-    pin(0.95, 0.14, 0xe0614f);
+    // On the door, gathered around the display the way a fridge fills up: lime magnets, polaroids, pinned notes,
+    // a stack of sticky notes, a child's drawing.
+    add(at(box(0.15, 0.15, 0.05, 0.03, C.lime, 0.01), -0.42, 1.0, 0.03, 0, 0, 0.12));
+    add(at(box(0.09, 0.09, 0.04, 0.02, C.lime, 0.008), -0.05, 0.92, 0.03));
+    add(at(box(0.09, 0.09, 0.04, 0.02, C.lime, 0.008), 0.62, 0.62, 0.03, 0, 0, -0.2));
+    add(at(box(0.09, 0.09, 0.04, 0.02, C.lime, 0.008), 0.05, 0.22, 0.03));
+    paper(0.3, 0.36, 0.42, 1.08, -0.12);
+    add(at(box(0.24, 0.23, 0.014, 0.01, 0x2b2b2b, 0), 0.425, 1.115, 0.02, 0, 0, -0.12));
+    paper(0.3, 0.36, 0.7, 1.02, 0.08);
+    add(at(box(0.24, 0.23, 0.014, 0.01, 0x7cc6ea, 0), 0.7, 1.055, 0.02, 0, 0, 0.08));
+    paper(0.26, 0.3, -0.38, 0.5, 0.1);
+    pin(-0.38, 0.62, 0xe0614f);
+    paper(0.24, 0.28, 0.66, 0.36, -0.1);
+    pin(0.66, 0.46, 0xe0614f);
     [0xff9a62, 0xf2a7c6, C.cyan, C.lime].forEach((c, i) =>
       add(
         at(
-          box(0.5, 0.18, 0.012 + i * 0.002, 0.02, c, 0.008),
-          -0.22 + i * 0.02,
-          -0.72 - i * 0.16,
+          box(0.34, 0.12, 0.012 + i * 0.002, 0.015, c, 0.006),
+          0.05 + i * 0.015,
+          0.05 - i * 0.11,
           0.014 + i * 0.004,
           0,
           0,
@@ -446,22 +450,78 @@ function home(place: Place) {
         ),
       ),
     );
-    pin(-0.2, -0.62, 0xe0614f);
-    paper(0.36, 0.44, 0.7, -0.85, 0.05);
-    add(at(box(0.3, 0.3, 0.014, 0.01, 0x2b2b2b, 0), 0.7, -0.81, 0.02, 0, 0, 0.05));
-    paper(0.42, 0.36, 0.98, -1.25, -0.08);
-    add(at(part(new THREE.CylinderGeometry(0.06, 0.06, 0.012, 16), 0xffd44a, 0.006), 1.06, -1.2, 0.025, 0, Math.PI / 2));
-    land = { pos: new THREE.Vector3(0.18, 0.55, 0.04), rot: new THREE.Euler(0, 0, 0) };
+    pin(0.06, 0.11, 0xe0614f);
+    paper(0.26, 0.32, 0.55, -0.12, 0.05);
+    add(at(box(0.21, 0.21, 0.014, 0.01, 0x2b2b2b, 0), 0.55, -0.09, 0.02, 0, 0, 0.05));
+    paper(0.3, 0.26, -0.3, -0.12, -0.08);
+    add(at(part(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 16), 0xffd44a, 0.005), -0.24, -0.08, 0.025, 0, Math.PI / 2));
+    land = { pos: new THREE.Vector3(0.18, 0.55, 0.025), rot: new THREE.Euler(0, 0, 0) };
   } else {
-    // A backpack: body, front pocket, top handle, a shoulder strap with a loop.
-    add(at(box(1.15, 1.45, 0.55, 0.22, C.pink), 0, 0, -0.3));
-    add(at(box(0.85, 0.55, 0.22, 0.14, C.orange), 0, -0.35, 0.02));
-    add(at(box(0.7, 0.03, 0.03, 0.01, C.ink, 0), 0, -0.13, 0.14));
-    const handle = part(new THREE.TorusGeometry(0.16, 0.035, 10, 24, Math.PI), C.ink, 0.01);
-    add(at(handle, 0, 0.72, -0.3));
-    add(at(box(0.16, 1.2, 0.05, 0.03, C.ink, 0.012), -0.38, 0.05, 0.0, 0, 0, 0.06));
-    add(at(box(0.2, 0.06, 0.06, 0.02, C.lime, 0.01), -0.4, 0.35, 0.03));
-    land = { pos: new THREE.Vector3(-0.4, 0.02, 0.1), rot: new THREE.Euler(0, 0.15, 0.08) };
+    const BAG = 0x2e3137;
+    const WEB = 0x1c1e22;
+    // The street behind: a sunset sky, brick buildings, a metro sign, a street lamp.
+    const sky = document.createElement("canvas");
+    sky.width = 4;
+    sky.height = 256;
+    const sg = sky.getContext("2d")!;
+    const grad = sg.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, "#7d7bc4");
+    grad.addColorStop(0.45, "#f3a3b5");
+    grad.addColorStop(0.8, "#ffc884");
+    sg.fillStyle = grad;
+    sg.fillRect(0, 0, 4, 256);
+    const skyTex = new THREE.CanvasTexture(sky);
+    skyTex.colorSpace = THREE.SRGBColorSpace;
+    const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), new THREE.MeshBasicMaterial({ map: skyTex }));
+    add(at(backdrop, 0, 2, -7));
+    add(at(box(30, 0.1, 14, 0.02, 0xb9aea3, 0), 0, -3.2, -2));
+    const BRICK = [0xa9533d, 0xc26b4c, 0x8f4636];
+    [
+      [-5.2, 4.5],
+      [-3.2, 6],
+      [3.6, 5.5],
+      [5.6, 7],
+    ].forEach(([x, hgt], i) => {
+      add(at(box(1.9, hgt, 1.6, 0.03, BRICK[i % 3], 0.02), x, -3.2 + hgt / 2, -5));
+      for (let r = 0; r < Math.floor(hgt / 0.9); r++)
+        for (const dx of [-0.45, 0.45]) add(at(box(0.36, 0.5, 0.02, 0.02, 0xffd9a0, 0.01), x + dx, -2.5 + r * 0.9, -4.19));
+    });
+    const sign = document.createElement("canvas");
+    sign.width = 256;
+    sign.height = 96;
+    const sx = sign.getContext("2d")!;
+    sx.fillStyle = "#23344a";
+    sx.fillRect(0, 0, 256, 96);
+    sx.fillStyle = "#fff";
+    sx.font = "700 52px Helvetica, Arial, sans-serif";
+    sx.fillText("Metro", 78, 66);
+    sx.beginPath();
+    sx.arc(42, 48, 24, 0, Math.PI * 2);
+    sx.fillStyle = "#5aa0e6";
+    sx.fill();
+    const signTex = new THREE.CanvasTexture(sign);
+    signTex.colorSpace = THREE.SRGBColorSpace;
+    add(
+      at(new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.52), new THREE.MeshBasicMaterial({ map: signTex })), -2.6, 0.6, -3),
+    );
+    add(at(box(0.08, 3.6, 0.08, 0.03, 0x2e5c47, 0.012), -1.8, -1.4, -3.2));
+    add(at(part(new THREE.SphereGeometry(0.18, 16, 12), 0xfff2c4, 0.01), -1.8, 0.45, -3.2));
+    // The person: a dark jacket and the back of their head.
+    add(at(box(2.1, 2.7, 1.0, 0.45, 0x22303f, 0.02), 0, -1.05, -1.05));
+    add(at(part(new THREE.CylinderGeometry(0.2, 0.24, 0.3, 18), 0xc89874, 0.012), 0, 0.4, -1.05));
+    add(at(part(new THREE.SphereGeometry(0.46, 24, 18), 0x3b2a20, 0.015), 0, 0.88, -1.05));
+    // The backpack: body, straps over the shoulders, top handle, front pocket with webbing, zips, a patch.
+    add(at(box(1.25, 1.65, 0.5, 0.2, BAG, 0.02), 0, -0.25, -0.33));
+    for (const x of [-0.4, 0.4]) add(at(box(0.2, 0.55, 0.12, 0.05, WEB, 0.012), x, 0.62, -0.6, 0, 0.5));
+    add(at(part(new THREE.TorusGeometry(0.13, 0.03, 10, 24, Math.PI), WEB, 0.008), 0, 0.6, -0.33));
+    add(at(box(0.92, 0.72, 0.2, 0.12, BAG, 0.016), 0.06, -0.62, -0.02));
+    for (let r = 0; r < 4; r++) add(at(box(0.84, 0.035, 0.02, 0.01, WEB, 0.006), 0.06, -0.42 - r * 0.13, 0.085));
+    add(at(box(0.32, 0.2, 0.02, 0.03, 0x3a3e45, 0.008), 0.25, 0.25, -0.07));
+    for (const x of [0.12, 0.2]) add(at(box(0.03, 0.09, 0.02, 0.01, WEB, 0.005), x, -0.22, 0.09));
+    // A webbing strap down the left side, with a ring the clip hangs from.
+    add(at(box(0.09, 1.25, 0.03, 0.02, WEB, 0.008), -0.45, -0.2, -0.065));
+    add(at(part(new THREE.TorusGeometry(0.04, 0.009, 8, 20), 0x8a8f99, 0.005), -0.45, 0.33, -0.04));
+    land = { pos: new THREE.Vector3(-0.45, 0.08, -0.02), rot: new THREE.Euler(0, 0.12, 0.05) };
   }
   return { group: g, pieces, land };
 }
@@ -507,16 +567,17 @@ export default function Device3D({
     world.add(dev);
     // Framing per scene.
     const view = {
-      desk: { cam: [0.6, 3.3, 4.7], look: [0.25, 0.35, -0.2] },
-      fridge: { cam: [2.7, 0.9, 5.3], look: [0.5, 0.2, 0] },
-      bag: { cam: [1.1, 0.6, 4.6], look: [-0.1, 0, 0] },
+      desk: { cam: [0.55, 1.75, 2.9], look: [0.05, 0.25, -0.3] },
+      fridge: { cam: [1.2, 0.85, 2.5], look: [0.2, 0.45, 0] },
+      bag: { cam: [0.8, 0.55, 3.0], look: [-0.2, -0.1, 0] },
     }[place];
     camera.position.set(...(view.cam as [number, number, number]));
     camera.lookAt(...(view.look as [number, number, number]));
 
     // The scene: 0–1.3s the device spins in mid-air; 1.1–1.9s its home pops in; 1.7–2.7s it glides into place.
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = new THREE.Vector3(...(view.look as [number, number, number])).add(new THREE.Vector3(0, 0.25, 0.9));
+    // It spins in a little way in front of the scene, toward the camera, then flies to its place.
+    const start = new THREE.Vector3(...(view.look as [number, number, number])).lerp(camera.position, 0.4);
     let t0 = -1;
     let drag = 0;
     let dragging = false;
