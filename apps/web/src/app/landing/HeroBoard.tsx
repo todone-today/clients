@@ -43,7 +43,18 @@ function chips(t: Partial<Task>, today: string) {
 export function HeroBoard() {
   const [notes, setNotes] = useState(NOTES);
   // The hardware concepts further down mirror these notes.
-  useEffect(() => publishHero(notes.map((n) => ({ title: n.title, done: !!n.done }))), [notes]);
+  useEffect(
+    () =>
+      publishHero(
+        notes.map((n) => ({
+          title: n.title,
+          done: !!n.done,
+          fill: n.fill.match(/--(\w+)/)?.[1],
+          tag: n.task.at ?? (n.task.est ? fmtMinutes(n.task.est) : n.task.pri === 1 ? "High" : undefined),
+        })),
+      ),
+    [notes],
+  );
   const [held, setHeld] = useState<string | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
   // Read when a sticker lands, not while rendering: the server and the visitor's clock can disagree.

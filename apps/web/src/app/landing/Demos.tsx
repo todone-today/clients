@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Bell, CalendarDays, Check, Cloud, CloudOff, Wifi, WifiOff } from "lucide-react";
 import { siApple, siDiscord, siGooglecalendar, siNotion, siObsidian, type SimpleIcon } from "simple-icons";
@@ -470,28 +470,63 @@ const PLACES = [
 
 export function Hardware() {
   const [at, setAt] = useState(0);
+  // Scrolling through the section steps Desk → Fridge → Bag; inside each step it plays that device's scene (see
+  // Device3D's `scroll`). The stage stays pinned meanwhile. Reduced motion: plain tabs, no pinning.
+  const track = useRef<HTMLDivElement>(null);
+  const scroll = useRef<number | null>(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const on = () => {
+      const r = track.current?.getBoundingClientRect();
+      if (!r) return;
+      const p = Math.min(Math.max(-r.top / Math.max(r.height - innerHeight, 1), 0), 0.9999);
+      const i = Math.floor(p * PLACES.length);
+      scroll.current = p * PLACES.length - i;
+      setAt(i);
+    };
+    Promise.resolve().then(() => {
+      setPinned(true);
+      on();
+    });
+    addEventListener("scroll", on, { passive: true });
+    return () => removeEventListener("scroll", on);
+  }, []);
+  const pick = (i: number) => {
+    const r = track.current?.getBoundingClientRect();
+    if (!pinned || !r) return setAt(i);
+    const span = r.height - innerHeight;
+    scrollTo({ top: scrollY + r.top + span * ((i + 0.62) / PLACES.length), behavior: "smooth" });
+  };
   const [, name, shot, title, line] = PLACES[at];
   const goal = GOALS.find((g) => g.key === PLACES[at][0])!;
   return (
-    <div className={s.hwDemo}>
-      <div className={s.places} role="tablist" aria-label="Where it lives">
-        {PLACES.map(([k, label], i) => (
-          <button key={k} type="button" role="tab" aria-selected={at === i} onClick={() => setAt(i)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className={s.place} role="tabpanel" aria-label={name}>
-        <figure className={s.stage}>
-          <Device3D key={PLACES[at][0]} place={PLACES[at][0] as "desk" | "fridge" | "bag"} label={shot.alt} />
-          <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
-        </figure>
-        <div>
-          <h3 className="display">{title}</h3>
-          <p>{line}</p>
-          <p className={s.goalTag}>
-            Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototypes
-          </p>
+    <div ref={track} className={s.hwTrack} data-pinned={pinned || undefined}>
+      <div className={s.hwDemo}>
+        <div className={s.places} role="tablist" aria-label="Where it lives">
+          {PLACES.map(([k, label], i) => (
+            <button key={k} type="button" role="tab" aria-selected={at === i} onClick={() => pick(i)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className={s.place} role="tabpanel" aria-label={name}>
+          <figure className={s.stage}>
+            <Device3D
+              key={PLACES[at][0]}
+              place={PLACES[at][0] as "desk" | "fridge" | "bag"}
+              label={shot.alt}
+              scroll={pinned ? scroll : undefined}
+            />
+            <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
+          </figure>
+          <div>
+            <h3 className="display">{title}</h3>
+            <p>{line}</p>
+            <p className={s.goalTag}>
+              Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototypes
+            </p>
+          </div>
         </div>
       </div>
     </div>

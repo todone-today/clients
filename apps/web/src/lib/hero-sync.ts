@@ -2,7 +2,8 @@
 
 // The homepage's hero notes, shared with the 3D hardware concepts: tick or reorder a note at the top of the page and
 // the devices' screens update, the way a real one would sync with the app.
-export type HeroTask = { title: string; done: boolean };
+// `fill`: the note's colour name (butter, pink, cyan, lime…); `tag`: its first sticker, as the app shows it.
+export type HeroTask = { title: string; done: boolean; fill?: string; tag?: string };
 
 let tasks: HeroTask[] = [];
 const subs = new Set<(t: HeroTask[]) => void>();

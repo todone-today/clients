@@ -1277,6 +1277,14 @@ button.box:hover {
   display: grid;
   gap: 1.5rem;
 }
+/* Scroll-driven: the section is three screens tall and the stage stays pinned while you scroll through it. */
+.hwTrack[data-pinned] {
+  height: 300vh;
+}
+.hwTrack[data-pinned] .hwDemo {
+  position: sticky;
+  top: 6rem;
+}
 .places {
   display: flex;
   gap: 0.8rem;
