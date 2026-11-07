@@ -235,19 +235,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
-        <button
-          className={s.fold}
-          onClick={toggleSlim}
-          aria-label={slim ? "Show the sidebar" : "Hide the sidebar"}
-          title={slim ? "Show the sidebar" : "Hide the sidebar"}
-          aria-pressed={slim}
-        >
-          {slim ? (
-            <PanelLeftOpen size={20} strokeWidth={2.25} aria-hidden />
-          ) : (
-            <PanelLeftClose size={20} strokeWidth={2.25} aria-hidden />
-          )}
-        </button>
         <button className={s.menu} onClick={() => setDrawer(true)} aria-label="Lists and workspace" aria-expanded={drawer}>
           <Menu size={18} strokeWidth={2.5} aria-hidden />
           <span>
@@ -272,6 +259,20 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Logo size={26} />
           </button>
         )}
+        <button
+          className={`${s.tile} ${s.fold}`}
+          style={{ "--fill": "var(--pink)" } as React.CSSProperties}
+          onClick={toggleSlim}
+          aria-label={slim ? "Show the sidebar" : "Hide the sidebar"}
+          title={slim ? "Show the sidebar" : "Hide the sidebar"}
+          aria-pressed={slim}
+        >
+          {slim ? (
+            <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
+          ) : (
+            <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
+          )}
+        </button>
         <nav className={s.tabs} aria-label="Views">
           {(
             [

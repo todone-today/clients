@@ -2547,15 +2547,7 @@ input.stick[data-custom][aria-invalid="true"] {
 
 /* Desktop: fold the sidebar away for a wider board. Phones use the drawer instead. */
 .fold {
-  display: grid;
-  place-items: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  margin-right: -0.75rem;
-  color: var(--ink-2);
-}
-.fold:hover {
-  color: var(--ink);
+  margin-left: -0.75rem; /* sits right next to the logo */
 }
 @media (min-width: 761px) {
   .shell[data-slim] {
