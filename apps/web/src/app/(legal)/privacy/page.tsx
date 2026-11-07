@@ -12,15 +12,18 @@ export default function Privacy() {
     <>
       <h1 className="display">Privacy Policy</h1>
       <p className={s.lead}>
-        {NAME} is a todo app. We collect what it needs to keep your lists, nothing to sell and nothing for ads. This policy
-        covers the hosted app; if you run {NAME} on your own server, you hold the data and this policy doesn&apos;t apply.
+        {NAME} is a todo app. We collect what it needs to keep your lists,
+        nothing to sell and nothing for ads. This policy covers the hosted app;
+        if you run {NAME} on your own server, you hold the data and this policy
+        doesn&apos;t apply.
       </p>
 
       <h2>Who we are</h2>
       <p>
-        The hosted {NAME} service is run by {OPERATOR}, an individual in India, who is the &ldquo;Data Fiduciary&rdquo; under
-        India&apos;s Digital Personal Data Protection Act, 2023 (DPDP Act). For anything about your data, write to{" "}
-        <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+        The hosted {NAME} service is run by {OPERATOR}, an individual in India,
+        who is the &ldquo;Data Fiduciary&rdquo; under India&apos;s Digital
+        Personal Data Protection Act, 2023 (DPDP Act). For anything about your
+        data, write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
       </p>
 
       <h2>What we collect, and why</h2>
@@ -34,35 +37,47 @@ export default function Privacy() {
         <tbody>
           <tr>
             <td>
-              Your name and email. Your password never reaches us: your browser sends only a one-way hash derived from it,
-              which we hash again
+              Your name and email. Your password never reaches us: your browser
+              sends only a one-way hash derived from it, which we hash again
             </td>
             <td>To make your account and sign you in.</td>
           </tr>
           <tr>
             <td>
-              Your lists, tasks and ideas, <b>end-to-end encrypted</b>: we store them scrambled and can&apos;t read them.
-              Lists you switch off encryption for (to use integrations) are stored readable. Files you attach to a task are
-              encrypted on your device the same way.
+              Your lists, tasks and ideas, <b>end-to-end encrypted</b>: we store
+              them scrambled and can&apos;t read them. Lists you switch off
+              encryption for (to use integrations) are stored readable. Files
+              you attach to a task are encrypted on your device the same way.
             </td>
-            <td>This is the app: to store them and show them to you and the teams you share them with.</td>
+            <td>
+              This is the app: to store them and show them to you and the teams
+              you share them with.
+            </td>
           </tr>
           <tr>
             <td>
-              Your encryption keys, locked by your password and by your recovery key, and your public key (so teammates
-              can share a team&apos;s key with you)
+              Your encryption keys, locked by your password and by your recovery
+              key, and your public key (so teammates can share a team&apos;s key
+              with you)
             </td>
-            <td>So you can open your lists on any device. We can&apos;t unlock them.</td>
+            <td>
+              So you can open your lists on any device. We can&apos;t unlock
+              them.
+            </td>
           </tr>
           <tr>
             <td>
-              A task you share by link, <b>stored readable</b>: its details, the comments on it and the files added to
-              it, by you or by anyone with the link. Guests show up by the name they choose, or as &ldquo;Anonymous&rdquo;: we keep that name and a random
-              number their browser makes, not a name or account. Their IP address is used briefly to limit abuse.
+              A task you share by link, <b>stored readable</b>: its details, the
+              comments on it and the files added to it, by you or by anyone with
+              the link. Guests show up by the name they choose, or as
+              &ldquo;Anonymous&rdquo;: we keep that name and a random number
+              their browser makes, never an account or email. Their IP address
+              is used briefly to limit abuse.
             </td>
             <td>
-              So people without an account can see the task, comment and add files. Stop sharing and it&apos;s all
-              deleted from our server; the conversation goes back into your task, encrypted.
+              So people without an account can see the task, comment and add
+              files. Stop sharing and it&apos;s all deleted from our server; the
+              conversation goes back into your task, encrypted.
             </td>
           </tr>
           <tr>
@@ -74,117 +89,148 @@ export default function Privacy() {
             <td>To keep you signed in and keep accounts secure.</td>
           </tr>
           <tr>
-            <td>Tokens for services you connect (Google Calendar, Notion, a Discord webhook)</td>
+            <td>
+              Tokens for services you connect (Google Calendar, Notion, a
+              Discord webhook)
+            </td>
             <td>To sync with those services, only when you turn it on.</td>
           </tr>
           <tr>
-            <td>Feedback you send, with the page you sent it from and your browser</td>
+            <td>
+              Feedback you send, with the page you sent it from and your browser
+            </td>
             <td>To fix bugs and improve the app.</td>
           </tr>
         </tbody>
       </table>
       <p>
-        We don&apos;t use analytics, advertising or tracking. We don&apos;t sell or rent your data, and we don&apos;t use it
-        to train AI models.
+        We don&apos;t use analytics, advertising or tracking. We don&apos;t sell
+        or rent your data, and we don&apos;t use it to train AI models.
       </p>
 
       <h2>Consent</h2>
       <p>
-        We process your data on the basis of the consent you give when you make an account, and for the specific purposes
-        above. You can withdraw consent at any time by deleting your account (Account → Delete account), which stops all
-        processing. Withdrawing doesn&apos;t affect what was done before.
+        We process your data on the basis of the consent you give when you make
+        an account, and for the specific purposes above. You can withdraw
+        consent at any time by deleting your account (Account → Delete account),
+        which stops all processing. Withdrawing doesn&apos;t affect what was
+        done before.
       </p>
 
       <h2>Who else handles it</h2>
-      <p>We use these providers to run the service. They process data for us and only as needed:</p>
+      <p>
+        We use these providers to run the service. They process data for us and
+        only as needed:
+      </p>
       <ul>
         <li>Vercel, which hosts the website.</li>
         <li>Contabo, which hosts our server and database.</li>
         <li>
-          Cloudflare, which stores encrypted backups of the database (only we hold the key) and files attached to tasks
-          (encrypted on your device, except on a task you share by link).
+          Cloudflare, which stores encrypted backups of the database (only we
+          hold the key) and files attached to tasks (encrypted on your device,
+          except on a task you share by link).
         </li>
         <li>
-          Sentry, which receives error reports so we can fix bugs. They describe what broke in the code, not you: no
-          email, IP address, list contents or page addresses. Stored in the EU.
+          Sentry, which receives error reports so we can fix bugs. They describe
+          what broke in the code, not you: no email, IP address, list contents
+          or page addresses. Stored in the EU.
         </li>
-        <li>Resend, which sends our emails (confirming your address, resetting your password).</li>
         <li>
-          Gravatar (Automattic), for profile pictures: your browser asks it for the picture matching a scrambled (hashed)
-          form of your email. If you have no Gravatar, you see your initial.
+          Resend, which sends our emails (confirming your address, resetting
+          your password).
+        </li>
+        <li>
+          Gravatar (Automattic), for profile pictures: your browser asks it for
+          the picture matching a scrambled (hashed) form of your email. If you
+          have no Gravatar, you see your initial.
         </li>
         <li>Google, if you connect Google Calendar.</li>
         <li>Notion and Discord, if you connect them.</li>
       </ul>
       <p>
-        These providers may store data outside India. We only use providers that protect it, and we don&apos;t transfer it to
-        any country the Government of India has restricted. Teammates see the lists and members of the teams you share. We
-        disclose data to authorities only when the law requires it.
+        These providers may store data outside India. We only use providers that
+        protect it, and we don&apos;t transfer it to any country the Government
+        of India has restricted. Teammates see the lists and members of the
+        teams you share. We disclose data to authorities only when the law
+        requires it.
       </p>
 
       <h2>How long we keep it</h2>
       <p>
-        Until you delete it or your account. Accounts whose email isn&apos;t confirmed within 7 days of signing up are
-        deleted, with everything in them. Deleting a task, list or team removes it; deleting your account removes your
-        account, personal lists, settings, sessions, connected-service tokens, keys and feedback straight away,
-        along with any team where you&apos;re the only member. Copies can stay in our database provider&apos;s backups for up
-        to 30 days before they roll off.
+        Until you delete it or your account. Accounts whose email isn&apos;t
+        confirmed within 7 days of signing up are deleted, with everything in
+        them. Deleting a task, list or team removes it; deleting your account
+        removes your account, personal lists, settings, sessions,
+        connected-service tokens, keys and feedback straight away, along with
+        any team where you&apos;re the only member. Copies can stay in our
+        database provider&apos;s backups for up to 30 days before they roll off.
       </p>
 
       <h2>Your rights</h2>
       <p>Under the DPDP Act you can:</p>
       <ul>
         <li>
-          <b>Get a copy</b> of your data: Account → Export everything (JSON or CSV), or write to us for a summary of what we
-          hold and whom we&apos;ve shared it with.
+          <b>Get a copy</b> of your data: Account → Export everything (JSON or
+          CSV), or write to us for a summary of what we hold and whom we&apos;ve
+          shared it with.
         </li>
         <li>
-          <b>Correct or update</b> it: edit your lists and name in the app, or write to us.
+          <b>Correct or update</b> it: edit your lists and name in the app, or
+          write to us.
         </li>
         <li>
           <b>Erase</b> it: delete it in the app, or Account → Delete account.
         </li>
         <li>
-          <b>Nominate</b> someone to exercise these rights for you if you die or can&apos;t act, by writing to us.
+          <b>Nominate</b> someone to exercise these rights for you if you die or
+          can&apos;t act, by writing to us.
         </li>
         <li>
-          <b>Complain</b> to us, and if you&apos;re not satisfied, to the Data Protection Board of India.
+          <b>Complain</b> to us, and if you&apos;re not satisfied, to the Data
+          Protection Board of India.
         </li>
       </ul>
       <p>
-        Write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a> from your account&apos;s email. We reply within 30 days.
+        Write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a> from your
+        account&apos;s email. We reply within 30 days.
       </p>
 
       <h2>Grievances</h2>
       <p>
-        Our grievance contact is {OPERATOR}, <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. We acknowledge complaints within 7
-        days and resolve them within 30 days. You must contact us before going to the Data Protection Board.
+        Our grievance contact is {OPERATOR},{" "}
+        <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. We acknowledge complaints
+        within 7 days and resolve them within 30 days. You must contact us
+        before going to the Data Protection Board.
       </p>
 
       <h2>Children</h2>
       <p>
-        {NAME} is for people 18 and over. We don&apos;t knowingly collect data from children; if you think a child has made
-        an account, write to us and we&apos;ll delete it.
+        {NAME} is for people 18 and over. We don&apos;t knowingly collect data
+        from children; if you think a child has made an account, write to us and
+        we&apos;ll delete it.
       </p>
 
       <h2>Security</h2>
       <p>
-        Your lists are end-to-end encrypted in your browser (AES-256), with a key that only your password or recovery key
-        can open; we never receive either. Connections are encrypted too, and access is limited to what each account and
-        team may see. This also means we can&apos;t recover your lists if you lose both your password and your recovery
-        key. If a breach affects your data, we&apos;ll tell you and the Data Protection Board as the law requires.
+        Your lists are end-to-end encrypted in your browser (AES-256), with a
+        key that only your password or recovery key can open; we never receive
+        either. Connections are encrypted too, and access is limited to what
+        each account and team may see. This also means we can&apos;t recover
+        your lists if you lose both your password and your recovery key. If a
+        breach affects your data, we&apos;ll tell you and the Data Protection
+        Board as the law requires.
       </p>
 
       <h2>Cookies</h2>
       <p>
-        We use only the cookies and browser storage the app needs to work. See the <Link href="/cookies">Cookie Policy</Link>
-        .
+        We use only the cookies and browser storage the app needs to work. See
+        the <Link href="/cookies">Cookie Policy</Link>.
       </p>
 
       <h2>Changes</h2>
       <p>
-        If we change this policy, we&apos;ll update the date below, and tell you in the app or by email before a significant
-        change takes effect.
+        If we change this policy, we&apos;ll update the date below, and tell you
+        in the app or by email before a significant change takes effect.
       </p>
     </>
   );
