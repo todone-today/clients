@@ -110,6 +110,7 @@ function Bubble({
   return (
     <article
       className={s.bubble}
+      data-mine={c.mine || undefined}
       style={
         {
           "--fill": c.mine

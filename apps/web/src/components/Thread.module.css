@@ -153,3 +153,22 @@
   font-weight: 700;
   color: var(--hot);
 }
+
+/* A chat: your messages on the right, everyone else's on the left, each as wide as it needs. */
+.bubble {
+  width: fit-content;
+  min-width: min(14rem, 100%);
+  max-width: 85%;
+}
+.bubble[data-mine] {
+  justify-self: end;
+}
+.list > li:has(> .bubble[data-mine]) > .replyBtn {
+  justify-self: end;
+}
+.reply {
+  justify-items: start;
+}
+.reply .bubble[data-mine] {
+  justify-self: end;
+}

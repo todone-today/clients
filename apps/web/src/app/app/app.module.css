@@ -3342,3 +3342,13 @@ input.stick[data-custom][aria-invalid="true"] {
   gap: 0.25rem;
   min-width: 5.5rem;
 }
+
+/* Notes read like a chat too: yours on the right. */
+.kept li {
+  width: fit-content;
+  min-width: min(14rem, 100%);
+  max-width: 85%;
+}
+.kept li[data-mine] {
+  justify-self: end;
+}

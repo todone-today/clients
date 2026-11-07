@@ -703,6 +703,7 @@ function Notes({
           {notes.map((h, i) => (
             <li
               key={i}
+              data-mine={h.who === me || undefined}
               style={
                 {
                   "--fill":
