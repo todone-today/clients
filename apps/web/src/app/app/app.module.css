@@ -3879,3 +3879,7 @@ input.stick[data-custom][aria-invalid="true"] {
     transform: translate(var(--drift), 105vh) rotate(var(--spin));
   }
 }
+.goalDialog > .tools {
+  justify-content: flex-end;
+  margin-top: 1.1rem;
+}
