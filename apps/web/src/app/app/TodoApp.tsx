@@ -198,16 +198,36 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   );
   const list = sorted.find((l) => l.id === picked) ?? sorted[0];
   // The sidebar's lists take ideas (they become tasks), tasks from another list (they move there),
-  // and other lists (dropped above or below to reorder).
+  // and other lists (dropped above or below to reorder). Brainstorm ("ideas") takes tasks back as ideas.
   const dropOnList = useDrop("sidebar", {
     accept: (p, listId) =>
-      p.kind === "idea" ||
-      (p.kind === "task" && p.listId !== listId) ||
-      (p.kind === "list" && p.id !== listId),
+      listId === "ideas"
+        ? p.kind === "task"
+        : p.kind === "idea" ||
+          (p.kind === "task" && p.listId !== listId) ||
+          (p.kind === "list" && p.id !== listId),
     where: (p, _, at) =>
       p.kind === "list" ? placeOn(at, "y", false) : "inside",
     drop: (p, listId, at) => {
-      if (p.kind === "idea" && lists)
+      if (listId === "ideas" && p.kind === "task") {
+        // A task (and its steps) goes back to the board as ideas, newest first.
+        let taken: Task[] = [];
+        update(p.listId, (l) => {
+          const [t, rest] = takeTasks(l.tasks, p.ids);
+          taken = t;
+          return { ...l, tasks: rest };
+        });
+        const ideas = flatten(taken).map((t) => ({
+          id: t.id,
+          title: t.title,
+          done: false,
+          sub: [],
+        }));
+        const board = lists?.find((l) => l.kind === "ideas");
+        if (!ideas.length) return;
+        if (board) update(board.id, (l) => ({ ...l, tasks: [...ideas, ...l.tasks] }));
+        else add("Brainstorm", ideas, "ideas");
+      } else if (p.kind === "idea" && lists)
         for (const id of p.ids) ideaToTask(lists, id, listId, update);
       else if (p.kind === "task")
         moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
@@ -547,6 +567,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           className={`${s.listBtn} ${s.ideasBtn}`}
           aria-current={panel === "ideas"}
           onClick={() => show("ideas")}
+          {...dropOnList("ideas")}
           data-tour="ideas"
           data-tip="Brainstorm"
         >
