@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Bell,
   Check,
   Send,
   Copy,
@@ -43,6 +44,7 @@ import {
 } from "./actions";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
+import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
 import type { Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
@@ -84,6 +86,7 @@ export function TaskPanel({
   const shared = !!task.share;
   const goals = useGoalItems().items.filter((i): i is Goal => i.t === "goal");
   const goal = goals.find((g) => g.id === task.goal);
+  const reminders = useReminders();
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) =>
@@ -312,6 +315,24 @@ export function TaskPanel({
             {goal.plan}
           </p>
         )}
+        {/* The moment a reminder is obviously useful: the task has a time and this device isn't reminding yet. */}
+        {task.at &&
+          task.due &&
+          task.due >= todayISO() &&
+          !task.done &&
+          reminders.state === "off" && (
+            <p className={s.remindAsk}>
+              <Bell size={15} strokeWidth={2.5} aria-hidden />
+              <span>Want a nudge before {task.at} on this device?</span>
+              <button
+                className={`btn ${s.claim}`}
+                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+                onClick={reminders.turnOn}
+              >
+                Remind me
+              </button>
+            </p>
+          )}
 
         <section className={s.panelSection}>
           <h3>Description</h3>

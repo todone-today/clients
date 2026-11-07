@@ -217,8 +217,10 @@ export default function Docs() {
       <h2 id="reminders">Reminders, offline and devices</h2>
       <ul>
         <li>
-          Turn on notifications on each device (Integrations → Notifications) to
-          hear about tasks before they start.
+          The bell (top bar) shows new comments on shared tasks and what&apos;s
+          due today. Switch on reminders there, on each device, to get a nudge
+          15 minutes before a task&apos;s time and a summary at 8 a.m. They come
+          from todone itself, so they work while todone is open in a tab.
         </li>
         <li>
           todone works offline: it opens showing your lists as last saved, and

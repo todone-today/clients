@@ -63,3 +63,16 @@ export function useUnread(share: string | undefined) {
   if (!share) return 0;
   return Math.max(0, (counts[share] ?? 0) - (seen()[share] ?? 0));
 }
+
+// Every shared task with new anonymous comments, for the bell: share id → how many are new.
+export function useUnreadAll() {
+  useSyncExternalStore(
+    subscribe,
+    () => snapshot,
+    () => "",
+  );
+  const s = seen();
+  return Object.entries(counts)
+    .map(([share, n]) => [share, Math.max(0, n - (s[share] ?? 0))] as const)
+    .filter(([, n]) => n > 0);
+}

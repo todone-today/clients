@@ -27,12 +27,10 @@ import {
   setNotion,
   syncNow,
 } from "./integration-actions";
-import { canNotify, notify, remindersOn, setReminders } from "@/lib/remind";
 import s from "./app.module.css";
 
 type State = Awaited<ReturnType<typeof getIntegrations>>;
 type Key =
-  | "notify"
   | "google"
   | "notion"
   | "markdown"
@@ -90,7 +88,6 @@ export function Integrations() {
   };
 
   const every: { key: Key; name: string; on: boolean }[] = [
-    { key: "notify", name: "Notifications (this device)", on: false },
     { key: "google", name: "Google Calendar", on: st.google.connected },
     { key: "notion", name: "Notion", on: st.notion },
     { key: "markdown", name: "Obsidian & Markdown", on: !!st.syncToken },
@@ -109,9 +106,9 @@ export function Integrations() {
     { key: "keep", name: "Google Keep", on: false },
   ];
   const items = every.filter(
-    // For now: Google Calendar, Apple Calendar and Outlook (plus this device's notifications). Others show only while
+    // For now: Google Calendar, Apple Calendar and Outlook (notifications live in the bell). Others show only while
     // still connected, so a workspace that set one up can switch it off.
-    (i) => ["notify", "google", "apple", "link"].includes(i.key) || i.on,
+    (i) => ["google", "apple", "link"].includes(i.key) || i.on,
   );
   const key = pick ?? items.find((i) => i.on)?.key ?? "google";
 
@@ -163,7 +160,6 @@ export function Integrations() {
       </div>
 
       <section className={s.integration}>
-        {key === "notify" && <Notify />}
         {key === "google" && <Google st={st} busy={busy} act={act} />}
         {key === "notion" && <Notion st={st} busy={busy} act={act} />}
         {key === "markdown" && (
@@ -542,92 +538,6 @@ function SharedViews() {
         ))}
       </ul>
     </div>
-  );
-}
-
-// Reminders on this device, from the open app: lists are end-to-end encrypted, so the server can't see what's due.
-function Notify() {
-  const [state, setState] = useState<
-    "loading" | "unsupported" | "off" | "on" | "blocked"
-  >("loading");
-  // Read once mounted (the browser's permission isn't known while rendering on the server).
-  useEffect(() => {
-    Promise.resolve().then(() =>
-      setState(
-        !canNotify()
-          ? "unsupported"
-          : Notification.permission === "denied"
-            ? "blocked"
-            : remindersOn()
-              ? "on"
-              : "off",
-      ),
-    );
-  }, []);
-
-  const turnOn = async () => {
-    if ((await Notification.requestPermission()) !== "granted")
-      return setState("blocked");
-    setReminders(true);
-    setState("on");
-    notify(
-      "Reminders are on",
-      "todone will nudge you here before a task's time, while a todone tab is open.",
-      "test",
-    );
-  };
-
-  return (
-    <>
-      <h2>Reminders</h2>
-      <p>
-        A nudge about 15 minutes before a task&apos;s time, and at 8 in the
-        morning what&apos;s due today and what&apos;s late. Your lists are
-        end-to-end encrypted, so our server can&apos;t see what&apos;s due:
-        reminders come from todone itself, <b>while a todone tab is open</b> on
-        this device (a pinned tab works well).
-      </p>
-      {state === "unsupported" && (
-        <p className={s.open}>
-          This browser can&apos;t show notifications. On an iPhone or iPad, add
-          todone to your Home Screen (Share → Add to Home Screen) and open it
-          from there.
-        </p>
-      )}
-      {state === "blocked" && (
-        <p className={s.open}>
-          Notifications are blocked for this site. Allow them in the
-          browser&apos;s site settings, then come back.
-        </p>
-      )}
-      {state === "off" && (
-        <button className="btn" onClick={turnOn}>
-          <Bell size={16} strokeWidth={2.5} /> Turn on for this device
-        </button>
-      )}
-      {state === "on" && (
-        <div className={s.tools}>
-          <span className={s.on}>On for this device</span>
-          <button
-            className={s.ghost}
-            onClick={() =>
-              notify("A test from todone", "Reminders work here.", "test")
-            }
-          >
-            Send a test
-          </button>
-          <button
-            className={`${s.ghost} ${s.danger}`}
-            onClick={() => {
-              setReminders(false);
-              setState("off");
-            }}
-          >
-            Turn off
-          </button>
-        </div>
-      )}
-    </>
   );
 }
 

@@ -3883,3 +3883,138 @@ input.stick[data-custom][aria-invalid="true"] {
   justify-content: flex-end;
   margin-top: 1.1rem;
 }
+
+/* ---------- The bell: what's new, what's due, and this device's reminders ---------- */
+.bellBox {
+  position: relative;
+}
+.bellBadge {
+  position: absolute;
+  top: -0.55rem;
+  right: -0.55rem;
+  margin: 0;
+}
+.bellPanel {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: -5rem;
+  z-index: 120;
+  display: grid;
+  gap: 1rem;
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(34rem, calc(100dvh - 6rem));
+  padding: 1rem 1.1rem 1.1rem;
+  overflow-y: auto;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  background: var(--ground);
+  border: 2.5px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--pink);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bellPanel {
+    animation: popIn 0.22s var(--ease) both;
+  }
+}
+.bellPanel h2 {
+  font: 900 1.4rem/1 var(--display);
+  text-transform: uppercase;
+}
+.bellPanel section {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.75rem;
+  border-top: 2.5px dashed var(--hair);
+}
+.bellPanel h3 {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.bellPanel h3 small {
+  color: var(--hot);
+}
+.bellPanel ul {
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+}
+.bellPanel li button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+}
+.bellPanel li button:hover {
+  transform: translate(-1px, -1px);
+}
+.bellPanel li span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bellPanel li time {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.bellPanel li small {
+  flex: none;
+  max-width: 6rem;
+  overflow: hidden;
+  font-size: 0.7rem;
+  color: rgb(11 11 11 / 0.6);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bellPanel li .unread {
+  margin: 0;
+}
+.bellEmpty {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.bellRemind p {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.bellRemind .e2eSwitch {
+  justify-self: start;
+  color: var(--ink);
+}
+.bellRemind .link {
+  justify-self: start;
+  font-size: 0.85rem;
+}
+.remindAsk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--pink);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.remindAsk span {
+  flex: 1;
+}

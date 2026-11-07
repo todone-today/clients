@@ -5,6 +5,7 @@
 // day's summary). Nothing leaves the device. Each one shows once, across tabs, by its key.
 import { dueNotes, localNow } from "@todone/sdk/reminders";
 import type { List } from "@todone/sdk/tasks";
+import { useEffect, useState } from "react";
 
 const ON = "todone:reminders";
 const SENT = "todone:reminded";
@@ -25,24 +26,93 @@ const store = {
   },
 };
 
-export const canNotify = () => typeof window !== "undefined" && "Notification" in window;
-export const remindersOn = () => canNotify() && Notification.permission === "granted" && store.get(ON) === "on";
+export const canNotify = () =>
+  typeof window !== "undefined" && "Notification" in window;
+export const remindersOn = () =>
+  canNotify() &&
+  Notification.permission === "granted" &&
+  store.get(ON) === "on";
 export function setReminders(on: boolean) {
   store.set(ON, on ? "on" : null);
+  dispatchEvent(new Event(CHANGED));
+}
+const CHANGED = "todone:reminders-changed";
+
+export type ReminderState =
+  "loading" | "unsupported" | "off" | "on" | "blocked";
+const readState = (): ReminderState =>
+  !canNotify()
+    ? "unsupported"
+    : Notification.permission === "denied"
+      ? "blocked"
+      : remindersOn()
+        ? "on"
+        : "off";
+
+// This device's reminders, the same everywhere they're shown (the bell, a task's panel). The browser asks for
+// permission only from turnOn, which runs on a click: asking out of the blue mostly gets "Block", for good.
+export function useReminders() {
+  const [state, setState] = useState<ReminderState>("loading");
+  useEffect(() => {
+    const read = () => setState(readState());
+    Promise.resolve().then(read);
+    addEventListener(CHANGED, read);
+    addEventListener("focus", read); // permission may have changed in the browser's settings
+    return () => {
+      removeEventListener(CHANGED, read);
+      removeEventListener("focus", read);
+    };
+  }, []);
+  const turnOn = async () => {
+    if (!canNotify()) return;
+    if (
+      Notification.permission !== "granted" &&
+      (await Notification.requestPermission()) !== "granted"
+    ) {
+      dispatchEvent(new Event(CHANGED));
+      return;
+    }
+    setReminders(true);
+    notify(
+      "Reminders are on",
+      "todone will nudge you before a task's time.",
+      "test",
+    ).catch(() => {});
+  };
+  return {
+    state,
+    turnOn,
+    turnOff: () => setReminders(false),
+    test: () =>
+      notify(
+        "A test from todone",
+        "Reminders work on this device.",
+        "test",
+      ).catch(() => {}),
+  };
 }
 
 export async function notify(title: string, body: string, tag: string) {
-  const reg = await navigator.serviceWorker?.getRegistration("/").catch(() => undefined);
+  const reg = await navigator.serviceWorker
+    ?.getRegistration("/")
+    .catch(() => undefined);
   if (reg) await reg.showNotification(title, { body, tag, icon: "/icon.svg" });
   else new Notification(title, { body, tag });
 }
 
 export function remindNow(lists: List[]) {
   if (!remindersOn()) return;
-  const { today, nowMin } = localNow(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const { today, nowMin } = localNow(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   const items = lists
     .filter((l) => !l.kind)
-    .flatMap((l) => l.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ task, list: l.name })));
+    .flatMap((l) =>
+      l.tasks
+        .flatMap((t) => [t, ...t.sub])
+        .map((task) => ({ task, list: l.name })),
+    );
   let sent: string[] = [];
   try {
     sent = JSON.parse(store.get(SENT) ?? "[]");

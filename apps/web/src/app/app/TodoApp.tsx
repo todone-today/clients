@@ -47,6 +47,7 @@ import {
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
 import { Goals, Rewards, XpTile } from "./Goals";
+import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { fold, reconcile, type Goal } from "@todone/sdk/goals";
 import { IconPick, ListIcon } from "./listIcon";
@@ -394,6 +395,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <p className={s.local} role="status">
           {error && <span className={s.err}>{error}</span>}
         </p>
+        {!demo && <NotificationBell onOpen={open} />}
         <XpTile onClick={() => show("rewards")} />
         <button
           className={s.tile}
