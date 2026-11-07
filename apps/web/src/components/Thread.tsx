@@ -259,14 +259,7 @@ function Composer({
           <Send size={16} strokeWidth={2.5} />
         </button>
       </div>
-      {busy > 0 ? (
-        <p className={s.note}>Uploading…</p>
-      ) : (
-        // Guests (they come with headers) get a quieter page without the hint.
-        !headers && (
-          <p className={s.note}>Enter to send · Shift+Enter for a new line</p>
-        )
-      )}
+      {busy > 0 && <p className={s.note}>Uploading…</p>}
       {err && (
         <p className={s.err} role="alert">
           {err}

@@ -303,8 +303,12 @@ export function TaskPanel({
               <Note text={task.note} />
             </button>
           ) : (
-            <button className={s.panelEmpty} onClick={() => setWriting(true)}>
-              Add a description
+            <button
+              className={s.panelNoteView}
+              data-empty
+              onClick={() => setWriting(true)}
+            >
+              Add details, links or a checklist…
             </button>
           )}
         </section>
@@ -360,23 +364,6 @@ export function TaskPanel({
 
         <Notes task={task} edit={edit} shared={shared} />
 
-        {!shared && (
-          <section className={s.panelSection}>
-            <h3>Share</h3>
-            <p className={s.panelHint}>
-              Let anyone with a link see this task, comment and add photos or
-              videos. No account needed.
-            </p>
-            <button
-              className="btn"
-              onClick={() => setAsking(true)}
-              disabled={!!busy}
-            >
-              <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share this task
-            </button>
-          </section>
-        )}
-
         {(busy || err) && (
           <p
             className={err ? s.err : s.panelHint}
@@ -395,6 +382,16 @@ export function TaskPanel({
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
           {!top && <span className={s.panelHint}>A step of a task.</span>}
+          {!shared && (
+            <button
+              className={`btn ${s.panelShare}`}
+              onClick={() => setAsking(true)}
+              disabled={!!busy}
+              title="Anyone with the link can see it, comment and add photos. No account needed."
+            >
+              <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share
+            </button>
+          )}
         </footer>
 
         {asking && (
@@ -807,9 +804,7 @@ function Notes({
             <Send size={16} strokeWidth={2.5} />
           </button>
         </div>
-        <p className={s.panelHint}>
-          {busy ? "Uploading…" : "Enter to add · Shift+Enter for a new line"}
-        </p>
+        {busy > 0 && <p className={s.panelHint}>Uploading…</p>}
         {err && (
           <p className={s.err} role="alert">
             {err}
