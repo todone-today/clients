@@ -112,9 +112,9 @@ export default function Home() {
           <article className={`${s.feat} ${s.full}`}>
             <h2 className="display">Your calendar, in step.</h2>
             <p>
-              Three for now, done properly: Google Calendar both ways, and a
-              private feed for Apple Calendar and Outlook. More once these are
-              rock solid.
+              Google Calendar, Apple Calendar and Outlook, from one private
+              link: add it once and your dated tasks show up in your calendar.
+              More once these are rock solid.
             </p>
             <ToolsDemo />
           </article>
@@ -216,9 +216,9 @@ export default function Home() {
           <p className={s.provisional}>
             What we can still see: your email and name, which teams you&apos;re
             in, how many lists you have, roughly how big they are and when they
-            change. Lists you choose to connect to integrations (Google
-            Calendar, the Apple Calendar and Outlook feed) are stored readable
-            so those can work; each list says which it is. Share a single task
+            change. Lists you choose to put in your calendar link (for Google
+            Calendar, Apple Calendar and Outlook) are stored readable so the
+            calendar can fetch them; each list says which it is. Share a single task
             by link and that task, its comments and its files are readable too,
             until you stop sharing.
           </p>

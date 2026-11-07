@@ -87,7 +87,11 @@ export function Integrations() {
   };
 
   const every: { key: Key; name: string; on: boolean }[] = [
-    { key: "google", name: "Google Calendar", on: st.google.connected },
+    {
+      key: "google",
+      name: "Google Calendar",
+      on: st.google.connected || !!st.icsToken,
+    },
     { key: "notion", name: "Notion", on: st.notion },
     { key: "markdown", name: "Obsidian & Markdown", on: !!st.syncToken },
     {
@@ -159,17 +163,22 @@ export function Integrations() {
       </div>
 
       <section className={s.integration}>
-        {key === "google" && <Google st={st} busy={busy} act={act} />}
+        {/* Two-way Google sync stays only for a workspace that linked it before; the rest subscribe to the link. */}
+        {key === "google" && st.google.connected && (
+          <Google st={st} busy={busy} act={act} />
+        )}
         {key === "notion" && <Notion st={st} busy={busy} act={act} />}
         {key === "markdown" && (
           <Markdown token={st.syncToken} manager={st.manager} act={act} />
         )}
         {key === "link" && st.manager && <SharedViews />}
-        {(key === "link" || key === "apple") && (
+        {(key === "link" ||
+          key === "apple" ||
+          (key === "google" && !st.google.connected)) && (
           <CalendarLink
             token={st.icsToken}
             manager={st.manager}
-            apple={key === "apple"}
+            app={key === "link" ? "outlook" : key}
             act={act}
           />
         )}
@@ -416,29 +425,61 @@ function Discord({ st, act }: { st: State; act: Act }) {
   );
 }
 
+// How each calendar app subscribes to the link: one way, todone → calendar. Each fetches it on its own schedule.
+const APPS = {
+  apple: {
+    name: "Apple Calendar",
+    how: "Add it and Apple Calendar keeps your dated tasks in step, fetching the link on its own (pick how often in Calendar → Settings → Accounts). On an iPhone: Settings → Calendar → Accounts → Add Subscribed Calendar, then paste the link.",
+    add: (f: string) => [["Add to Apple Calendar", f.replace(/^https?:/, "webcal:")]],
+  },
+  google: {
+    name: "Google Calendar",
+    how: "Add it and Google Calendar shows your dated tasks. Google fetches the link on its own schedule, every few hours up to a day, so a new task can take a while to show up. By hand: Other calendars → + → From URL, then paste the link.",
+    add: (f: string) => [
+      [
+        "Add to Google Calendar",
+        `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(f.replace(/^https?:/, "webcal:"))}`,
+      ],
+    ],
+  },
+  outlook: {
+    name: "Outlook",
+    how: "Add it and Outlook shows your dated tasks, refreshing the link every few hours. By hand: Add calendar → Subscribe from web, then paste the link. Opened in a browser, the link shows the calendar too.",
+    add: (f: string) => [
+      [
+        "Add to Outlook.com",
+        `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(f)}&name=todone`,
+      ],
+      [
+        "Work or school account",
+        `https://outlook.office.com/calendar/0/addfromweb?url=${encodeURIComponent(f)}&name=todone`,
+      ],
+    ],
+  },
+} as const;
+
 function CalendarLink({
   token,
   manager,
-  apple,
+  app,
   act,
 }: {
   token: string | null;
   manager: boolean;
-  apple: boolean;
+  app: keyof typeof APPS;
   act: Act;
 }) {
   const feed = token && `${location.origin}/api/calendar/${token}.ics`;
+  const a = APPS[app];
   // The feed is read by Apple's (or Outlook's) servers from ours, so it can only hold lists our server can read.
   const readable = (useLists().lists ?? []).filter((l) => !l.kind && l.plain);
   return (
     <>
-      <h2>
-        {apple ? "Apple Calendar · read-only" : "Calendar link · read-only"}
-      </h2>
+      <h2>{a.name} · one way</h2>
       <p>
-        {apple
-          ? "Apple Calendar subscribes to the calendar link: File → New Calendar Subscription, then paste it. It refreshes on its own. Apple's calendar has no API todone can write back through, so edits there don't come back."
-          : "Opened in a browser it shows the calendar; added to Outlook or any calendar app it stays in sync. Anyone with the link can read your dated tasks."}
+        {a.how} Edits made in {a.name} don&apos;t come back to todone. Anyone
+        with the link can see the dated tasks in it; make a new link to cut
+        the old one off.
       </p>
       {readable.length ? (
         <p className={s.e2eCount}>
@@ -474,9 +515,17 @@ function CalendarLink({
             onFocus={(e) => e.target.select()}
           />
           <div className={s.tools}>
-            <a className={s.ghost} href={feed} target="_blank" rel="noreferrer">
-              <CalendarDays size={16} strokeWidth={2.5} /> Open
-            </a>
+            {a.add(feed).map(([label, href], i) => (
+              <a
+                key={label}
+                className={i ? s.ghost : "btn"}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <CalendarDays size={16} strokeWidth={2.5} /> {label}
+              </a>
+            ))}
             <button
               className={s.ghost}
               onClick={() => navigator.clipboard.writeText(feed)}

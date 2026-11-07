@@ -311,17 +311,17 @@ type Tool = {
 const TOOLS: Tool[] = [
   {
     name: "Google Calendar",
-    how: "Dated tasks become events, and moving an event moves the task.",
+    how: "Add your private calendar link in one click: your dated tasks show up as events.",
     mark: siGooglecalendar,
   },
   {
     name: "Apple Calendar",
-    how: "Subscribe to a private feed of everything that's due.",
+    how: "The same private link, added to Apple Calendar on your Mac, iPhone or iPad.",
     mark: siApple,
   },
   {
     name: "Outlook",
-    how: "The same private feed, subscribed in Outlook: your dated tasks show up in your calendar.",
+    how: "The same private link, added to Outlook.com or a work account. One way: todone → your calendar.",
     mark: "calendar",
   },
 ];

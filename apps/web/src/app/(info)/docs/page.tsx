@@ -199,14 +199,15 @@ export default function Docs() {
       </p>
       <ul>
         <li>
-          <b>Google Calendar</b>: dated tasks become events in a “todone”
-          calendar, and moving an event moves the task.
+          <b>Google Calendar</b>, <b>Apple Calendar</b> and <b>Outlook</b>:
+          make your private calendar link, then &ldquo;Add to&rdquo; your
+          calendar in one click. It&apos;s one way: dated tasks show up as
+          events, and edits in the calendar don&apos;t come back. Each calendar
+          fetches the link on its own schedule (Google can take up to a day).
         </li>
         <li>
-          <b>Apple Calendar</b>: a private feed of everything that&apos;s due.
-        </li>
-        <li>
-          <b>Outlook</b>: subscribe to the same private feed in Outlook.
+          The link can only hold lists our server can read: switch encryption
+          off for the lists you want in it, under Integrations.
         </li>
       </ul>
       <p>
