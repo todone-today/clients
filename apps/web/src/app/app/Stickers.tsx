@@ -226,9 +226,7 @@ export function Stickers({
   );
   return (
     <aside className={s.stickers} aria-label="Stickers" data-tour="stickers" data-active={active}>
-      <p>
-        {selected ? <>Tap or click one to apply it to “{selected}”. </> : null}Drag a task onto a sticker, or a sticker onto a task.
-      </p>
+      {selected && <p>Tap or click one to apply it to “{selected}”.</p>}
       {group("When", WHEN, "when", when)}
       {group("How long", LONG, "long", long)}
       {group("Priority", PRI, "pri")}
