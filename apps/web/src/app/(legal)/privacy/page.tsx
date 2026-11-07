@@ -57,7 +57,7 @@ export default function Privacy() {
           <tr>
             <td>
               A task you share by link, <b>stored readable</b>: its details, the comments on it and the files added to
-              it, by you or by anyone with the link. Guests are anonymous (&ldquo;Guest 2&rdquo;): we keep a random
+              it, by you or by anyone with the link. Guests show up as &ldquo;Anonymous&rdquo;: we keep a random
               number their browser makes, not a name or account. Their IP address is used briefly to limit abuse.
             </td>
             <td>

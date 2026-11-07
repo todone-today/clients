@@ -113,8 +113,7 @@ export default function Docs() {
       <ul>
         <li>
           In a task&apos;s panel, &ldquo;Share this task&rdquo; makes a link anyone can open, no account needed. They can
-          read the task, comment, reply and add photos, videos or PDFs. Each browser shows up as &ldquo;Guest 1&rdquo;,
-          &ldquo;Guest 2&rdquo;…
+          read the task, comment, reply and add photos, videos or PDFs. They show up as &ldquo;Anonymous&rdquo;.
         </li>
         <li>
           A shared task is <b>not end-to-end encrypted</b>: our server and anyone with the link can read it, its comments

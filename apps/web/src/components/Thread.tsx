@@ -36,13 +36,21 @@ export function Thread({
   const [err, setErr] = useState("");
   const refresh = useCallback(() => load().then(setComments, () => {}), [load]);
   useEffect(() => {
-    const t = setInterval(() => document.visibilityState === "visible" && refresh(), 10_000);
+    const t = setInterval(
+      () => document.visibilityState === "visible" && refresh(),
+      10_000,
+    );
     return () => clearInterval(t);
   }, [refresh]);
   const send = async (body: string, files: string[], parent?: string) => {
     setErr("");
     try {
-      await shareCall("POST", `${base}/comments`, { body, files, parent }, headers);
+      await shareCall(
+        "POST",
+        `${base}/comments`,
+        { body, files, parent },
+        headers,
+      );
       await refresh();
       return true;
     } catch (x) {
@@ -66,7 +74,12 @@ export function Thread({
                     <Bubble c={r} base={base} headers={headers} />
                   </div>
                 ))}
-              <Composer base={base} headers={headers} onSend={(b, f) => send(b, f, c.id)} reply />
+              <Composer
+                base={base}
+                headers={headers}
+                onSend={(b, f) => send(b, f, c.id)}
+                reply
+              />
             </li>
           ))}
         </ol>
@@ -83,21 +96,48 @@ export function Thread({
   );
 }
 
-function Bubble({ c, base, headers }: { c: Comment; base: string; headers?: Record<string, string> }) {
+function Bubble({
+  c,
+  base,
+  headers,
+}: {
+  c: Comment;
+  base: string;
+  headers?: Record<string, string>;
+}) {
   return (
-    <article className={s.bubble} data-mine={c.mine || undefined}>
+    <article
+      className={s.bubble}
+      style={
+        {
+          "--fill": c.mine
+            ? "var(--lime)"
+            : c.guest
+              ? "var(--pink)"
+              : "var(--cyan)",
+        } as React.CSSProperties
+      }
+    >
       <header>
         <b>{c.mine ? `${c.who} (you)` : c.who}</b>
-        {c.guest && <span className={s.badge}>Guest</span>}
         <time dateTime={new Date(c.at).toISOString()}>
-          {new Date(c.at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          {new Date(c.at).toLocaleString(undefined, {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </time>
       </header>
       {c.body && <p>{c.body}</p>}
       {c.files.length > 0 && (
         <div className={s.files}>
           {c.files.map((f) => (
-            <Media key={f.id} file={f} load={() => sharedUrl(base, f.id, headers)} />
+            <Media
+              key={f.id}
+              file={f}
+              load={() => sharedUrl(base, f.id, headers)}
+            />
           ))}
         </div>
       )}
@@ -148,7 +188,12 @@ function Composer({
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy || (!text.trim() && !files.length)) return;
-        if (await onSend(text.trim(), files.map((f) => f.id))) {
+        if (
+          await onSend(
+            text.trim(),
+            files.map((f) => f.id),
+          )
+        ) {
           setText("");
           setFiles([]);
           if (reply) setOpen(false);
@@ -160,7 +205,11 @@ function Composer({
           {files.map((f) => (
             <li key={f.id}>
               {f.name}
-              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.id !== f.id))}>
+              <button
+                type="button"
+                aria-label={`Remove ${f.name}`}
+                onClick={() => setFiles((x) => x.filter((y) => y.id !== f.id))}
+              >
                 <X size={12} strokeWidth={3} />
               </button>
             </li>
@@ -177,18 +226,39 @@ function Composer({
           rows={reply ? 1 : 2}
           autoFocus={reply}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
           }}
         />
-        <input ref={input} type="file" accept={ACCEPT} multiple hidden onChange={(e) => attach(e.target.files)} />
-        <button type="button" className={s.icon} onClick={() => input.current?.click()} aria-label="Attach files">
+        <input
+          ref={input}
+          type="file"
+          accept={ACCEPT}
+          multiple
+          hidden
+          onChange={(e) => attach(e.target.files)}
+        />
+        <button
+          type="button"
+          className={s.icon}
+          onClick={() => input.current?.click()}
+          aria-label="Attach files"
+        >
           <Paperclip size={16} strokeWidth={2.5} />
         </button>
         <button className={s.icon} disabled={!!busy} aria-label="Send">
           <Send size={16} strokeWidth={2.5} />
         </button>
       </div>
-      {busy > 0 && <p className={s.note}>Uploading…</p>}
+      <p className={s.note}>
+        {busy > 0 ? "Uploading…" : "Enter to send · Shift+Enter for a new line"}
+      </p>
       {err && (
         <p className={s.err} role="alert">
           {err}

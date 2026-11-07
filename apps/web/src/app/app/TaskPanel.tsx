@@ -1,29 +1,67 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Copy, Link2, Lock, LockOpen, Paperclip, RefreshCw, Share2, Trash2, X } from "lucide-react";
-import { type FileRef, type Task, fmtMinutes, parseMinutes } from "@todone/sdk/tasks";
+import {
+  Copy,
+  Link2,
+  Lock,
+  LockOpen,
+  Paperclip,
+  RefreshCw,
+  Share2,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
+  type FileRef,
+  type Task,
+  fmtMinutes,
+  parseMinutes,
+} from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
 import { Note } from "@/components/Note";
 import { type Comment, Thread } from "@/components/Thread";
-import { ACCEPT, deletePrivate, openPrivate, sharedUrl, uploadPrivate, uploadShared } from "@/lib/files";
-import { createShare, revokeShare, rotateShare, setShareFiles, shareView, workspaceKey } from "./actions";
+import {
+  ACCEPT,
+  deletePrivate,
+  openPrivate,
+  sharedUrl,
+  uploadPrivate,
+  uploadShared,
+} from "@/lib/files";
+import {
+  createShare,
+  revokeShare,
+  rotateShare,
+  setShareFiles,
+  shareView,
+  workspaceKey,
+} from "./actions";
 import s from "./app.module.css";
 
-const REPEATS = ["every day", "every weekday", "every weekend", "every week", "every month", "every year"];
+const REPEATS = [
+  "every day",
+  "every weekday",
+  "every weekend",
+  "every week",
+  "every month",
+  "every year",
+];
 
-// Everything about one task, in a drawer on the right: fields, description, attachments, and (when shared by link)
+// Everything about one task, on a sticker in the middle of the screen: fields, description, attachments, and (when shared by link)
 // the conversation and sharing controls. Private tasks stay end-to-end encrypted, attachments included. Sharing
 // switches that off for this one task, only after the owner reads what that means and says "I Understand".
 export function TaskPanel({
   task,
   top,
+  fill,
   edit,
   onDelete,
   onClose,
 }: {
   task: Task;
   top: boolean;
+  fill?: string;
   edit: (f: (t: Task) => Task | null) => void;
   onDelete: () => void;
   onClose: () => void;
@@ -36,7 +74,8 @@ export function TaskPanel({
   const shared = !!task.share;
 
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && !asking && onClose();
+    const esc = (e: KeyboardEvent) =>
+      e.key === "Escape" && !asking && onClose();
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, [asking, onClose]);
@@ -62,7 +101,10 @@ export function TaskPanel({
       }
     });
   const removeFile = (f: FileRef) => {
-    edit((t) => ({ ...t, files: (t.files ?? []).filter((x) => x.id !== f.id) }));
+    edit((t) => ({
+      ...t,
+      files: (t.files ?? []).filter((x) => x.id !== f.id),
+    }));
     deletePrivate(f.id);
   };
 
@@ -77,7 +119,14 @@ export function TaskPanel({
           const ids: string[] = [];
           for (const f of files) {
             const blob = await openPrivate(f, key);
-            ids.push((await uploadShared(`/task-shares/${id}`, new File([blob], f.name, { type: f.type }))).id);
+            ids.push(
+              (
+                await uploadShared(
+                  `/task-shares/${id}`,
+                  new File([blob], f.name, { type: f.type }),
+                )
+              ).id,
+            );
           }
           await setShareFiles(id, task, ids);
           for (const f of files) deletePrivate(f.id);
@@ -90,232 +139,356 @@ export function TaskPanel({
     });
 
   return (
-    <aside className={s.panel} aria-label={`Task: ${task.title}`}>
-      <header className={s.panelHead}>
-        <input
-          key={task.id + task.title}
-          className={s.panelTitle}
-          aria-label="Task name"
-          defaultValue={task.title}
-          maxLength={500}
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          onBlur={(e) => {
-            const v = e.target.value.trim();
-            if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
-          }}
-        />
-        <button className={s.panelClose} onClick={onClose} aria-label="Close">
-          <X size={20} strokeWidth={2.75} />
-        </button>
-      </header>
-
-      <p className={s.privacyLine} data-shared={shared || undefined}>
-        {shared ? (
-          <>
-            <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Shared by link · not end-to-end encrypted
-          </>
-        ) : (
-          <>
-            <Lock size={14} strokeWidth={2.5} aria-hidden /> End-to-end encrypted
-          </>
-        )}
-      </p>
-
-      <div className={s.panelFields}>
-        <label className={s.panelCheck}>
-          <input type="checkbox" checked={task.done} onChange={(e) => edit((t) => ({ ...t, done: e.target.checked }))} />
-          Done
-        </label>
-        <label>
-          <span>Day</span>
+    <div
+      className={s.panelBack}
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <aside
+        className={s.panel}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Task: ${task.title}`}
+        style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}
+      >
+        <header className={s.panelHead}>
           <input
-            type="date"
-            value={task.due ?? ""}
-            onChange={(e) =>
-              edit((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
-            }
-          />
-        </label>
-        <label>
-          <span>Time</span>
-          <input
-            type="time"
-            step={900}
-            disabled={!task.due}
-            value={task.at ?? ""}
-            onChange={(e) => edit((t) => ({ ...t, at: e.target.value || undefined }))}
-          />
-        </label>
-        <label>
-          <span>How long</span>
-          <input
-            key={`est${task.est}`}
-            defaultValue={task.est ? fmtMinutes(task.est) : ""}
-            placeholder="45m"
-            onBlur={(e) => {
-              const m = e.target.value.trim() ? parseMinutes(e.target.value) : 0;
-              if (m !== null && m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
-            }}
+            key={task.id + task.title}
+            className={s.panelTitle}
+            aria-label="Task name"
+            defaultValue={task.title}
+            maxLength={500}
             onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          />
-        </label>
-        <label>
-          <span>Priority</span>
-          <select
-            value={task.pri ?? ""}
-            onChange={(e) => edit((t) => ({ ...t, pri: e.target.value ? (+e.target.value as 1 | 2 | 3) : undefined }))}
-          >
-            <option value="">None</option>
-            <option value="1">High</option>
-            <option value="2">Medium</option>
-            <option value="3">Low</option>
-          </select>
-        </label>
-        <label>
-          <span>Repeat</span>
-          <select value={task.rep ?? ""} onChange={(e) => edit((t) => ({ ...t, rep: e.target.value || undefined }))}>
-            <option value="">Never</option>
-            {(task.rep && !REPEATS.includes(task.rep) ? [task.rep, ...REPEATS] : REPEATS).map((r) => (
-              <option key={r} value={r}>
-                {r.replace("every ", "Every ")}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <section className={s.panelSection}>
-        <h3>Description</h3>
-        {writing ? (
-          <textarea
-            className={s.panelNote}
-            autoFocus
-            defaultValue={task.note ?? ""}
-            maxLength={20_000}
-            placeholder="Details, links, a checklist (- item)… **bold**, _italic_ work."
             onBlur={(e) => {
               const v = e.target.value.trim();
-              if (v !== (task.note ?? "")) edit((t) => ({ ...t, note: v || undefined }));
-              setWriting(false);
+              if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
             }}
           />
-        ) : task.note ? (
-          <button className={s.panelNoteView} onClick={() => setWriting(true)} title="Click to edit">
-            <Note text={task.note} />
+          <button className={s.panelClose} onClick={onClose} aria-label="Close">
+            <X size={20} strokeWidth={2.75} />
           </button>
-        ) : (
-          <button className={s.panelEmpty} onClick={() => setWriting(true)}>
-            Add a description
-          </button>
-        )}
-      </section>
+        </header>
 
-      {shared ? (
-        <SharedPart task={task} edit={edit} />
-      ) : (
-        <section className={s.panelSection}>
-          <h3>
-            Attachments
-            <button className={s.ghost} onClick={() => fileInput.current?.click()} disabled={!!busy}>
-              <Paperclip size={14} strokeWidth={2.5} aria-hidden /> Add
-            </button>
-          </h3>
-          <input ref={fileInput} type="file" accept={ACCEPT} multiple hidden onChange={(e) => attach(e.target.files)} />
-          {task.files?.length ? (
-            <div className={s.panelFiles}>
-              {task.files.map((f) => (
-                <div key={f.id} className={s.panelFile}>
-                  <Media file={f} load={async () => openPrivate(f, await workspaceKey())} />
-                  <button className={s.panelX} onClick={() => removeFile(f)} aria-label={`Remove ${f.name}`}>
-                    <X size={12} strokeWidth={3} />
-                  </button>
-                </div>
-              ))}
-            </div>
+        <p className={s.privacyLine} data-shared={shared || undefined}>
+          {shared ? (
+            <>
+              <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Shared by
+              link · not end-to-end encrypted
+            </>
           ) : (
-            <p className={s.panelHint}>Images, videos (up to 50 MB), PDFs. Encrypted before they leave this device.</p>
+            <>
+              <Lock size={14} strokeWidth={2.5} aria-hidden /> End-to-end
+              encrypted
+            </>
+          )}
+        </p>
+
+        <div className={s.panelFields}>
+          <label className={s.panelCheck}>
+            <input
+              type="checkbox"
+              checked={task.done}
+              onChange={(e) => edit((t) => ({ ...t, done: e.target.checked }))}
+            />
+            Done
+          </label>
+          <label>
+            <span>Day</span>
+            <input
+              type="date"
+              value={task.due ?? ""}
+              onChange={(e) =>
+                edit((t) => ({
+                  ...t,
+                  due: e.target.value || undefined,
+                  ...(e.target.value ? {} : { at: undefined }),
+                }))
+              }
+            />
+          </label>
+          <label>
+            <span>Time</span>
+            <input
+              type="time"
+              step={900}
+              disabled={!task.due}
+              value={task.at ?? ""}
+              onChange={(e) =>
+                edit((t) => ({ ...t, at: e.target.value || undefined }))
+              }
+            />
+          </label>
+          <label>
+            <span>How long</span>
+            <input
+              key={`est${task.est}`}
+              defaultValue={task.est ? fmtMinutes(task.est) : ""}
+              placeholder="45m"
+              onBlur={(e) => {
+                const m = e.target.value.trim()
+                  ? parseMinutes(e.target.value)
+                  : 0;
+                if (m !== null && m !== (task.est ?? 0))
+                  edit((t) => ({ ...t, est: m || undefined }));
+              }}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            />
+          </label>
+          <label>
+            <span>Priority</span>
+            <select
+              value={task.pri ?? ""}
+              onChange={(e) =>
+                edit((t) => ({
+                  ...t,
+                  pri: e.target.value
+                    ? (+e.target.value as 1 | 2 | 3)
+                    : undefined,
+                }))
+              }
+            >
+              <option value="">None</option>
+              <option value="1">High</option>
+              <option value="2">Medium</option>
+              <option value="3">Low</option>
+            </select>
+          </label>
+          <label>
+            <span>Repeat</span>
+            <select
+              value={task.rep ?? ""}
+              onChange={(e) =>
+                edit((t) => ({ ...t, rep: e.target.value || undefined }))
+              }
+            >
+              <option value="">Never</option>
+              {(task.rep && !REPEATS.includes(task.rep)
+                ? [task.rep, ...REPEATS]
+                : REPEATS
+              ).map((r) => (
+                <option key={r} value={r}>
+                  {r.replace("every ", "Every ")}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <section className={s.panelSection}>
+          <h3>Description</h3>
+          {writing ? (
+            <textarea
+              className={s.panelNote}
+              autoFocus
+              defaultValue={task.note ?? ""}
+              maxLength={20_000}
+              placeholder="Details, links, a checklist (- item)… **bold**, _italic_ work."
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v !== (task.note ?? ""))
+                  edit((t) => ({ ...t, note: v || undefined }));
+                setWriting(false);
+              }}
+            />
+          ) : task.note ? (
+            <button
+              className={s.panelNoteView}
+              onClick={() => setWriting(true)}
+              title="Click to edit"
+            >
+              <Note text={task.note} />
+            </button>
+          ) : (
+            <button className={s.panelEmpty} onClick={() => setWriting(true)}>
+              Add a description
+            </button>
           )}
         </section>
-      )}
 
-      {task.history?.length ? (
-        <section className={s.panelSection}>
-          <h3>Conversation (kept when sharing stopped)</h3>
-          <ol className={s.kept}>
-            {task.history.map((h, i) => (
-              <li key={i}>
-                <b>{h.who}</b> <time>{new Date(h.at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</time>
-                {h.text && <p>{h.text}</p>}
-                {h.files?.map((f) => (
-                  <Media key={f.id} file={f} load={async () => openPrivate(f, await workspaceKey())} />
+        {shared ? (
+          <SharedPart task={task} edit={edit} />
+        ) : (
+          <section className={s.panelSection}>
+            <h3>
+              Attachments
+              <button
+                className={s.ghost}
+                onClick={() => fileInput.current?.click()}
+                disabled={!!busy}
+              >
+                <Paperclip size={14} strokeWidth={2.5} aria-hidden /> Add
+              </button>
+            </h3>
+            <input
+              ref={fileInput}
+              type="file"
+              accept={ACCEPT}
+              multiple
+              hidden
+              onChange={(e) => attach(e.target.files)}
+            />
+            {task.files?.length ? (
+              <div className={s.panelFiles}>
+                {task.files.map((f) => (
+                  <div key={f.id} className={s.panelFile}>
+                    <Media
+                      file={f}
+                      load={async () => openPrivate(f, await workspaceKey())}
+                    />
+                    <button
+                      className={s.panelX}
+                      onClick={() => removeFile(f)}
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                  </div>
                 ))}
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
+              </div>
+            ) : (
+              <p className={s.panelHint}>
+                Images, videos (up to 50 MB), PDFs. Encrypted before they leave
+                this device.
+              </p>
+            )}
+          </section>
+        )}
 
-      {!shared && (
-        <section className={s.panelSection}>
-          <h3>Share</h3>
-          <p className={s.panelHint}>Let anyone with a link see this task, comment and add photos or videos. No account needed.</p>
-          <button className="btn" onClick={() => setAsking(true)} disabled={!!busy}>
-            <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share this task
+        {task.history?.length ? (
+          <section className={s.panelSection}>
+            <h3>Conversation (kept when sharing stopped)</h3>
+            <ol className={s.kept}>
+              {task.history.map((h, i) => (
+                <li
+                  key={i}
+                  style={
+                    {
+                      "--fill":
+                        h.who === "Anonymous" || /^Guest \d/.test(h.who)
+                          ? "var(--pink)"
+                          : "var(--cyan)",
+                    } as React.CSSProperties
+                  }
+                >
+                  <b>{h.who}</b>{" "}
+                  <time>
+                    {new Date(h.at).toLocaleDateString(undefined, {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </time>
+                  {h.text && <p>{h.text}</p>}
+                  {h.files?.map((f) => (
+                    <Media
+                      key={f.id}
+                      file={f}
+                      load={async () => openPrivate(f, await workspaceKey())}
+                    />
+                  ))}
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
+        {!shared && (
+          <section className={s.panelSection}>
+            <h3>Share</h3>
+            <p className={s.panelHint}>
+              Let anyone with a link see this task, comment and add photos or
+              videos. No account needed.
+            </p>
+            <button
+              className="btn"
+              onClick={() => setAsking(true)}
+              disabled={!!busy}
+            >
+              <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share this task
+            </button>
+          </section>
+        )}
+
+        {(busy || err) && (
+          <p
+            className={err ? s.err : s.panelHint}
+            role={err ? "alert" : "status"}
+          >
+            {err || busy}
+          </p>
+        )}
+
+        <footer className={s.panelFoot}>
+          <button
+            className={s.edDelete}
+            onClick={onDelete}
+            title={task.sub.length ? "Deletes its steps too" : undefined}
+          >
+            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
-        </section>
-      )}
+          {!top && <span className={s.panelHint}>A step of a task.</span>}
+        </footer>
 
-      {(busy || err) && (
-        <p className={err ? s.err : s.panelHint} role={err ? "alert" : "status"}>
-          {err || busy}
-        </p>
-      )}
-
-      <footer className={s.panelFoot}>
-        <button className={s.edDelete} onClick={onDelete} title={task.sub.length ? "Deletes its steps too" : undefined}>
-          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
-        </button>
-        {!top && <span className={s.panelHint}>A step of a task.</span>}
-      </footer>
-
-      {asking && (
-        <Disclosure
-          onCancel={() => setAsking(false)}
-          onOk={() => {
-            setAsking(false);
-            share();
-          }}
-        />
-      )}
-    </aside>
+        {asking && (
+          <Disclosure
+            onCancel={() => setAsking(false)}
+            onOk={() => {
+              setAsking(false);
+              share();
+            }}
+          />
+        )}
+      </aside>
+    </div>
   );
 }
 
 // What sharing means, said plainly, before anything changes. Only "I Understand" goes ahead.
-function Disclosure({ onOk, onCancel }: { onOk: () => void; onCancel: () => void }) {
+function Disclosure({
+  onOk,
+  onCancel,
+}: {
+  onOk: () => void;
+  onCancel: () => void;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     if (!ref.current?.open) ref.current?.showModal();
   }, []);
   return (
-    <dialog ref={ref} className={s.disclosure} onClose={onCancel} aria-labelledby="share-h">
+    <dialog
+      ref={ref}
+      className={s.disclosure}
+      onClose={onCancel}
+      aria-labelledby="share-h"
+    >
       <h2 id="share-h" className="display">
         This task won&apos;t be end-to-end encrypted
       </h2>
       <ul>
         <li>
-          A readable copy of this task (its name, details, steps and attachments) and everything added to it goes to
-          todone&apos;s server, so the people you share it with can see it.
+          A readable copy of this task (its name, details, steps and
+          attachments) and everything added to it goes to todone&apos;s server,
+          so the people you share it with can see it.
         </li>
-        <li>todone and anyone with the link can read it. Guests can view it, comment, and upload photos, videos and files.</li>
+        <li>
+          todone and anyone with the link can read it. They can view it, comment
+          and upload photos, videos and files, anonymously.
+        </li>
         <li>Don&apos;t share anything sensitive or confidential this way.</li>
-        <li>Your other tasks stay end-to-end encrypted. You can stop sharing at any time: the link dies at once.</li>
+        <li>
+          Your other tasks stay end-to-end encrypted. You can stop sharing at
+          any time: the link dies at once.
+        </li>
       </ul>
       <div className={s.tools}>
         <button className={s.ghost} onClick={() => ref.current?.close()}>
           Cancel
         </button>
-        <button className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties} onClick={onOk} autoFocus>
+        <button
+          className="btn"
+          style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+          onClick={onOk}
+          autoFocus
+        >
           I Understand
         </button>
       </div>
@@ -324,23 +497,41 @@ function Disclosure({ onOk, onCancel }: { onOk: () => void; onCancel: () => void
 }
 
 // A shared task: the link, its controls, the shared attachments and the conversation.
-function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | null) => void }) {
+function SharedPart({
+  task,
+  edit,
+}: {
+  task: Task;
+  edit: (f: (t: Task) => Task | null) => void;
+}) {
   const id = task.share!;
   const base = `/task-shares/${id}`;
-  const [view, setView] = useState<{ token: string; files: FileRef[]; comments: Comment[] } | null>(null);
+  const [view, setView] = useState<{
+    token: string;
+    files: FileRef[];
+    comments: Comment[];
+  } | null>(null);
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [armed, setArmed] = useState(false);
   const [copied, setCopied] = useState(false);
   const load = useCallback(async () => {
     const v = await shareView(id);
-    setView({ token: v.token, files: v.task.files ?? [], comments: v.comments });
+    setView({
+      token: v.token,
+      files: v.task.files ?? [],
+      comments: v.comments,
+    });
     return v.comments;
   }, [id]);
   useEffect(() => {
     Promise.resolve()
       .then(load)
-      .catch((x) => setErr(x instanceof Error ? x.message : "Couldn't load the shared task."));
+      .catch((x) =>
+        setErr(
+          x instanceof Error ? x.message : "Couldn't load the shared task.",
+        ),
+      );
   }, [load]);
   const link = view ? `${location.origin}/t/${view.token}` : "";
 
@@ -357,7 +548,10 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
         if (kept.has(f.id)) return kept.get(f.id)!;
         try {
           const blob = await (await fetch(await sharedUrl(base, f.id))).blob();
-          const ref = await uploadPrivate(new File([blob], f.name, { type: f.type }), key);
+          const ref = await uploadPrivate(
+            new File([blob], f.name, { type: f.type }),
+            key,
+          );
           kept.set(f.id, ref);
           return ref;
         } catch {
@@ -365,16 +559,27 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
           return null;
         }
       };
-      const files = (await Promise.all((v.task.files ?? []).map(keep))).filter((f): f is FileRef => !!f);
+      const files = (await Promise.all((v.task.files ?? []).map(keep))).filter(
+        (f): f is FileRef => !!f,
+      );
       const history: NonNullable<Task["history"]> = [];
       for (const c of v.comments) {
-        const hf = (await Promise.all(c.files.map(keep))).filter((f): f is FileRef => !!f);
-        history.push({ who: c.who, at: c.at, text: `${c.parent ? "↳ " : ""}${c.body}`, ...(hf.length ? { files: hf } : {}) });
+        const hf = (await Promise.all(c.files.map(keep))).filter(
+          (f): f is FileRef => !!f,
+        );
+        history.push({
+          who: c.who,
+          at: c.at,
+          text: `${c.parent ? "↳ " : ""}${c.body}`,
+          ...(hf.length ? { files: hf } : {}),
+        });
       }
       if (lost && !armed) {
         setArmed(true);
         setBusy("");
-        setErr(`${lost} file${lost === 1 ? "" : "s"} couldn't be kept. Click Stop sharing again to stop anyway.`);
+        setErr(
+          `${lost} file${lost === 1 ? "" : "s"} couldn't be kept. Click Stop sharing again to stop anyway.`,
+        );
         return;
       }
       await revokeShare(id);
@@ -385,7 +590,9 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
         history: [...(t.history ?? []), ...history],
       }));
     } catch (x) {
-      setErr(x instanceof Error ? x.message : "Couldn't stop sharing. Try again.");
+      setErr(
+        x instanceof Error ? x.message : "Couldn't stop sharing. Try again.",
+      );
     }
     setBusy("");
   };
@@ -397,7 +604,12 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
         {view ? (
           <div className={s.shareLink}>
             <Link2 size={15} strokeWidth={2.5} aria-hidden />
-            <input readOnly value={link} aria-label="Share link" onFocus={(e) => e.target.select()} />
+            <input
+              readOnly
+              value={link}
+              aria-label="Share link"
+              onFocus={(e) => e.target.select()}
+            />
             <button
               className={s.ghost}
               onClick={async () => {
@@ -406,7 +618,8 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
                 setTimeout(() => setCopied(false), 2000);
               }}
             >
-              <Copy size={14} strokeWidth={2.5} aria-hidden /> {copied ? "Copied" : "Copy"}
+              <Copy size={14} strokeWidth={2.5} aria-hidden />{" "}
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
         ) : (
@@ -424,12 +637,19 @@ function SharedPart({ task, edit }: { task: Task; edit: (f: (t: Task) => Task | 
           >
             <RefreshCw size={14} strokeWidth={2.5} aria-hidden /> New link
           </button>
-          <button className={`${s.ghost} ${s.danger}`} disabled={!!busy} onClick={stop}>
+          <button
+            className={`${s.ghost} ${s.danger}`}
+            disabled={!!busy}
+            onClick={stop}
+          >
             <Lock size={14} strokeWidth={2.5} aria-hidden /> Stop sharing
           </button>
         </div>
         {(busy || err) && (
-          <p className={err ? s.err : s.panelHint} role={err ? "alert" : "status"}>
+          <p
+            className={err ? s.err : s.panelHint}
+            role={err ? "alert" : "status"}
+          >
             {err || busy}
           </p>
         )}

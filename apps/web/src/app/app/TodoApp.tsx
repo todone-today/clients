@@ -825,6 +825,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           key={selected}
           task={findTask(list.tasks, selected)!}
           top={isTop(selected)}
+          fill={colors.get(selected)}
           edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
           onDelete={() => {
             const before = list.tasks;
