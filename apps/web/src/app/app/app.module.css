@@ -3185,3 +3185,62 @@ input.stick[data-custom][aria-invalid="true"] {
   background: var(--lime);
   border-color: var(--black);
 }
+
+/* Panel fields are stickers, in the sidebar's colours: when (day, time) butter, how long cyan, priority pink,
+   repeat lime. Text boxes are white stickers. All keep their colours in both themes. */
+.panelFields > :nth-child(1),
+.panelFields > :nth-child(2) {
+  --tone: var(--butter);
+}
+.panelFields > :nth-child(3) {
+  --tone: var(--cyan);
+}
+.panelFields > :nth-child(4) {
+  --tone: var(--pink);
+}
+.panelFields > :nth-child(5) {
+  --tone: var(--lime);
+}
+.panelFields input,
+.panelSelect > button {
+  color: var(--black);
+  color-scheme: light;
+  background: var(--tone);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.panelFields input::placeholder {
+  color: rgb(11 11 11 / 0.45);
+}
+.panelFields input:focus-visible,
+.panelSelect > button:hover,
+.panelSelect > button[aria-expanded="true"] {
+  border-color: var(--black);
+  transform: translate(-2px, -2px) rotate(-0.6deg);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.panelFields input:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+.panelNote,
+.noteRow textarea {
+  color: var(--black);
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.panelNote::placeholder,
+.noteRow textarea::placeholder {
+  color: rgb(11 11 11 / 0.45);
+}
+.panelNote:focus-visible,
+.noteRow textarea:focus-visible {
+  box-shadow: 5px 5px 0 var(--fill);
+}
+.noteRow {
+  align-items: start;
+}

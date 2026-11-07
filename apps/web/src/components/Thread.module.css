@@ -82,16 +82,20 @@
   display: grid;
   grid-template-columns: 1fr auto auto;
   gap: 0.4rem;
-  align-items: end;
+  align-items: start;
 }
 .row textarea {
   padding: 0.5rem 0.6rem;
   font: inherit;
   font-size: 0.92rem;
-  color: var(--ink);
+  color: var(--black);
   resize: vertical;
-  background: var(--raise);
-  border: 2.5px solid var(--ink);
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.row textarea::placeholder {
+  color: rgb(11 11 11 / 0.45);
 }
 .row textarea:focus-visible {
   outline: none;
