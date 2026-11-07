@@ -59,7 +59,7 @@ export function Guest({ token }: { token: string }) {
           <Logo size={28} />
         </Link>
         <span className={s.badge}>
-          <LockOpen size={13} strokeWidth={2.5} aria-hidden /> Shared by link · not end-to-end encrypted
+          <LockOpen size={13} strokeWidth={2.5} aria-hidden /> Shared by link
         </span>
       </header>
       {gone ? (
