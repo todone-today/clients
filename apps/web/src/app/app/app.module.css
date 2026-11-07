@@ -4393,7 +4393,11 @@ input.stick[data-custom][aria-invalid="true"] {
     min-width: 0;
   }
 }
+.goalNums > * {
+  min-width: 0;
+}
 .goalNums input {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
 }

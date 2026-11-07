@@ -1033,11 +1033,6 @@ export function GoalDialog({
               Back
             </button>
           )}
-          {step > 0 && step < 3 && !editing && (
-            <button type="button" className={s.ghost} onClick={save}>
-              Save now
-            </button>
-          )}
           {editing && step < 3 && (
             <button
               type="button"
