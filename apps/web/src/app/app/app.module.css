@@ -3389,3 +3389,358 @@ input.stick[data-custom][aria-invalid="true"] {
 .panelShare {
   padding: 0.6em 1.2em;
 }
+
+/* ---------- Goals and rewards ---------- */
+.panelFields > :nth-child(6) {
+  --tone: var(--peri);
+}
+.goalEmpty {
+  max-width: 40rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.goalGrid,
+.rewardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  list-style: none;
+}
+.goal,
+.reward {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.goal:nth-child(odd),
+.reward:nth-child(odd) {
+  rotate: -0.5deg;
+}
+.goal:nth-child(even),
+.reward:nth-child(even) {
+  rotate: 0.4deg;
+}
+.goal[data-done] {
+  opacity: 0.85;
+}
+.goal header {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+.goal header svg {
+  flex: none;
+  margin-top: 0.2rem;
+}
+.goal h3 {
+  flex: 1;
+  font: 900 1.35rem/1.05 var(--display);
+  text-transform: uppercase;
+}
+.goalKind {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.goalWhy {
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+.goalBecome {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.goalMeter {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+.goalMeter .bar {
+  width: 100%;
+  border-color: var(--black);
+  background: #fff;
+}
+.goalMeter small,
+.goalWeeks small {
+  color: rgb(11 11 11 / 0.65);
+  font-weight: 600;
+}
+.goalWeeks {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  align-items: end;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+.goalWeeks > span {
+  position: relative;
+  height: 2.2rem;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.goalWeeks > span[data-now] {
+  outline: 2px dashed var(--black);
+  outline-offset: 2px;
+}
+.goalWeeks > span i {
+  position: absolute;
+  inset: auto 0 0;
+  background: var(--black);
+}
+.goalWeeks b,
+.goalWeeks small {
+  grid-column: 1 / -1;
+}
+.goalNext {
+  justify-self: start;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #fff;
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+}
+.goalNext:hover {
+  transform: translate(-1px, -1px);
+}
+.goalHint {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.goal .goalHint {
+  color: rgb(11 11 11 / 0.65);
+}
+.goalPlan {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+  rotate: -0.6deg;
+}
+.goal footer,
+.reward .tools {
+  display: flex;
+  gap: 0.4rem;
+}
+.goal .ghost,
+.reward .ghost,
+.goalDialog .ghost {
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.goal .danger,
+.reward .danger {
+  margin-left: auto;
+  color: var(--hot);
+}
+.goalChip {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--peri) !important;
+  border-color: var(--black) !important;
+}
+.goalDialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.4rem 1.5rem 1.5rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.goalDialog::backdrop {
+  background: rgb(11 11 11 / 0.55);
+  backdrop-filter: blur(3px);
+}
+.goalDialog .panelClose {
+  float: right;
+}
+.goalDialog h2 {
+  margin: 0.2rem 0 1rem;
+  font-size: 2rem;
+  line-height: 1;
+}
+.goalStep {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.goalForm {
+  display: grid;
+  gap: 0.9rem;
+}
+.goalForm .tools {
+  justify-content: flex-end;
+}
+.goalField {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.goalField input,
+.goalField textarea,
+.goalStepInput,
+.goalField > div > button {
+  padding: 0.55rem 0.6rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--black);
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.goalField textarea {
+  resize: vertical;
+}
+.goalField input:focus-visible,
+.goalField textarea:focus-visible,
+.goalStepInput:focus-visible {
+  outline: none;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--black);
+}
+.goalKinds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.goalKinds button {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  background: #fff;
+  border: var(--key);
+}
+.goalKinds button small {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.goalKinds button[aria-checked="true"] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.goalCheer {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .goalCheer svg {
+    animation: unreadPop 0.5s var(--ease) both;
+  }
+}
+.reward b {
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+.reward > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 800;
+}
+.rewardNew form {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border: 2.5px dashed var(--ink);
+}
+.rewardNew .goalField {
+  color: var(--ink);
+}
+.wins {
+  display: grid;
+  gap: 0.3rem;
+  max-width: 34rem;
+  margin-top: 0.6rem;
+  list-style: none;
+}
+.wins li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  border-bottom: 2px dashed var(--hair);
+}
+.wins b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wins li[data-spend] b {
+  color: var(--hot);
+}
+.xpTile {
+  position: relative;
+  display: inline-flex;
+  gap: 0.2rem;
+  width: auto;
+  padding: 0 0.55rem;
+  overflow: visible;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.xpPop {
+  position: absolute;
+  top: -0.2rem;
+  left: 50%;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--black);
+  pointer-events: none;
+  translate: -50% 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .xpPop {
+    animation: xpUp 1.3s var(--ease) both;
+  }
+}
+@keyframes xpUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-1.8rem);
+  }
+}
+.xpTile > span {
+  display: inline;
+  width: auto;
+  height: auto;
+  background: none;
+}

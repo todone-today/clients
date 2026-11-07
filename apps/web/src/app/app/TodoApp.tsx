@@ -6,6 +6,7 @@ import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Target,
   AlignLeft,
   Lightbulb,
   Lock,
@@ -42,6 +43,9 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
+import { Goals, Rewards, XpTile } from "./Goals";
+import { changeGoals, useGoalItems } from "./goalStore";
+import { fold, reconcile, type Goal } from "@todone/sdk/goals";
 import { IconPick, ListIcon } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
@@ -218,6 +222,21 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setDrawer(false);
   };
 
+  // XP: whenever lists change, finished tasks earn a win in the goals list and unticked ones lose it. One place,
+  // so it covers every way a task gets ticked (card, panel, calendar). Idempotent: an unchanged log isn't saved.
+  useEffect(() => {
+    if (!lists || vault !== "open") return;
+    const tasks = lists.filter((l) => !l.kind).flatMap((l) => l.tasks);
+    const goals = lists.find((l) => l.kind === "goals");
+    const items = (goals?.tasks ?? []) as unknown as Parameters<
+      typeof reconcile
+    >[0];
+    if (reconcile(items, tasks, todayISO(), userId) === items) return;
+    changeGoals(lists, (xs) =>
+      fold(reconcile(xs, tasks, todayISO(), userId), () => uid() + uid()),
+    );
+  }, [lists, vault, userId]);
+
   useEffect(() => {
     if (!demo && !isPending && !userId && !offline)
       router.replace("/login?next=/app");
@@ -355,6 +374,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             [
               [null, "Lists"],
               ["calendar", "Calendar"],
+              ["goals", "Goals"],
+              ["rewards", "Rewards"],
             ] as const
           ).map(([p, name]) => (
             <button
@@ -370,6 +391,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <p className={s.local} role="status">
           {error && <span className={s.err}>{error}</span>}
         </p>
+        <XpTile onClick={() => show("rewards")} />
         <button
           className={s.tile}
           style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
@@ -552,6 +574,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               share={demo ? undefined : shareCalendar}
             />
           )
+        ) : panel === "goals" ? (
+          lists && <Goals onOpen={open} />
+        ) : panel === "rewards" ? (
+          lists && <Rewards />
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} />
         ) : panel === "bin" ? (
@@ -666,6 +692,7 @@ function ListView({
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
   const [selected, setSelected] = useState<string | null>(null); // the task whose editor is open
+  const me = authClient.useSession().data?.user.id;
   const [show, setShow] = useState<Show>("open");
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
@@ -1101,6 +1128,7 @@ function ListView({
           top={isTop(selected)}
           fill={colors.get(selected)}
           edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
+          onTick={() => setTasks((ts) => tick(ts, selected, today, me))}
           onDelete={() => {
             const before = list.tasks;
             const gone = flatten(before).filter((t) => t.id === selected);
@@ -1151,6 +1179,7 @@ function TaskRow({
   top?: boolean;
   dragged?: boolean; // the note being moved, faded while its new slot is shown
 }) {
+  const me = authClient.useSession().data?.user.id;
   const open = selected === task.id;
   const [renaming, setRenaming] = useState(false);
   const edit = (f: (t: Task) => Task | null) =>
@@ -1206,7 +1235,7 @@ function TaskRow({
           role="checkbox"
           aria-checked={task.done}
           aria-label={task.title}
-          onClick={() => setTasks((ts) => tick(ts, task.id, today))}
+          onClick={() => setTasks((ts) => tick(ts, task.id, today, me))}
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
@@ -1278,6 +1307,7 @@ function TaskRow({
             <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span>
           ) : null}
           {task.share ? <SharedChip share={task.share} /> : null}
+          {task.goal ? <GoalChip goal={task.goal} /> : null}
           {task.files?.length ? (
             <span
               title={`${task.files.length} attachment${task.files.length === 1 ? "" : "s"}`}
@@ -1337,6 +1367,19 @@ function SharedChip({ share }: { share: string }) {
           {n > 9 ? "9+" : n}
         </b>
       )}
+    </span>
+  );
+}
+
+// The goal a task moves forward, on its card.
+function GoalChip({ goal }: { goal: string }) {
+  const g = useGoalItems().items.find(
+    (i) => i.t === "goal" && i.id === goal,
+  ) as Goal | undefined;
+  if (!g) return null;
+  return (
+    <span className={s.goalChip} title={`Toward: ${g.title}`}>
+      <Target size={11} strokeWidth={2.75} aria-hidden /> {g.title}
     </span>
   );
 }

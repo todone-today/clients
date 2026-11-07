@@ -44,10 +44,11 @@ export default function Privacy() {
           </tr>
           <tr>
             <td>
-              Your lists, tasks and ideas, <b>end-to-end encrypted</b>: we store
-              them scrambled and can&apos;t read them. Lists you switch off
-              encryption for (to use integrations) are stored readable. Files
-              you attach to a task are encrypted on your device the same way.
+              Your lists, tasks, ideas, goals, rewards and XP,{" "}
+              <b>end-to-end encrypted</b>: we store them scrambled and
+              can&apos;t read them. Lists you switch off encryption for (to use
+              integrations) are stored readable. Files you attach to a task are
+              encrypted on your device the same way.
             </td>
             <td>
               This is the app: to store them and show them to you and the teams

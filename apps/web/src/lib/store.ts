@@ -141,7 +141,7 @@ function subscribe(f: () => void) {
   return () => void subs.delete(f);
 }
 
-export function add(name: string, tasks: Task[] = [], kind?: "ideas" | "bin") {
+export function add(name: string, tasks: Task[] = [], kind?: "ideas" | "bin" | "goals") {
   const id = crypto.randomUUID();
   show([
     ...(cache ?? []),

@@ -3,10 +3,26 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Select } from "@/components/Select";
-import { addDays, addMonths, label, lanes, monthCells, toClock, toMinutes, weekStart } from "@todone/sdk/calendar";
+import {
+  addDays,
+  addMonths,
+  label,
+  lanes,
+  monthCells,
+  toClock,
+  toMinutes,
+  weekStart,
+} from "@todone/sdk/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, fmtMinutes, tick, todayISO } from "@todone/sdk/tasks";
+import { authClient } from "@/lib/auth-client";
+import {
+  type List,
+  type Task,
+  fmtMinutes,
+  tick,
+  todayISO,
+} from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -30,50 +46,82 @@ export function CalendarView({
   update?: (id: string, f: (l: List) => List | null) => void;
   onOpen?: (listId: string) => void;
   // Returns the workspace's secret calendar token (or an error message) for a share link.
-  share?: (view: View, at: string) => Promise<{ token: string } | { error: string }>;
+  share?: (
+    view: View,
+    at: string,
+  ) => Promise<{ token: string } | { error: string }>;
   // Where a shared link opens: its view and date.
   start?: { view?: string; at?: string };
   // A shared view: only that period, no way to move to another one.
   locked?: boolean;
 }) {
   const today = todayISO();
-  const [view, setView] = useState<View>(() => (VIEWS.includes(start?.view as View) ? (start!.view as View) : "week"));
-  const [at, setAt] = useState(() => (/^\d{4}-\d{2}-\d{2}$/.test(start?.at ?? "") ? start!.at! : today));
+  const [view, setView] = useState<View>(() =>
+    VIEWS.includes(start?.view as View) ? (start!.view as View) : "week",
+  );
+  const [at, setAt] = useState(() =>
+    /^\d{4}-\d{2}-\d{2}$/.test(start?.at ?? "") ? start!.at! : today,
+  );
   const [shared, setShared] = useState("");
 
   // Which lists the calendar shows: all of them, or one.
   const [only, setOnly] = useState("all");
   const shown = only === "all" ? lists : lists.filter((l) => l.id === only);
-  const all: Item[] = shown.flatMap((list) => list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })));
+  const all: Item[] = shown.flatMap((list) =>
+    list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })),
+  );
   const byDay = new Map<string, Item[]>();
-  for (const it of all) if (it.task.due) byDay.set(it.task.due, [...(byDay.get(it.task.due) ?? []), it]);
-  for (const items of byDay.values()) items.sort((a, b) => (a.task.at ?? "").localeCompare(b.task.at ?? ""));
+  for (const it of all)
+    if (it.task.due)
+      byDay.set(it.task.due, [...(byDay.get(it.task.due) ?? []), it]);
+  for (const items of byDay.values())
+    items.sort((a, b) => (a.task.at ?? "").localeCompare(b.task.at ?? ""));
 
   const move = (it: Item, patch: Partial<Task>) =>
-    update?.(it.list.id, (l) => ({ ...l, tasks: mapTask(l.tasks, it.task.id, (t) => ({ ...t, ...patch })) }));
+    update?.(it.list.id, (l) => ({
+      ...l,
+      tasks: mapTask(l.tasks, it.task.id, (t) => ({ ...t, ...patch })),
+    }));
   const drag = (it: Item) =>
-    update && draggable({ kind: "task", listId: it.list.id, id: it.task.id, ids: [it.task.id] }, it.task.title);
+    update &&
+    draggable(
+      { kind: "task", listId: it.list.id, id: it.task.id, ids: [it.task.id] },
+      it.task.title,
+    );
   // Drop spots: "day:<date>" keeps the time, "all:<date>" clears it, "col:<date>" sets it from where it lands,
   // "tray" unschedules. Read-only calendars (the shared page) take no drops.
   // While a task is dragged over the hour grid, a ghost block shows where it lands and for how long.
-  const [ghost, setGhost] = useState<{ day: string; start: number; est: number } | null>(null);
+  const [ghost, setGhost] = useState<{
+    day: string;
+    start: number;
+    est: number;
+  } | null>(null);
   const minuteAt = (at: At) => {
     const y = at.y - at.el.getBoundingClientRect().top;
-    return Math.max(0, Math.min(24 * 60 - SNAP, Math.round(((y / HOUR) * 60) / SNAP) * SNAP));
+    return Math.max(
+      0,
+      Math.min(24 * 60 - SNAP, Math.round(((y / HOUR) * 60) / SNAP) * SNAP),
+    );
   };
   const dropAt = useDrop("cal", {
     accept: (p) => !!update && p.kind === "task",
     where: (p, arg, at) => {
       const [spot, d] = arg.split(":");
       if (spot !== "col" || p.kind !== "task") return (setGhost(null), "");
-      const est = all.find((x) => x.list.id === p.listId && x.task.id === p.id)?.task.est || 30;
+      const est =
+        all.find((x) => x.list.id === p.listId && x.task.id === p.id)?.task
+          .est || 30;
       const start = minuteAt(at);
-      setGhost((g) => (g?.day === d && g.start === start ? g : { day: d, start, est }));
+      setGhost((g) =>
+        g?.day === d && g.start === start ? g : { day: d, start, est },
+      );
       return "";
     },
     leave: () => setGhost(null),
     drop: (p, arg, at) => {
-      const it = p.kind === "task" && all.find((x) => x.list.id === p.listId && x.task.id === p.id);
+      const it =
+        p.kind === "task" &&
+        all.find((x) => x.list.id === p.listId && x.task.id === p.id);
       if (!it) return;
       const [spot, d] = arg.split(":");
       if (arg === "tray") move(it, { at: undefined });
@@ -94,7 +142,13 @@ export function CalendarView({
   const timed = view === "day" || view === "week"; // views with hours: the tray holds tasks without a time
   const week = Array.from({ length: 7 }, (_, i) => addDays(weekStart(at), i));
   const title = {
-    day: () => label(at, { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
+    day: () =>
+      label(at, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
     week: () =>
       `${label(week[0], { month: "short", day: "numeric" })} – ${label(week[6], { month: "short", day: "numeric", year: "numeric" })}`,
     month: () => label(at, { month: "long", year: "numeric" }),
@@ -104,6 +158,7 @@ export function CalendarView({
     setAt(d);
     setView("day");
   };
+  const me = authClient.useSession().data?.user.id;
 
   const chip = (it: Item, withTime: boolean) => (
     <div
@@ -119,14 +174,23 @@ export function CalendarView({
           role="checkbox"
           aria-checked={it.task.done}
           aria-label={it.task.title}
-          onClick={() => update?.(it.list.id, (l) => ({ ...l, tasks: tick(l.tasks, it.task.id, today) }))}
+          onClick={() =>
+            update?.(it.list.id, (l) => ({
+              ...l,
+              tasks: tick(l.tasks, it.task.id, today, me),
+            }))
+          }
         >
           {it.task.done && <Check size={12} strokeWidth={3.5} />}
         </button>
       ) : (
         <span className={s.dot} aria-hidden />
       )}
-      <button className={s.calTitle} onClick={() => onOpen?.(it.list.id)} title={`${it.task.title} · ${it.list.name}`}>
+      <button
+        className={s.calTitle}
+        onClick={() => onOpen?.(it.list.id)}
+        title={`${it.task.title} · ${it.list.name}`}
+      >
         <span>
           {withTime && it.task.at ? <b>{it.task.at} </b> : null}
           {it.task.title}
@@ -144,10 +208,18 @@ export function CalendarView({
             <button className={s.ghost} onClick={() => setAt(today)}>
               Today
             </button>
-            <button className={s.ghost} onClick={() => setAt(step(-1))} aria-label="Previous">
+            <button
+              className={s.ghost}
+              onClick={() => setAt(step(-1))}
+              aria-label="Previous"
+            >
               <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
-            <button className={s.ghost} onClick={() => setAt(step(1))} aria-label="Next">
+            <button
+              className={s.ghost}
+              onClick={() => setAt(step(1))}
+              aria-label="Next"
+            >
               <ChevronRight size={16} strokeWidth={2.5} />
             </button>
           </>
@@ -156,7 +228,11 @@ export function CalendarView({
         {!locked && (
           <div className={s.seg} role="group" aria-label="Calendar view">
             {VIEWS.map((v) => (
-              <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+              <button
+                key={v}
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+              >
                 {v[0].toUpperCase() + v.slice(1)}
               </button>
             ))}
@@ -167,7 +243,10 @@ export function CalendarView({
             className={s.calLists}
             label="Show lists"
             value={lists.some((l) => l.id === only) ? only : "all"}
-            options={[{ value: "all", label: "All lists" }, ...lists.map((l) => ({ value: l.id, label: l.name }))]}
+            options={[
+              { value: "all", label: "All lists" },
+              ...lists.map((l) => ({ value: l.id, label: l.name })),
+            ]}
             onChange={setOnly}
           />
         )}
@@ -177,7 +256,9 @@ export function CalendarView({
             onClick={async () => {
               const r = await share(view, at);
               if ("error" in r) return setShared(r.error);
-              await navigator.clipboard.writeText(`${location.origin}/calendar/${r.token}`);
+              await navigator.clipboard.writeText(
+                `${location.origin}/calendar/${r.token}`,
+              );
               setShared(
                 `Copied a read-only link to ${title}. It shows only this ${view}. Stop sharing it any time in Integrations.`,
               );
@@ -196,7 +277,11 @@ export function CalendarView({
       <div className={s.planner} data-tray={!!update}>
         {view === "year" ? (
           <div className={s.year}>
-            {Array.from({ length: 12 }, (_, m) => `${at.slice(0, 4)}-${String(m + 1).padStart(2, "0")}-01`).map((first) => (
+            {Array.from(
+              { length: 12 },
+              (_, m) =>
+                `${at.slice(0, 4)}-${String(m + 1).padStart(2, "0")}-01`,
+            ).map((first) => (
               <div key={first} className={s.mini}>
                 <button
                   className={s.miniHead}
@@ -209,7 +294,9 @@ export function CalendarView({
                 </button>
                 <div className={s.miniGrid}>
                   {monthCells(first).map((d) => {
-                    const n = (byDay.get(d) ?? []).filter((it) => !it.task.done).length;
+                    const n = (byDay.get(d) ?? []).filter(
+                      (it) => !it.task.done,
+                    ).length;
                     return d.slice(0, 7) === first.slice(0, 7) ? (
                       <button
                         key={d}
@@ -248,7 +335,9 @@ export function CalendarView({
                   {...drop(`day:${d}`)}
                 >
                   <button className={s.dayNum} onClick={() => openDay(d)}>
-                    <span className={s.dayName}>{label(d, { weekday: "short" })} </span>
+                    <span className={s.dayName}>
+                      {label(d, { weekday: "short" })}{" "}
+                    </span>
                     {+d.slice(8)}
                   </button>
                   {items.map((it) => chip(it, true))}
@@ -271,7 +360,11 @@ export function CalendarView({
           />
         )}
         {update && (
-          <aside className={s.tray} aria-label="To plan" {...drop(timed ? "tray" : "tray-date")}>
+          <aside
+            className={s.tray}
+            aria-label="To plan"
+            {...drop(timed ? "tray" : "tray-date")}
+          >
             <h3>To plan</h3>
             <p>
               {timed
@@ -279,14 +372,18 @@ export function CalendarView({
                 : "Drag onto a day. Drop a task back here to take its date off."}
             </p>
             {all
-              .filter((it) => !it.task.done && (timed ? !it.task.at : !it.task.due))
+              .filter(
+                (it) => !it.task.done && (timed ? !it.task.at : !it.task.due),
+              )
               .map((it) => (
                 <div key={it.task.id} className={s.trayItem} {...drag(it)}>
                   {it.task.title}
                   <span>
                     {it.list.name}
                     {it.task.est ? ` · ${fmtMinutes(it.task.est)}` : ""}
-                    {it.task.due ? ` · ${label(it.task.due, { month: "short", day: "numeric" })}` : ""}
+                    {it.task.due
+                      ? ` · ${label(it.task.due, { month: "short", day: "numeric" })}`
+                      : ""}
                   </span>
                 </div>
               ))}
@@ -321,16 +418,25 @@ function TimeGrid({
   ghost: { day: string; start: number; est: number } | null;
 }) {
   // Dragging a block's bottom edge stretches it; the new length becomes the task's estimate.
-  const [stretch, setStretch] = useState<{ id: string; est: number } | null>(null);
+  const [stretch, setStretch] = useState<{ id: string; est: number } | null>(
+    null,
+  );
   const startStretch = (e: React.PointerEvent, it: Item, start: number) => {
     e.stopPropagation(); // not a move of the whole block
     e.preventDefault();
     const y0 = e.clientY;
     const est0 = it.task.est || 30;
     const at = (y: number) =>
-      Math.max(SNAP, Math.min(24 * 60 - start, Math.round((est0 + ((y - y0) / HOUR) * 60) / SNAP) * SNAP));
+      Math.max(
+        SNAP,
+        Math.min(
+          24 * 60 - start,
+          Math.round((est0 + ((y - y0) / HOUR) * 60) / SNAP) * SNAP,
+        ),
+      );
     let est = est0;
-    const onMove = (ev: PointerEvent) => setStretch({ id: it.task.id, est: (est = at(ev.clientY)) });
+    const onMove = (ev: PointerEvent) =>
+      setStretch({ id: it.task.id, est: (est = at(ev.clientY)) });
     const onUp = () => {
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerup", onUp);
@@ -345,22 +451,33 @@ function TimeGrid({
   const [allOpen, setAllOpen] = useState(false);
   const ALL_DAY = 3;
   const allDay = (d: string) =>
-    (byDay.get(d) ?? []).filter((it) => !it.task.at).sort((x, y) => Number(x.task.done) - Number(y.task.done));
+    (byDay.get(d) ?? [])
+      .filter((it) => !it.task.at)
+      .sort((x, y) => Number(x.task.done) - Number(y.task.done));
   const folds = days.some((d) => allDay(d).length > ALL_DAY);
   useEffect(() => {
-    const tick = () => setNow(new Date().getHours() * 60 + new Date().getMinutes());
+    const tick = () =>
+      setNow(new Date().getHours() * 60 + new Date().getMinutes());
     tick();
     const t = setInterval(tick, 60_000);
     return () => clearInterval(t);
   }, []);
 
   return (
-    <div className={s.tg} style={{ "--days": days.length } as React.CSSProperties}>
+    <div
+      className={s.tg}
+      style={{ "--days": days.length } as React.CSSProperties}
+    >
       <div className={s.tgHead}>
         <div className={s.tgRow}>
           <span />
           {days.map((d) => (
-            <button key={d} className={s.tgDay} data-today={d === today} onClick={() => onDay(d)}>
+            <button
+              key={d}
+              className={s.tgDay}
+              data-today={d === today}
+              onClick={() => onDay(d)}
+            >
               {label(d, { weekday: "short" })} <b>{+d.slice(8)}</b>
             </button>
           ))}
@@ -379,9 +496,14 @@ function TimeGrid({
             const hidden = allOpen ? 0 : Math.max(0, items.length - ALL_DAY);
             return (
               <div key={d} className={s.allDay} {...drop(`all:${d}`)}>
-                {(hidden ? items.slice(0, ALL_DAY) : items).map((it) => chip(it, false))}
+                {(hidden ? items.slice(0, ALL_DAY) : items).map((it) =>
+                  chip(it, false),
+                )}
                 {hidden > 0 && (
-                  <button className={s.allMore} onClick={() => setAllOpen(true)}>
+                  <button
+                    className={s.allMore}
+                    onClick={() => setAllOpen(true)}
+                  >
                     +{hidden} more
                   </button>
                 )}
@@ -400,14 +522,20 @@ function TimeGrid({
         </div>
         {days.map((d) => (
           <div key={d} className={s.col} {...drop(`col:${d}`)}>
-            {d === today && now !== null && <i className={s.now} style={{ top: (now / 60) * HOUR }} />}
+            {d === today && now !== null && (
+              <i className={s.now} style={{ top: (now / 60) * HOUR }} />
+            )}
             {ghost?.day === d && (
               <span
                 className={s.ghostBlock}
-                style={{ top: (ghost.start / 60) * HOUR, height: Math.max((ghost.est / 60) * HOUR - 2, 18) }}
+                style={{
+                  top: (ghost.start / 60) * HOUR,
+                  height: Math.max((ghost.est / 60) * HOUR - 2, 18),
+                }}
                 aria-hidden
               >
-                {toClock(ghost.start)}–{toClock(Math.min(24 * 60, ghost.start + ghost.est))}
+                {toClock(ghost.start)}–
+                {toClock(Math.min(24 * 60, ghost.start + ghost.est))}
               </span>
             )}
             {lanes(
@@ -415,7 +543,10 @@ function TimeGrid({
                 .filter((it) => it.task.at)
                 .map((it) => {
                   const start = toMinutes(it.task.at!);
-                  const est = stretch?.id === it.task.id ? stretch.est : it.task.est || 30;
+                  const est =
+                    stretch?.id === it.task.id
+                      ? stretch.est
+                      : it.task.est || 30;
                   return { it, start, end: Math.min(24 * 60, start + est) };
                 }),
             ).map(({ it, start, end, lane, lanes: n }) => (

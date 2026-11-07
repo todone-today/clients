@@ -19,6 +19,7 @@ import {
   type Task,
   fmtMinutes,
   parseMinutes,
+  todayISO,
 } from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
 import { Note } from "@/components/Note";
@@ -42,6 +43,8 @@ import {
 } from "./actions";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
+import { useGoalItems } from "./goalStore";
+import type { Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
 
 const REPEATS = [
@@ -61,6 +64,7 @@ export function TaskPanel({
   top,
   fill,
   edit,
+  onTick,
   onDelete,
   onClose,
 }: {
@@ -68,6 +72,7 @@ export function TaskPanel({
   top: boolean;
   fill?: string;
   edit: (f: (t: Task) => Task | null) => void;
+  onTick: () => void; // done/undone the same way a card's box does (repeats, XP)
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -77,6 +82,8 @@ export function TaskPanel({
   const [asking, setAsking] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
+  const goals = useGoalItems().items.filter((i): i is Goal => i.t === "goal");
+  const goal = goals.find((g) => g.id === task.goal);
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) =>
@@ -162,7 +169,7 @@ export function TaskPanel({
             aria-checked={task.done}
             aria-label="Done"
             title={task.done ? "Done: click to reopen" : "Mark done"}
-            onClick={() => edit((t) => ({ ...t, done: !t.done }))}
+            onClick={onTick}
           >
             {task.done && <Check size={18} strokeWidth={3.5} />}
           </button>
@@ -276,7 +283,35 @@ export function TaskPanel({
               onChange={(v) => edit((t) => ({ ...t, rep: v || undefined }))}
             />
           </div>
+          <div className={s.panelField}>
+            <span>Goal</span>
+            <Select
+              className={s.panelSelect}
+              label="Goal"
+              value={
+                task.goal && goals.some((g) => g.id === task.goal)
+                  ? task.goal
+                  : ""
+              }
+              options={[
+                { value: "", label: "None" },
+                ...goals
+                  .filter((g) => !g.done || g.id === task.goal)
+                  .map((g) => ({ value: g.id, label: g.title })),
+              ]}
+              onChange={(v) => edit((t) => ({ ...t, goal: v || undefined }))}
+            />
+          </div>
         </div>
+        {goal?.plan && !task.done && task.due && task.due < todayISO() && (
+          <p className={s.goalPlan}>
+            Your plan for {goal.title}:{" "}
+            {goal.obstacle
+              ? `if ${goal.obstacle.replace(/^if\s+/i, "")} → `
+              : ""}
+            {goal.plan}
+          </p>
+        )}
 
         <section className={s.panelSection}>
           <h3>Description</h3>

@@ -1,10 +1,22 @@
 import type { Metadata } from "next";
 import s from "../../(legal)/legal.module.css";
 
-export const metadata: Metadata = { title: "Changelog", description: "What's new in todone." };
+export const metadata: Metadata = {
+  title: "Changelog",
+  description: "What's new in todone.",
+};
 
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
+  {
+    date: "8 November 2026",
+    title: "Goals, XP and rewards",
+    items: [
+      "Goals: say what you want and why, what could get in the way and what you'll do then. Outcome goals track their milestones (linked tasks); habits count the weeks you showed up, and a quiet week never resets anything.",
+      "Finishing a task earns XP: more for longer, higher-priority and on-time tasks, tasks with steps, and tasks toward a goal. Spend it on rewards you set yourself, like a cheat meal.",
+      "Link a task to a goal from its panel. Goals, rewards and XP are end-to-end encrypted like your lists; in a team, each person has their own XP.",
+    ],
+  },
   {
     date: "8 November 2026",
     title: "A page for every task, and sharing one",

@@ -49,7 +49,7 @@ export async function createList(
   id: string,
   name: string,
   tasks: Task[],
-  kind?: "ideas" | "bin",
+  kind?: "ideas" | "bin" | "goals",
   plain?: boolean,
 ) {
   const l = await api<Stored>("POST", "/lists", {
@@ -84,7 +84,8 @@ export async function saveList(
 // guests see edits made anywhere (stickers, calendar, the panel).
 const pushed = new Map<string, string>();
 function pushShared(tasks: Task[]) {
-  for (const t of tasks.flatMap((x) => [x, ...x.sub]))
+  // `?? []`: a goals list's items aren't tasks and have no steps.
+  for (const t of tasks.flatMap((x) => [x, ...(x.sub ?? [])]))
     if (t.share) {
       const copy = {
         ...t,
@@ -166,7 +167,8 @@ export async function exportData(): Promise<Export> {
   >("GET", "/export");
   const spaces = new Map<string, Export["workspaces"][number]>();
   for (const r of rows) {
-    if (r.kind === "bin") continue; // recently deleted tasks aren't part of an export
+    // ponytail: goals, rewards and XP aren't in exports yet; add a "goals" section when someone asks.
+    if (r.kind === "bin" || r.kind === "goals") continue; // recently deleted tasks aren't part of an export
     const key = r.data
       ? r.org
         ? await teamKey(r.org)
