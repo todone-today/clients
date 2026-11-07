@@ -220,8 +220,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       }
     },
   });
-  const open = (id: string) => {
+  // A task to open in the list once it shows (the bell); a new object each time, so the same task opens again.
+  const [focus, setFocus] = useState<{ id: string } | null>(null);
+  const open = (id: string, task?: string) => {
     setPicked(id);
+    setFocus(task ? { id: task } : null);
     setPanel(null);
     setDrawer(false);
   };
@@ -611,7 +614,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         ) : panel === "account" ? (
           <Account />
         ) : !lists ? null : list ? (
-          <ListView key={list.id} list={list} lists={sorted} update={update} />
+          <ListView
+            key={list.id}
+            list={list}
+            lists={sorted}
+            update={update}
+            focus={focus}
+          />
         ) : (
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
           <Brainstorm lists={lists} add={add} update={update} />
@@ -705,15 +714,24 @@ function ListView({
   list,
   lists,
   update,
+  focus,
 }: {
   list: List;
   lists: { id: string; name: string }[];
   update: Update;
+  focus?: { id: string } | null;
 }) {
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null); // the task whose editor is open
+  const [selected, setSelected] = useState<string | null>(
+    focus?.id ?? null,
+  ); // the task whose editor is open
+  const [focused, setFocused] = useState(focus);
+  if (focus !== focused) {
+    setFocused(focus);
+    if (focus) setSelected(focus.id);
+  }
   const me = authClient.useSession().data?.user.id;
   const [show, setShow] = useState<Show>("open");
   const [sort, setSort] = useState<Sort>("mine");

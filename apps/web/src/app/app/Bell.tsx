@@ -13,9 +13,10 @@ import s from "./app.module.css";
 export function NotificationBell({
   onOpen,
 }: {
-  onOpen: (listId: string) => void;
+  onOpen: (listId: string, taskId?: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [tested, setTested] = useState<"sent" | "failed" | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const { lists } = useLists();
   const unread = useUnreadAll();
@@ -48,8 +49,8 @@ export function NotificationBell({
     ({ t }) => !t.done && t.due && t.due < today,
   ).length;
   const count = comments.reduce((n, c) => n + c.n, 0);
-  const go = (listId: string) => {
-    onOpen(listId);
+  const go = (listId: string, taskId: string) => {
+    onOpen(listId, taskId);
     setOpen(false);
   };
 
@@ -85,7 +86,7 @@ export function NotificationBell({
               <ul>
                 {comments.map(({ n, it }) => (
                   <li key={it.t.id}>
-                    <button onClick={() => go(it.l.id)}>
+                    <button onClick={() => go(it.l.id, it.t.id)}>
                       <MessageCircle size={14} strokeWidth={2.5} aria-hidden />
                       <span>{it.t.title}</span>
                       <b className={s.unread}>{n > 9 ? "9+" : n}</b>
@@ -104,7 +105,7 @@ export function NotificationBell({
               <ul>
                 {dueToday.slice(0, 6).map(({ t, l }) => (
                   <li key={t.id}>
-                    <button onClick={() => go(l.id)}>
+                    <button onClick={() => go(l.id, t.id)}>
                       <time>{t.at ?? "Any time"}</time>
                       <span>{t.title}</span>
                       <small>{l.name}</small>
@@ -152,9 +153,26 @@ export function NotificationBell({
                   it, never what it says.
                 </p>
                 {reminders.state === "on" && (
-                  <button className={s.link} onClick={reminders.test}>
-                    Send a test
-                  </button>
+                  <>
+                    <button
+                      className={s.link}
+                      onClick={() =>
+                        reminders.test().then(
+                          () => setTested("sent"),
+                          () => setTested("failed"),
+                        )
+                      }
+                    >
+                      Send a test
+                    </button>
+                    {tested && (
+                      <p className={s.bellEmpty} role="status">
+                        {tested === "sent"
+                          ? "Sent. Nothing showed up? Your computer may be silencing the browser: on a Mac, System Settings → Notifications → Google Chrome (and Focus must be off)."
+                          : "This browser wouldn't show it. Reload todone and try again."}
+                      </p>
+                    )}
+                  </>
                 )}
               </>
             )}

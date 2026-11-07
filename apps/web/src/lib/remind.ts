@@ -79,7 +79,7 @@ export function useReminders() {
     notify(
       "Reminders are on",
       "todone will nudge you before a task's time.",
-      "test",
+      `test:${Date.now()}`,
     ).catch(() => {});
   };
   return {
@@ -89,12 +89,13 @@ export function useReminders() {
       setReminders(false);
       pushOff().catch(() => {});
     },
+    // Its own tag each time: one that's still in the notification centre would be replaced silently, not shown.
     test: () =>
       notify(
         "A test from todone",
         "Reminders work on this device.",
-        "test",
-      ).catch(() => {}),
+        `test:${Date.now()}`,
+      ),
   };
 }
 
