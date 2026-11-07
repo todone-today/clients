@@ -1038,6 +1038,26 @@ function ListView({
                   </button>
                 ))}
               </div>
+              {list.tasks.some((t) => t.done) && (
+                // Finished tasks (and their steps) go to the Bin for 7 days; the undo bar can put them back.
+                <button
+                  className={s.ghost}
+                  onClick={() => {
+                    const before = list.tasks;
+                    const gone = before.filter((t) => t.done);
+                    setTasks((ts) => ts.filter((t) => !t.done));
+                    binSound();
+                    setBinned({
+                      before,
+                      ids: bin(gone),
+                      text: `Cleared ${gone.length} done task${gone.length === 1 ? "" : "s"}.`,
+                    });
+                  }}
+                >
+                  <Trash2 size={14} strokeWidth={2.5} aria-hidden /> Clear done
+                  ({list.tasks.filter((t) => t.done).length})
+                </button>
+              )}
               <div className={s.sortBy}>
                 <span aria-hidden>Sort</span>
                 <Select

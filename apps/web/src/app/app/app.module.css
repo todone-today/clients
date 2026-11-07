@@ -3845,3 +3845,37 @@ input.stick[data-custom][aria-invalid="true"] {
 .check:disabled:hover {
   transform: none;
 }
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confetti i {
+  position: absolute;
+  top: -1rem;
+  border: 1.5px solid var(--black);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .confetti i {
+    animation-name: confettiFall;
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+    animation-fill-mode: both;
+  }
+}
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 105vh) rotate(var(--spin));
+  }
+}
