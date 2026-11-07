@@ -1889,6 +1889,10 @@
   .side .sideTools {
     flex-direction: column;
   }
+  .side .sideTools .newList {
+    flex: none;
+    align-self: stretch;
+  }
   .backdrop {
     display: block;
     position: fixed;
@@ -4461,4 +4465,35 @@ body[data-drag="task"] .listGoal {
     max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 9.5rem);
     box-shadow: 5px 5px 0 var(--pink);
   }
+}
+/* The sidebar's bottom actions: one width and one sticker shape (Feedback keeps its lime). */
+.import {
+  display: grid;
+  align-self: stretch;
+}
+.import > button,
+.sideTools > .phoneOnly {
+  justify-content: center;
+  align-self: stretch;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--ground);
+  border: var(--key);
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.import > button:hover,
+.sideTools > .phoneOnly:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.import > button:active,
+.sideTools > .phoneOnly:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
