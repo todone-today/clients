@@ -17,6 +17,7 @@ const SECTIONS = [
   ["ideas", "Brainstorm"],
   ["ai", "Import with AI"],
   ["teams", "Teams"],
+  ["sharing", "Sharing one task"],
   ["integrations", "Integrations"],
   ["reminders", "Reminders, offline and devices"],
   ["account", "Your account and data"],
@@ -51,7 +52,11 @@ export default function Docs() {
       <h2 id="notes">Lists and notes</h2>
       <ul>
         <li>Each list is a board of sticky notes. Type a task in the box at the top and press Enter.</li>
-        <li>Click a note&apos;s name to open it: rename it in place, set its day, time, length and list, add steps.</li>
+        <li>
+          Click a note to open its panel: rename it, set its day, time, length, priority and repeat, write a description
+          (**bold**, _italic_, links, and &ldquo;- &rdquo; lists) and attach photos, videos or PDFs. Attachments are
+          encrypted on your device like everything else.
+        </li>
         <li>Tick the box to finish it. Finishing a task finishes its steps too; unticking leaves them as they were.</li>
         <li>Rename a list by clicking its name. The bin deletes it after a second click.</li>
         <li>Filter by Open, Done, Today, Late or No date, and sort by your own order, date, length or priority.</li>
@@ -103,6 +108,25 @@ export default function Docs() {
         people by email (send them the invite link) and set them as members or admins. Everyone in a team sees and edits its
         lists. The owner can delete the team; anyone else can leave it.
       </p>
+
+      <h2 id="sharing">Sharing one task</h2>
+      <ul>
+        <li>
+          In a task&apos;s panel, &ldquo;Share this task&rdquo; makes a link anyone can open, no account needed. They can
+          read the task, comment, reply and add photos, videos or PDFs. Each browser shows up as &ldquo;Guest 1&rdquo;,
+          &ldquo;Guest 2&rdquo;…
+        </li>
+        <li>
+          A shared task is <b>not end-to-end encrypted</b>: our server and anyone with the link can read it, its comments
+          and its files. todone asks before turning that on. The rest of your lists stay encrypted.
+        </li>
+        <li>&ldquo;New link&rdquo; stops the old link working; send the new one to whoever should still have it.</li>
+        <li>
+          &ldquo;Stop sharing&rdquo; kills the link at once and deletes the shared copy from our server. The conversation
+          and its files go back into your task, encrypted.
+        </li>
+        <li>Limits: photos and documents up to 10 MB, videos up to 50 MB, 200 MB per shared task.</li>
+      </ul>
 
       <h2 id="integrations">Integrations</h2>
       <p>

@@ -7,6 +7,15 @@ export const metadata: Metadata = { title: "Changelog", description: "What's new
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "8 November 2026",
+    title: "A page for every task, and sharing one",
+    items: [
+      "Click a task to open it: every detail in one place, a description with **bold**, _italic_, links and lists, and attachments (photos, videos, PDFs), encrypted on your device before upload.",
+      "Share a single task by link with anyone, no account needed. They can read it, comment, reply and add photos or videos; you see it all in the task.",
+      "Sharing turns off end-to-end encryption for that one task, and todone says so before you agree. Make a new link to cut off the old one, or stop sharing: the link dies at once and the conversation stays in your task, encrypted again.",
+    ],
+  },
+  {
+    date: "8 November 2026",
     title: "A bin you can dig through",
     items: [
       "Deleted tasks wait in the bin for 7 days: open “Recently deleted” under the Bin and restore any of them to its list.",

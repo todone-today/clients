@@ -42,7 +42,8 @@ export default function Privacy() {
           <tr>
             <td>
               Your lists, tasks and ideas, <b>end-to-end encrypted</b>: we store them scrambled and can&apos;t read them.
-              Lists you switch off encryption for (to use integrations) are stored readable
+              Lists you switch off encryption for (to use integrations) are stored readable. Files you attach to a task are
+              encrypted on your device the same way.
             </td>
             <td>This is the app: to store them and show them to you and the teams you share them with.</td>
           </tr>
@@ -52,6 +53,17 @@ export default function Privacy() {
               can share a team&apos;s key with you)
             </td>
             <td>So you can open your lists on any device. We can&apos;t unlock them.</td>
+          </tr>
+          <tr>
+            <td>
+              A task you share by link, <b>stored readable</b>: its details, the comments on it and the files added to
+              it, by you or by anyone with the link. Guests are anonymous (&ldquo;Guest 2&rdquo;): we keep a random
+              number their browser makes, not a name or account. Their IP address is used briefly to limit abuse.
+            </td>
+            <td>
+              So people without an account can see the task, comment and add files. Stop sharing and it&apos;s all
+              deleted from our server; the conversation goes back into your task, encrypted.
+            </td>
           </tr>
           <tr>
             <td>Your teams, invitations and settings</td>
@@ -88,7 +100,10 @@ export default function Privacy() {
       <ul>
         <li>Vercel, which hosts the website.</li>
         <li>Contabo, which hosts our server and database.</li>
-        <li>Cloudflare, which stores encrypted backups of the database; only we hold the key.</li>
+        <li>
+          Cloudflare, which stores encrypted backups of the database (only we hold the key) and files attached to tasks
+          (encrypted on your device, except on a task you share by link).
+        </li>
         <li>
           Sentry, which receives error reports so we can fix bugs. They describe what broke in the code, not you: no
           email, IP address, list contents or page addresses. Stored in the EU.

@@ -139,7 +139,8 @@ export default function Home() {
           <p className={s.provisional}>
             What we can still see: your email and name, which teams you&apos;re in, how many lists you have, roughly how
             big they are and when they change. Lists you choose to connect to integrations (calendar feed, Google, Notion,
-            Discord) are stored readable so those can work; each list says which it is.
+            Discord) are stored readable so those can work; each list says which it is. Share a single task by link and that
+            task, its comments and its files are readable too, until you stop sharing.
           </p>
         </section>
 
