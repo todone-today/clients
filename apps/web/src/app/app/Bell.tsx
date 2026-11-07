@@ -147,8 +147,9 @@ export function NotificationBell({
                 </button>
                 <p>
                   A nudge 15 minutes before a task&apos;s time, and at 8 a.m.
-                  what&apos;s due. Made on this device from your encrypted
-                  lists, so it works while todone is open in a tab.
+                  what&apos;s due, even with todone closed. Each reminder is
+                  sealed on your device; our server only knows when to send
+                  it, never what it says.
                 </p>
                 {reminders.state === "on" && (
                   <button className={s.link} onClick={reminders.test}>

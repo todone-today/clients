@@ -4,6 +4,8 @@
 // tab checks every minute and shows the notification itself (a nudge shortly before a task's time, and at 8 the
 // day's summary). Nothing leaves the device. Each one shows once, across tabs, by its key.
 import { dueNotes, localNow } from "@todone/sdk/reminders";
+import { fromB64u, plan, seal, toB64u } from "@todone/sdk/push";
+import { api } from "./api";
 import type { List } from "@todone/sdk/tasks";
 import { useEffect, useState } from "react";
 
@@ -73,6 +75,7 @@ export function useReminders() {
       return;
     }
     setReminders(true);
+    await pushOn().catch(() => {}); // without push, reminders still come while a tab is open
     notify(
       "Reminders are on",
       "todone will nudge you before a task's time.",
@@ -82,7 +85,10 @@ export function useReminders() {
   return {
     state,
     turnOn,
-    turnOff: () => setReminders(false),
+    turnOff: () => {
+      setReminders(false);
+      pushOff().catch(() => {});
+    },
     test: () =>
       notify(
         "A test from todone",
@@ -100,19 +106,22 @@ export async function notify(title: string, body: string, tag: string) {
   else new Notification(title, { body, tag });
 }
 
-export function remindNow(lists: List[]) {
-  if (!remindersOn()) return;
-  const { today, nowMin } = localNow(
-    new Date(),
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
-  const items = lists
+const itemsOf = (lists: List[]) =>
+  lists
     .filter((l) => !l.kind)
     .flatMap((l) =>
       l.tasks
         .flatMap((t) => [t, ...t.sub])
         .map((task) => ({ task, list: l.name })),
     );
+
+export function remindNow(lists: List[]) {
+  if (!remindersOn()) return;
+  const { today, nowMin } = localNow(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
+  const items = itemsOf(lists);
   let sent: string[] = [];
   try {
     sent = JSON.parse(store.get(SENT) ?? "[]");
@@ -125,4 +134,72 @@ export function remindNow(lists: List[]) {
     notify(n.title, n.body, n.key).catch(() => {});
   }
   store.set(SENT, JSON.stringify(sent.slice(-300)));
+}
+
+// Reminders with todone closed (Web Push). The browser's push address goes to the server; the reminders themselves
+// are sealed here for each of the person's browsers (sdk/push.ts), so the server only learns when to send them.
+const canPush = () =>
+  typeof window !== "undefined" &&
+  "serviceWorker" in navigator &&
+  "PushManager" in window;
+
+// The service worker TodoApp registers (production builds only); `ready` would wait forever without one.
+const worker = async () =>
+  (await navigator.serviceWorker.getRegistration("/")) &&
+  navigator.serviceWorker.ready;
+
+async function pushOn() {
+  const reg = canPush() && (await worker());
+  if (!reg) return;
+  const sub =
+    (await reg.pushManager.getSubscription()) ??
+    (await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: fromB64u(
+        (await api<{ key: string }>("GET", "/push/key")).key,
+      ),
+    }));
+  await api("POST", "/push/devices", sub.toJSON());
+}
+
+async function pushOff() {
+  const reg = canPush() && (await worker());
+  const sub = reg && (await reg.pushManager.getSubscription());
+  if (!sub) return;
+  await api("DELETE", "/push/devices", { endpoint: sub.endpoint });
+  await sub.unsubscribe();
+}
+
+let last = { sig: "", at: 0 };
+// Plans the coming week from these lists and hands each of the person's browsers its sealed copy. Lists reload
+// often, so it only resends when the plan changed (or every half hour, to drop what's been sent).
+export async function schedulePush(lists: List[]) {
+  if (!remindersOn() || !canPush() || !(await worker())) return;
+  const notes = plan(itemsOf(lists), new Date());
+  if (!last.at) await pushOn(); // this browser may have turned reminders on before push existed
+  const devices =
+    await api<{ id: string; p256dh: string; auth: string }[]>(
+      "GET",
+      "/push/devices",
+    );
+  const sig = JSON.stringify([notes, devices.map((d) => d.id)]);
+  if (sig === last.sig && Date.now() - last.at < 30 * 60_000) return;
+  last = { sig, at: Date.now() };
+  await Promise.all(
+    devices.map(async (d) =>
+      api("PUT", `/push/devices/${d.id}/notes`, {
+        notes: await Promise.all(
+          notes.map(async (n) => ({
+            at: n.at,
+            body: toB64u(
+              await seal(
+                d,
+                JSON.stringify({ title: n.title, body: n.body, tag: n.key }),
+              ),
+            ),
+          })),
+        ),
+      }),
+    ),
+  );
 }

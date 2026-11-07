@@ -10,6 +10,14 @@ export const metadata: Metadata = {
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "8 November 2026",
+    title: "Reminders with todone closed, still end-to-end encrypted",
+    items: [
+      "A bell in the top bar: new comments on shared tasks, what's due today, and one switch for this device's reminders. The browser asks for permission only when you flip it, or click \"Remind me\" on a task with a time.",
+      "Reminders now arrive with todone closed. todone seals each one on your device for your browsers, so our server keeps only unreadable copies and the time to send them.",
+    ],
+  },
+  {
+    date: "8 November 2026",
     title: "Goals, XP and rewards",
     items: [
       "Goals: say what you want and why, what could get in the way and what you'll do then. Outcome goals track their milestones (linked tasks); habits count the weeks you showed up, and a quiet week never resets anything.",

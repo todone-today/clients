@@ -219,8 +219,11 @@ export default function Docs() {
         <li>
           The bell (top bar) shows new comments on shared tasks and what&apos;s
           due today. Switch on reminders there, on each device, to get a nudge
-          15 minutes before a task&apos;s time and a summary at 8 a.m. They come
-          from todone itself, so they work while todone is open in a tab.
+          15 minutes before a task&apos;s time and a summary at 8 a.m., even with
+          todone closed. While todone is open it plans the next 7 days and
+          seals each reminder for your browsers; the server only holds the
+          sealed copies and a send time. Changes show up in them the next time
+          todone is open on any of your devices.
         </li>
         <li>
           todone works offline: it opens showing your lists as last saved, and

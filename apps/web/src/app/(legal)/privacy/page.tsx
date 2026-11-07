@@ -68,6 +68,20 @@ export default function Privacy() {
           </tr>
           <tr>
             <td>
+              If you switch on reminders: each browser&apos;s push address
+              (from Google, Mozilla, Apple or Microsoft, depending on the
+              browser) and the coming week&apos;s reminders,{" "}
+              <b>sealed on your device</b> so only that browser can read them.
+              We see when each is due, not what it says. Each is deleted once
+              sent.
+            </td>
+            <td>
+              To send reminders when todone is closed. Switching reminders off
+              deletes them.
+            </td>
+          </tr>
+          <tr>
+            <td>
               A task you share by link, <b>stored readable</b>: its details, the
               comments on it and the files added to it, by you or by anyone with
               the link. Guests show up by the name they choose, or as

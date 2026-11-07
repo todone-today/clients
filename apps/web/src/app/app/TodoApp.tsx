@@ -68,7 +68,7 @@ import {
 } from "./actions";
 import { Unlock } from "./Unlock";
 import { loadVault, startTeam, teamKey, teamMembers } from "@/lib/vault";
-import { remindNow } from "@/lib/remind";
+import { remindNow, schedulePush } from "@/lib/remind";
 import { shareCalendar } from "./integration-actions";
 import { Stickers, sticker } from "./Stickers";
 import { Members, type Panel, Workspaces } from "./Workspaces";
@@ -312,6 +312,18 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     if (demo) return;
     const t = setInterval(() => remindNow(lists ?? []), 60_000);
     return () => clearInterval(t);
+  }, [demo, lists]);
+  // …and with todone closed: the week's reminders, sealed for each of this person's browsers (lib/remind.ts).
+  useEffect(() => {
+    if (demo || !lists) return;
+    const go = () =>
+      schedulePush(lists).catch((e) => console.warn("push", e));
+    const t = setTimeout(go, 3000);
+    addEventListener("todone:reminders-changed", go); // just turned on here
+    return () => {
+      clearTimeout(t);
+      removeEventListener("todone:reminders-changed", go);
+    };
   }, [demo, lists]);
   // Changes from other devices and teammates show up on focus, and every 20s while the tab is visible.
   useEffect(() => {
