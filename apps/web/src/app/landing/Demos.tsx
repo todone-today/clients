@@ -8,8 +8,11 @@ import {
   Check,
   Cloud,
   CloudOff,
+  Lock,
+  Target,
   Wifi,
   WifiOff,
+  Zap,
 } from "lucide-react";
 import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
@@ -341,6 +344,99 @@ function Mark({ mark }: { mark: Tool["mark"] }) {
     >
       <path d={mark.path} />
     </svg>
+  );
+}
+
+// A "Gym" list's goals: log a weigh-in or some protein and watch it fill, with the XP it earns.
+export function GoalsDemo() {
+  const [kg, setKg] = useState(71.5);
+  const [protein, setProtein] = useState(90);
+  const [xp, setXp] = useState(0);
+  const earn = (n: number) => setXp((x) => x + n);
+  return (
+    <div className={s.goalsDemo}>
+      <div
+        className={s.goalNote}
+        style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
+      >
+        <header>
+          <Target size={15} strokeWidth={2.75} aria-hidden /> <b>Weigh 68 kg</b>
+        </header>
+        <span className={s.goalBar} aria-hidden>
+          <i style={{ transform: `scaleX(${Math.min(1, (74 - kg) / 6)})` }} />
+        </span>
+        <small>
+          {kg} kg now · {Math.max(0, Math.round((kg - 68) * 10) / 10)} kg to go
+        </small>
+        <button
+          type="button"
+          disabled={kg <= 68}
+          onClick={() => {
+            setKg((k) => Math.round((k - 0.5) * 10) / 10);
+            earn(3);
+          }}
+        >
+          Log {Math.round((kg - 0.5) * 10) / 10} kg
+        </button>
+      </div>
+      <div
+        className={s.goalNote}
+        style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+      >
+        <header>
+          <Target size={15} strokeWidth={2.75} aria-hidden />{" "}
+          <b>Protein, 140 g a day</b>
+        </header>
+        <span className={s.goalBar} aria-hidden>
+          <i style={{ transform: `scaleX(${Math.min(1, protein / 140)})` }} />
+        </span>
+        <small>
+          {protein} of 140 g today{protein >= 140 ? " · hit!" : ""}
+        </small>
+        <button
+          type="button"
+          onClick={() => {
+            setProtein((p) => p + 25);
+            earn(protein < 140 && protein + 25 >= 140 ? 10 : 0);
+          }}
+        >
+          + 25 g
+        </button>
+      </div>
+      <p className={s.goalXp} role="status">
+        <Zap size={15} strokeWidth={2.75} aria-hidden /> {xp} XP, toward a
+        reward you pick: a cheat meal, a movie night.
+      </p>
+    </div>
+  );
+}
+
+// A reminder as it lands with todone closed, and what our server saw of it.
+export function RemindDemo() {
+  const [sent, setSent] = useState(false);
+  return (
+    <div className={s.remindDemo}>
+      <div className={s.toast} data-in={sent || undefined} aria-live="polite">
+        {sent ? (
+          <>
+            <Bell size={16} strokeWidth={2.5} aria-hidden />
+            <span>
+              <b>Plan the week</b>
+              <small>At 16:00 · Todone</small>
+            </span>
+          </>
+        ) : (
+          <small>Nothing yet.</small>
+        )}
+      </div>
+      <p className={s.sealed}>
+        <Lock size={14} strokeWidth={2.75} aria-hidden /> Our server saw:{" "}
+        <code>{sent ? "15:45 · 4f9a…c2e1 (sealed)" : "—"}</code>
+      </p>
+      <button type="button" className="btn" onClick={() => setSent((x) => !x)}>
+        {sent ? "Again" : "Send the 15:45 reminder"}
+      </button>
+    </div>
   );
 }
 

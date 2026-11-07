@@ -119,8 +119,9 @@ export default function Docs() {
       <p>
         A board for loose ideas that aren&apos;t tasks yet. Double-click one to
         edit it, drag ideas next to each other to arrange them, and drag a good
-        one onto a list to make it a task. Click the bin twice to clear them
-        all.
+        one onto a list to make it a task. Changed your mind? Drag a task back
+        onto Brainstorm and it becomes an idea again. Click the bin twice to
+        clear them all.
       </p>
 
       <h2 id="ai">Import with AI</h2>
@@ -175,14 +176,17 @@ export default function Docs() {
         </li>
         <li>
           Rewards: set your own (&ldquo;cheat meal · 150&rdquo;) and claim them
-          with your XP. In a team, XP is per person.
+          with your XP. The Rewards page shows what you can claim now and what
+          you&apos;re saving for, with how many tasks away it is; the Small,
+          Medium and Big buttons price a new one in tasks like yours. In a team,
+          XP is per person.
         </li>
       </ul>
 
       <h2 id="sharing">Sharing one task</h2>
       <ul>
         <li>
-          In a task&apos;s panel, &ldquo;Share this task&rdquo; makes a link
+          In a task&apos;s panel, &ldquo;Share&rdquo; (bottom right) makes a link
           anyone can open, no account needed. They can read the task, comment,
           reply and add photos, videos or PDFs. They show up by the name they
           type, or as &ldquo;Anonymous&rdquo; if they leave it blank.
@@ -193,11 +197,12 @@ export default function Docs() {
           asks before turning that on. The rest of your lists stay encrypted.
         </li>
         <li>
-          &ldquo;New link&rdquo; stops the old link working; send the new one to
-          whoever should still have it.
+          &ldquo;Copy link&rdquo; copies it to send. &ldquo;New link&rdquo; stops
+          the old link working; send the new one to whoever should still have
+          it.
         </li>
         <li>
-          &ldquo;Stop sharing&rdquo; kills the link at once and deletes the
+          &ldquo;Stop sharing&rdquo; (where Share was) kills the link at once and deletes the
           shared copy from our server. The conversation and its files go back
           into your task, encrypted.
         </li>

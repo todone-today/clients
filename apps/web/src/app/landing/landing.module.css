@@ -1421,3 +1421,119 @@ button.box:hover {
 .zk .way:hover {
   transform: none;
 }
+
+/* Goals demo: two of a list's goals as sticky notes, logged with a click. */
+.goalsDemo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+.goalNote {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 0.95rem;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  rotate: -0.8deg;
+}
+.goalNote + .goalNote {
+  rotate: 0.7deg;
+}
+.goalNote header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.goalNote small {
+  font-weight: 700;
+}
+.goalBar {
+  display: block;
+  height: 0.6rem;
+  overflow: hidden;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.goalBar i {
+  display: block;
+  height: 100%;
+  background: var(--black);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+}
+.goalNote button {
+  justify-self: start;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+  cursor: pointer;
+}
+.goalNote button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.goalXp {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+/* Reminders demo: the notification, and the sealed line the server stored. */
+.remindDemo {
+  display: grid;
+  justify-items: start;
+  gap: 0.8rem;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(100%, 20rem);
+  min-height: 3.6rem;
+  padding: 0.7rem 0.9rem;
+  color: var(--black);
+  background: #fff;
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+}
+.toast[data-in] {
+  animation: toastIn 0.45s var(--ease);
+}
+.toast span {
+  display: grid;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.8rem) rotate(-2deg);
+  }
+}
+.sealed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.sealed code {
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
+  background: rgb(255 255 255 / 0.6);
+  border: 2px solid var(--black);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast[data-in] {
+    animation: none;
+  }
+  .goalBar i {
+    transition: none;
+  }
+}

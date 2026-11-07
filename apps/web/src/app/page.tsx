@@ -16,10 +16,12 @@ import { LEGAL_DOCS, REPO } from "@/lib/brand";
 import { FOUNDING, FUNDING, SHOTS } from "@/lib/landing";
 import {
   Goals,
+  GoalsDemo,
   Hardware,
   OfflineDemo,
   Pay,
   Pricing,
+  RemindDemo,
   SharedDemo,
   StepsDemo,
   ToolsDemo,
@@ -95,7 +97,8 @@ export default function Home() {
             <h2 className="display">One list, the whole house.</h2>
             <p>
               Make a team, invite people, and plan together. Changes show up on
-              everyone&apos;s screens within seconds.
+              everyone&apos;s screens within seconds. Or share one task by link
+              with anyone, no account needed, and talk it through there.
             </p>
             <SharedDemo />
           </article>
@@ -107,6 +110,26 @@ export default function Home() {
               and saves what you change once you&apos;re back. Try it:
             </p>
             <OfflineDemo />
+          </article>
+
+          <article className={`${s.feat} ${s.half}`}>
+            <h2 className="display">Goals you can feel.</h2>
+            <p>
+              Give a list its goals: a number to reach, a habit, a daily amount,
+              or milestones. Log in a tap, earn XP, spend it on rewards you set
+              yourself. No streak to break.
+            </p>
+            <GoalsDemo />
+          </article>
+
+          <article className={`${s.feat} ${s.half} ${s.dark}`}>
+            <h2 className="display">Reminders that can&apos;t read you.</h2>
+            <p>
+              A nudge before a task&apos;s time and a summary at 8, even with
+              todone closed. Each one is sealed on your device for your browser;
+              our server only knows when to send it.
+            </p>
+            <RemindDemo />
           </article>
 
           <article className={`${s.feat} ${s.full}`}>
@@ -176,8 +199,8 @@ export default function Home() {
               <Lock size={22} strokeWidth={2.5} aria-hidden />
               <b>Encrypted on your device</b>
               <span>
-                List names, tasks, steps, notes and ideas, with AES-256. Teams
-                share a key only members hold.
+                List names, tasks, steps, notes, ideas, goals and rewards, with
+                AES-256. Teams share a key only members hold.
               </span>
             </div>
             <div
@@ -218,9 +241,10 @@ export default function Home() {
             in, how many lists you have, roughly how big they are and when they
             change. Lists you choose to put in your calendar link (for Google
             Calendar, Apple Calendar and Outlook) are stored readable so the
-            calendar can fetch them; each list says which it is. Share a single task
-            by link and that task, its comments and its files are readable too,
-            until you stop sharing.
+            calendar can fetch them; each list says which it is. Share a single
+            task by link and that task, its comments and its files are readable
+            too, until you stop sharing. Reminders reach us sealed: we see when
+            each is due, never what it says.
           </p>
         </section>
 
@@ -247,6 +271,9 @@ export default function Home() {
                   "Sticky-note lists with steps",
                   "Calendar and planning",
                   "Teams and shared lists",
+                  "Share a task by link",
+                  "Goals, XP and rewards",
+                  "Reminders, even when closed",
                   "Works offline",
                   "Google, Apple & Outlook calendars",
                   "Open source, self-hostable",
@@ -267,7 +294,7 @@ export default function Home() {
               <ul>
                 {[
                   "Quick capture, phone first",
-                  "Push reminders",
+                  "Lock-screen reminders",
                   "Sync across devices",
                   "Widgets and quick actions",
                   "Share sheet and OS integrations",
