@@ -36,7 +36,7 @@ export async function fetchLists(): Promise<List[]> {
   waiting = opened.some((l) => l === null);
   return opened.filter((l): l is List => !!l);
 }
-export async function createList(id: string, name: string, tasks: Task[], kind?: "ideas", plain?: boolean) {
+export async function createList(id: string, name: string, tasks: Task[], kind?: "ideas" | "bin", plain?: boolean) {
   const l = await api<Stored>("POST", "/lists", { id, kind: kind ?? "list", ...(await body(id, name, tasks, plain)) });
   return (await open(l))!;
 }
@@ -75,6 +75,7 @@ export async function exportData(): Promise<Export> {
   >("GET", "/export");
   const spaces = new Map<string, Export["workspaces"][number]>();
   for (const r of rows) {
+    if (r.kind === "bin") continue; // recently deleted tasks aren't part of an export
     const key = r.data ? (r.org ? await teamKey(r.org) : await keyFor(null)) : null;
     if (r.data && !key) continue; // a team that hasn't given you its key yet
     const l = r.data ? await decryptList<Task[]>(key!, r.id, r.data) : { name: r.name, tasks: r.tasks };

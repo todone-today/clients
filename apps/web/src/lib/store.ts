@@ -132,7 +132,7 @@ function subscribe(f: () => void) {
   return () => void subs.delete(f);
 }
 
-export function add(name: string, tasks: Task[] = [], kind?: "ideas") {
+export function add(name: string, tasks: Task[] = [], kind?: "ideas" | "bin") {
   const id = crypto.randomUUID();
   show([...(cache ?? []), { id, name, tasks, updated: Date.now(), version: 0, ...(kind ? { kind } : {}) }]);
   enqueue(async () => {
@@ -189,6 +189,39 @@ export function moveToList(from: string, to: string, take: (tasks: Task[]) => [T
     return { ...l, tasks: rest };
   });
   update(to, (l) => ({ ...l, tasks: [...l.tasks, ...taken] }));
+}
+
+// The bin: deleted tasks wait 7 days in the workspace's "bin" list (end-to-end encrypted like any list), each with
+// when it went and which list it came from, so they can be restored. Older ones are dropped on the next change.
+const WEEK = 7 * 86_400_000;
+export type Binned = Task & { binnedAt: number; from: string; fromName: string };
+export const fresh = (ts: Task[]) => (ts as Binned[]).filter((t) => t.binnedAt > Date.now() - WEEK);
+const binList = () => (cache ?? []).find((l) => l.kind === "bin");
+
+export function toBin(tasks: Task[], from: { id: string; name: string }) {
+  if (!tasks.length) return;
+  const at = Date.now();
+  const entries: Binned[] = tasks.map((t) => ({ ...t, binnedAt: at, from: from.id, fromName: from.name }));
+  const bin = binList();
+  if (bin) update(bin.id, (l) => ({ ...l, tasks: [...entries, ...fresh(l.tasks)] }));
+  else add("Bin", entries, "bin");
+}
+// Takes tasks out of the bin without restoring them (the undo bar already put them back).
+export function unbin(ids: string[]) {
+  const bin = binList();
+  if (bin) update(bin.id, (l) => ({ ...l, tasks: fresh(l.tasks).filter((t) => !ids.includes(t.id)) }));
+}
+// Puts a binned task back at the end of the list it came from, or of `fallback` if that list is gone.
+export function restore(id: string, fallback: string) {
+  const bin = binList();
+  const entry = bin?.tasks.find((t) => t.id === id) as Binned | undefined;
+  if (!bin || !entry) return;
+  const { from } = entry;
+  const task: Task = { ...entry };
+  for (const k of ["binnedAt", "from", "fromName"]) delete (task as Record<string, unknown>)[k];
+  const to = (cache ?? []).some((l) => l.id === from && !l.kind) ? from : fallback;
+  update(bin.id, (l) => ({ ...l, tasks: fresh(l.tasks).filter((t) => t.id !== id) }));
+  update(to, (l) => ({ ...l, tasks: [...l.tasks, task] }));
 }
 
 // Maps a task (or subtask) by id; the callback returns the new task, or null to delete it.

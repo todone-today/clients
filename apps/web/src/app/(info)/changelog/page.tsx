@@ -6,6 +6,14 @@ export const metadata: Metadata = { title: "Changelog", description: "What's new
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "8 November 2026",
+    title: "A bin you can dig through",
+    items: [
+      "Deleted tasks wait in the bin for 7 days: open “Recently deleted” under the Bin and restore any of them to its list.",
+      "Custom day and length are stickers like the rest; what you pick stays on the sticker for a moment so you can drag it onto other tasks.",
+    ],
+  },
+  {
     date: "6 November 2026",
     title: "End-to-end encrypted",
     items: [

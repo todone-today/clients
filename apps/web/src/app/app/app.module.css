@@ -2535,3 +2535,63 @@ input.stick[data-custom]:focus-visible {
 input.stick[data-custom][aria-invalid="true"] {
   outline: 3px solid var(--hot);
 }
+
+/* Under the bin: "Recently deleted · N", opening the tasks kept for 7 days. */
+.binPanel {
+  position: absolute;
+  top: 7.1rem;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  justify-items: end;
+  width: min(22rem, 90vw);
+}
+.binLink {
+  width: 11rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-align: center;
+  text-decoration: underline;
+}
+.binLink:hover {
+  color: var(--ink);
+}
+.binList {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  max-height: 22rem;
+  margin-top: 0.4rem;
+  padding: 0.6rem;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--raise);
+  border: 2px solid var(--ink);
+  box-shadow: var(--lift-sm);
+}
+.binList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.binList li > span {
+  display: grid;
+  min-width: 0;
+}
+.binList b {
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.binList small {
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}
+.binList .binNote {
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}

@@ -14,7 +14,8 @@ import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
-import { mapTask, moveToList, refresh, reload, reorder, showSaved, startDemo, useLists } from "@/lib/store";
+import { mapTask, moveToList, refresh, reload, reorder, showSaved, startDemo, toBin, unbin, useLists } from "@/lib/store";
+import { BinPanel } from "./BinPanel";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -456,7 +457,14 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   const [show, setShow] = useState<Show>("open");
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
-  const [binned, setBinned] = useState<{ before: Task[]; text: string } | null>(null);
+  const [binned, setBinned] = useState<{ before: Task[]; text: string; ids?: string[] } | null>(null);
+  // Binned tasks also go to the workspace's bin for 7 days. A task whose parent goes too travels inside it.
+  const bin = (gone: Task[]) => {
+    const inside = new Set(gone.flatMap((t) => t.sub.map((x) => x.id)));
+    const top = gone.filter((t) => !inside.has(t.id));
+    toBin(top, list);
+    return top.map((t) => t.id);
+  };
   const today = todayISO();
   // The minute of the day, kept current so a task turns late when its time passes.
   const [nowMin, setNowMin] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
@@ -528,7 +536,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         const gone = flatten(before).filter((t) => p.ids.includes(t.id));
         setTasks((ts) => p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts));
         binSound();
-        setBinned({ before, text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.` });
+        setBinned({
+          before,
+          ids: bin(gone),
+          text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.`,
+        });
         setPicked(new Set());
       } else if (p.kind === "sticker") {
         const due = sticker(p.key, today)!.due!;
@@ -537,7 +549,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         if (!gone.length) return setBinned({ before, text: `Nothing is due ${day}.` });
         setTasks((ts) => gone.reduce((acc, t) => mapTask(acc, t.id, () => null), ts));
         binSound();
-        setBinned({ before, text: `Deleted ${gone.length} task${gone.length === 1 ? "" : "s"} due ${day}.` });
+        setBinned({
+          before,
+          ids: bin(gone),
+          text: `Deleted ${gone.length} task${gone.length === 1 ? "" : "s"} due ${day}.`,
+        });
       }
     },
   });
@@ -626,6 +642,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           </span>
         </p>
         <Privacy list={list} update={update} />
+        <BinPanel listId={list.id} />
       </div>
 
       {binned && (
@@ -636,6 +653,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
               className={s.ghost}
               onClick={() => {
                 setTasks(() => binned.before);
+                if (binned.ids) unbin(binned.ids);
                 setBinned(null);
               }}
             >
@@ -912,4 +930,3 @@ function TaskRow({
     </li>
   );
 }
-
