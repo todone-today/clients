@@ -89,7 +89,7 @@ export function Integrations() {
     refresh();
   };
 
-  const items: { key: Key; name: string; on: boolean }[] = [
+  const every: { key: Key; name: string; on: boolean }[] = [
     { key: "notify", name: "Notifications (this device)", on: false },
     { key: "google", name: "Google Calendar", on: st.google.connected },
     { key: "notion", name: "Notion", on: st.notion },
@@ -99,11 +99,24 @@ export function Integrations() {
       name: "Calendar link (Outlook, any app)",
       on: !!st.icsToken,
     },
-    { key: "apple", name: "Apple Calendar", on: !!st.icsToken },
+    {
+      key: "apple",
+      name: "Apple Calendar (or any calendar app)",
+      on: !!st.icsToken,
+    },
     { key: "discord", name: "Discord", on: st.discord },
     { key: "reminders", name: "Apple Reminders", on: false },
     { key: "keep", name: "Google Keep", on: false },
   ];
+  const items = every.filter(
+    // For now: Google and Apple Calendar (plus this device's notifications). Others show only while still connected,
+    // so a workspace that set one up can switch it off.
+    (i) =>
+      i.key === "notify" ||
+      i.key === "google" ||
+      i.key === "apple" ||
+      (i.on && i.key !== "link"),
+  );
   const key = pick ?? items.find((i) => i.on)?.key ?? "google";
 
   return (

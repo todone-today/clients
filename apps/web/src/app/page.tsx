@@ -1,11 +1,30 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Bug, EyeOff, GitPullRequest, KeyRound, Lightbulb, Lock } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Bug,
+  EyeOff,
+  GitPullRequest,
+  KeyRound,
+  Lightbulb,
+  Lock,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { GithubMark } from "@/components/GithubMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LEGAL_DOCS, REPO } from "@/lib/brand";
 import { FOUNDING, FUNDING, SHOTS } from "@/lib/landing";
-import { Goals, Hardware, OfflineDemo, Pay, Pricing, SharedDemo, StepsDemo, ToolsDemo, WeekDemo } from "./landing/Demos";
+import {
+  Goals,
+  Hardware,
+  OfflineDemo,
+  Pay,
+  Pricing,
+  SharedDemo,
+  StepsDemo,
+  ToolsDemo,
+  WeekDemo,
+} from "./landing/Demos";
 import { HeroBoard } from "./landing/HeroBoard";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
@@ -41,39 +60,62 @@ export default function Home() {
         <HeroBoard />
 
         {/* What it does today: every feature is something you can try right here. */}
-        <section id="features" className={s.features} aria-label="What todone does">
+        <section
+          id="features"
+          className={s.features}
+          aria-label="What todone does"
+        >
           <article className={s.feat}>
             <h2 className="display">Big task, small steps.</h2>
-            <p>Drop one note onto another and it becomes a step. Steps travel with their task.</p>
+            <p>
+              Drop one note onto another and it becomes a step. Steps travel
+              with their task.
+            </p>
             <StepsDemo />
           </article>
 
           <article className={`${s.feat} ${s.wide}`}>
             <h2 className="display">Plan the week by dragging it there.</h2>
             <p>
-              Day, week, month or year. Drag tasks onto a time and stretch a block to set how long it takes. Share one view
-              with a private link.
+              Day, week, month or year. Drag tasks onto a time and stretch a
+              block to set how long it takes. Share one view with a private
+              link.
             </p>
-            {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 58vw" /> : <WeekDemo />}
+            {SHOTS.calendar.src ? (
+              <Shot
+                shot={SHOTS.calendar}
+                sizes="(max-width: 1100px) 100vw, 58vw"
+              />
+            ) : (
+              <WeekDemo />
+            )}
           </article>
 
           <article className={`${s.feat} ${s.half}`}>
             <h2 className="display">One list, the whole house.</h2>
-            <p>Make a team, invite people, and plan together. Changes show up on everyone&apos;s screens within seconds.</p>
+            <p>
+              Make a team, invite people, and plan together. Changes show up on
+              everyone&apos;s screens within seconds.
+            </p>
             <SharedDemo />
           </article>
 
           <article className={`${s.feat} ${s.half} ${s.dark}`}>
             <h2 className="display">No signal? Keep going.</h2>
             <p>
-              todone opens without a connection, shows your lists as last saved, and saves what you change once you&apos;re
-              back. Try it:
+              todone opens without a connection, shows your lists as last saved,
+              and saves what you change once you&apos;re back. Try it:
             </p>
             <OfflineDemo />
           </article>
 
           <article className={`${s.feat} ${s.full}`}>
-            <h2 className="display">Keeps the tools you already use.</h2>
+            <h2 className="display">Your calendar, in step.</h2>
+            <p>
+              Two integrations for now, done properly: Google Calendar both
+              ways, and a private feed for Apple Calendar. More once these are
+              rock solid.
+            </p>
             <ToolsDemo />
           </article>
         </section>
@@ -86,22 +128,32 @@ export default function Home() {
             </h2>
             <ul>
               <li>
-                <b>You move things, you don&apos;t fill in forms.</b> Dates, lengths, priorities and repeats are stickers you
-                drop on.
+                <b>You move things, you don&apos;t fill in forms.</b> Dates,
+                lengths, priorities and repeats are stickers you drop on.
               </li>
               <li>
-                <b>Your lists are yours.</b> End-to-end encrypted, open source under GPL-3.0, export any time, or run it on
-                your own server.
+                <b>Your lists are yours.</b> End-to-end encrypted, open source
+                under GPL-3.0, export any time, or run it on your own server.
               </li>
               <li>
-                <b>Calm by design.</b> No streaks, no badges, no feed. A board, a calendar, and done.
+                <b>Calm by design.</b> No streaks to break, no feed. Goals and
+                rewards you set yourself, if you want them.
               </li>
             </ul>
-            <Link href="/demo" className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
-              Try the full app, no account <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            <Link
+              href="/demo"
+              className="btn"
+              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+            >
+              Try the full app, no account{" "}
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Link>
           </div>
-          <Shot shot={SHOTS.board} sizes="(max-width: 900px) 100vw, 55vw" className={s.boardShot} />
+          <Shot
+            shot={SHOTS.board}
+            sizes="(max-width: 900px) 100vw, 55vw"
+            className={s.boardShot}
+          />
           <Shot shot={SHOTS.boardMobile} sizes="80vw" className={s.phoneShot} />
         </section>
 
@@ -111,36 +163,64 @@ export default function Home() {
             For your eyes only.
           </h2>
           <p className={s.sub}>
-            todone is end-to-end encrypted. Your lists are locked on your device before they&apos;re saved, so our servers
-            only ever hold scrambled data. We can&apos;t read your plans, and neither can anyone who breaks in.
+            todone is end-to-end encrypted. Your lists are locked on your device
+            before they&apos;re saved, so our servers only ever hold scrambled
+            data. We can&apos;t read your plans, and neither can anyone who
+            breaks in.
           </p>
           <div className={s.ways}>
-            <div className={s.way} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            <div
+              className={s.way}
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            >
               <Lock size={22} strokeWidth={2.5} aria-hidden />
               <b>Encrypted on your device</b>
-              <span>List names, tasks, steps, notes and ideas, with AES-256. Teams share a key only members hold.</span>
+              <span>
+                List names, tasks, steps, notes and ideas, with AES-256. Teams
+                share a key only members hold.
+              </span>
             </div>
-            <div className={s.way} style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
+            <div
+              className={s.way}
+              style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
+            >
               <EyeOff size={22} strokeWidth={2.5} aria-hidden />
               <b>We never see your password</b>
-              <span>It unlocks your key in the browser; the server only gets a one-way hash of it.</span>
+              <span>
+                It unlocks your key in the browser; the server only gets a
+                one-way hash of it.
+              </span>
             </div>
-            <div className={s.way} style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+            <div
+              className={s.way}
+              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+            >
               <KeyRound size={22} strokeWidth={2.5} aria-hidden />
               <b>A recovery key, just for you</b>
-              <span>Forget your password and it gets you back in. Nobody else can, us included.</span>
+              <span>
+                Forget your password and it gets you back in. Nobody else can,
+                us included.
+              </span>
             </div>
-            <div className={s.way} style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
+            <div
+              className={s.way}
+              style={{ "--fill": "var(--pink)" } as React.CSSProperties}
+            >
               <GitPullRequest size={22} strokeWidth={2.5} aria-hidden />
               <b>Open source, checkable</b>
-              <span>The encryption is in our public code for anyone to read.</span>
+              <span>
+                The encryption is in our public code for anyone to read.
+              </span>
             </div>
           </div>
           <p className={s.provisional}>
-            What we can still see: your email and name, which teams you&apos;re in, how many lists you have, roughly how
-            big they are and when they change. Lists you choose to connect to integrations (calendar feed, Google, Notion,
-            Discord) are stored readable so those can work; each list says which it is. Share a single task by link and that
-            task, its comments and its files are readable too, until you stop sharing.
+            What we can still see: your email and name, which teams you&apos;re
+            in, how many lists you have, roughly how big they are and when they
+            change. Lists you choose to connect to integrations (Google
+            Calendar, the Apple Calendar feed) are stored readable so those can
+            work; each list says which it is. Share a single task by link and
+            that task, its comments and its files are readable too, until you
+            stop sharing.
           </p>
         </section>
 
@@ -150,11 +230,15 @@ export default function Home() {
             Built for the long haul.
           </h2>
           <p className={s.sub}>
-            The web app today, your phone next, then the places you actually look: your desk, your fridge, your bag.
+            The web app today, your phone next, then the places you actually
+            look: your desk, your fridge, your bag.
           </p>
 
           <div className={s.lanes}>
-            <div className={s.lane} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            <div
+              className={s.lane}
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            >
               <h3 className="display">Now</h3>
               <p className={s.laneSub}>Web app, live</p>
               <ul>
@@ -164,7 +248,7 @@ export default function Home() {
                   "Calendar and planning",
                   "Teams and shared lists",
                   "Works offline",
-                  "Integrations",
+                  "Google & Apple Calendar",
                   "Open source, self-hostable",
                 ].map((t) => (
                   <li key={t} data-done>
@@ -174,7 +258,10 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className={s.lane} style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+            <div
+              className={s.lane}
+              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+            >
               <h3 className="display">Next</h3>
               <p className={s.laneSub}>Android, then iPhone</p>
               <ul>
@@ -188,14 +275,27 @@ export default function Home() {
                   <li key={t}>{t}</li>
                 ))}
               </ul>
-              <Shot shot={SHOTS.mobile} sizes="(max-width: 900px) 100vw, 30vw" className={s.phone} />
+              <Shot
+                shot={SHOTS.mobile}
+                sizes="(max-width: 900px) 100vw, 30vw"
+                className={s.phone}
+              />
             </div>
 
-            <div className={s.lane} style={{ "--fill": "var(--peri)" } as React.CSSProperties}>
+            <div
+              className={s.lane}
+              style={{ "--fill": "var(--peri)" } as React.CSSProperties}
+            >
               <h3 className="display">Then</h3>
               <p className={s.laneSub}>Hardware, after the apps</p>
               <ul>
-                {["Desk display", "Fridge display", "Bag clip", "E-ink calendar", "Smart home"].map((t) => (
+                {[
+                  "Desk display",
+                  "Fridge display",
+                  "Bag clip",
+                  "E-ink calendar",
+                  "Smart home",
+                ].map((t) => (
                   <li key={t}>{t}</li>
                 ))}
               </ul>
@@ -210,9 +310,11 @@ export default function Home() {
               Your tasks, off your phone.
             </h2>
             <p>
-              Calm e-ink screens that show the day without asking for your attention, wherever you&apos;ll see them. They
-              come after the mobile apps and will be <b>sold separately</b> from the app. Right now they&apos;re concepts:
-              your Plus, Team or Founding membership funds their prototype R&amp;D, one goal at a time.
+              Calm e-ink screens that show the day without asking for your
+              attention, wherever you&apos;ll see them. They come after the
+              mobile apps and will be <b>sold separately</b> from the app. Right
+              now they&apos;re concepts: your Plus, Team or Founding membership
+              funds their prototype R&amp;D, one goal at a time.
             </p>
           </div>
           <Hardware />
@@ -225,9 +327,10 @@ export default function Home() {
               Unlock what&apos;s next.
             </h2>
             <p className={s.sub}>
-              Every Plus, Team or Founding purchase goes toward the next goal: first the app-store accounts, then hardware
-              prototypes. App-store amounts are what Google and Apple charge; hardware amounts are our estimates for R&amp;D,
-              not manufacturing.
+              Every Plus, Team or Founding purchase goes toward the next goal:
+              first the app-store accounts, then hardware prototypes. App-store
+              amounts are what Google and Apple charge; hardware amounts are our
+              estimates for R&amp;D, not manufacturing.
             </p>
             <Goals />
           </section>
@@ -239,29 +342,33 @@ export default function Home() {
             Free to use. Fair to keep running.
           </h2>
           <p className={s.sub}>
-            todone is free and open source, and self-hosting is free forever. The hosted cloud is free for everyday use; paid
-            plans are for heavy use and teams, pay for the servers, and fund the goals above. Checkout opens soon through
-            Razorpay: UPI, cards and netbanking.
+            todone is free and open source, and self-hosting is free forever.
+            The hosted cloud is free for everyday use; paid plans are for heavy
+            use and teams, pay for the servers, and fund the goals above.
+            Checkout opens soon through Razorpay: UPI, cards and netbanking.
           </p>
           <Pricing />
           <p className={s.provisional}>
-            Plan limits and extras are our plan for launch and may change before checkout opens; nothing changes for anyone
-            already using todone.
+            Plan limits and extras are our plan for launch and may change before
+            checkout opens; nothing changes for anyone already using todone.
           </p>
           <div className={s.founding}>
             <p>
-              <b>{FOUNDING.name}:</b> {FOUNDING.inr} / {FOUNDING.usd} once for three years of Plus, instead of{" "}
-              {FOUNDING.yearly} paying yearly at launch prices. It all goes to the goals above straight away.
+              <b>{FOUNDING.name}:</b> {FOUNDING.inr} / {FOUNDING.usd} once for
+              three years of Plus, instead of {FOUNDING.yearly} paying yearly at
+              launch prices. It all goes to the goals above straight away.
             </p>
             <Pay fill="var(--butter)">Become a founding member</Pay>
           </div>
           <p className={s.selfhost}>
-            Rather run it yourself? <a href={`${REPO}/server`}>Self-host todone</a> with Docker Compose: every feature, no
-            limits, no licence key.
+            Rather run it yourself?{" "}
+            <a href={`${REPO}/server`}>Self-host todone</a> with Docker Compose:
+            every feature, no limits, no licence key.
           </p>
           <p className={s.selfhost}>
-            Want todone run for your company? Email <a href="mailto:hello@todone.today">hello@todone.today</a> and tell us
-            what you need.
+            Want todone run for your company? Email{" "}
+            <a href="mailto:hello@todone.today">hello@todone.today</a> and tell
+            us what you need.
           </p>
         </section>
 
@@ -271,22 +378,38 @@ export default function Home() {
             Build it with us.
           </h2>
           <div className={s.ways}>
-            <a href={REPO} className={s.way} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            <a
+              href={REPO}
+              className={s.way}
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            >
               <GitPullRequest size={22} strokeWidth={2.5} aria-hidden />
               <b>Contribute code</b>
               <span>Server, web app and shared code on GitHub, GPL-3.0.</span>
             </a>
-            <a href={ISSUES} className={s.way} style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
+            <a
+              href={ISSUES}
+              className={s.way}
+              style={{ "--fill": "var(--pink)" } as React.CSSProperties}
+            >
               <Bug size={22} strokeWidth={2.5} aria-hidden />
               <b>Report a bug</b>
               <span>Or use Send feedback inside the app.</span>
             </a>
-            <a href={ISSUES} className={s.way} style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
+            <a
+              href={ISSUES}
+              className={s.way}
+              style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
+            >
               <Lightbulb size={22} strokeWidth={2.5} aria-hidden />
               <b>Suggest an idea</b>
               <span>Tell us what would make todone yours.</span>
             </a>
-            <Link href="/changelog" className={s.way} style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+            <Link
+              href="/changelog"
+              className={s.way}
+              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+            >
               <ArrowUpRight size={22} strokeWidth={2.5} aria-hidden />
               <b>Follow along</b>
               <span>The changelog, the roadmap and the status page.</span>
@@ -300,7 +423,11 @@ export default function Home() {
             <br />
             <span className={s.slab}>Tick it off.</span>
           </p>
-          <Link href="/app" className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+          <Link
+            href="/app"
+            className="btn"
+            style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+          >
             Start a list <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
           </Link>
         </section>
@@ -310,7 +437,12 @@ export default function Home() {
         <Logo size={22} />
         <span>Free and open source, GPL-3.0.</span>
         <nav className={s.legal} aria-label="More">
-          {[["/docs", "Guide"], ["/changelog", "Changelog"], ["/status", "Status"], ...LEGAL_DOCS].map(([href, name]) => (
+          {[
+            ["/docs", "Guide"],
+            ["/changelog", "Changelog"],
+            ["/status", "Status"],
+            ...LEGAL_DOCS,
+          ].map(([href, name]) => (
             <Link key={href} href={href}>
               {name}
             </Link>

@@ -203,20 +203,14 @@ export default function Docs() {
           calendar, and moving an event moves the task.
         </li>
         <li>
-          <b>Calendar link</b>: a private feed for Apple Calendar, Outlook or
-          any calendar app.
-        </li>
-        <li>
-          <b>Notion</b>: sync a list with a Notion database, both ways.
-        </li>
-        <li>
-          <b>Obsidian &amp; Markdown</b>: a private address that reads and
-          writes your lists as Obsidian Tasks Markdown.
-        </li>
-        <li>
-          <b>Discord</b>: post to a channel when tasks are added or finished.
+          <b>Apple Calendar</b>: a private feed of everything that&apos;s due.
+          Outlook and other calendar apps can subscribe to it too.
         </li>
       </ul>
+      <p>
+        We&apos;re keeping it to these two until they&apos;re rock solid; more
+        integrations will follow.
+      </p>
 
       <h2 id="reminders">Reminders, offline and devices</h2>
       <ul>

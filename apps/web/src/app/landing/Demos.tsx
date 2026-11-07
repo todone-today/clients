@@ -2,16 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Bell, CalendarDays, Check, Cloud, CloudOff, Wifi, WifiOff } from "lucide-react";
-import { siApple, siDiscord, siGooglecalendar, siNotion, siObsidian, type SimpleIcon } from "simple-icons";
+import {
+  Bell,
+  CalendarDays,
+  Check,
+  Cloud,
+  CloudOff,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
+import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
-import { BILLING, FUNDING, GOALS, PAY_URL, PLANS, PLUS_YEAR_INR, SHOTS, type Billing } from "@/lib/landing";
+import {
+  BILLING,
+  FUNDING,
+  GOALS,
+  PAY_URL,
+  PLANS,
+  PLUS_YEAR_INR,
+  SHOTS,
+  type Billing,
+} from "@/lib/landing";
 import s from "./landing.module.css";
 
 // The landing page's hands-on pieces: every section can be poked, and each behaves the way todone does.
 
 // The hardware concepts in 3D (three.js), loaded only in the browser when the section shows.
-const Device3D = dynamic(() => import("./Device3D"), { ssr: false, loading: () => <div className="device3d" /> });
+const Device3D = dynamic(() => import("./Device3D"), {
+  ssr: false,
+  loading: () => <div className="device3d" />,
+});
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -49,7 +69,11 @@ export function StepsDemo() {
               type="button"
               className={s.row}
               aria-pressed={on}
-              onClick={() => setSteps((st) => st.map((x, j) => (j === i ? [x[0], !x[1]] : x)))}
+              onClick={() =>
+                setSteps((st) =>
+                  st.map((x, j) => (j === i ? [x[0], !x[1]] : x)),
+                )
+              }
             >
               <Box on={on} />
               <span data-done={on || undefined}>{t}</span>
@@ -65,11 +89,46 @@ export function StepsDemo() {
 // The week strip: drag a block to another day, or pick one and click a day.
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const BLOCKS = [
-  { id: "standup", title: "Standup", day: 0, top: 1, h: 1, fill: "var(--butter)" },
-  { id: "post", title: "Write the launch post", day: 1, top: 0, h: 3, fill: "var(--cyan)" },
-  { id: "dentist", title: "Dentist", day: 2, top: 2, h: 1, fill: "var(--pink)" },
-  { id: "trip", title: "Plan the trip", day: 3, top: 1, h: 2, fill: "var(--lime)" },
-  { id: "groceries", title: "Groceries", day: 4, top: 3, h: 1, fill: "var(--peri)" },
+  {
+    id: "standup",
+    title: "Standup",
+    day: 0,
+    top: 1,
+    h: 1,
+    fill: "var(--butter)",
+  },
+  {
+    id: "post",
+    title: "Write the launch post",
+    day: 1,
+    top: 0,
+    h: 3,
+    fill: "var(--cyan)",
+  },
+  {
+    id: "dentist",
+    title: "Dentist",
+    day: 2,
+    top: 2,
+    h: 1,
+    fill: "var(--pink)",
+  },
+  {
+    id: "trip",
+    title: "Plan the trip",
+    day: 3,
+    top: 1,
+    h: 2,
+    fill: "var(--lime)",
+  },
+  {
+    id: "groceries",
+    title: "Groceries",
+    day: 4,
+    top: 3,
+    h: 1,
+    fill: "var(--peri)",
+  },
 ];
 
 export function WeekDemo() {
@@ -87,7 +146,12 @@ export function WeekDemo() {
     <div className={s.weekWrap}>
       <div className={s.week}>
         {DAYS.map((d, day) => (
-          <div key={d} {...drop(String(day))} onClick={() => held && move(held, day)} data-holding={held ? "" : undefined}>
+          <div
+            key={d}
+            {...drop(String(day))}
+            onClick={() => held && move(held, day)}
+            data-holding={held ? "" : undefined}
+          >
             <span>{d}</span>
             {blocks
               .filter((b) => b.day === day)
@@ -96,7 +160,12 @@ export function WeekDemo() {
                   key={b.id}
                   type="button"
                   className={s.block}
-                  style={{ "--fill": b.fill, gridRow: `${b.top + 2} / span ${b.h}` } as React.CSSProperties}
+                  style={
+                    {
+                      "--fill": b.fill,
+                      gridRow: `${b.top + 2} / span ${b.h}`,
+                    } as React.CSSProperties
+                  }
                   aria-pressed={held === b.id}
                   aria-label={`${b.title}, ${DAYS[b.day]}. Pick it up, then click another day.`}
                   onClick={(e) => {
@@ -111,7 +180,9 @@ export function WeekDemo() {
           </div>
         ))}
       </div>
-      <p className={s.try}>Drag a block to another day, or tap it and then a day.</p>
+      <p className={s.try}>
+        Drag a block to another day, or tap it and then a day.
+      </p>
     </div>
   );
 }
@@ -139,7 +210,13 @@ export function SharedDemo() {
               type="button"
               className={s.row}
               aria-pressed={on}
-              onClick={() => setItems((it) => it.map((x, j) => (j === i ? [x[0], !x[1], x[1] ? "" : "You"] : x)))}
+              onClick={() =>
+                setItems((it) =>
+                  it.map((x, j) =>
+                    j === i ? [x[0], !x[1], x[1] ? "" : "You"] : x,
+                  ),
+                )
+              }
             >
               <Box on={on} />
               <span data-done={on || undefined}>{t}</span>
@@ -171,32 +248,44 @@ export function OfflineDemo() {
   };
   return (
     <div className={s.offlineDemo}>
-      <button type="button" className={s.switch} aria-pressed={!online} onClick={toggle}>
-        {online ? <Wifi size={18} strokeWidth={2.5} aria-hidden /> : <WifiOff size={18} strokeWidth={2.5} aria-hidden />}
+      <button
+        type="button"
+        className={s.switch}
+        aria-pressed={!online}
+        onClick={toggle}
+      >
+        {online ? (
+          <Wifi size={18} strokeWidth={2.5} aria-hidden />
+        ) : (
+          <WifiOff size={18} strokeWidth={2.5} aria-hidden />
+        )}
         {online ? "Online. Turn the Wi-Fi off" : "Offline. Turn it back on"}
       </button>
       <ul>
-        {["Reply to the landlord", "Book the cab", "Send the deck"].map((t, i) => (
-          <li key={t}>
-            <button
-              type="button"
-              className={s.row}
-              aria-pressed={ticks[i]}
-              onClick={() => {
-                setTicks((ts) => ts.map((x, j) => (j === i ? !x : x)));
-                if (!online) setWaiting((w) => w + 1);
-              }}
-            >
-              <Box on={ticks[i]} />
-              <span data-done={ticks[i] || undefined}>{t}</span>
-            </button>
-          </li>
-        ))}
+        {["Reply to the landlord", "Book the cab", "Send the deck"].map(
+          (t, i) => (
+            <li key={t}>
+              <button
+                type="button"
+                className={s.row}
+                aria-pressed={ticks[i]}
+                onClick={() => {
+                  setTicks((ts) => ts.map((x, j) => (j === i ? !x : x)));
+                  if (!online) setWaiting((w) => w + 1);
+                }}
+              >
+                <Box on={ticks[i]} />
+                <span data-done={ticks[i] || undefined}>{t}</span>
+              </button>
+            </li>
+          ),
+        )}
       </ul>
       <p className={s.syncState} role="status">
         {saved ? (
           <>
-            <Cloud size={16} strokeWidth={2.5} aria-hidden /> Back online. Everything saved.
+            <Cloud size={16} strokeWidth={2.5} aria-hidden /> Back online.
+            Everything saved.
           </>
         ) : online ? (
           <>
@@ -204,7 +293,8 @@ export function OfflineDemo() {
           </>
         ) : (
           <>
-            <CloudOff size={16} strokeWidth={2.5} aria-hidden /> {waiting} change{waiting === 1 ? "" : "s"} waiting to save.
+            <CloudOff size={16} strokeWidth={2.5} aria-hidden /> {waiting}{" "}
+            change{waiting === 1 ? "" : "s"} waiting to save.
           </>
         )}
       </p>
@@ -213,22 +303,37 @@ export function OfflineDemo() {
 }
 
 // Integrations with their real marks; click one to see what connecting it does.
-type Tool = { name: string; how: string; mark: SimpleIcon | "calendar" | "bell" };
+type Tool = {
+  name: string;
+  how: string;
+  mark: SimpleIcon | "calendar" | "bell";
+};
 const TOOLS: Tool[] = [
-  { name: "Google Calendar", how: "Dated tasks become events, and moving an event moves the task.", mark: siGooglecalendar },
-  { name: "Notion", how: "A list and a Notion database stay in step, both ways.", mark: siNotion },
-  { name: "Obsidian", how: "Your lists as Obsidian Tasks Markdown: pull, edit, push back.", mark: siObsidian },
-  { name: "Apple Calendar", how: "Subscribe to a private feed of everything that's due.", mark: siApple },
-  { name: "Outlook & others", how: "The same private calendar feed works in any calendar app.", mark: "calendar" },
-  { name: "Discord", how: "A channel hears when tasks are added or done.", mark: siDiscord },
-  { name: "Push reminders", how: "A nudge before a task starts, even with todone closed.", mark: "bell" },
+  {
+    name: "Google Calendar",
+    how: "Dated tasks become events, and moving an event moves the task.",
+    mark: siGooglecalendar,
+  },
+  {
+    name: "Apple Calendar",
+    how: "Subscribe to a private feed of everything that's due. Outlook and other calendar apps can use it too.",
+    mark: siApple,
+  },
 ];
 
 function Mark({ mark }: { mark: Tool["mark"] }) {
-  if (mark === "calendar") return <CalendarDays size={22} strokeWidth={2.25} aria-hidden />;
+  if (mark === "calendar")
+    return <CalendarDays size={22} strokeWidth={2.25} aria-hidden />;
   if (mark === "bell") return <Bell size={22} strokeWidth={2.25} aria-hidden />;
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden fill={`#${mark.hex}`} className={s.brand}>
+    <svg
+      viewBox="0 0 24 24"
+      width={22}
+      height={22}
+      aria-hidden
+      fill={`#${mark.hex}`}
+      className={s.brand}
+    >
       <path d={mark.path} />
     </svg>
   );
@@ -248,12 +353,18 @@ export function ToolsDemo() {
               aria-pressed={on.includes(t.name)}
               onClick={() => {
                 setOpen(t.name);
-                setOn((o) => (o.includes(t.name) ? o.filter((x) => x !== t.name) : [...o, t.name]));
+                setOn((o) =>
+                  o.includes(t.name)
+                    ? o.filter((x) => x !== t.name)
+                    : [...o, t.name],
+                );
               }}
             >
               <Mark mark={t.mark} />
               <b>{t.name}</b>
-              {on.includes(t.name) && <Check size={16} strokeWidth={3} aria-label="connected" />}
+              {on.includes(t.name) && (
+                <Check size={16} strokeWidth={3} aria-label="connected" />
+              )}
             </button>
           </li>
         ))}
@@ -272,11 +383,18 @@ export function Goals() {
   const raised = FUNDING.raisedInr;
   const total = GOALS.reduce((a, g) => a + g.inr, 0);
   // Goals fill in order: each takes what's left after the ones before it.
-  const before = (i: number) => GOALS.slice(0, i).reduce((a, g) => a + g.inr, 0);
-  const got = GOALS.map((g, i) => Math.max(0, Math.min(raised - before(i), g.inr)));
-  const ifReached = GOALS.filter((_, i) => members * PLUS_YEAR_INR >= before(i + 1)).length;
+  const before = (i: number) =>
+    GOALS.slice(0, i).reduce((a, g) => a + g.inr, 0);
+  const got = GOALS.map((g, i) =>
+    Math.max(0, Math.min(raised - before(i), g.inr)),
+  );
+  const ifReached = GOALS.filter(
+    (_, i) => members * PLUS_YEAR_INR >= before(i + 1),
+  ).length;
   // How much of each goal the slider's amount covers: a goal colours in as it fills, grey until then.
-  const covered = GOALS.map((g, i) => Math.max(0, Math.min((members * PLUS_YEAR_INR - before(i)) / g.inr, 1)));
+  const covered = GOALS.map((g, i) =>
+    Math.max(0, Math.min((members * PLUS_YEAR_INR - before(i)) / g.inr, 1)),
+  );
   return (
     <div className={s.goals}>
       <ol className={s.ladder}>
@@ -284,7 +402,12 @@ export function Goals() {
           return (
             <li
               key={g.key}
-              style={{ "--fill": g.fill, "--grey": 1 - covered[i] } as React.CSSProperties}
+              style={
+                {
+                  "--fill": g.fill,
+                  "--grey": 1 - covered[i],
+                } as React.CSSProperties
+              }
               data-hit={i < ifReached || undefined}
             >
               <div className={s.goalHead}>
@@ -303,7 +426,10 @@ export function Goals() {
                 <i style={{ width: `${(got[i] / g.inr) * 100}%` }} />
               </div>
               <small>
-                {inr(got[i])} raised · {g.kind === "fee" ? "app-store fee" : "prototype R&D, estimated"}
+                {inr(got[i])} raised ·{" "}
+                {g.kind === "fee"
+                  ? "app-store fee"
+                  : "prototype R&D, estimated"}
               </small>
             </li>
           );
@@ -339,8 +465,8 @@ export function Goals() {
           {ifReached === GOALS.length ? ". Everything." : "."}
         </p>
         <p className={s.meterNote}>
-          Every Plus, Team or Founding purchase counts, goals fill in order, and this section goes once they&apos;re all met.
-          Before fees and taxes.
+          Every Plus, Team or Founding purchase counts, goals fill in order, and
+          this section goes once they&apos;re all met. Before fees and taxes.
         </p>
         <Pay>Back todone with UPI</Pay>
       </div>
@@ -349,9 +475,19 @@ export function Goals() {
 }
 
 // A payment button that admits it isn't live yet rather than leading nowhere.
-export function Pay({ children, fill = "var(--lime)" }: { children: React.ReactNode; fill?: string }) {
+export function Pay({
+  children,
+  fill = "var(--lime)",
+}: {
+  children: React.ReactNode;
+  fill?: string;
+}) {
   return PAY_URL ? (
-    <a href={PAY_URL} className="btn" style={{ "--fill": fill } as React.CSSProperties}>
+    <a
+      href={PAY_URL}
+      className="btn"
+      style={{ "--fill": fill } as React.CSSProperties}
+    >
       {children}
     </a>
   ) : (
@@ -362,12 +498,24 @@ export function Pay({ children, fill = "var(--lime)" }: { children: React.ReactN
 }
 
 // Plans with a billing switch.
-const PER: Record<Billing, string> = { month: "a month", half: "for 6 months", year: "a year" };
+const PER: Record<Billing, string> = {
+  month: "a month",
+  half: "for 6 months",
+  year: "a year",
+};
 // "₹1,499" → 1499
 const amount = (s: string) => Number(s.replace(/[^\d]/g, ""));
 const MONTHS: Record<Billing, number> = { month: 1, half: 6, year: 12 };
-const TERM: Record<Billing, string> = { month: "", half: "first 6 months", year: "first year" };
-const AGAIN: Record<Billing, string> = { month: "", half: "every 6 months", year: "a year" };
+const TERM: Record<Billing, string> = {
+  month: "",
+  half: "first 6 months",
+  year: "first year",
+};
+const AGAIN: Record<Billing, string> = {
+  month: "",
+  half: "every 6 months",
+  year: "a year",
+};
 
 // The launch price's discount on the normal price for the same term, rounded down.
 const off = (intro: [string, string], normal: [string, string]) =>
@@ -377,7 +525,9 @@ const off = (intro: [string, string], normal: [string, string]) =>
 function saving(b: Billing) {
   const plus = PLANS.find((p) => p.lead)!;
   const first = plus.intro?.[b] ?? plus.price![b];
-  return Math.floor((1 - amount(first[0]) / (amount(plus.price!.month[0]) * MONTHS[b])) * 100);
+  return Math.floor(
+    (1 - amount(first[0]) / (amount(plus.price!.month[0]) * MONTHS[b])) * 100,
+  );
 }
 
 export function Pricing() {
@@ -386,7 +536,13 @@ export function Pricing() {
     <>
       <div className={s.billing} role="radiogroup" aria-label="Billing">
         {BILLING.map(([k, label]) => (
-          <button key={k} type="button" role="radio" aria-checked={billing === k} onClick={() => setBilling(k)}>
+          <button
+            key={k}
+            type="button"
+            role="radio"
+            aria-checked={billing === k}
+            onClick={() => setBilling(k)}
+          >
             {label}
             {k !== "month" && <small>save {saving(k)}%</small>}
           </button>
@@ -395,8 +551,13 @@ export function Pricing() {
       <div className={s.plans}>
         {PLANS.map((p) => {
           const intro = p.intro?.[billing];
-          const [rs, usd] = intro ?? (p.price ? p.price[billing] : ["₹0", "$0"]);
-          const per = p.price ? [p.per, intro ? TERM[billing] : PER[billing]].filter(Boolean).join(", ") : p.per;
+          const [rs, usd] =
+            intro ?? (p.price ? p.price[billing] : ["₹0", "$0"]);
+          const per = p.price
+            ? [p.per, intro ? TERM[billing] : PER[billing]]
+                .filter(Boolean)
+                .join(", ")
+            : p.per;
           return (
             <div
               key={p.name}
@@ -406,19 +567,24 @@ export function Pricing() {
             >
               <h3 className="display">{p.name}</h3>
               {intro && (
-                <p className={s.deal} aria-label={`Launch deal: ${off(intro, p.price![billing])}% off the ${TERM[billing]}`}>
+                <p
+                  className={s.deal}
+                  aria-label={`Launch deal: ${off(intro, p.price![billing])}% off the ${TERM[billing]}`}
+                >
                   <span>Launch deal</span>
                   <b className="display">−{off(intro, p.price![billing])}%</b>
                   <span>{TERM[billing]}!</span>
                 </p>
               )}
               <p className={s.price}>
-                {intro && <s className={s.was}>{p.price![billing][0]}</s>} <b className="display">{rs}</b>{" "}
-                <span>/ {usd}</span> <small>{per}</small>
+                {intro && <s className={s.was}>{p.price![billing][0]}</s>}{" "}
+                <b className="display">{rs}</b> <span>/ {usd}</span>{" "}
+                <small>{per}</small>
               </p>
               {intro && (
                 <p className={s.renew}>
-                  <b>Launch price.</b> Then {p.price![billing][0]} / {p.price![billing][1]}
+                  <b>Launch price.</b> Then {p.price![billing][0]} /{" "}
+                  {p.price![billing][1]}
                   {p.per && ` ${p.per},`} {AGAIN[billing]}; cancel any time.
                 </p>
               )}
@@ -430,7 +596,9 @@ export function Pricing() {
                 ))}
               </ul>
               {p.price ? (
-                <Pay fill={p.lead ? "#fff8ef" : "var(--butter)"}>Choose {p.name}</Pay>
+                <Pay fill={p.lead ? "#fff8ef" : "var(--butter)"}>
+                  Choose {p.name}
+                </Pay>
               ) : (
                 <a href="/app" className="btn">
                   Start free
@@ -482,7 +650,10 @@ export function Hardware() {
     const on = () => {
       const r = track.current?.getBoundingClientRect();
       if (!r) return;
-      const p = Math.min(Math.max(-r.top / Math.max(r.height - innerHeight, 1), 0), 0.9999);
+      const p = Math.min(
+        Math.max(-r.top / Math.max(r.height - innerHeight, 1), 0),
+        0.9999,
+      );
       const i = Math.floor(p * PLACES.length);
       scroll.current = p * PLACES.length - i;
       copy.current?.style.setProperty("--p", String(scroll.current));
@@ -499,7 +670,10 @@ export function Hardware() {
     const r = track.current?.getBoundingClientRect();
     if (!pinned || !r) return setAt(i);
     const span = r.height - innerHeight;
-    scrollTo({ top: scrollY + r.top + span * ((i + 0.62) / PLACES.length), behavior: "smooth" });
+    scrollTo({
+      top: scrollY + r.top + span * ((i + 0.62) / PLACES.length),
+      behavior: "smooth",
+    });
   };
   const [, name, shot, title, line] = PLACES[at];
   const goal = GOALS.find((g) => g.key === PLACES[at][0])!;
@@ -508,7 +682,13 @@ export function Hardware() {
       <div className={s.hwDemo}>
         <div className={s.places} role="tablist" aria-label="Where it lives">
           {PLACES.map(([k, label], i) => (
-            <button key={k} type="button" role="tab" aria-selected={at === i} onClick={() => pick(i)}>
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={at === i}
+              onClick={() => pick(i)}
+            >
               {label}
             </button>
           ))}
@@ -521,13 +701,20 @@ export function Hardware() {
               label={shot.alt}
               scroll={pinned ? scroll : undefined}
             />
-            <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
+            <figcaption className={s.conceptTag}>
+              Concept, not a product · drag to turn
+            </figcaption>
           </figure>
-          <div ref={copy} className={s.placeCopy} data-synced={pinned || undefined}>
+          <div
+            ref={copy}
+            className={s.placeCopy}
+            data-synced={pinned || undefined}
+          >
             <h3 className="display">{title}</h3>
             <p>{line}</p>
             <p className={s.goalTag}>
-              Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototype R&amp;D · sold separately later
+              Goal {GOALS.indexOf(goal) + 1}: {inr(goal.inr)} for prototype
+              R&amp;D · sold separately later
             </p>
           </div>
         </div>
