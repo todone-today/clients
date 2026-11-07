@@ -775,7 +775,8 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           )}
 
           {list.tasks.length ? (
-            <ul className={s.tasks} data-tour="board" ref={boardRef}>
+            // A step dragged out of its note onto the board's empty space becomes a main task again.
+            <ul className={s.tasks} data-tour="board" ref={boardRef} {...drop("unnest")}>
               {board(list.tasks, show, sort, today, nowMin).flatMap((t) => {
                 const note = <TaskRow key={t.id} task={t} {...row} top dragged={!!gap?.ids.includes(t.id)} />;
                 if (gap?.target !== t.id) return [note];
@@ -797,11 +798,6 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
                   <button className={s.link} onClick={() => setShow("all")}>
                     Show all
                   </button>
-                </li>
-              )}
-              {list.tasks.some((t) => t.sub.length) && (
-                <li className={s.unnest} {...drop("unnest")}>
-                  Drop a subtask here to make it a main task
                 </li>
               )}
             </ul>

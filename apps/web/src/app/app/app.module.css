@@ -1044,16 +1044,6 @@
   outline-offset: 2px;
 }
 /* Shown only while something is being dragged. */
-.unnest {
-  display: none;
-  padding: 0.9rem;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-2);
-  text-align: center;
-  border: 2px dashed var(--hair);
-}
 .stickers {
   position: sticky;
   top: 1rem;
@@ -1130,12 +1120,13 @@
   }
 }
 
-:global(body.is-dragging) .unnest {
-  display: block;
+/* Dragging a step out of its note: the board's empty space takes it as a main task. */
+.listBody .tasks {
+  padding-bottom: 3rem;
 }
-.unnest[data-over] {
-  color: var(--ink);
-  border-color: var(--lime);
+.listBody .tasks[data-over] {
+  outline: 2px dashed var(--lime);
+  outline-offset: 6px;
 }
 /* While dragging, columns and cells under the pointer light up. */
 .day[data-over],
@@ -1221,9 +1212,6 @@
 }
 .note .row[data-over] {
   outline-color: var(--black);
-}
-.listBody .unnest {
-  grid-column: 1 / -1;
 }
 
 /* Date and estimate chips: click to remove. */
