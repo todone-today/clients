@@ -1,0 +1,107 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 44rem;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 1.5rem var(--gutter) 3rem;
+  align-content: start;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.top a {
+  text-decoration: none;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+}
+.card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.5rem;
+}
+.card h1 {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.card h1[data-done] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 2px solid var(--black);
+}
+.note {
+  display: grid;
+  gap: 0.4rem;
+}
+.note ul {
+  padding-left: 1.2rem;
+}
+.note a {
+  text-decoration: underline;
+}
+.steps {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0 0;
+  list-style: none;
+  border-top: 2px dashed rgb(0 0 0 / 0.25);
+}
+.steps li[data-done] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.thread {
+  display: grid;
+  gap: 0.6rem;
+}
+.thread h2 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.hint {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.foot {
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.foot a {
+  text-decoration: underline;
+}

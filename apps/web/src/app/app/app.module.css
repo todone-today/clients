@@ -2584,3 +2584,266 @@ input.stick[data-custom][aria-invalid="true"] {
     display: none;
   }
 }
+
+/* ---------- Task panel: a drawer on the right with everything about one task ---------- */
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(30rem, 100vw);
+  padding: 1.25rem 1.25rem 2rem;
+  overflow-y: auto;
+  background: var(--ground);
+  border-left: var(--key);
+  box-shadow: -8px 0 0 var(--shadow);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: slideIn 0.18s var(--ease) both;
+  }
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+.panelHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: start;
+}
+.panelTitle {
+  flex: 1;
+  min-width: 0;
+  padding: 0.2rem 0;
+  font: 900 1.9rem/1.05 var(--display);
+  text-transform: uppercase;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+}
+.panelTitle:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+.panelClose {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--black);
+  background: #fff;
+  border: 2.5px solid var(--black);
+}
+.panelClose:hover {
+  background: var(--lime);
+}
+.privacyLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: start;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.privacyLine[data-shared] {
+  padding: 0.2rem 0.5rem;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+}
+.panelFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.panelFields label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.panelFields input,
+.panelFields select {
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  background: var(--ground);
+  border: 2px solid var(--hair);
+}
+.panelFields input:focus-visible,
+.panelFields select:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+}
+.panelFields input:disabled {
+  opacity: 0.45;
+}
+.panelFields .panelCheck {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.panelCheck input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--black);
+}
+.panelSection {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 2px dashed var(--hair);
+}
+.panelSection h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.panelNote {
+  min-height: 9rem;
+  padding: 0.6rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  resize: vertical;
+  background: var(--ground);
+  border: 2px solid var(--ink);
+}
+.panelNoteView {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink);
+}
+.panelNoteView ul {
+  padding-left: 1.2rem;
+}
+.panelNoteView a {
+  text-decoration: underline;
+}
+.panelEmpty {
+  justify-self: start;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  text-decoration: underline;
+}
+.panelFiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.panelFile {
+  position: relative;
+}
+.panelX {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.panelHint {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.kept {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+}
+.kept time {
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}
+.kept p {
+  white-space: pre-wrap;
+}
+.panelFoot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+.shareLink {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+.shareLink input {
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+}
+.disclosure {
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.disclosure::backdrop {
+  background: rgb(11 11 11 / 0.5);
+}
+.disclosure h2 {
+  font-size: 1.8rem;
+  line-height: 1.05;
+}
+.disclosure ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 1.25rem;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+.sharedChip {
+  color: var(--black);
+  background: var(--butter);
+  border-color: var(--black) !important;
+}
+.chips span svg {
+  vertical-align: -1px;
+}

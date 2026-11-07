@@ -46,8 +46,37 @@ export async function saveList(id: string, version: number, name: string, tasks:
     version,
     ...(await body(id, name, tasks, plain)),
   });
+  if (r.ok) pushShared(tasks);
   return { ok: r.ok, list: r.list ? await open(r.list) : null };
 }
+
+// Shared tasks (by link, not end-to-end encrypted): after a save, send changed fields to their readable copy, so
+// guests see edits made anywhere (stickers, calendar, the panel).
+const pushed = new Map<string, string>();
+function pushShared(tasks: Task[]) {
+  for (const t of tasks.flatMap((x) => [x, ...x.sub]))
+    if (t.share) {
+      const copy = { ...t, files: undefined, history: undefined, share: undefined };
+      const json = JSON.stringify(copy);
+      if (pushed.get(t.share) === json) continue;
+      pushed.set(t.share, json);
+      api("PUT", `/task-shares/${t.share}`, { task: copy }).catch(() => pushed.delete(t.share!));
+    }
+}
+// The key for the open workspace's private attachments.
+export const workspaceKey = async () => {
+  const k = await keyFor(workspace);
+  if (!k) throw new Error("A teammate needs to confirm you before you can add files to this team's tasks.");
+  return k;
+};
+export const createShare = (task: Task) =>
+  api<{ id: string; token: string }>("POST", "/task-shares", { task: { ...task, files: undefined, history: undefined } });
+export const setShareFiles = (id: string, task: Task, files: string[]) =>
+  api<null>("PUT", `/task-shares/${id}`, { task: { ...task, files: undefined, history: undefined, share: undefined }, files });
+export const shareView = (id: string) =>
+  api<{ token: string; task: Task; comments: import("@/components/Thread").Comment[] }>("GET", `/task-shares/${id}`);
+export const rotateShare = (id: string) => api<{ token: string }>("POST", `/task-shares/${id}/rotate`);
+export const revokeShare = (id: string) => api<null>("DELETE", `/task-shares/${id}`);
 // Encrypts a workspace's lists that are still stored readable: an account's personal lists on its first sign-in
 // after encryption arrived, or a team's when it first gets a key. Lists made by integrations are included; their
 // owner can switch encryption off again for those. The server lists the active workspace, so pass that one.

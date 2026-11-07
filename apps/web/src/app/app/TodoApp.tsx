@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Lightbulb, Lock, LockOpen, Menu, Check, Info, PanelLeftClose, PanelLeftOpen, Plus, Trash2 } from "lucide-react";
+import { AlignLeft, Lightbulb, Lock, LockOpen, Paperclip, Menu, Check, Info, PanelLeftClose, PanelLeftOpen, Plus, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -28,6 +28,7 @@ import {
   useLists,
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
+import { TaskPanel } from "./TaskPanel";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -819,6 +820,23 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           task={picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)}
         />
       </div>
+      {selected && picked.size <= 1 && findTask(list.tasks, selected) && (
+        <TaskPanel
+          key={selected}
+          task={findTask(list.tasks, selected)!}
+          top={isTop(selected)}
+          edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
+          onDelete={() => {
+            const before = list.tasks;
+            const gone = flatten(before).filter((t) => t.id === selected);
+            setTasks((ts) => mapTask(ts, selected, () => null));
+            binSound();
+            setBinned({ before, ids: bin(gone), text: `Deleted “${gone[0]?.title}”.` });
+            setSelected(null);
+          }}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   );
 }
@@ -958,6 +976,21 @@ function TaskRow({
             </button>
           ) : null}
           {task.spent ? <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span> : null}
+          {task.share ? (
+            <span className={s.sharedChip} title="Shared by link: not end-to-end encrypted">
+              <LockOpen size={11} strokeWidth={2.75} aria-hidden /> Shared
+            </span>
+          ) : null}
+          {task.files?.length ? (
+            <span title={`${task.files.length} attachment${task.files.length === 1 ? "" : "s"}`}>
+              <Paperclip size={11} strokeWidth={2.75} aria-hidden /> {task.files.length}
+            </span>
+          ) : null}
+          {task.note ? (
+            <span title="Has a description">
+              <AlignLeft size={11} strokeWidth={2.75} aria-hidden />
+            </span>
+          ) : null}
           {task.due ? (
             <button
               className={`${s.chip} ${late !== null ? s.late : s.due}`}
