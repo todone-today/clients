@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { type Binned, fresh, restore, useLists } from "@/lib/store";
 import s from "./app.module.css";
 
-// "Recently deleted": tasks dropped on the bin in the last 7 days, newest first, each restorable to its list.
-export function BinPanel({ listId }: { listId: string }) {
+// The Bin (sidebar → Bin): tasks deleted in the last 7 days, newest first, each restorable to the list it came from
+// (or `fallback` if that list is gone).
+export function BinView({ fallback }: { fallback: string | null }) {
   const { lists } = useLists();
-  const [open, setOpen] = useState(false);
   const [now] = useState(() => Date.now());
   const items = fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []) as Binned[];
   const left = (t: Binned) => {
@@ -16,29 +16,41 @@ export function BinPanel({ listId }: { listId: string }) {
     return d <= 1 ? "goes today" : `${d} days left`;
   };
   return (
-    <div className={s.binPanel}>
-      <button className={s.binLink} aria-expanded={open} onClick={() => setOpen(!open)}>
-        Recently deleted{items.length ? ` · ${items.length}` : ""}
-      </button>
-      {open && (
+    <>
+      <div className={s.listHead}>
+        <h1 className={`display ${s.title}`}>Bin</h1>
+        <p className={s.progress}>Tasks you delete wait here for 7 days, then they&apos;re gone for good.</p>
+      </div>
+      {items.length ? (
         <ul className={s.binList} aria-label="Recently deleted">
-          {!items.length && <li className={s.binNote}>Nothing deleted in the last 7 days.</li>}
           {items.map((t) => (
             <li key={t.id}>
               <span>
                 <b>{t.title}</b>
                 <small>
-                  from {t.fromName} · {left(t)}
+                  from {t.fromName} · deleted{" "}
+                  {new Date(t.binnedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {left(t)}
+                  {t.sub.length ? ` · ${t.sub.length} step${t.sub.length === 1 ? "" : "s"}` : ""}
                 </small>
               </span>
-              <button className={s.ghost} onClick={() => restore(t.id, listId)} title={`Put it back in ${t.fromName}`}>
+              <button
+                className={s.ghost}
+                disabled={!fallback && !lists?.some((l) => l.id === t.from)}
+                onClick={() => fallback && restore(t.id, fallback)}
+                title={`Put it back in ${t.fromName}`}
+              >
                 <RotateCcw size={14} strokeWidth={2.5} aria-hidden /> Restore
               </button>
             </li>
           ))}
-          {items.length > 0 && <li className={s.binNote}>Deleted tasks stay here for 7 days.</li>}
         </ul>
+      ) : (
+        <div className={s.empty}>
+          <Trash2 size={32} strokeWidth={2} aria-hidden />
+          <p className="display">The bin is empty.</p>
+          <p>Drop a task on a list&apos;s Bin to delete it; it waits here for 7 days in case you change your mind.</p>
+        </div>
       )}
-    </div>
+    </>
   );
 }

@@ -2536,49 +2536,18 @@ input.stick[data-custom][aria-invalid="true"] {
   outline: 3px solid var(--hot);
 }
 
-/* Under the bin: "Recently deleted · N", opening the tasks kept for 7 days. */
-.binPanel {
-  position: absolute;
-  top: 7.1rem;
-  right: 0;
-  z-index: 20;
-  display: grid;
-  justify-items: end;
-  width: min(22rem, 90vw);
-}
-.binLink {
-  width: 11rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--ink-2);
-  text-align: center;
-  text-decoration: underline;
-}
-.binLink:hover {
-  color: var(--ink);
-}
-@media (max-width: 760px) {
-  .binPanel {
-    top: 5rem;
-  }
-  .binLink {
-    width: 6rem;
-  }
-}
+/* The Bin view: recently deleted tasks with Restore. */
 .binList {
   display: grid;
   gap: 0.4rem;
-  width: 100%;
-  max-height: 22rem;
-  margin-top: 0.4rem;
-  padding: 0.6rem;
-  overflow-y: auto;
+  max-width: 48rem;
+  padding: 0;
   list-style: none;
-  background: var(--raise);
-  border: 2px solid var(--ink);
-  box-shadow: var(--lift-sm);
 }
 .binList li {
+  padding: 0.7rem 0.9rem;
+  background: var(--raise);
+  border: 2px solid var(--hair);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2590,16 +2559,11 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .binList b {
   overflow: hidden;
-  font-size: 0.85rem;
+  font-size: 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .binList small {
-  font-size: 0.72rem;
-  color: var(--ink-2);
-}
-.binList .binNote {
-  justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--ink-2);
 }

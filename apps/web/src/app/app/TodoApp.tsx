@@ -14,8 +14,20 @@ import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
-import { mapTask, moveToList, refresh, reload, reorder, showSaved, startDemo, toBin, unbin, useLists } from "@/lib/store";
-import { BinPanel } from "./BinPanel";
+import {
+  fresh,
+  mapTask,
+  moveToList,
+  refresh,
+  reload,
+  reorder,
+  showSaved,
+  startDemo,
+  toBin,
+  unbin,
+  useLists,
+} from "@/lib/store";
+import { BinView } from "./BinPanel";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -214,11 +226,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           <span>
             {panel === "ideas"
               ? "Brainstorm"
-              : panel === "integrations"
-                ? "Integrations"
-                : panel === "account"
-                  ? "Account"
-                  : (list?.name ?? "Lists")}
+              : panel === "bin"
+                ? "Bin"
+                : panel === "integrations"
+                  ? "Integrations"
+                  : panel === "account"
+                    ? "Account"
+                    : (list?.name ?? "Lists")}
           </span>
         </button>
         {demo ? (
@@ -318,6 +332,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </span>
           <span className={s.open}>{lists?.find((l) => l.kind === "ideas")?.tasks.length || ""}</span>
         </button>
+        <button className={`${s.listBtn} ${s.ideasBtn}`} aria-current={panel === "bin"} onClick={() => show("bin")}>
+          <span>
+            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Bin
+          </span>
+          <span className={s.open}>{fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []).length || ""}</span>
+        </button>
         <h2 className={s.sideHead}>Lists</h2>
         {lists && (
           <ul className={s.lists} data-tour="lists">
@@ -367,6 +387,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           )
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} />
+        ) : panel === "bin" ? (
+          <BinView fallback={list?.id ?? null} />
         ) : panel === "members" && orgId ? (
           <Members key={orgId} />
         ) : panel === "integrations" ? (
@@ -642,13 +664,12 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           </span>
         </p>
         <Privacy list={list} update={update} />
-        <BinPanel listId={list.id} />
       </div>
 
       {binned && (
         <div className={s.undo} role="status">
           {binned.text}
-          {binned.ids?.length ? <small>In Recently deleted for 7 days.</small> : null}
+          {binned.ids?.length ? <small>In the Bin (sidebar) for 7 days.</small> : null}
           {binned.before !== list.tasks && (
             <button
               className={s.ghost}
