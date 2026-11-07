@@ -65,7 +65,7 @@
   border-color: var(--hair);
 }
 .listBtn[aria-current="true"] {
-  background: var(--lime);
+  background: var(--list, var(--lime));
   color: var(--black);
   border-color: var(--black);
   box-shadow: var(--lift-sm);
@@ -3152,7 +3152,7 @@ input.stick[data-custom][aria-invalid="true"] {
   width: 2.5rem;
   height: 2.5rem;
   color: var(--black);
-  background: var(--lime);
+  background: var(--list, var(--lime));
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
   transition: transform 0.15s var(--ease);

@@ -13,11 +13,15 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = new URL(e.notification.data?.url || "/app", self.location.origin).href;
+  const url = new URL(e.notification.data?.url || "/app", self.location.origin);
+  const task = url.searchParams.get("task");
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((ws) => {
-      const open = ws.find((w) => w.url.startsWith(self.location.origin));
-      return open ? open.focus().then((w) => w.navigate(url)) : self.clients.openWindow(url);
+      // An open app opens the task in place (no reload); otherwise a new tab opens on it.
+      const app = ws.find((w) => new URL(w.url).pathname === "/app");
+      if (app && task) return app.focus().then((w) => w.postMessage({ task }));
+      const open = app ?? ws.find((w) => w.url.startsWith(self.location.origin));
+      return open ? open.focus().then((w) => w.navigate(url.href)) : self.clients.openWindow(url.href);
     }),
   );
 });

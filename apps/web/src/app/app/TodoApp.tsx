@@ -103,6 +103,8 @@ const NOTES = [
   "#c9b3ff", // lavender
   "#8fe3b0", // mint
 ];
+// A list's own colour, from its id: picked once when it's made, the same on every device and after a rename.
+const listColor = (id: string) => NOTES[noteColor(id)];
 const noteColor = (id: string) => {
   let h = 2166136261; // FNV-1a, then a final mix so short ids spread evenly over the colours
   for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
@@ -228,6 +230,32 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setPanel(null);
     setDrawer(false);
   };
+  // A reminder that was clicked: /app?task=… in a new tab, or a message from the service worker into this one.
+  // It waits for the lists (the vault may still be locked), then opens the task like a click on it.
+  const [wanted, setWanted] = useState<string | null>(null);
+  useEffect(() => {
+    const m = (e: MessageEvent) =>
+      typeof e.data?.task === "string" && setWanted(e.data.task);
+    navigator.serviceWorker?.addEventListener("message", m);
+    return () => navigator.serviceWorker?.removeEventListener("message", m);
+  }, []);
+  useEffect(() => {
+    // The address is read only now: the app can mount more than once while signing in.
+    const want = wanted ?? new URLSearchParams(location.search).get("task");
+    if (!want || !lists || vault !== "open") return; // before that, encrypted lists aren't readable yet
+    if (location.search) history.replaceState(null, "", location.pathname);
+    const l = lists.find(
+      (l) => !l.kind && flatten(l.tasks).some((t) => t.id === want),
+    );
+    Promise.resolve().then(() => {
+      setWanted(null);
+      if (!l) return;
+      setPicked(l.id);
+      setFocus({ id: want });
+      setPanel(null);
+      setDrawer(false);
+    });
+  }, [wanted, lists, vault]);
 
   // XP: whenever lists change, finished tasks earn a win in the goals list and unticked ones lose it. One place,
   // so it covers every way a task gets ticked (card, panel, calendar). Idempotent: an unchanged log isn't saved.
@@ -540,6 +568,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                   <button
                     className={s.listBtn}
                     aria-current={!panel && l.id === list?.id}
+                    style={{ "--list": listColor(l.id) } as React.CSSProperties}
                     onClick={() => open(l.id)}
                     {...dropOnList(l.id)}
                     {...draggable({ kind: "list", id: l.id }, l.name)}
@@ -982,7 +1011,10 @@ function ListView({
             <i style={{ transform: `scaleX(${c.all ? c.done / c.all : 0})` }} />
           </span>
         </p>
-        <div className={s.listMeta}>
+        <div
+          className={s.listMeta}
+          style={{ "--list": listColor(list.id) } as React.CSSProperties}
+        >
           <IconPick
             id={list.id}
             name={list.name}

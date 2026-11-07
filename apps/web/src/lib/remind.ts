@@ -99,11 +99,22 @@ export function useReminders() {
   };
 }
 
+// Where clicking a reminder goes: a task's own reminder opens that task, the summary the app.
+export const urlFor = (key: string) =>
+  key.startsWith("t:") ? `/app?task=${key.split(":")[1]}` : "/app";
+
 export async function notify(title: string, body: string, tag: string) {
+  const url = urlFor(tag);
   const reg = await navigator.serviceWorker
     ?.getRegistration("/")
     .catch(() => undefined);
-  if (reg) await reg.showNotification(title, { body, tag, icon: "/icon.svg" });
+  if (reg)
+    await reg.showNotification(title, {
+      body,
+      tag,
+      icon: "/icon.svg",
+      data: { url },
+    });
   else new Notification(title, { body, tag });
 }
 
@@ -195,7 +206,12 @@ export async function schedulePush(lists: List[]) {
             body: toB64u(
               await seal(
                 d,
-                JSON.stringify({ title: n.title, body: n.body, tag: n.key }),
+                JSON.stringify({
+                  title: n.title,
+                  body: n.body,
+                  tag: n.key,
+                  url: urlFor(n.key),
+                }),
               ),
             ),
           })),
