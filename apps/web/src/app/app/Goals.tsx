@@ -75,7 +75,12 @@ const goalTask = (g: Goal, title: string, habit: boolean): Task => ({
   ...(habit ? { rep: habitRule(g.perWeek), due: todayISO() } : {}),
 });
 
-// A new goal, and the first steps it came with as tasks (a habit's one step repeats).
+// A new or edited goal, and any first steps it came with as tasks (a habit's one step repeats).
+// Clicks on a card's own controls don't open its editor.
+const onControl = (e: React.MouseEvent) =>
+  !!(e.target as HTMLElement).closest(
+    "button, input, select, textarea, a, form, details, [role=combobox]",
+  );
 function saveGoal(
   lists: List[] | null,
   update: (id: string, f: (l: List) => List | null) => void,
@@ -83,7 +88,11 @@ function saveGoal(
   steps: string[],
   listId: string | null,
 ) {
-  changeGoals(lists, (xs) => [...xs, g]);
+  changeGoals(lists, (xs) =>
+    xs.some((x) => x.id === g.id)
+      ? xs.map((x) => (x.id === g.id ? g : x))
+      : [...xs, g],
+  );
   if (steps.length && listId)
     update(listId, (l) => ({
       ...l,
@@ -101,6 +110,7 @@ export function ListGoals({ list }: { list: List }) {
   const { lists, update } = useLists();
   const { items } = useGoalItems();
   const [making, setMaking] = useState(false);
+  const [editing, setEditing] = useState<Goal | null>(null);
   const all = (lists ?? []).filter((l) => !l.kind);
   const tasks = all.flatMap((l) => l.tasks);
   const goals = items.filter(
@@ -114,6 +124,8 @@ export function ListGoals({ list }: { list: List }) {
           <div
             key={g.id}
             className={s.listGoal}
+            onClick={(e) => !onControl(e) && setEditing(g)}
+            title="Click to edit"
             style={{ "--fill": fillFor(g.id) } as React.CSSProperties}
           >
             <header>
@@ -130,6 +142,17 @@ export function ListGoals({ list }: { list: List }) {
         <Plus size={15} strokeWidth={2.75} aria-hidden />{" "}
         {goals.length ? "Goal" : "Add a goal"}
       </button>
+      {editing && (
+        <GoalDialog
+          lists={all}
+          initial={editing}
+          onClose={() => setEditing(null)}
+          onSave={(g, steps, listId) => {
+            saveGoal(lists, update, g, steps, listId);
+            setEditing(null);
+          }}
+        />
+      )}
       {making && (
         <GoalDialog
           lists={all}
@@ -277,6 +300,7 @@ function GoalCard({
 }) {
   const { lists: all, update } = useLists();
   const [reflecting, setReflecting] = useState(false);
+  const [editing, setEditing] = useState(false);
   const p = goalProgress(goal, tasks, items);
   const set = (f: (g: Goal) => Goal | null) =>
     changeGoals(all, (xs) =>
@@ -294,6 +318,8 @@ function GoalCard({
   return (
     <li
       {...dnd}
+      onClick={(e) => !onControl(e) && setEditing(true)}
+      title="Click to edit"
       className={s.goal}
       style={{ "--fill": fillFor(goal.id) } as React.CSSProperties}
       data-done={goal.done ? "" : undefined}
@@ -376,6 +402,17 @@ function GoalCard({
           <Trash2 size={15} strokeWidth={2.5} aria-hidden />
         </button>
       </footer>
+      {editing && (
+        <GoalDialog
+          lists={lists}
+          initial={goal}
+          onClose={() => setEditing(false)}
+          onSave={(g, steps, listId) => {
+            saveGoal(all, update, g, steps, listId);
+            setEditing(false);
+          }}
+        />
+      )}
       {reflecting && (
         <Reflect
           title={goal.title}
@@ -656,25 +693,33 @@ function Reflect({
 export function GoalDialog({
   lists,
   list,
+  initial,
   onClose,
   onSave,
 }: {
   lists: List[];
   list?: string;
+  initial?: Goal; // editing this goal rather than making one
   onClose: () => void;
   onSave: (g: Goal, steps: string[], listId: string | null) => void;
 }) {
   const [step, setStep] = useState(0);
-  const [g, setG] = useState<Goal>(() => ({
-    t: "goal",
-    id: uid(),
-    title: "",
-    kind: "target",
-    created: Date.now(),
-    ...(list ? { list } : {}),
-  }));
+  const editing = !!initial;
+  const [g, setG] = useState<Goal>(
+    () =>
+      initial ?? {
+        t: "goal",
+        id: uid(),
+        title: "",
+        kind: "target",
+        created: Date.now(),
+        ...(list ? { list } : {}),
+      },
+  );
   const [steps, setSteps] = useState(["", "", ""]);
-  const [listId, setListId] = useState(list ?? lists[0]?.id ?? "");
+  const [listId, setListId] = useState(
+    initial?.list ?? list ?? lists[0]?.id ?? "",
+  );
   const putNum =
     (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value.replace(",", ".");
@@ -716,17 +761,18 @@ export function GoalDialog({
       listId || null,
     );
   return (
-    <Modal label="New goal" onClose={onClose}>
+    <Modal label={editing ? "Edit goal" : "New goal"} onClose={onClose}>
       <p className={s.goalStep}>
-        Step {step + 1} of 4{step > 0 && " · optional"}
+        {editing ? "Edit goal · " : ""}Step {step + 1} of 4
+        {step > 0 && " · optional"}
       </p>
       <h2 className="display">{titles[step]}</h2>
       <form
         className={s.goalForm}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!g.title.trim()) return;
-          if (step < 3) setStep(step + 1);
+          if (!ready) return;
+          if (step < 3 && !editing) setStep(step + 1);
           else save();
         }}
       >
@@ -973,9 +1019,18 @@ export function GoalDialog({
               Back
             </button>
           )}
-          {step > 0 && step < 3 && (
+          {step > 0 && step < 3 && !editing && (
             <button type="button" className={s.ghost} onClick={save}>
               Save now
+            </button>
+          )}
+          {editing && step < 3 && (
+            <button
+              type="button"
+              className={s.ghost}
+              onClick={() => setStep(step + 1)}
+            >
+              Next: {titles[step + 1].toLowerCase()}
             </button>
           )}
           <button
@@ -983,7 +1038,7 @@ export function GoalDialog({
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
             disabled={!ready}
           >
-            {step < 3 ? "Next" : "Save goal"}
+            {editing ? "Save" : step < 3 ? "Next" : "Save goal"}
           </button>
         </div>
       </form>
@@ -1049,6 +1104,7 @@ export function Rewards() {
     setClaimed(r.title);
     setTimeout(() => setClaimed(""), 2500);
   };
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const ready = rewards.filter((r) => xp >= r.cost);
   const saving = rewards.filter((r) => xp < r.cost);
   const card = (r: Reward) => (
@@ -1056,6 +1112,8 @@ export function Rewards() {
       key={r.id}
       {...draggable({ kind: "reward", id: r.id }, r.title)}
       {...dropReward(r.id)}
+      onClick={(e) => !onControl(e) && setEditingReward(r)}
+      title="Click to edit"
       className={s.reward}
       style={{ "--fill": fillFor(r.id) } as React.CSSProperties}
     >
@@ -1131,6 +1189,23 @@ export function Rewards() {
           <Gift size={20} strokeWidth={2.5} aria-hidden /> Enjoy: {claimed}. You
           earned it.
         </p>
+      )}
+      {editingReward && (
+        <RewardDialog
+          reward={editingReward}
+          perTask={perTask}
+          onClose={() => setEditingReward(null)}
+          onSave={(r) => {
+            changeGoals(lists, (xs) => xs.map((x) => (x.id === r.id ? r : x)));
+            setEditingReward(null);
+          }}
+          onDelete={() => {
+            changeGoals(lists, (xs) =>
+              xs.filter((x) => x.id !== editingReward.id),
+            );
+            setEditingReward(null);
+          }}
+        />
       )}
       <div className={s.rewardsPage}>
         <div>
@@ -1298,6 +1373,81 @@ export function Rewards() {
         </aside>
       </div>
     </>
+  );
+}
+
+// Editing a reward: its name and price, in tasks like yours.
+function RewardDialog({
+  reward,
+  perTask,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  reward: Reward;
+  perTask: number;
+  onClose: () => void;
+  onSave: (r: Reward) => void;
+  onDelete: () => void;
+}) {
+  const [title, setTitle] = useState(reward.title);
+  const [cost, setCost] = useState(String(reward.cost));
+  const c = Math.round(+cost);
+  const ok = !!title.trim() && c >= 1 && c <= 100_000;
+  return (
+    <Modal label="Edit reward" onClose={onClose}>
+      <p className={s.goalStep}>Edit reward</p>
+      <h2 className="display">{title.trim() || reward.title}</h2>
+      <form
+        className={s.goalForm}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (ok) onSave({ ...reward, title: title.trim(), cost: c });
+        }}
+      >
+        <label className={s.goalField}>
+          <span>The reward</span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={80}
+            autoFocus
+          />
+        </label>
+        <label className={s.goalField}>
+          <span>Costs (XP)</span>
+          <input
+            type="number"
+            min={1}
+            max={100000}
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+          />
+        </label>
+        {c >= 1 && (
+          <p className={s.goalHint}>
+            About {Math.max(1, Math.round(c / perTask))} task
+            {Math.round(c / perTask) === 1 ? "" : "s"} like yours.
+          </p>
+        )}
+        <div className={s.tools}>
+          <button
+            type="button"
+            className={`${s.ghost} ${s.danger}`}
+            onClick={onDelete}
+          >
+            <Trash2 size={15} strokeWidth={2.5} aria-hidden /> Delete
+          </button>
+          <button
+            className="btn"
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            disabled={!ok}
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

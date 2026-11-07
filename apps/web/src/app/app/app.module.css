@@ -4294,3 +4294,6 @@ input.stick[data-custom][aria-invalid="true"] {
   color: var(--ink);
   border-color: var(--ink);
 }
+.listGoal {
+  cursor: pointer;
+}
