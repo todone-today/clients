@@ -43,6 +43,7 @@
 .lists {
   list-style: none;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.15rem;
 }
 .listBtn {
@@ -55,6 +56,7 @@
   border: 2px solid transparent;
 }
 .listBtn span:first-child {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2542,24 +2544,55 @@ input.stick[data-custom][aria-invalid="true"] {
   margin-top: 0;
 }
 
-/* Desktop: fold the sidebar away for a wider board. Phones use the drawer instead. */
-.fold {
-  margin-left: -0.75rem; /* sits right next to the logo */
+/* Desktop: fold the sidebar to a rail of icons for a wider board. Phones use the drawer instead. */
+.listBtn span:first-child > svg {
+  flex: none;
+  vertical-align: -3px;
 }
 @media (min-width: 761px) {
   .shell[data-slim] {
-    grid-template-columns: 0 1fr;
+    grid-template-columns: 4.25rem 1fr;
   }
   .shell[data-slim] > .side {
-    visibility: hidden;
-    overflow: hidden;
-    padding: 0;
-    border: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.55rem;
+    overflow-x: hidden;
   }
-}
-@media (max-width: 760px) {
-  .fold {
+  .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools),
+  .shell[data-slim] .sideTools > :not(.binBtn),
+  .shell[data-slim] .side .label,
+  .shell[data-slim] .side .open {
     display: none;
+  }
+  .shell[data-slim] .foldIn {
+    position: static;
+    margin-bottom: 0.5rem;
+  }
+  .shell[data-slim] .lists {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .shell[data-slim] .sideTools {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+  }
+  .shell[data-slim] .binBtn {
+    margin-top: 0;
+  }
+  .shell[data-slim] .listBtn {
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    align-items: center;
+  }
+  .shell[data-slim] .listBtn span:first-child {
+    display: grid;
+    place-items: center;
+    overflow: visible;
   }
 }
 
@@ -2724,7 +2757,8 @@ input.stick[data-custom][aria-invalid="true"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.panelFields label {
+.panelFields label,
+.panelField {
   display: grid;
   gap: 0.3rem;
   font-size: 0.7rem;
@@ -2956,4 +2990,48 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .disclosure .ghost {
   background: #fff;
+}
+
+/* Panel: the done box sits before the title, like on a note; dropdowns and Delete match the fields. */
+.panelDone {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-top: 0.35rem;
+  background: #fff;
+  border-color: var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.panelSelect > button {
+  padding: 0.5rem 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.panelSelect > button:hover,
+.panelSelect > button[aria-expanded="true"] {
+  border-color: var(--ink);
+  box-shadow: 4px 4px 0 var(--fill);
+}
+.panel .edDelete {
+  color: #fff;
+  background: var(--hot);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.panel .edDelete:hover,
+.panel .edDelete:focus-visible {
+  color: #fff;
+  background: var(--hot);
+  transform: translate(-1px, -1px) rotate(-2deg);
+}
+.panel .edDelete:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
 }

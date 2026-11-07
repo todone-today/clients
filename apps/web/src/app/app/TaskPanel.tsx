@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Check,
   Copy,
   Link2,
   Lock,
@@ -20,6 +21,7 @@ import {
 } from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
 import { Note } from "@/components/Note";
+import { Select } from "@/components/Select";
 import { type Comment, Thread } from "@/components/Thread";
 import {
   ACCEPT,
@@ -151,6 +153,16 @@ export function TaskPanel({
         style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}
       >
         <header className={s.panelHead}>
+          <button
+            className={`${s.check} ${s.panelDone}`}
+            role="checkbox"
+            aria-checked={task.done}
+            aria-label="Done"
+            title={task.done ? "Done: click to reopen" : "Mark done"}
+            onClick={() => edit((t) => ({ ...t, done: !t.done }))}
+          >
+            {task.done && <Check size={18} strokeWidth={3.5} />}
+          </button>
           <input
             key={task.id + task.title}
             className={s.panelTitle}
@@ -183,14 +195,6 @@ export function TaskPanel({
         </p>
 
         <div className={s.panelFields}>
-          <label className={s.panelCheck}>
-            <input
-              type="checkbox"
-              checked={task.done}
-              onChange={(e) => edit((t) => ({ ...t, done: e.target.checked }))}
-            />
-            Done
-          </label>
           <label>
             <span>Day</span>
             <input
@@ -233,44 +237,42 @@ export function TaskPanel({
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
           </label>
-          <label>
+          <div className={s.panelField}>
             <span>Priority</span>
-            <select
-              value={task.pri ?? ""}
-              onChange={(e) =>
-                edit((t) => ({
-                  ...t,
-                  pri: e.target.value
-                    ? (+e.target.value as 1 | 2 | 3)
-                    : undefined,
-                }))
+            <Select
+              className={s.panelSelect}
+              label="Priority"
+              value={String(task.pri ?? "")}
+              options={[
+                { value: "", label: "None" },
+                { value: "1", label: "High" },
+                { value: "2", label: "Medium" },
+                { value: "3", label: "Low" },
+              ]}
+              onChange={(v) =>
+                edit((t) => ({ ...t, pri: v ? (+v as 1 | 2 | 3) : undefined }))
               }
-            >
-              <option value="">None</option>
-              <option value="1">High</option>
-              <option value="2">Medium</option>
-              <option value="3">Low</option>
-            </select>
-          </label>
-          <label>
+            />
+          </div>
+          <div className={s.panelField}>
             <span>Repeat</span>
-            <select
+            <Select
+              className={s.panelSelect}
+              label="Repeat"
               value={task.rep ?? ""}
-              onChange={(e) =>
-                edit((t) => ({ ...t, rep: e.target.value || undefined }))
-              }
-            >
-              <option value="">Never</option>
-              {(task.rep && !REPEATS.includes(task.rep)
-                ? [task.rep, ...REPEATS]
-                : REPEATS
-              ).map((r) => (
-                <option key={r} value={r}>
-                  {r.replace("every ", "Every ")}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={[
+                { value: "", label: "Never" },
+                ...(task.rep && !REPEATS.includes(task.rep)
+                  ? [task.rep, ...REPEATS]
+                  : REPEATS
+                ).map((r) => ({
+                  value: r,
+                  label: r.replace("every ", "Every "),
+                })),
+              ]}
+              onChange={(v) => edit((t) => ({ ...t, rep: v || undefined }))}
+            />
+          </div>
         </div>
 
         <section className={s.panelSection}>

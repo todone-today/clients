@@ -5,7 +5,20 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AlignLeft, Lightbulb, Lock, LockOpen, Paperclip, Menu, Check, Info, PanelLeftClose, PanelLeftOpen, Plus, Trash2 } from "lucide-react";
+import {
+  AlignLeft,
+  Lightbulb,
+  Lock,
+  LockOpen,
+  Paperclip,
+  Menu,
+  Check,
+  Info,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -29,6 +42,7 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
+import { listIcon } from "./listIcon";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -37,7 +51,12 @@ import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
 import { Tour } from "./Tour";
 import { VerifyBanner } from "./VerifyBanner";
-import { encryptPlainLists, setWorkspace, startOnboarding, waitingForTeamKey } from "./actions";
+import {
+  encryptPlainLists,
+  setWorkspace,
+  startOnboarding,
+  waitingForTeamKey,
+} from "./actions";
 import { Unlock } from "./Unlock";
 import { loadVault, startTeam, teamKey, teamMembers } from "@/lib/vault";
 import { remindNow } from "@/lib/remind";
@@ -63,8 +82,8 @@ import {
 import s from "./app.module.css";
 
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.
-// Sticky colours. Each note in a list gets its own, ranked by id, so no two match until there are more
-// notes than colours, and dragging notes around doesn't reshuffle them.
+// Sticky colours. Each note's colour comes from its own id, so adding, deleting or moving notes doesn't recolour
+// the list; a note that would match the one before it takes the next colour instead.
 const NOTES = [
   "var(--butter)",
   "var(--pink)",
@@ -75,26 +94,47 @@ const NOTES = [
   "#c9b3ff", // lavender
   "#8fe3b0", // mint
 ];
-const noteColors = (tasks: Task[]) =>
-  new Map(
-    [...tasks]
-      .map((t) => t.id)
-      .sort()
-      .map((id, i) => [id, NOTES[i % NOTES.length]]),
-  );
+const noteColor = (id: string) => {
+  let h = 2166136261; // FNV-1a: short random ids still spread evenly over the colours
+  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return (h >>> 0) % NOTES.length;
+};
+const noteColors = (tasks: Task[]) => {
+  const out = new Map<string, string>();
+  let prev = -1;
+  for (const t of tasks) {
+    let c = noteColor(t.id);
+    if (c === prev) c = (c + 1) % NOTES.length;
+    out.set(t.id, NOTES[c]);
+    prev = c;
+  }
+  return out;
+};
 const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
-const findTask = (ts: Task[], id: string | null) => ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
+const findTask = (ts: Task[], id: string | null) =>
+  ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
 // Repeats waiting for their day aren't counted until it comes.
 const count = (ts: Task[], today = todayISO()) => {
-  const all = ts.flatMap((t) => [t, ...t.sub]).filter((t) => !waiting(t, today));
-  return { open: all.filter((t) => !t.done).length, done: all.filter((t) => t.done).length, all: all.length };
+  const all = ts
+    .flatMap((t) => [t, ...t.sub])
+    .filter((t) => !waiting(t, today));
+  return {
+    open: all.filter((t) => !t.done).length,
+    done: all.filter((t) => t.done).length,
+    all: all.length,
+  };
 };
 
 // `demo`: the app on sample lists with no account (todone.today/demo); changes stay in this tab.
 export function TodoApp({ demo = false }: { demo?: boolean }) {
   const router = useRouter();
-  const { data: session, isPending, error: offline, refetch } = authClient.useSession();
+  const {
+    data: session,
+    isPending,
+    error: offline,
+    refetch,
+  } = authClient.useSession();
   const orgId = session?.session.activeOrganizationId ?? null;
   const userId = session?.user.id;
   const { lists, error, update, add } = useLists();
@@ -106,7 +146,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [slim, setSlim] = useState(false);
   useEffect(() => {
     try {
-      if (localStorage.getItem("todone:slim") === "1") Promise.resolve().then(() => setSlim(true));
+      if (localStorage.getItem("todone:slim") === "1")
+        Promise.resolve().then(() => setSlim(true));
     } catch {}
   }, []);
   const toggleSlim = () =>
@@ -118,7 +159,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     });
   // End-to-end encryption: whether this browser holds the keys ("locked": ask for the password), and whether the
   // open team still has to give you its key.
-  const [vault, setVault] = useState<"checking" | "open" | "locked">("checking");
+  const [vault, setVault] = useState<"checking" | "open" | "locked">(
+    "checking",
+  );
   const [teamWait, setTeamWait] = useState(false);
   // Anything that changes the view closes the phone drawer.
   const show = (p: Panel) => {
@@ -132,7 +175,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         .filter((l) => !l.kind)
         .sort((a, b) =>
           a.position == null || b.position == null
-            ? (a.position == null ? 0 : 1) - (b.position == null ? 0 : 1) || b.updated - a.updated
+            ? (a.position == null ? 0 : 1) - (b.position == null ? 0 : 1) ||
+              b.updated - a.updated
             : a.position - b.position,
         ),
     [lists],
@@ -142,14 +186,23 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   // and other lists (dropped above or below to reorder).
   const dropOnList = useDrop("sidebar", {
     accept: (p, listId) =>
-      p.kind === "idea" || (p.kind === "task" && p.listId !== listId) || (p.kind === "list" && p.id !== listId),
-    where: (p, _, at) => (p.kind === "list" ? placeOn(at, "y", false) : "inside"),
+      p.kind === "idea" ||
+      (p.kind === "task" && p.listId !== listId) ||
+      (p.kind === "list" && p.id !== listId),
+    where: (p, _, at) =>
+      p.kind === "list" ? placeOn(at, "y", false) : "inside",
     drop: (p, listId, at) => {
-      if (p.kind === "idea" && lists) for (const id of p.ids) ideaToTask(lists, id, listId, update);
-      else if (p.kind === "task") moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
+      if (p.kind === "idea" && lists)
+        for (const id of p.ids) ideaToTask(lists, id, listId, update);
+      else if (p.kind === "task")
+        moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
       else if (p.kind === "list") {
         const ids = sorted.map((l) => l.id).filter((id) => id !== p.id);
-        ids.splice(ids.indexOf(listId) + (placeOn(at, "y", false) === "after" ? 1 : 0), 0, p.id);
+        ids.splice(
+          ids.indexOf(listId) + (placeOn(at, "y", false) === "after" ? 1 : 0),
+          0,
+          p.id,
+        );
         reorder(ids);
       }
     },
@@ -161,20 +214,30 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   };
 
   useEffect(() => {
-    if (!demo && !isPending && !userId && !offline) router.replace("/login?next=/app");
+    if (!demo && !isPending && !userId && !offline)
+      router.replace("/login?next=/app");
   }, [demo, isPending, userId, offline, router]);
   useEffect(() => {
     if (!demo) return;
     fetch(`/api/demo?today=${todayISO()}`)
       .then((r) => r.json())
       .then((ls: { name: string; tasks: Task[]; kind?: "ideas" }[]) => {
-        startDemo(ls.map((l, i) => ({ ...l, id: uid(), version: 0, updated: 0, position: i + 1 })));
+        startDemo(
+          ls.map((l, i) => ({
+            ...l,
+            id: uid(),
+            version: 0,
+            updated: 0,
+            position: i + 1,
+          })),
+        );
         setTouring(true);
       });
   }, [demo]);
   // The service worker keeps the app openable offline (and shows push notifications).
   useEffect(() => {
-    if (process.env.NODE_ENV === "production") navigator.serviceWorker?.register("/sw.js").catch(() => {});
+    if (process.env.NODE_ENV === "production")
+      navigator.serviceWorker?.register("/sw.js").catch(() => {});
   }, []);
   useEffect(() => {
     if (demo || !userId) return;
@@ -194,19 +257,23 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setWorkspace(orgId);
     (async () => {
       // A team from before encryption has no key yet: the first member to open it makes one and encrypts its lists.
-      if (orgId && !(await teamKey(orgId)) && !(await teamMembers(orgId)).some((m) => m.hasKey)) {
+      if (
+        orgId &&
+        !(await teamKey(orgId)) &&
+        !(await teamMembers(orgId)).some((m) => m.hasKey)
+      ) {
         await startTeam(orgId);
         await encryptPlainLists(orgId);
       }
       await reload(!orgId);
       setTeamWait(!!orgId && (waitingForTeamKey() || !(await teamKey(orgId))));
       // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
-      if (new URLSearchParams(location.search).has("connect")) return setPanel("integrations");
+      if (new URLSearchParams(location.search).has("connect"))
+        return setPanel("integrations");
       // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
       if (!orgId && (await startOnboarding())) {
-        const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] = await fetch(
-          `/api/demo?today=${todayISO()}`,
-        ).then((r) => r.json());
+        const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
+          await fetch(`/api/demo?today=${todayISO()}`).then((r) => r.json());
         reorder(demoLists.map((l) => add(l.name, l.tasks, l.kind)));
         setTouring(true);
       }
@@ -220,7 +287,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   }, [demo, lists]);
   // Changes from other devices and teammates show up on focus, and every 20s while the tab is visible.
   useEffect(() => {
-    const timer = setInterval(() => document.visibilityState === "visible" && refresh(), 20_000);
+    const timer = setInterval(
+      () => document.visibilityState === "visible" && refresh(),
+      20_000,
+    );
     addEventListener("focus", refresh);
     return () => {
       clearInterval(timer);
@@ -229,14 +299,25 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   }, []);
 
   if (!demo && session && vault === "locked")
-    return <Unlock userId={session.user.id} email={session.user.email} onDone={() => setVault("open")} />;
+    return (
+      <Unlock
+        userId={session.user.id}
+        email={session.user.email}
+        onDone={() => setVault("open")}
+      />
+    );
 
   return (
     <div className={s.shell} data-slim={slim || undefined}>
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
-        <button className={s.menu} onClick={() => setDrawer(true)} aria-label="Lists and workspace" aria-expanded={drawer}>
+        <button
+          className={s.menu}
+          onClick={() => setDrawer(true)}
+          aria-label="Lists and workspace"
+          aria-expanded={drawer}
+        >
           <Menu size={18} strokeWidth={2.5} aria-hidden />
           <span>
             {panel === "ideas"
@@ -256,20 +337,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </Link>
         ) : (
           // Signed in, the logo is the app's home: back to your lists, not the marketing page.
-          <button className={s.mark} onClick={() => setPanel(null)} aria-label="Your lists">
-            <Logo size={26} />
-          </button>
-        )}
-        {slim && (
-          // Hidden sidebar: bring it back from here, next to the logo.
           <button
-            className={`${s.tile} ${s.fold}`}
-            style={{ "--fill": "var(--pink)" } as React.CSSProperties}
-            onClick={toggleSlim}
-            aria-label="Show the sidebar"
-            title="Show the sidebar"
+            className={s.mark}
+            onClick={() => setPanel(null)}
+            aria-label="Your lists"
           >
-            <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
+            <Logo size={26} />
           </button>
         )}
         <nav className={s.tabs} aria-label="Views">
@@ -279,7 +352,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               ["calendar", "Calendar"],
             ] as const
           ).map(([p, name]) => (
-            <button key={name} aria-pressed={panel === p} onClick={() => setPanel(p)} data-tour={p ?? "lists-tab"}>
+            <button
+              key={name}
+              aria-pressed={panel === p}
+              onClick={() => setPanel(p)}
+              data-tour={p ?? "lists-tab"}
+            >
               {name}
             </button>
           ))}
@@ -302,7 +380,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         </button>
         <ThemeToggle tile={s.tile} />
         {demo ? (
-          <Link href="/login" className={`btn ${s.signUp}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+          <Link
+            href="/login"
+            className={`btn ${s.signUp}`}
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+          >
             <span className={s.wide}>Make an account</span>
             <span className={s.narrow}>Sign up</span>
           </Link>
@@ -314,31 +396,60 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             aria-label="Account"
             title={session?.user.email}
           >
-            <Avatar image={session?.user.image} name={session?.user.name || session?.user.email || "?"} />
+            <Avatar
+              image={session?.user.image}
+              name={session?.user.name || session?.user.email || "?"}
+            />
           </button>
         )}
       </header>
       {!demo && session && (
-        <VerifyBanner email={session.user.email} verified={session.user.emailVerified} created={session.user.createdAt} />
+        <VerifyBanner
+          email={session.user.email}
+          verified={session.user.emailVerified}
+          created={session.user.createdAt}
+        />
       )}
       {teamWait && (
         <p className={s.demoBar} role="note">
-          This team&apos;s lists are end-to-end encrypted. A teammate who has the team&apos;s key needs to confirm you
-          (Workspace → the team → Members) before you can see or add to them.
+          This team&apos;s lists are end-to-end encrypted. A teammate who has
+          the team&apos;s key needs to confirm you (Workspace → the team →
+          Members) before you can see or add to them.
         </p>
       )}
       {demo && (
         <p className={s.demoBar} role="note">
-          This is a demo with sample lists. Try anything: changes stay in this tab and vanish when you close it.
+          This is a demo with sample lists. Try anything: changes stay in this
+          tab and vanish when you close it.
         </p>
       )}
 
       {/* On a phone the sidebar is a drawer, opened from the header. */}
-      {drawer && <div className={s.backdrop} onClick={() => setDrawer(false)} aria-hidden />}
-      <aside className={s.side} aria-label="Lists" data-open={drawer} data-demo={demo || undefined}>
-        {/* Fold the sidebar away (desktop), top right beside Workspace; the top bar brings it back. */}
-        <button className={s.foldIn} onClick={toggleSlim} aria-label="Hide the sidebar" title="Hide the sidebar">
-          <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
+      {drawer && (
+        <div
+          className={s.backdrop}
+          onClick={() => setDrawer(false)}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={s.side}
+        aria-label="Lists"
+        data-open={drawer}
+        data-demo={demo || undefined}
+      >
+        {/* Fold the sidebar to icons (desktop): top right beside Workspace, top of the rail when folded. */}
+        <button
+          className={s.foldIn}
+          onClick={toggleSlim}
+          aria-label={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
+          title={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
+        >
+          {slim ? (
+            <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
+          ) : (
+            <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
+          )}
         </button>
         {!demo && (
           <Workspaces
@@ -357,17 +468,22 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           aria-current={panel === "ideas"}
           onClick={() => show("ideas")}
           data-tour="ideas"
+          title="Brainstorm"
         >
           <span>
-            <Lightbulb size={16} strokeWidth={2.5} aria-hidden /> Brainstorm
+            <Lightbulb size={16} strokeWidth={2.5} aria-hidden />{" "}
+            <span className={s.label}>Brainstorm</span>
           </span>
-          <span className={s.open}>{lists?.find((l) => l.kind === "ideas")?.tasks.length || ""}</span>
+          <span className={s.open}>
+            {lists?.find((l) => l.kind === "ideas")?.tasks.length || ""}
+          </span>
         </button>
         <h2 className={s.sideHead}>Lists</h2>
         {lists && (
           <ul className={s.lists} data-tour="lists">
             {sorted.map((l) => {
               const c = count(l.tasks);
+              const Icon = listIcon(l.id, l.name);
               return (
                 <li key={l.id}>
                   <button
@@ -376,8 +492,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                     onClick={() => open(l.id)}
                     {...dropOnList(l.id)}
                     {...draggable({ kind: "list", id: l.id }, l.name)}
+                    title={l.name}
                   >
-                    <span>{l.name}</span>
+                    <span>
+                      <Icon size={16} strokeWidth={2.5} aria-hidden />{" "}
+                      <span className={s.label}>{l.name}</span>
+                    </span>
                     <span className={s.open}>{c.open}</span>
                   </button>
                 </li>
@@ -386,16 +506,24 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </ul>
         )}
         <div className={s.sideTools}>
-          <NewList onAdd={(name) => open(add(name))} taken={(n) => !!lists?.some((l) => l.name === n)} />
+          <NewList
+            onAdd={(name) => open(add(name))}
+            taken={(n) => !!lists?.some((l) => l.name === n)}
+          />
           <button
             className={`${s.listBtn} ${s.ideasBtn} ${s.binBtn}`}
             aria-current={panel === "bin"}
             onClick={() => show("bin")}
+            title="Bin"
           >
             <span>
-              <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Bin
+              <Trash2 size={16} strokeWidth={2.5} aria-hidden />{" "}
+              <span className={s.label}>Bin</span>
             </span>
-            <span className={s.open}>{fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []).length || ""}</span>
+            <span className={s.open}>
+              {fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? [])
+                .length || ""}
+            </span>
           </button>
           <AiImport
             lists={sorted}
@@ -441,7 +569,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   );
 }
 
-function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name: string) => boolean }) {
+function NewList({
+  onAdd,
+  taken,
+}: {
+  onAdd: (name: string) => void;
+  taken: (name: string) => boolean;
+}) {
   const [name, setName] = useState("");
   const clean = name.trim();
   const clash = clean !== "" && taken(clean);
@@ -458,11 +592,19 @@ function NewList({ onAdd, taken }: { onAdd: (name: string) => void; taken: (name
       <label className="sr-only" htmlFor="new-list">
         New list
       </label>
-      <input id="new-list" value={name} onChange={(e) => setName(e.target.value)} placeholder="New list" maxLength={60} />
+      <input
+        id="new-list"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="New list"
+        maxLength={60}
+      />
       <button aria-label="Create list" disabled={!clean || clash}>
         <Plus size={18} strokeWidth={2.5} />
       </button>
-      {clash && <p className={s.err}>There is already a list called “{clean}”.</p>}
+      {clash && (
+        <p className={s.err}>There is already a list called “{clean}”.</p>
+      )}
     </form>
   );
 }
@@ -481,7 +623,8 @@ function Privacy({ list, update }: { list: List; update: Update }) {
         onClick={() => update(list.id, (l) => ({ ...l, plain: false }))}
         title="Encrypt this list again; integrations and shared links stop seeing it"
       >
-        <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Not encrypted: integrations can read it · <u>Encrypt</u>
+        <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Not encrypted:
+        integrations can read it · <u>Encrypt</u>
       </button>
     );
   return (
@@ -506,7 +649,15 @@ function Privacy({ list, update }: { list: List; update: Update }) {
 
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
-function ListView({ list, lists, update }: { list: List; lists: { id: string; name: string }[]; update: Update }) {
+function ListView({
+  list,
+  lists,
+  update,
+}: {
+  list: List;
+  lists: { id: string; name: string }[];
+  update: Update;
+}) {
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -514,7 +665,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   const [show, setShow] = useState<Show>("open");
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
-  const [binned, setBinned] = useState<{ before: Task[]; text: string; ids?: string[] } | null>(null);
+  const [binned, setBinned] = useState<{
+    before: Task[];
+    text: string;
+    ids?: string[];
+  } | null>(null);
   // Binned tasks also go to the workspace's bin for 7 days. A task whose parent goes too travels inside it.
   const bin = (gone: Task[]) => {
     const inside = new Set(gone.flatMap((t) => t.sub.map((x) => x.id)));
@@ -524,13 +679,19 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   };
   const today = todayISO();
   // The minute of the day, kept current so a task turns late when its time passes.
-  const [nowMin, setNowMin] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
+  const [nowMin, setNowMin] = useState(
+    () => new Date().getHours() * 60 + new Date().getMinutes(),
+  );
   useEffect(() => {
-    const t = setInterval(() => setNowMin(new Date().getHours() * 60 + new Date().getMinutes()), 30_000);
+    const t = setInterval(
+      () => setNowMin(new Date().getHours() * 60 + new Date().getMinutes()),
+      30_000,
+    );
     return () => clearInterval(t);
   }, []);
   const c = count(list.tasks);
-  const setTasks = (f: (ts: Task[]) => Task[]) => update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
+  const setTasks = (f: (ts: Task[]) => Task[]) =>
+    update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
   const isTop = (id: string) => list.tasks.some((t) => t.id === id);
   const pick = (id: string) =>
     setPicked((p) => {
@@ -539,18 +700,35 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       return n;
     });
   const applySticker = (key: string, ids: string[]) => {
-    if (key.startsWith("custom-")) return dispatchEvent(new CustomEvent("todone:custom", { detail: { key, ids } }));
+    if (key.startsWith("custom-"))
+      return dispatchEvent(
+        new CustomEvent("todone:custom", { detail: { key, ids } }),
+      );
     const patch = sticker(key, today);
-    if (patch) setTasks((ts) => ids.reduce((acc, id) => mapTask(acc, id, (t) => ({ ...t, ...patch })), ts));
+    if (patch)
+      setTasks((ts) =>
+        ids.reduce(
+          (acc, id) => mapTask(acc, id, (t) => ({ ...t, ...patch })),
+          ts,
+        ),
+      );
   };
   // Dropping a task: on a note's left or right edge puts it before or after; in the middle nests it.
   // Among subtasks, the top or bottom half puts it above or below.
   // While sorted, the screen isn't your order, so edges nest too instead of reordering.
   const place = (arg: string, at: At) =>
-    !isTop(arg) ? placeOn(at, "y", false) : sort === "mine" ? placeOn(at, "x") : ("inside" as const);
+    !isTop(arg)
+      ? placeOn(at, "y", false)
+      : sort === "mine"
+        ? placeOn(at, "x")
+        : ("inside" as const);
   // While a note is dragged over another's left or right edge, an empty slot opens there and the
   // neighbours shift aside; the slot is a drop target too, so the gap holds while the pointer is in it.
-  const [gap, setGap] = useState<{ target: string; place: "before" | "after"; ids: string[] } | null>(null);
+  const [gap, setGap] = useState<{
+    target: string;
+    place: "before" | "after";
+    ids: string[];
+  } | null>(null);
   // Notes glide to their new spots when the slot opens or moves, or a drop lands.
   const boardRef = useGlide<HTMLUListElement>();
   const drop = useDrop(`list-${list.id}`, {
@@ -560,19 +738,29 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         : p.kind === "task" &&
           p.listId === list.id &&
           !p.ids.includes(arg) &&
-          (arg === "gap" ? !!gap : arg === "unnest" ? p.ids.some((id) => !isTop(id)) : !!findTask(list.tasks, arg)),
+          (arg === "gap"
+            ? !!gap
+            : arg === "unnest"
+              ? p.ids.some((id) => !isTop(id))
+              : !!findTask(list.tasks, arg)),
     where: (p, arg, at) => {
       if (p.kind !== "task" || arg === "unnest") return "inside";
       if (arg === "gap") return "inside";
       const where = place(arg, at);
-      const slot = isTop(arg) && where !== "inside" ? { target: arg, place: where, ids: p.ids } : null;
-      setGap((g) => (g?.target === slot?.target && g?.place === slot?.place ? g : slot));
+      const slot =
+        isTop(arg) && where !== "inside"
+          ? { target: arg, place: where, ids: p.ids }
+          : null;
+      setGap((g) =>
+        g?.target === slot?.target && g?.place === slot?.place ? g : slot,
+      );
       return where;
     },
     leave: () => setGap(null),
     drop: (p, arg, at) => {
       setGap(null);
-      if (p.kind === "sticker") applySticker(p.key, picked.has(arg) ? [...picked] : [arg]);
+      if (p.kind === "sticker")
+        applySticker(p.key, picked.has(arg) ? [...picked] : [arg]);
       else if (p.kind === "task") {
         setTasks((ts) =>
           arg === "gap" && gap
@@ -587,25 +775,35 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
   });
   // The bin takes tasks, or a date sticker: then every task due that day goes. Either way, undo puts the list back.
   const binDrop = useDrop(`bin-${list.id}`, {
-    accept: (p) => (p.kind === "task" && p.listId === list.id) || (p.kind === "sticker" && !!sticker(p.key, today)?.due),
+    accept: (p) =>
+      (p.kind === "task" && p.listId === list.id) ||
+      (p.kind === "sticker" && !!sticker(p.key, today)?.due),
     drop: (p) => {
       const before = list.tasks;
       if (p.kind === "task") {
         const gone = flatten(before).filter((t) => p.ids.includes(t.id));
-        setTasks((ts) => p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts));
+        setTasks((ts) =>
+          p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts),
+        );
         binSound();
         setBinned({
           before,
           ids: bin(gone),
-          text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.`,
+          text:
+            gone.length > 1
+              ? `Deleted ${gone.length} tasks.`
+              : `Deleted “${gone[0]?.title}”.`,
         });
         setPicked(new Set());
       } else if (p.kind === "sticker") {
         const due = sticker(p.key, today)!.due!;
         const gone = flatten(before).filter((t) => t.due === due);
         const day = relDue(due, today);
-        if (!gone.length) return setBinned({ before, text: `Nothing is due ${day}.` });
-        setTasks((ts) => gone.reduce((acc, t) => mapTask(acc, t.id, () => null), ts));
+        if (!gone.length)
+          return setBinned({ before, text: `Nothing is due ${day}.` });
+        setTasks((ts) =>
+          gone.reduce((acc, t) => mapTask(acc, t.id, () => null), ts),
+        );
         binSound();
         setBinned({
           before,
@@ -621,7 +819,8 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
     return () => clearTimeout(t);
   }, [binned]);
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setPicked(new Set());
+    const esc = (e: KeyboardEvent) =>
+      e.key === "Escape" && setPicked(new Set());
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, []);
@@ -653,8 +852,16 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           {...binDrop("bin")}
           onClick={() => (armed ? update(list.id, () => null) : setArmed(true))}
           onBlur={() => setArmed(false)}
-          aria-label={armed ? "Click again to delete this list" : "Delete list, or drop tasks here to delete them"}
-          title={armed ? "Click again to delete this list" : "Drop tasks here to delete them. Click to delete the list."}
+          aria-label={
+            armed
+              ? "Click again to delete this list"
+              : "Delete list, or drop tasks here to delete them"
+          }
+          title={
+            armed
+              ? "Click again to delete this list"
+              : "Drop tasks here to delete them. Click to delete the list."
+          }
         >
           <Trash2 size={28} strokeWidth={2.5} />
           <span>{armed ? "Delete list?" : "Bin"}</span>
@@ -681,14 +888,19 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
               }}
               onBlur={(e) => {
                 const v = e.target.value.trim();
-                if (v && v !== list.name) update(list.id, (l) => ({ ...l, name: v }));
+                if (v && v !== list.name)
+                  update(list.id, (l) => ({ ...l, name: v }));
                 setRenaming(false);
               }}
             />
           </>
         ) : (
           <h1 className={`display ${s.title}`}>
-            <button className={s.titleBtn} onClick={() => setRenaming(true)} title="Click to rename">
+            <button
+              className={s.titleBtn}
+              onClick={() => setRenaming(true)}
+              title="Click to rename"
+            >
               {list.name}
             </button>
           </h1>
@@ -705,7 +917,9 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       {binned && (
         <div className={s.undo} role="status">
           {binned.text}
-          {binned.ids?.length ? <small>In the Bin (sidebar) for 7 days.</small> : null}
+          {binned.ids?.length ? (
+            <small>In the Bin (sidebar) for 7 days.</small>
+          ) : null}
           {binned.before !== list.tasks && (
             <button
               className={s.ghost}
@@ -722,7 +936,8 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       )}
       {picked.size > 0 && (
         <div className={s.pickBar} role="status">
-          <b>{picked.size} selected.</b> Drag them onto a sticker, the bin or another list, or click a sticker.
+          <b>{picked.size} selected.</b> Drag them onto a sticker, the bin or
+          another list, or click a sticker.
           <button className={s.ghost} onClick={() => setPicked(new Set())}>
             Clear <kbd>Esc</kbd>
           </button>
@@ -737,7 +952,10 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
               e.preventDefault();
               const t = draft.trim();
               if (!t) return;
-              setTasks((ts) => [...ts, { id: uid(), title: t, done: false, sub: [] }]);
+              setTasks((ts) => [
+                ...ts,
+                { id: uid(), title: t, done: false, sub: [] },
+              ]);
               setDraft("");
             }}
           >
@@ -751,7 +969,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
               placeholder="Add a task, press enter"
               autoComplete="off"
             />
-            <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!draft.trim()}>
+            <button
+              className="btn"
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+              disabled={!draft.trim()}
+            >
               Add
             </button>
           </form>
@@ -760,7 +982,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
             <div className={s.boardBar} data-tour="filters">
               <div className={s.seg} role="group" aria-label="Show">
                 {SHOWS.map(([k, name]) => (
-                  <button key={k} aria-pressed={show === k} onClick={() => setShow(k)}>
+                  <button
+                    key={k}
+                    aria-pressed={show === k}
+                    onClick={() => setShow(k)}
+                  >
                     {name}
                   </button>
                 ))}
@@ -779,30 +1005,55 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
 
           {list.tasks.length ? (
             // A step dragged out of its note onto the board's empty space becomes a main task again.
-            <ul className={s.tasks} data-tour="board" ref={boardRef} {...drop("unnest")}>
+            <ul
+              className={s.tasks}
+              data-tour="board"
+              ref={boardRef}
+              {...drop("unnest")}
+            >
               {board(list.tasks, show, sort, today, nowMin).flatMap((t) => {
-                const note = <TaskRow key={t.id} task={t} {...row} top dragged={!!gap?.ids.includes(t.id)} />;
+                const note = (
+                  <TaskRow
+                    key={t.id}
+                    task={t}
+                    {...row}
+                    top
+                    dragged={!!gap?.ids.includes(t.id)}
+                  />
+                );
                 if (gap?.target !== t.id) return [note];
-                const slot = <li key="gap" className={s.slot} {...drop("gap")} aria-hidden />;
+                const slot = (
+                  <li
+                    key="gap"
+                    className={s.slot}
+                    {...drop("gap")}
+                    aria-hidden
+                  />
+                );
                 return gap.place === "before" ? [slot, note] : [note, slot];
               })}
               {show === "open" && list.tasks.some((t) => waiting(t, today)) && (
                 <li className={s.noMatch}>
-                  {list.tasks.filter((t) => waiting(t, today)).length} repeating task
-                  {list.tasks.filter((t) => waiting(t, today)).length === 1 ? " comes" : "s come"} back on its day.{" "}
+                  {list.tasks.filter((t) => waiting(t, today)).length} repeating
+                  task
+                  {list.tasks.filter((t) => waiting(t, today)).length === 1
+                    ? " comes"
+                    : "s come"}{" "}
+                  back on its day.{" "}
                   <button className={s.link} onClick={() => setShow("all")}>
                     Show
                   </button>
                 </li>
               )}
-              {!board(list.tasks, show, sort, today, nowMin).length && !list.tasks.some((t) => waiting(t, today)) && (
-                <li className={s.noMatch}>
-                  No tasks here.{" "}
-                  <button className={s.link} onClick={() => setShow("all")}>
-                    Show all
-                  </button>
-                </li>
-              )}
+              {!board(list.tasks, show, sort, today, nowMin).length &&
+                !list.tasks.some((t) => waiting(t, today)) && (
+                  <li className={s.noMatch}>
+                    No tasks here.{" "}
+                    <button className={s.link} onClick={() => setShow("all")}>
+                      Show all
+                    </button>
+                  </li>
+                )}
             </ul>
           ) : (
             <div className={s.empty}>
@@ -814,10 +1065,21 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
         <Stickers
           active={!!selected || picked.size > 0}
           selected={
-            picked.size > 1 ? `${picked.size} tasks` : (findTask(list.tasks, [...picked][0] ?? selected)?.title ?? null)
+            picked.size > 1
+              ? `${picked.size} tasks`
+              : (findTask(list.tasks, [...picked][0] ?? selected)?.title ??
+                null)
           }
-          onApply={(key, taskIds) => applySticker(key, taskIds ?? (picked.size ? [...picked] : selected ? [selected] : []))}
-          task={picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)}
+          onApply={(key, taskIds) =>
+            applySticker(
+              key,
+              taskIds ??
+                (picked.size ? [...picked] : selected ? [selected] : []),
+            )
+          }
+          task={
+            picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)
+          }
         />
       </div>
       {selected && picked.size <= 1 && findTask(list.tasks, selected) && (
@@ -832,7 +1094,11 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
             const gone = flatten(before).filter((t) => t.id === selected);
             setTasks((ts) => mapTask(ts, selected, () => null));
             binSound();
-            setBinned({ before, ids: bin(gone), text: `Deleted “${gone[0]?.title}”.` });
+            setBinned({
+              before,
+              ids: bin(gone),
+              text: `Deleted “${gone[0]?.title}”.`,
+            });
             setSelected(null);
           }}
           onClose={() => setSelected(null)}
@@ -875,11 +1141,24 @@ function TaskRow({
 }) {
   const open = selected === task.id;
   const [renaming, setRenaming] = useState(false);
-  const edit = (f: (t: Task) => Task | null) => setTasks((ts) => mapTask(ts, task.id, f));
+  const edit = (f: (t: Task) => Task | null) =>
+    setTasks((ts) => mapTask(ts, task.id, f));
   const late = lateBy(task, today, nowMin);
   // Dragging a selected task carries the whole selection.
   const ids = picked.has(task.id) ? [...picked] : [task.id];
-  const row = { listId, today, nowMin, setTasks, selected, onSelect, picked, onPick, drop, colors, lists };
+  const row = {
+    listId,
+    today,
+    nowMin,
+    setTasks,
+    selected,
+    onSelect,
+    picked,
+    onPick,
+    drop,
+    colors,
+    lists,
+  };
 
   return (
     <li
@@ -887,14 +1166,21 @@ function TaskRow({
       data-id={top ? task.id : undefined}
       data-open={open || undefined}
       data-dragged={dragged || undefined}
-      style={top ? ({ "--fill": colors.get(task.id) } as React.CSSProperties) : undefined}
+      style={
+        top
+          ? ({ "--fill": colors.get(task.id) } as React.CSSProperties)
+          : undefined
+      }
     >
       <div
         className={s.row}
         data-done={task.done}
         data-picked={picked.has(task.id) || undefined}
         {...drop(task.id)}
-        {...draggable({ kind: "task", listId, id: task.id, ids }, ids.length > 1 ? `${ids.length} tasks` : task.title)}
+        {...draggable(
+          { kind: "task", listId, id: task.id, ids },
+          ids.length > 1 ? `${ids.length} tasks` : task.title,
+        )}
         // Ctrl/Cmd-click selects instead of ticking or opening.
         onClickCapture={(e) => {
           if (!e.metaKey && !e.ctrlKey) return;
@@ -976,15 +1262,23 @@ function TaskRow({
               {fmtMinutes(task.est)}
             </button>
           ) : null}
-          {task.spent ? <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span> : null}
+          {task.spent ? (
+            <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span>
+          ) : null}
           {task.share ? (
-            <span className={s.sharedChip} title="Shared by link: not end-to-end encrypted">
+            <span
+              className={s.sharedChip}
+              title="Shared by link: not end-to-end encrypted"
+            >
               <LockOpen size={11} strokeWidth={2.75} aria-hidden /> Shared
             </span>
           ) : null}
           {task.files?.length ? (
-            <span title={`${task.files.length} attachment${task.files.length === 1 ? "" : "s"}`}>
-              <Paperclip size={11} strokeWidth={2.75} aria-hidden /> {task.files.length}
+            <span
+              title={`${task.files.length} attachment${task.files.length === 1 ? "" : "s"}`}
+            >
+              <Paperclip size={11} strokeWidth={2.75} aria-hidden />{" "}
+              {task.files.length}
             </span>
           ) : null}
           {task.note ? (
@@ -995,7 +1289,9 @@ function TaskRow({
           {task.due ? (
             <button
               className={`${s.chip} ${late !== null ? s.late : s.due}`}
-              onClick={() => edit((t) => ({ ...t, due: undefined, at: undefined }))}
+              onClick={() =>
+                edit((t) => ({ ...t, due: undefined, at: undefined }))
+              }
               aria-label={`Remove date ${relDue(task.due, today)}`}
               title="Remove date"
             >
