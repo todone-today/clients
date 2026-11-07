@@ -3244,3 +3244,101 @@ input.stick[data-custom][aria-invalid="true"] {
 .noteRow {
   align-items: start;
 }
+
+/* Integrations: what end-to-end encryption means here, and a switch per list. */
+.e2e {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1.5rem;
+  padding: 1.1rem 1.25rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.e2e h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.e2e p {
+  max-width: 44rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.e2eCount {
+  font-weight: 800;
+}
+.e2eLists {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+}
+.e2eLists li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.e2eName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.e2eName svg {
+  vertical-align: -3px;
+}
+.e2eWarn {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--hot);
+}
+.e2eSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--black);
+}
+.e2eSwitch i {
+  position: relative;
+  width: 2.6rem;
+  height: 1.4rem;
+  background: var(--butter);
+  border: 2px solid var(--black);
+  transition: background 0.15s;
+}
+.e2eSwitch i::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 0.95rem;
+  height: 0.95rem;
+  background: var(--black);
+  transition: transform 0.18s var(--ease);
+}
+.e2eSwitch[aria-checked="true"] i {
+  background: var(--lime);
+}
+.e2eSwitch[aria-checked="true"] i::after {
+  transform: translateX(1.2rem);
+}
+.e2eSwitch[data-armed] i {
+  background: var(--hot);
+}
+.e2eSwitch span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 5.5rem;
+}
