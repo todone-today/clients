@@ -11,7 +11,6 @@ export function BinPanel({ listId }: { listId: string }) {
   const [open, setOpen] = useState(false);
   const [now] = useState(() => Date.now());
   const items = fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []) as Binned[];
-  if (!items.length) return null;
   const left = (t: Binned) => {
     const d = Math.min(7, Math.ceil((t.binnedAt + 7 * 86_400_000 - now) / 86_400_000));
     return d <= 1 ? "goes today" : `${d} days left`;
@@ -19,10 +18,11 @@ export function BinPanel({ listId }: { listId: string }) {
   return (
     <div className={s.binPanel}>
       <button className={s.binLink} aria-expanded={open} onClick={() => setOpen(!open)}>
-        Recently deleted · {items.length}
+        Recently deleted{items.length ? ` · ${items.length}` : ""}
       </button>
       {open && (
         <ul className={s.binList} aria-label="Recently deleted">
+          {!items.length && <li className={s.binNote}>Nothing deleted in the last 7 days.</li>}
           {items.map((t) => (
             <li key={t.id}>
               <span>
@@ -36,7 +36,7 @@ export function BinPanel({ listId }: { listId: string }) {
               </button>
             </li>
           ))}
-          <li className={s.binNote}>Deleted tasks stay here for 7 days.</li>
+          {items.length > 0 && <li className={s.binNote}>Deleted tasks stay here for 7 days.</li>}
         </ul>
       )}
     </div>

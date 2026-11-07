@@ -648,6 +648,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       {binned && (
         <div className={s.undo} role="status">
           {binned.text}
+          {binned.ids?.length ? <small>In Recently deleted for 7 days.</small> : null}
           {binned.before !== list.tasks && (
             <button
               className={s.ghost}

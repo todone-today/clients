@@ -2557,6 +2557,14 @@ input.stick[data-custom][aria-invalid="true"] {
 .binLink:hover {
   color: var(--ink);
 }
+@media (max-width: 760px) {
+  .binPanel {
+    top: 5rem;
+  }
+  .binLink {
+    width: 6rem;
+  }
+}
 .binList {
   display: grid;
   gap: 0.4rem;
