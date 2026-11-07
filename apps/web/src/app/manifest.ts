@@ -10,6 +10,12 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#0b0b0b",
     theme_color: "#d4f04a",
-    icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
+    // PNGs for phones (iOS and Android skip SVG icons); the maskable one has room for Android to crop it round.
+    icons: [
+      { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
   };
 }

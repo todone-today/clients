@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   title: { default: `${NAME} · Todos. Done right.`, template: `%s · ${NAME}` },
   description:
     "An open-source todo app: sticky notes you drag onto a day, a calendar to plan the week, and teams to share it with. Works offline.",
+  // Added to an iPhone's Home Screen it opens as its own app, named todone (the icon is app/apple-icon.png).
+  appleWebApp: { capable: true, title: NAME },
 };
 
 export const viewport: Viewport = {

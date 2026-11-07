@@ -4450,3 +4450,15 @@ body[data-drag="task"] .listGoal {
     display: none;
   }
 }
+/* On a phone the bell's panel spans the screen under the top bar, above the tab bar, instead of hanging off the bell. */
+@media (max-width: 760px) {
+  .bellPanel {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 4rem);
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 9.5rem);
+    box-shadow: 5px 5px 0 var(--pink);
+  }
+}

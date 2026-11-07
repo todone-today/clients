@@ -148,9 +148,10 @@ export function NotificationBell({
                 </button>
                 <p>
                   A nudge 15 minutes before a task&apos;s time, and at 8 a.m.
-                  what&apos;s due, even with todone closed. Each reminder is
-                  sealed on your device; our server only knows when to send
-                  it, never what it says.
+                  what&apos;s due, and new comments on tasks you&apos;ve
+                  shared, even with todone closed. Reminders are sealed on
+                  your device; our server only knows when to send them, never
+                  what they say.
                 </p>
                 {reminders.state === "on" && (
                   <>
@@ -168,7 +169,7 @@ export function NotificationBell({
                     {tested && (
                       <p className={s.bellEmpty} role="status">
                         {tested === "sent"
-                          ? "Sent. Nothing showed up? Your computer may be silencing the browser: on a Mac, System Settings → Notifications → Google Chrome (and Focus must be off)."
+                          ? "Sent. Nothing showed up? Check that notifications are allowed for todone (on an iPhone: Settings → Notifications → todone; on a Mac: System Settings → Notifications → your browser) and that Focus is off."
                           : "This browser wouldn't show it. Reload todone and try again."}
                       </p>
                     )}
