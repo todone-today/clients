@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { addDays, shiftMonths } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
-import { type Task, fmtMinutes, parseMinutes, todayISO } from "@todone/sdk/tasks";
+import { type Task, fmtMinutes, parseMinutes } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 const WHEN: [string, string, (today: string) => Partial<Task>][] = [
@@ -34,9 +34,15 @@ const LONG: [string, string, (today: string) => Partial<Task>][] = [
   ]),
 ];
 
-// What a sticker does to a task; dates count from today.
-export const sticker = (key: string, today: string): Partial<Task> | null =>
-  [...WHEN, ...LONG, ...PRI, ...REP].find(([k]) => k === key)?.[2](today) ?? null;
+// What a sticker does to a task; dates count from today. Custom stickers carry their value: "due:2026-11-25", "est:75".
+export function sticker(key: string, today: string): Partial<Task> | null {
+  const [kind, v] = key.split(":");
+  if (kind === "due" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return { due: v };
+  if (kind === "est" && +v > 0) return { est: +v };
+  return [...WHEN, ...LONG, ...PRI, ...REP].find(([k]) => k === key)?.[2](today) ?? null;
+}
+// A custom sticker keeps showing what was last picked for this long, so it can be used again (click or drag).
+const HOLD = 15_000;
 
 // The right-hand sidebar: sticky notes for when, how long, priority and repeat (drop a task card on one, or pick a
 // task and click one), each with a Custom row for anything the stickers don't cover, so a card never has to open up.
@@ -45,20 +51,48 @@ export function Stickers({
   active,
   onApply,
   task,
-  edit,
 }: {
   selected: string | null;
   // A task is open or selected: on a phone the stickers then rise as a sheet to tap.
   active: boolean;
   onApply: (key: string, taskIds?: string[]) => void;
   task?: Task | null;
-  edit?: (f: (t: Task) => Task | null) => void;
 }) {
   const [estErr, setEstErr] = useState(false);
+  // Custom: the value last picked (shown, clickable and draggable for HOLD), and the tasks a drop on "Custom…" is for.
+  const [held, setHeld] = useState<{ due?: string; est?: number }>({});
+  const timer = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const hold = (k: "due" | "est", v: string | number) => {
+    setHeld((h) => ({ ...h, [k]: v }));
+    clearTimeout(timer.current[k]);
+    timer.current[k] = setTimeout(() => setHeld((h) => ({ ...h, [k]: undefined })), HOLD);
+  };
+  const forIds = useRef<string[] | undefined>(undefined);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const [typing, setTyping] = useState(false);
+  const openPicker = () => {
+    try {
+      dateRef.current?.showPicker();
+    } catch {
+      dateRef.current?.click();
+    }
+  };
   const drop = useDrop("stickers", {
     accept: (p) => p.kind === "task",
-    drop: (p, key) => p.kind === "task" && onApply(key, p.ids),
+    drop: (p, key) => {
+      if (p.kind !== "task") return;
+      // A task dropped on an empty Custom: ask for the value, then apply it to that task.
+      if (key === "custom-when" || key === "custom-long") {
+        forIds.current = p.ids;
+        return key === "custom-when" ? openPicker() : setTyping(true);
+      }
+      onApply(key, p.ids);
+    },
   });
+  const use = (key: string) => {
+    onApply(key, forIds.current);
+    forIds.current = undefined;
+  };
   const group = (title: string, items: typeof WHEN, kind: string, custom?: React.ReactNode) => (
     <div className={s.stickGroup}>
       <h3>{title}</h3>
@@ -81,66 +115,103 @@ export function Stickers({
       </div>
     </div>
   );
-  // Custom stickers for the picked task: any day (the date picker opens), any length (typed right on the sticker).
-  const dateRef = useRef<HTMLInputElement>(null);
-  const [typing, setTyping] = useState(false);
-  const off = !task || !edit;
+  // Custom stickers: any day (the date picker opens) and any length (typed on the sticker). Once picked, the value
+  // stays on the sticker for a while, as a normal sticker: click it for the picked task, or drag it onto any task.
+  const off = !selected;
+  const dayLabel = (d: string) => new Date(`${d}T12:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const when = (
-    <span className={s.stick} data-kind="when" data-custom aria-disabled={off}>
-      <button
-        type="button"
-        onClick={() => !off && (dateRef.current?.showPicker?.() ?? dateRef.current?.click())}
-        title={off ? "Pick a task first" : "Pick any day"}
-      >
-        {task?.due && !WHEN.some(([, , f]) => f(todayISO()).due === task.due) ? new Date(`${task.due}T12:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Custom…"}
-      </button>
+    <span className={s.stick} data-kind="when" data-custom>
+      {held.due ? (
+        <button
+          type="button"
+          {...drop(`due:${held.due}`)}
+          {...draggable({ kind: "sticker", key: `due:${held.due}` }, dayLabel(held.due))}
+          onClick={() => selected && onApply(`due:${held.due}`)}
+          title={selected ? `Apply to “${selected}”` : "Drag onto a task"}
+        >
+          {dayLabel(held.due)}
+        </button>
+      ) : (
+        <button
+          type="button"
+          {...drop("custom-when")}
+          aria-disabled={off}
+          onClick={() => !off && openPicker()}
+          title={off ? "Pick a task, or drop one here" : "Pick any day"}
+        >
+          Custom…
+        </button>
+      )}
       <input
         ref={dateRef}
         type="date"
         tabIndex={-1}
         aria-label="Custom day"
-        value={task?.due ?? ""}
-        onChange={(e) =>
-          edit?.((t) => ({ ...t, due: e.target.value || undefined, ...(e.target.value ? {} : { at: undefined }) }))
-        }
+        value=""
+        onChange={(e) => {
+          const v = e.target.value;
+          if (!v) return;
+          hold("due", v);
+          use(`due:${v}`);
+        }}
       />
     </span>
   );
-  const long = typing && task && edit ? (
+  const long = typing ? (
     <input
       className={s.stick}
       data-kind="long"
       data-custom
       autoFocus
       aria-label="Custom length"
-      defaultValue={task.est ? fmtMinutes(task.est) : ""}
+      defaultValue={held.est ? fmtMinutes(held.est) : task?.est ? fmtMinutes(task.est) : ""}
       placeholder="45m"
       aria-invalid={estErr}
       title="Like 45m, 2h or 1h30m"
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur();
-        if (e.key === "Escape") setTyping(false);
+        if (e.key === "Escape") {
+          forIds.current = undefined;
+          setTyping(false);
+        }
       }}
       onBlur={(e) => {
         const v = e.target.value.trim();
         const m = v ? parseMinutes(v) : 0;
         setEstErr(m === null);
         if (m === null) return;
-        if (m !== (task.est ?? 0)) edit((t) => ({ ...t, est: m || undefined }));
+        if (m) {
+          hold("est", m);
+          use(`est:${m}`);
+        } else forIds.current = undefined;
         setTyping(false);
       }}
     />
+  ) : held.est ? (
+    <button
+      type="button"
+      className={s.stick}
+      data-kind="long"
+      data-custom
+      {...drop(`est:${held.est}`)}
+      {...draggable({ kind: "sticker", key: `est:${held.est}` }, fmtMinutes(held.est))}
+      onClick={() => selected && onApply(`est:${held.est}`)}
+      title={selected ? `Apply to “${selected}”` : "Drag onto a task"}
+    >
+      {fmtMinutes(held.est)}
+    </button>
   ) : (
     <button
       type="button"
       className={s.stick}
       data-kind="long"
       data-custom
+      {...drop("custom-long")}
       aria-disabled={off}
-      title={off ? "Pick a task first" : "Type any length"}
+      title={off ? "Pick a task, or drop one here" : "Type any length"}
       onClick={() => !off && setTyping(true)}
     >
-      {task?.est && ![15, 30, 60, 120, 240].includes(task.est) ? fmtMinutes(task.est) : "Custom…"}
+      Custom…
     </button>
   );
   return (

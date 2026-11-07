@@ -746,7 +746,6 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
           }
           onApply={(key, taskIds) => applySticker(key, taskIds ?? (picked.size ? [...picked] : selected ? [selected] : []))}
           task={picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)}
-          edit={selected ? (f) => setTasks((ts) => mapTask(ts, selected, f)) : undefined}
         />
       </div>
     </>
