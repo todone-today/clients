@@ -2536,37 +2536,6 @@ input.stick[data-custom][aria-invalid="true"] {
   outline: 3px solid var(--hot);
 }
 
-/* The Bin view: recently deleted tasks with Restore. */
-.binList {
-  display: grid;
-  gap: 0.4rem;
-  max-width: 48rem;
-  padding: 0;
-  list-style: none;
-}
-.binList li {
-  padding: 0.7rem 0.9rem;
-  background: var(--raise);
-  border: 2px solid var(--hair);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-.binList li > span {
-  display: grid;
-  min-width: 0;
-}
-.binList b {
-  overflow: hidden;
-  font-size: 1rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.binList small {
-  font-size: 0.8rem;
-  color: var(--ink-2);
-}
 
 /* The Bin sits at the bottom of the sidebar, above Import with AI. */
 .binBtn {
@@ -2574,20 +2543,6 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .binBtn + .import {
   margin-top: 0;
-}
-.binLead {
-  font-weight: 700;
-}
-.binList .binClear {
-  justify-content: flex-end;
-  padding: 0.4rem 0 0;
-  background: none;
-  border: 0;
-}
-.binClear [data-armed] {
-  color: var(--black);
-  background: var(--hot);
-  border-color: var(--black);
 }
 
 /* Desktop: fold the sidebar away for a wider board. Phones use the drawer instead. */
