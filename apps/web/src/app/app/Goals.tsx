@@ -14,6 +14,7 @@ import {
 import {
   balance,
   goalProgress,
+  logGoal,
   type Goal,
   type GoalItem,
   type Reward,
@@ -41,6 +42,14 @@ const fillFor = (id: string) =>
     ([...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7) >>> 0) %
       FILLS.length
   ];
+const kindLabel = (g: Goal) =>
+  g.kind === "habit"
+    ? `${g.perWeek ?? 1}× a week`
+    : g.kind === "target"
+      ? `Reach ${g.target ?? "?"}${g.unit ? ` ${g.unit}` : ""}`
+      : g.kind === "daily"
+        ? `${g.target ?? "?"}${g.unit ? ` ${g.unit}` : ""} a day`
+        : "Milestones";
 const daysLeft = (by: string) =>
   Math.round((+new Date(by) - +new Date(todayISO())) / 86_400_000);
 export const useMe = () => authClient.useSession().data?.user.id;
@@ -66,6 +75,76 @@ const goalTask = (g: Goal, title: string, habit: boolean): Task => ({
   ...(habit ? { rep: habitRule(g.perWeek), due: todayISO() } : {}),
 });
 
+// A new goal, and the first steps it came with as tasks (a habit's one step repeats).
+function saveGoal(
+  lists: List[] | null,
+  update: (id: string, f: (l: List) => List | null) => void,
+  g: Goal,
+  steps: string[],
+  listId: string | null,
+) {
+  changeGoals(lists, (xs) => [...xs, g]);
+  if (steps.length && listId)
+    update(listId, (l) => ({
+      ...l,
+      tasks: [
+        ...l.tasks,
+        ...(g.kind === "habit"
+          ? [goalTask(g, steps[0], true)]
+          : steps.map((title) => goalTask(g, title, false))),
+      ],
+    }));
+}
+
+// A list's goals, at the top of the list: a sticky note each, with how it's going and a quick log.
+export function ListGoals({ list }: { list: List }) {
+  const { lists, update } = useLists();
+  const { items } = useGoalItems();
+  const [making, setMaking] = useState(false);
+  const all = (lists ?? []).filter((l) => !l.kind);
+  const tasks = all.flatMap((l) => l.tasks);
+  const goals = items.filter(
+    (i): i is Goal => i.t === "goal" && i.list === list.id && !i.done,
+  );
+  return (
+    <div className={s.listGoals}>
+      {goals.map((g) => {
+        const p = goalProgress(g, tasks, items);
+        return (
+          <div
+            key={g.id}
+            className={s.listGoal}
+            style={{ "--fill": fillFor(g.id) } as React.CSSProperties}
+          >
+            <header>
+              <Target size={14} strokeWidth={2.75} aria-hidden />
+              <b>{g.title}</b>
+              <span className={s.goalKind}>{kindLabel(g)}</span>
+            </header>
+            <Meter goal={g} p={p} compact />
+            <LogBox goal={g} p={p} />
+          </div>
+        );
+      })}
+      <button className={s.listGoalAdd} onClick={() => setMaking(true)}>
+        <Plus size={15} strokeWidth={2.75} aria-hidden />{" "}
+        {goals.length ? "Goal" : "Add a goal"}
+      </button>
+      {making && (
+        <GoalDialog
+          lists={all}
+          list={list.id}
+          onClose={() => setMaking(false)}
+          onSave={(g, steps, listId) => {
+            saveGoal(lists, update, g, steps, listId);
+            setMaking(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 // Goals: why each one matters, how it's going, the next step, and the if-then plan. Outcome goals have milestones
 // (their linked tasks); habits count the weeks you showed up. Nothing here ever "fails".
 export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
@@ -89,6 +168,19 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   const achieved = goals.filter((g) => g.done);
   const all = (lists ?? []).filter((l) => !l.kind);
   const tasks = all.flatMap((l) => l.tasks);
+  // Goals under their lists (in the sidebar's order), then those kept with none.
+  const groups = [
+    ...all.map((l) => ({
+      id: l.id,
+      name: l.name,
+      goals: open.filter((g) => g.list === l.id),
+    })),
+    {
+      id: "",
+      name: "No list",
+      goals: open.filter((g) => !all.some((l) => l.id === g.list)),
+    },
+  ].filter((x) => x.goals.length);
   return (
     <>
       <div className={s.listHead}>
@@ -108,19 +200,34 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </button>
         </div>
       </div>
-      <ul className={s.goalGrid}>
-        {open.map((g) => (
-          <GoalCard
-            key={g.id}
-            dnd={dnd(g)}
-            goal={g}
-            items={items}
-            tasks={tasks}
-            lists={all}
-            onOpen={onOpen}
-          />
-        ))}
-      </ul>
+      {groups.map(({ id, name, goals }) => (
+        <section key={id} className={s.goalGroup}>
+          {groups.length > 1 && (
+            <h2 className={s.sideHead}>
+              {id ? (
+                <button className={s.goalGroupHead} onClick={() => onOpen(id)}>
+                  {name}
+                </button>
+              ) : (
+                name
+              )}
+            </h2>
+          )}
+          <ul className={s.goalGrid}>
+            {goals.map((g) => (
+              <GoalCard
+                key={g.id}
+                dnd={dnd(g)}
+                goal={g}
+                items={items}
+                tasks={tasks}
+                lists={all}
+                onOpen={onOpen}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
       {achieved.length > 0 && (
         <>
           <h2 className={s.sideHead}>Achieved</h2>
@@ -144,17 +251,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           lists={all}
           onClose={() => setMaking(false)}
           onSave={(g, steps, listId) => {
-            changeGoals(lists, (xs) => [...xs, g]);
-            if ((steps.length || g.kind === "habit") && listId)
-              update(listId, (l) => ({
-                ...l,
-                tasks: [
-                  ...l.tasks,
-                  ...(g.kind === "habit"
-                    ? [goalTask(g, steps[0] || g.title, true)]
-                    : steps.map((title) => goalTask(g, title, false))),
-                ],
-              }));
+            saveGoal(lists, update, g, steps, listId);
             setMaking(false);
           }}
         />
@@ -194,7 +291,6 @@ function GoalCard({
         (t) => t.id === p.next!.id || t.sub.some((x) => x.id === p.next!.id),
       ),
     );
-  const left = goal.by ? daysLeft(goal.by) : null;
   return (
     <li
       {...dnd}
@@ -205,59 +301,13 @@ function GoalCard({
       <header>
         <Target size={18} strokeWidth={2.5} aria-hidden />
         <h3>{goal.title}</h3>
-        <span className={s.goalKind}>
-          {goal.kind === "habit" ? `${goal.perWeek ?? 1}× a week` : "Outcome"}
-        </span>
+        <span className={s.goalKind}>{kindLabel(goal)}</span>
       </header>
       {goal.why && <p className={s.goalWhy}>{goal.why}</p>}
       {goal.become && <p className={s.goalBecome}>Becoming: {goal.become}</p>}
 
-      {goal.kind === "outcome" ? (
-        <div className={s.goalMeter}>
-          <span className={s.bar} aria-hidden>
-            <i
-              style={{ transform: `scaleX(${p.total ? p.done / p.total : 0})` }}
-            />
-          </span>
-          <b>
-            {p.done} of {p.total} milestones
-          </b>
-          {!goal.done && left !== null && (
-            <small>
-              {left > 1
-                ? `${left} days left`
-                : left === 1
-                  ? "Due tomorrow"
-                  : left === 0
-                    ? "Due today"
-                    : "Past the date: still worth it"}
-            </small>
-          )}
-        </div>
-      ) : (
-        <div
-          className={s.goalWeeks}
-          aria-label={`${p.thisWeek} of ${goal.perWeek ?? 1} this week`}
-        >
-          {p.weeks.map((w, i) => (
-            <span
-              key={w.week}
-              title={`Week of ${w.week}: ${w.n}`}
-              data-now={i === p.weeks.length - 1 || undefined}
-            >
-              <i
-                style={{
-                  height: `${Math.min(1, w.n / (goal.perWeek ?? 1)) * 100}%`,
-                }}
-              />
-            </span>
-          ))}
-          <b>
-            {p.thisWeek} of {goal.perWeek ?? 1} this week
-          </b>
-          {p.thisWeek === 0 && <small>Fresh week. One small one counts.</small>}
-        </div>
-      )}
+      <Meter goal={goal} p={p} />
+      {!goal.done && <LogBox goal={goal} p={p} />}
 
       {p.next && !goal.done && (
         <button
@@ -344,6 +394,191 @@ function GoalCard({
   );
 }
 
+type Progress = ReturnType<typeof goalProgress>;
+const fmt = (n: number) => String(Math.round(n * 10) / 10);
+
+// How a goal is going, the way its kind measures it.
+function Meter({
+  goal,
+  p,
+  compact,
+}: {
+  goal: Goal;
+  p: Progress;
+  compact?: boolean;
+}) {
+  const left = goal.by ? daysLeft(goal.by) : null;
+  const unit = goal.unit ? ` ${goal.unit}` : "";
+  if (goal.kind === "target")
+    return (
+      <div className={s.goalMeter}>
+        <span className={s.bar} aria-hidden>
+          <i style={{ transform: `scaleX(${p.towards})` }} />
+        </span>
+        <b>
+          {p.current === undefined
+            ? "Log where you are"
+            : `${fmt(p.current)}${unit} now`}
+          {goal.target !== undefined && ` · goal ${fmt(goal.target)}${unit}`}
+        </b>
+        {goal.start !== undefined &&
+          goal.target !== undefined &&
+          p.current !== undefined && (
+            <small>
+              {p.towards >= 1
+                ? "You're there."
+                : `${fmt(Math.abs(goal.target - p.current))}${unit} to go, from ${fmt(goal.start)}${unit}`}
+            </small>
+          )}
+      </div>
+    );
+  if (goal.kind === "daily") {
+    const passed = ((new Date().getDay() + 6) % 7) + 1;
+    return (
+      <div className={s.goalMeter}>
+        <span className={s.bar} aria-hidden>
+          <i
+            style={{
+              transform: `scaleX(${goal.target ? Math.min(1, p.today / goal.target) : 0})`,
+            }}
+          />
+        </span>
+        <b>
+          {fmt(p.today)} of {fmt(goal.target ?? 0)}
+          {unit} today
+        </b>
+        <small>
+          Hit on {p.daysHit} of {passed} day{passed === 1 ? "" : "s"} this week
+        </small>
+      </div>
+    );
+  }
+  // In a list's strip, a habit is just this week's count, as a bar.
+  if (compact && goal.kind === "habit")
+    return (
+      <div className={s.goalMeter}>
+        <span className={s.bar} aria-hidden>
+          <i
+            style={{
+              transform: `scaleX(${Math.min(1, p.thisWeek / (goal.perWeek ?? 1))})`,
+            }}
+          />
+        </span>
+        <b>
+          {p.thisWeek} of {goal.perWeek ?? 1} this week
+        </b>
+      </div>
+    );
+  return goal.kind === "outcome" ? (
+    <div className={s.goalMeter}>
+      <span className={s.bar} aria-hidden>
+        <i style={{ transform: `scaleX(${p.total ? p.done / p.total : 0})` }} />
+      </span>
+      <b>
+        {p.done} of {p.total} milestones
+      </b>
+      {!goal.done && left !== null && (
+        <small>
+          {left > 1
+            ? `${left} days left`
+            : left === 1
+              ? "Due tomorrow"
+              : left === 0
+                ? "Due today"
+                : "Past the date: still worth it"}
+        </small>
+      )}
+    </div>
+  ) : (
+    <div
+      className={s.goalWeeks}
+      aria-label={`${p.thisWeek} of ${goal.perWeek ?? 1} this week`}
+    >
+      {p.weeks.map((w, i) => (
+        <span
+          key={w.week}
+          title={`Week of ${w.week}: ${w.n}`}
+          data-now={i === p.weeks.length - 1 || undefined}
+        >
+          <i
+            style={{
+              height: `${Math.min(1, w.n / (goal.perWeek ?? 1)) * 100}%`,
+            }}
+          />
+        </span>
+      ))}
+      <b>
+        {p.thisWeek} of {goal.perWeek ?? 1} this week
+      </b>
+      {p.thisWeek === 0 && <small>Fresh week. One small one counts.</small>}
+    </div>
+  );
+}
+
+// Logging toward a goal right where it shows: a number (target), an amount (daily) or a check-in (habit).
+export function LogBox({ goal, p }: { goal: Goal; p: Progress }) {
+  const { lists } = useLists();
+  const me = useMe();
+  const [v, setV] = useState("");
+  const log = (value: number) =>
+    changeGoals(lists, (xs) =>
+      logGoal(xs, goal, value, Date.now(), () => uid() + uid(), me),
+    );
+  if (goal.kind === "habit") {
+    const today = todayISO();
+    const done = p.logs.some(
+      (l) => new Date(l.at).toLocaleDateString("en-CA") === today,
+    );
+    return (
+      <button
+        className={`btn ${s.claim} ${s.logBtn}`}
+        style={
+          { "--fill": done ? "#fff" : "var(--lime)" } as React.CSSProperties
+        }
+        disabled={done}
+        onClick={() => log(1)}
+      >
+        <Check size={15} strokeWidth={3} aria-hidden />{" "}
+        {done ? "Done today" : "Did it today"}
+      </button>
+    );
+  }
+  if (goal.kind === "outcome") return null;
+  const n = Number(v.replace(",", "."));
+  return (
+    <form
+      className={s.logBox}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!v.trim() || !Number.isFinite(n)) return;
+        log(n);
+        setV("");
+      }}
+    >
+      <input
+        inputMode="decimal"
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        placeholder={
+          goal.kind === "target"
+            ? `Today's ${goal.unit || "number"}`
+            : `+ ${goal.unit || "amount"}`
+        }
+        aria-label={
+          goal.kind === "target" ? `Log ${goal.title}` : `Add to ${goal.title}`
+        }
+      />
+      <button
+        className={`btn ${s.claim}`}
+        style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+        disabled={!v.trim() || !Number.isFinite(n)}
+      >
+        {goal.kind === "target" ? "Log" : "Add"}
+      </button>
+    </form>
+  );
+}
+
 function Modal({
   label,
   onClose,
@@ -418,12 +653,14 @@ function Reflect({
 }
 
 // A new goal in four short steps (only the first is needed): the wish, why, the obstacle and plan, first steps.
-function GoalDialog({
+export function GoalDialog({
   lists,
+  list,
   onClose,
   onSave,
 }: {
   lists: List[];
+  list?: string;
   onClose: () => void;
   onSave: (g: Goal, steps: string[], listId: string | null) => void;
 }) {
@@ -432,15 +669,27 @@ function GoalDialog({
     t: "goal",
     id: uid(),
     title: "",
-    kind: "outcome",
+    kind: "target",
     created: Date.now(),
+    ...(list ? { list } : {}),
   }));
   const [steps, setSteps] = useState(["", "", ""]);
-  const [listId, setListId] = useState(lists[0]?.id ?? "");
+  const [listId, setListId] = useState(list ?? lists[0]?.id ?? "");
+  const putNum =
+    (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value.replace(",", ".");
+      setG((x) => ({
+        ...x,
+        [k]: v === "" || !Number.isFinite(+v) ? undefined : +v,
+      }));
+    };
   const put =
     (k: keyof Goal) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setG((x) => ({ ...x, [k]: e.target.value || undefined }));
+  const ready =
+    !!g.title.trim() &&
+    ((g.kind !== "target" && g.kind !== "daily") || g.target !== undefined);
   const titles = [
     "What do you want?",
     "Why does it matter?",
@@ -452,9 +701,16 @@ function GoalDialog({
       {
         ...g,
         title: g.title.trim(),
-        ...(g.kind === "habit"
-          ? { by: undefined, perWeek: g.perWeek ?? 3 }
-          : { perWeek: undefined }),
+        // Only the fields this kind uses.
+        by: g.kind === "outcome" ? g.by : undefined,
+        perWeek: g.kind === "habit" ? (g.perWeek ?? 3) : undefined,
+        unit:
+          g.kind === "target" || g.kind === "daily"
+            ? g.unit?.trim() || undefined
+            : undefined,
+        start: g.kind === "target" ? g.start : undefined,
+        target:
+          g.kind === "target" || g.kind === "daily" ? g.target : undefined,
       },
       steps.map((x) => x.trim()).filter(Boolean),
       listId || null,
@@ -494,12 +750,18 @@ function GoalDialog({
             >
               {(
                 [
+                  ["target", "Reach a number", "Weigh 68 kg, save ₹50,000"],
+                  ["habit", "Show up", "Gym 5× a week, read most days"],
+                  [
+                    "daily",
+                    "A daily amount",
+                    "140 g protein, 8 glasses of water",
+                  ],
                   [
                     "outcome",
                     "Get somewhere",
-                    "A result by a date, made of milestones",
+                    "Ship the app: milestones by a date",
                   ],
-                  ["habit", "Show up", "Something you do a few times a week"],
                 ] as const
               ).map(([k, name, hint]) => (
                 <button
@@ -514,7 +776,60 @@ function GoalDialog({
                 </button>
               ))}
             </div>
-            {g.kind === "outcome" ? (
+            {g.kind === "target" ? (
+              <div className={s.goalNums}>
+                <label className={s.goalField}>
+                  <span>Unit</span>
+                  <input
+                    value={g.unit ?? ""}
+                    onChange={put("unit")}
+                    maxLength={20}
+                    placeholder="kg"
+                  />
+                </label>
+                <label className={s.goalField}>
+                  <span>Where you are</span>
+                  <input
+                    inputMode="decimal"
+                    value={g.start ?? ""}
+                    onChange={putNum("start")}
+                    placeholder="74"
+                  />
+                </label>
+                <label className={s.goalField}>
+                  <span>The goal</span>
+                  <input
+                    inputMode="decimal"
+                    value={g.target ?? ""}
+                    onChange={putNum("target")}
+                    placeholder="68"
+                    required
+                  />
+                </label>
+              </div>
+            ) : g.kind === "daily" ? (
+              <div className={s.goalNums}>
+                <label className={s.goalField}>
+                  <span>A day</span>
+                  <input
+                    inputMode="decimal"
+                    value={g.target ?? ""}
+                    onChange={putNum("target")}
+                    placeholder="140"
+                    required
+                  />
+                </label>
+                <label className={s.goalField}>
+                  <span>Unit</span>
+                  <input
+                    value={g.unit ?? ""}
+                    onChange={put("unit")}
+                    maxLength={20}
+                    placeholder="g"
+                  />
+                </label>
+              </div>
+            ) : g.kind === "outcome" ? (
               <label className={s.goalField}>
                 <span>By when (optional)</span>
                 <input
@@ -535,6 +850,23 @@ function GoalDialog({
                     label: n === 7 ? "Every day" : `${n}× a week`,
                   }))}
                   onChange={(v) => setG((x) => ({ ...x, perWeek: +v }))}
+                />
+              </div>
+            )}
+            {lists.length > 0 && (
+              <div className={s.goalField}>
+                <span>Part of which list</span>
+                <Select
+                  label="List"
+                  value={g.list ?? ""}
+                  options={[
+                    { value: "", label: "No list" },
+                    ...lists.map((l) => ({ value: l.id, label: l.name })),
+                  ]}
+                  onChange={(v) => {
+                    setG((x) => ({ ...x, list: v || undefined }));
+                    if (v) setListId(v);
+                  }}
                 />
               </div>
             )}
@@ -649,7 +981,7 @@ function GoalDialog({
           <button
             className="btn"
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            disabled={!g.title.trim()}
+            disabled={!ready}
           >
             {step < 3 ? "Next" : "Save goal"}
           </button>

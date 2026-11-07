@@ -9,6 +9,15 @@ export const metadata: Metadata = {
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "9 November 2026",
+    title: "Goals that live in your lists",
+    items: [
+      "A list can have its own goals, shown as sticky notes at its top: \"weigh 68 kg\", \"gym 5× a week\", \"140 g protein a day\". Log progress right there.",
+      "Two new kinds of goal: reach a number, and a daily amount. Habits get a one-tap check-in. Logging earns a little XP.",
+      "Rewards, rethought: what you can claim now, what you're saving for and how many tasks away it is, with help pricing a new one.",
+    ],
+  },
+  {
     date: "8 November 2026",
     title: "Reminders with todone closed, still end-to-end encrypted",
     items: [

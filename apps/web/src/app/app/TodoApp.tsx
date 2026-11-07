@@ -46,7 +46,7 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
-import { Goals, Rewards, XpTile } from "./Goals";
+import { Goals, ListGoals, Rewards, XpTile } from "./Goals";
 import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { fold, reconcile, type Goal } from "@todone/sdk/goals";
@@ -1065,6 +1065,7 @@ function ListView({
           <Privacy list={list} update={update} />
         </div>
       </div>
+      <ListGoals list={list} />
 
       {binned && (
         <div className={s.undo} role="status">

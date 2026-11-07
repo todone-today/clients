@@ -150,9 +150,23 @@ export default function Docs() {
           step is needed.
         </li>
         <li>
-          An outcome goal (&ldquo;ship the app by March&rdquo;) shows its
-          milestones done; a habit (&ldquo;run 3× a week&rdquo;) shows the last
-          8 weeks. Link any task to a goal from its panel.
+          A goal can belong to a list, and a list can have several: a
+          &ldquo;Gym&rdquo; list might hold &ldquo;weigh 68 kg&rdquo;,
+          &ldquo;gym 5× a week&rdquo; and &ldquo;140 g protein a day&rdquo;.
+          They show as sticky notes at the top of the list, where you log
+          progress in a tap.
+        </li>
+        <li>
+          Four kinds: <b>reach a number</b> (log where you are, it shows how
+          far you&apos;ve come), <b>show up</b> (check in, or tick its tasks;
+          it counts the week, and a quiet week resets nothing), <b>a daily
+          amount</b> (add to it through the day; it counts the days you hit it)
+          and <b>get somewhere</b> (milestones: the tasks you link to it from
+          their panel).
+        </li>
+        <li>
+          Logging earns 3 XP the first time each goal each day, and 10 more
+          when a daily amount is reached.
         </li>
         <li>
           Finishing a task earns XP: 5, plus a point per 5 minutes estimated (up
