@@ -211,6 +211,11 @@ export function unbin(ids: string[]) {
   const bin = binList();
   if (bin) update(bin.id, (l) => ({ ...l, tasks: fresh(l.tasks).filter((t) => !ids.includes(t.id)) }));
 }
+// Empties the bin for good (asked twice in the UI).
+export function emptyBin() {
+  const bin = binList();
+  if (bin) update(bin.id, (l) => ({ ...l, tasks: [] }));
+}
 // Puts a binned task back at the end of the list it came from, or of `fallback` if that list is gone.
 export function restore(id: string, fallback: string) {
   const bin = binList();

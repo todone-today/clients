@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RotateCcw, Trash2 } from "lucide-react";
-import { type Binned, fresh, restore, useLists } from "@/lib/store";
+import { type Binned, emptyBin, fresh, restore, useLists } from "@/lib/store";
 import s from "./app.module.css";
 
 // The Bin (sidebar → Bin): tasks deleted in the last 7 days, newest first, each restorable to the list it came from
@@ -10,6 +10,7 @@ import s from "./app.module.css";
 export function BinView({ fallback }: { fallback: string | null }) {
   const { lists } = useLists();
   const [now] = useState(() => Date.now());
+  const [armed, setArmed] = useState(false);
   const items = fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []) as Binned[];
   const left = (t: Binned) => {
     const d = Math.min(7, Math.ceil((t.binnedAt + 7 * 86_400_000 - now) / 86_400_000));
@@ -19,7 +20,7 @@ export function BinView({ fallback }: { fallback: string | null }) {
     <>
       <div className={s.listHead}>
         <h1 className={`display ${s.title}`}>Bin</h1>
-        <p className={s.progress}>Tasks you delete wait here for 7 days, then they&apos;re gone for good.</p>
+        <p className={s.binLead}>Tasks you delete wait here for 7 days, then they&apos;re gone for good.</p>
       </div>
       {items.length ? (
         <ul className={s.binList} aria-label="Recently deleted">
@@ -43,6 +44,22 @@ export function BinView({ fallback }: { fallback: string | null }) {
               </button>
             </li>
           ))}
+          <li className={s.binClear}>
+            {/* Asks twice: nothing comes back after this. */}
+            <button
+              className={`${s.ghost} ${s.danger}`}
+              data-armed={armed || undefined}
+              onBlur={() => setArmed(false)}
+              onClick={() => {
+                if (!armed) return setArmed(true);
+                emptyBin();
+                setArmed(false);
+              }}
+            >
+              <Trash2 size={14} strokeWidth={2.5} aria-hidden />{" "}
+              {armed ? `Delete ${items.length} task${items.length === 1 ? "" : "s"} for good? Click again` : "Clear bin"}
+            </button>
+          </li>
         </ul>
       ) : (
         <div className={s.empty}>

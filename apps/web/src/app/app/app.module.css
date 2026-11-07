@@ -2567,3 +2567,54 @@ input.stick[data-custom][aria-invalid="true"] {
   font-size: 0.8rem;
   color: var(--ink-2);
 }
+
+/* The Bin sits at the bottom of the sidebar, above Import with AI. */
+.binBtn {
+  margin-top: auto;
+}
+.binBtn + .import {
+  margin-top: 0;
+}
+.binLead {
+  font-weight: 700;
+}
+.binList .binClear {
+  justify-content: flex-end;
+  padding: 0.4rem 0 0;
+  background: none;
+  border: 0;
+}
+.binClear [data-armed] {
+  color: var(--black);
+  background: var(--hot);
+  border-color: var(--black);
+}
+
+/* Desktop: fold the sidebar away for a wider board. Phones use the drawer instead. */
+.fold {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-right: -0.75rem;
+  color: var(--ink-2);
+}
+.fold:hover {
+  color: var(--ink);
+}
+@media (min-width: 761px) {
+  .shell[data-slim] {
+    grid-template-columns: 0 1fr;
+  }
+  .shell[data-slim] > .side {
+    visibility: hidden;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+  }
+}
+@media (max-width: 760px) {
+  .fold {
+    display: none;
+  }
+}

@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Lightbulb, Lock, LockOpen, Menu, Check, Info, Plus, Trash2 } from "lucide-react";
+import { Lightbulb, Lock, LockOpen, Menu, Check, Info, PanelLeftClose, PanelLeftOpen, Plus, Trash2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -101,6 +101,20 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [touring, setTouring] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
+  const [slim, setSlim] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("todone:slim") === "1") Promise.resolve().then(() => setSlim(true));
+    } catch {}
+  }, []);
+  const toggleSlim = () =>
+    setSlim((v) => {
+      try {
+        localStorage.setItem("todone:slim", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
   // End-to-end encryption: whether this browser holds the keys ("locked": ask for the password), and whether the
   // open team still has to give you its key.
   const [vault, setVault] = useState<"checking" | "open" | "locked">("checking");
@@ -217,10 +231,23 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     return <Unlock userId={session.user.id} email={session.user.email} onDone={() => setVault("open")} />;
 
   return (
-    <div className={s.shell}>
+    <div className={s.shell} data-slim={slim || undefined}>
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
+        <button
+          className={s.fold}
+          onClick={toggleSlim}
+          aria-label={slim ? "Show the sidebar" : "Hide the sidebar"}
+          title={slim ? "Show the sidebar" : "Hide the sidebar"}
+          aria-pressed={slim}
+        >
+          {slim ? (
+            <PanelLeftOpen size={20} strokeWidth={2.25} aria-hidden />
+          ) : (
+            <PanelLeftClose size={20} strokeWidth={2.25} aria-hidden />
+          )}
+        </button>
         <button className={s.menu} onClick={() => setDrawer(true)} aria-label="Lists and workspace" aria-expanded={drawer}>
           <Menu size={18} strokeWidth={2.5} aria-hidden />
           <span>
@@ -332,12 +359,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </span>
           <span className={s.open}>{lists?.find((l) => l.kind === "ideas")?.tasks.length || ""}</span>
         </button>
-        <button className={`${s.listBtn} ${s.ideasBtn}`} aria-current={panel === "bin"} onClick={() => show("bin")}>
-          <span>
-            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Bin
-          </span>
-          <span className={s.open}>{fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []).length || ""}</span>
-        </button>
         <h2 className={s.sideHead}>Lists</h2>
         {lists && (
           <ul className={s.lists} data-tour="lists">
@@ -362,6 +383,16 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         )}
         <div className={s.sideTools}>
           <NewList onAdd={(name) => open(add(name))} taken={(n) => !!lists?.some((l) => l.name === n)} />
+          <button
+            className={`${s.listBtn} ${s.ideasBtn} ${s.binBtn}`}
+            aria-current={panel === "bin"}
+            onClick={() => show("bin")}
+          >
+            <span>
+              <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Bin
+            </span>
+            <span className={s.open}>{fresh(lists?.find((l) => l.kind === "bin")?.tasks ?? []).length || ""}</span>
+          </button>
           <AiImport
             lists={sorted}
             current={list?.id ?? null}
@@ -504,6 +535,7 @@ function ListView({ list, lists, update }: { list: List; lists: { id: string; na
       return n;
     });
   const applySticker = (key: string, ids: string[]) => {
+    if (key.startsWith("custom-")) return dispatchEvent(new CustomEvent("todone:custom", { detail: { key, ids } }));
     const patch = sticker(key, today);
     if (patch) setTasks((ts) => ids.reduce((acc, id) => mapTask(acc, id, (t) => ({ ...t, ...patch })), ts));
   };

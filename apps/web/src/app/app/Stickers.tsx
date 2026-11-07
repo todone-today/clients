@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addDays, shiftMonths } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
 import { type Task, fmtMinutes, parseMinutes } from "@todone/sdk/tasks";
@@ -77,6 +77,17 @@ export function Stickers({
       dateRef.current?.click();
     }
   };
+  // "Custom…" dropped on a task (see TodoApp's applySticker): ask for the value, for that task.
+  useEffect(() => {
+    const on = (e: Event) => {
+      const { key, ids } = (e as CustomEvent<{ key: string; ids: string[] }>).detail;
+      forIds.current = ids;
+      if (key === "custom-when") openPicker();
+      else setTyping(true);
+    };
+    addEventListener("todone:custom", on);
+    return () => removeEventListener("todone:custom", on);
+  });
   const drop = useDrop("stickers", {
     accept: (p) => p.kind === "task",
     drop: (p, key) => {
@@ -117,7 +128,6 @@ export function Stickers({
   );
   // Custom stickers: any day (the date picker opens) and any length (typed on the sticker). Once picked, the value
   // stays on the sticker for a while, as a normal sticker: click it for the picked task, or drag it onto any task.
-  const off = !selected;
   const dayLabel = (d: string) => new Date(`${d}T12:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const when = (
     <span className={s.stick} data-kind="when" data-custom>
@@ -135,9 +145,9 @@ export function Stickers({
         <button
           type="button"
           {...drop("custom-when")}
-          aria-disabled={off}
-          onClick={() => !off && openPicker()}
-          title={off ? "Pick a task, or drop one here" : "Pick any day"}
+          {...draggable({ kind: "sticker", key: "custom-when" }, "Custom…")}
+          onClick={openPicker}
+          title="Pick any day, or drag onto a task"
         >
           Custom…
         </button>
@@ -207,9 +217,9 @@ export function Stickers({
       data-kind="long"
       data-custom
       {...drop("custom-long")}
-      aria-disabled={off}
-      title={off ? "Pick a task, or drop one here" : "Type any length"}
-      onClick={() => !off && setTyping(true)}
+      {...draggable({ kind: "sticker", key: "custom-long" }, "Custom…")}
+      title="Type any length, or drag onto a task"
+      onClick={() => setTyping(true)}
     >
       Custom…
     </button>
