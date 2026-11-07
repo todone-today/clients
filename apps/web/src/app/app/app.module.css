@@ -3744,3 +3744,64 @@ input.stick[data-custom][aria-invalid="true"] {
   height: auto;
   background: none;
 }
+
+/* Reward cards read like goal cards: title, cost chip, progress to the cost, Claim and a small delete. */
+.rewardGrid {
+  align-items: start;
+}
+.reward header {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+.reward header svg {
+  flex: none;
+  margin-top: 0.2rem;
+}
+.reward h3 {
+  flex: 1;
+  font: 900 1.35rem/1.05 var(--display);
+  text-transform: uppercase;
+}
+.reward .goalKind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.reward footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.claim {
+  padding: 0.5em 1em;
+  box-shadow: 3px 3px 0 var(--black);
+}
+.claim:disabled {
+  opacity: 0.6;
+}
+.rewardX {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--hot);
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.rewardX:hover {
+  transform: translate(-1px, -1px) rotate(-4deg);
+}
+.rewardX:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.goal footer {
+  align-items: center;
+  justify-content: space-between;
+}
+.goalMeter .bar i {
+  background: var(--black);
+}

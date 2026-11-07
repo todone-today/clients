@@ -257,24 +257,29 @@ function GoalCard({
 
       <footer>
         {goal.kind === "outcome" && !goal.done && (
-          <button className={s.ghost} onClick={() => setReflecting(true)}>
-            <Check size={14} strokeWidth={2.75} aria-hidden /> Achieved
+          <button
+            className={`btn ${s.claim}`}
+            style={{ "--fill": "#fff" } as React.CSSProperties}
+            onClick={() => setReflecting(true)}
+          >
+            <Check size={15} strokeWidth={2.75} aria-hidden /> Achieved
           </button>
         )}
         {goal.done && (
           <button
-            className={s.ghost}
+            className={`btn ${s.claim}`}
+            style={{ "--fill": "#fff" } as React.CSSProperties}
             onClick={() => set((g) => ({ ...g, done: undefined }))}
           >
             Not yet
           </button>
         )}
         <button
-          className={`${s.ghost} ${s.danger}`}
+          className={s.rewardX}
           onClick={() => set(() => null)}
           aria-label={`Delete goal ${goal.title}`}
         >
-          <Trash2 size={14} strokeWidth={2.5} aria-hidden />
+          <Trash2 size={15} strokeWidth={2.5} aria-hidden />
         </button>
       </footer>
       {reflecting && (
@@ -669,30 +674,48 @@ export function Rewards() {
             className={s.reward}
             style={{ "--fill": fillFor(r.id) } as React.CSSProperties}
           >
-            <Gift size={20} strokeWidth={2.5} aria-hidden />
-            <b>{r.title}</b>
-            <span>
-              <Zap size={13} strokeWidth={2.75} aria-hidden /> {r.cost}
-            </span>
-            <div className={s.tools}>
+            <header>
+              <Gift size={18} strokeWidth={2.5} aria-hidden />
+              <h3>{r.title}</h3>
+              <span className={s.goalKind}>
+                <Zap size={11} strokeWidth={2.75} aria-hidden /> {r.cost}
+              </span>
+            </header>
+            <div className={s.goalMeter}>
+              <span className={s.bar} aria-hidden>
+                <i
+                  style={{
+                    transform: `scaleX(${Math.min(1, Math.max(0, xp) / r.cost)})`,
+                  }}
+                />
+              </span>
+              <small>
+                {xp >= r.cost ? "Ready to claim" : `${r.cost - xp} XP to go`}
+              </small>
+            </div>
+            <footer>
               <button
-                className={s.ghost}
+                className={`btn ${s.claim}`}
+                style={
+                  {
+                    "--fill": xp >= r.cost ? "var(--lime)" : "#fff",
+                  } as React.CSSProperties
+                }
                 disabled={xp < r.cost}
                 onClick={() => claim(r)}
-                title={xp < r.cost ? `${r.cost - xp} XP to go` : undefined}
               >
-                {xp < r.cost ? `${r.cost - xp} to go` : "Claim"}
+                <Gift size={15} strokeWidth={2.5} aria-hidden /> Claim
               </button>
               <button
-                className={`${s.ghost} ${s.danger}`}
+                className={s.rewardX}
                 aria-label={`Delete reward ${r.title}`}
                 onClick={() =>
                   changeGoals(lists, (xs) => xs.filter((x) => x.id !== r.id))
                 }
               >
-                <Trash2 size={14} strokeWidth={2.5} aria-hidden />
+                <Trash2 size={15} strokeWidth={2.5} aria-hidden />
               </button>
-            </div>
+            </footer>
           </li>
         ))}
         <li className={s.rewardNew}>
