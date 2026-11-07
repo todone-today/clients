@@ -111,6 +111,19 @@ export function ListGoals({ list }: { list: List }) {
   const { items } = useGoalItems();
   const [making, setMaking] = useState(false);
   const [editing, setEditing] = useState<Goal | null>(null);
+  // Drop tasks on a goal's note to link them to it: they become its milestones (or count toward the habit).
+  const dropOnGoal = useDrop("goal-notes", {
+    accept: (p) => p.kind === "task",
+    drop: (p, goalId) => {
+      if (p.kind !== "task") return;
+      const ids = new Set(p.ids);
+      const link = (t: Task): Task => ({
+        ...(ids.has(t.id) ? { ...t, goal: goalId } : t),
+        sub: t.sub.map(link),
+      });
+      update(p.listId, (l) => ({ ...l, tasks: l.tasks.map(link) }));
+    },
+  });
   const all = (lists ?? []).filter((l) => !l.kind);
   const tasks = all.flatMap((l) => l.tasks);
   const goals = items.filter(
@@ -124,6 +137,7 @@ export function ListGoals({ list }: { list: List }) {
           <div
             key={g.id}
             className={s.listGoal}
+            {...dropOnGoal(g.id)}
             onClick={(e) => !onControl(e) && setEditing(g)}
             title="Click to edit"
             style={{ "--fill": fillFor(g.id) } as React.CSSProperties}

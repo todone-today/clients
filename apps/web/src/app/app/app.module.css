@@ -1000,20 +1000,6 @@
   opacity: 0.4;
 }
 
-@media (max-width: 760px) {
-  .top {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-  .tabs {
-    order: 1;
-    flex-basis: 100%;
-  }
-  .tabs button {
-    flex: 1;
-  }
-}
-
 /* The calendar link opened in a browser */
 .shared {
   display: grid;
@@ -1121,7 +1107,14 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 900px) {
+/* Tablets keep the stickers beside the board, in a narrower column whose groups wrap. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .listBody {
+    grid-template-columns: minmax(0, 1fr) 10.5rem;
+    gap: 1.25rem;
+  }
+}
+@media (max-width: 760px) {
   .listBody {
     grid-template-columns: 1fr;
   }
@@ -2366,6 +2359,7 @@
   border-bottom: 2px solid var(--hair);
 }
 .verifyBar {
+  overflow-wrap: anywhere;
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
@@ -4296,4 +4290,159 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .listGoal {
   cursor: pointer;
+}
+
+/* ---------- Responsive shell ----------
+   Phones (≤760px): the four views move to a tab bar at the bottom, in thumb reach, and the top bar keeps only
+   what fits (the lists menu, the bell, XP, theme, account). Tablets (761–1100px): the views keep their place
+   but show icons only, so the bar fits. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .tabs .tabName {
+    display: none;
+  }
+  .tabs button {
+    padding: 0.45rem 0.65rem;
+  }
+  .top {
+    gap: 0.75rem;
+  }
+}
+@media (max-width: 760px) {
+  .tabs {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--ground);
+    border: 0;
+    border-top: 2px solid var(--ink);
+  }
+  .tabs button {
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 3.6rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.75rem;
+  }
+  .tabs button + button {
+    border-left: 0;
+  }
+  .tabs button svg {
+    width: 20px;
+    height: 20px;
+  }
+  /* Room for the tab bar under the last thing on the page. */
+  .shell {
+    padding-bottom: calc(3.8rem + env(safe-area-inset-bottom));
+  }
+  .top {
+    padding-top: max(0.6rem, env(safe-area-inset-top));
+  }
+  .top .mark,
+  .top [data-tour="tour"] {
+    display: none;
+  }
+  .top .menu {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+  }
+  .top .tile {
+    flex: none;
+  }
+  /* Two number fields side by side fit a phone; three wrap. */
+  .goalNums {
+    grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  }
+  .goalDialog {
+    width: calc(100vw - 1.25rem);
+    padding: 1.1rem 1rem 1.2rem;
+  }
+}
+.phoneOnly {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .phoneOnly {
+    display: inline-flex !important;
+    justify-content: center;
+  }
+}
+@media (max-width: 760px) {
+  /* Keep the bar to one row: the lists menu takes what the tiles leave. */
+  .top {
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+  }
+  .top .tile {
+    min-width: 2.6rem;
+    height: 2.6rem;
+  }
+  .progress {
+    white-space: normal;
+  }
+  .goalNums {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .goalNums input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+.goalNums input {
+  width: 100%;
+  min-width: 0;
+}
+/* Touch: small controls get a touch area of about 44px around them, without moving anything. */
+@media (pointer: coarse) {
+  .check,
+  .panelX,
+  .rewardX,
+  .panelClose {
+    position: relative;
+  }
+  .check::after,
+  .panelX::after,
+  .rewardX::after,
+  .panelClose::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+  .check::after {
+    inset: -10px;
+  }
+  .chips .chip {
+    min-height: 1.9rem;
+    padding-inline: 0.5rem;
+  }
+}
+/* A task dragged over a goal's note: it would link to it. */
+.listGoal[data-over] {
+  outline: 3px dashed var(--ink);
+  outline-offset: 4px;
+}
+body[data-drag="task"] .listGoal {
+  transform: none;
+}
+.seg button {
+  white-space: nowrap;
+}
+/* On a phone the filters scroll sideways rather than wrap. */
+@media (max-width: 760px) {
+  .seg {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+/* The view tabs only need their tooltip while their names are hidden (tablets). */
+@media (min-width: 1101px), (max-width: 760px) {
+  .tabs [data-tip]::after {
+    display: none;
+  }
 }

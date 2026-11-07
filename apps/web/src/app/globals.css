@@ -97,9 +97,22 @@ a {
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
+}
+
+/* iOS Safari zooms the whole page into any field whose text is under 16px, and the UI's rem is 90% (14.4px), so on
+   touch screens every editable field gets at least 16px. Pinch-zoom stays on. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"]),
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: max(16px, 1em) !important;
+  }
 }
 
 button {

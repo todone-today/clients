@@ -161,7 +161,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [slim, setSlim] = useState(false);
   useEffect(() => {
     try {
-      if (localStorage.getItem("todone:slim") === "1")
+      const saved = localStorage.getItem("todone:slim");
+      // A tablet starts with the rail, so the board gets the width; once chosen, the choice is kept.
+      if (
+        saved === "1" ||
+        (saved === null &&
+          matchMedia("(min-width: 761px) and (max-width: 1100px)").matches)
+      )
         Promise.resolve().then(() => setSlim(true));
     } catch {}
   }, []);
@@ -450,8 +456,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               aria-pressed={panel === p}
               onClick={() => setPanel(p)}
               data-tour={p ?? "lists-tab"}
+              aria-label={name}
+              data-tip={name}
             >
-              <Icon size={16} strokeWidth={2.5} aria-hidden /> {name}
+              <Icon size={16} strokeWidth={2.5} aria-hidden />{" "}
+              <span className={s.tabName}>{name}</span>
             </button>
           ))}
         </nav>
@@ -635,6 +644,17 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               open(id);
             }}
           />
+          {/* The top bar's Tour tile doesn't fit a phone, so the tour starts from here there. */}
+          <button
+            className={`${s.ghost} ${s.phoneOnly}`}
+            onClick={() => {
+              setDrawer(false);
+              setPanel(null);
+              setTouring(true);
+            }}
+          >
+            <Info size={16} strokeWidth={2.5} aria-hidden /> Take the tour
+          </button>
           {!demo && <Feedback />}
         </div>
       </aside>
