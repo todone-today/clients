@@ -924,6 +924,26 @@ function ListView({
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, []);
+  // Cmd/Ctrl+A picks every task on the board (as shown), unless you're typing or a task is open.
+  useEffect(() => {
+    const all = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (
+        e.key.toLowerCase() !== "a" ||
+        !(e.metaKey || e.ctrlKey) ||
+        e.altKey ||
+        selected ||
+        el.closest("input, textarea, select, [contenteditable=true]")
+      )
+        return;
+      e.preventDefault();
+      setPicked(
+        new Set(board(list.tasks, show, sort, today, nowMin).map((t) => t.id)),
+      );
+    };
+    addEventListener("keydown", all);
+    return () => removeEventListener("keydown", all);
+  }, [list.tasks, show, sort, today, nowMin, selected]);
 
   const colors = noteColors(list.tasks);
   const row = {
