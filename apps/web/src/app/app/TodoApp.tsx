@@ -1038,7 +1038,7 @@ function ListView({
                   </button>
                 ))}
               </div>
-              {list.tasks.some((t) => t.done) && (
+              {show === "done" && list.tasks.some((t) => t.done) && (
                 // Finished tasks (and their steps) go to the Bin for 7 days; the undo bar can put them back.
                 <button
                   className={s.ghost}
