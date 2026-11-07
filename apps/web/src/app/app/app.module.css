@@ -2900,6 +2900,7 @@ input.stick[data-custom][aria-invalid="true"] {
   border: 2.5px dashed var(--ink);
 }
 .disclosure {
+  margin: auto;
   max-width: min(32rem, calc(100vw - 2rem));
   padding: 1.5rem;
   color: var(--black);
@@ -2952,4 +2953,7 @@ input.stick[data-custom][aria-invalid="true"] {
 .panel .danger {
   color: #fff;
   background: var(--hot);
+}
+.disclosure .ghost {
+  background: #fff;
 }
