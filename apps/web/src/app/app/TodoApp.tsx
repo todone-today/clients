@@ -42,7 +42,7 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
-import { listIcon } from "./listIcon";
+import { IconPick, ListIcon } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
@@ -84,7 +84,7 @@ import s from "./app.module.css";
 
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.
 // Sticky colours. Each note's colour comes from its own id, so adding, deleting or moving notes doesn't recolour
-// the list; a note that would match the one before it takes the next colour instead.
+// the list; a note that would match one just before it takes the next colour instead.
 const NOTES = [
   "var(--butter)",
   "var(--pink)",
@@ -96,18 +96,22 @@ const NOTES = [
   "#8fe3b0", // mint
 ];
 const noteColor = (id: string) => {
-  let h = 2166136261; // FNV-1a: short random ids still spread evenly over the colours
+  let h = 2166136261; // FNV-1a, then a final mix so short ids spread evenly over the colours
   for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+  h ^= h >>> 16;
   return (h >>> 0) % NOTES.length;
 };
+// A note that would match one of the two before it takes the next free colour.
 const noteColors = (tasks: Task[]) => {
   const out = new Map<string, string>();
-  let prev = -1;
+  const recent: number[] = [];
   for (const t of tasks) {
     let c = noteColor(t.id);
-    if (c === prev) c = (c + 1) % NOTES.length;
+    while (recent.includes(c)) c = (c + 1) % NOTES.length;
     out.set(t.id, NOTES[c]);
-    prev = c;
+    recent.push(c);
+    if (recent.length > 2) recent.shift();
   }
   return out;
 };
@@ -484,7 +488,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           <ul className={s.lists} data-tour="lists">
             {sorted.map((l) => {
               const c = count(l.tasks);
-              const Icon = listIcon(l.id, l.name);
               return (
                 <li key={l.id}>
                   <button
@@ -496,7 +499,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                     title={l.name}
                   >
                     <span>
-                      <Icon size={16} strokeWidth={2.5} aria-hidden />{" "}
+                      <ListIcon id={l.id} name={l.name} icon={l.icon} />{" "}
                       <span className={s.label}>{l.name}</span>
                     </span>
                     <span className={s.open}>{c.open}</span>
@@ -912,7 +915,15 @@ function ListView({
             <i style={{ transform: `scaleX(${c.all ? c.done / c.all : 0})` }} />
           </span>
         </p>
-        <Privacy list={list} update={update} />
+        <div className={s.listMeta}>
+          <IconPick
+            id={list.id}
+            name={list.name}
+            icon={list.icon}
+            onPick={(icon) => update(list.id, (l) => ({ ...l, icon }))}
+          />
+          <Privacy list={list} update={update} />
+        </div>
       </div>
 
       {binned && (

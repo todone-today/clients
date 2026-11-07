@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
+  Send,
   Copy,
   Link2,
   Lock,
@@ -41,6 +42,7 @@ import {
 } from "./actions";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
+import { authClient } from "@/lib/auth-client";
 
 const REPEATS = [
   "every day",
@@ -356,42 +358,7 @@ export function TaskPanel({
           </section>
         )}
 
-        {task.history?.length ? (
-          <section className={s.panelSection}>
-            <h3>Conversation (kept when sharing stopped)</h3>
-            <ol className={s.kept}>
-              {task.history.map((h, i) => (
-                <li
-                  key={i}
-                  style={
-                    {
-                      "--fill":
-                        h.who === "Anonymous" || /^Guest \d/.test(h.who)
-                          ? "var(--pink)"
-                          : "var(--cyan)",
-                    } as React.CSSProperties
-                  }
-                >
-                  <b>{h.who}</b>{" "}
-                  <time>
-                    {new Date(h.at).toLocaleDateString(undefined, {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </time>
-                  {h.text && <p>{h.text}</p>}
-                  {h.files?.map((f) => (
-                    <Media
-                      key={f.id}
-                      file={f}
-                      load={async () => openPrivate(f, await workspaceKey())}
-                    />
-                  ))}
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+        <Notes task={task} edit={edit} shared={shared} />
 
         {!shared && (
           <section className={s.panelSection}>
@@ -675,5 +642,179 @@ function SharedPart({
         </section>
       )}
     </>
+  );
+}
+
+// Notes on a task: always there, end-to-end encrypted with the rest of the list (files too). A shared task's public
+// conversation is separate; when sharing stops, it's kept here.
+function Notes({
+  task,
+  edit,
+  shared,
+}: {
+  task: Task;
+  edit: (f: (t: Task) => Task | null) => void;
+  shared: boolean;
+}) {
+  const me = authClient.useSession().data?.user.name || "You";
+  const [text, setText] = useState("");
+  const [files, setFiles] = useState<FileRef[]>([]);
+  const [busy, setBusy] = useState(0);
+  const [err, setErr] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  const notes = task.history ?? [];
+  const attach = async (list: FileList | null) => {
+    setErr("");
+    const key = await workspaceKey();
+    for (const f of Array.from(list ?? [])) {
+      setBusy((n) => n + 1);
+      try {
+        const ref = await uploadPrivate(f, key);
+        setFiles((x) => [...x, ref]);
+      } catch (x) {
+        setErr(x instanceof Error ? x.message : "Couldn't upload that.");
+      }
+      setBusy((n) => n - 1);
+    }
+  };
+  const add = () => {
+    const body = text.trim();
+    if (busy || (!body && !files.length)) return;
+    const note = {
+      who: me,
+      at: Date.now(),
+      text: body,
+      ...(files.length ? { files } : {}),
+    };
+    edit((t) => ({ ...t, history: [...(t.history ?? []), note].slice(-500) }));
+    setText("");
+    setFiles([]);
+  };
+  return (
+    <section className={s.panelSection}>
+      <h3>{shared ? "Private notes" : "Notes"}</h3>
+      {shared && (
+        <p className={s.panelHint}>
+          Only you and your team see these; they stay end-to-end encrypted.
+        </p>
+      )}
+      {notes.length > 0 && (
+        <ol className={s.kept}>
+          {notes.map((h, i) => (
+            <li
+              key={i}
+              style={
+                {
+                  "--fill":
+                    h.who === me
+                      ? "var(--lime)"
+                      : h.who === "Anonymous" || /^Guest \d/.test(h.who)
+                        ? "var(--pink)"
+                        : "var(--cyan)",
+                } as React.CSSProperties
+              }
+            >
+              <header className={s.keptHead}>
+                <b>{h.who}</b>
+                <time>
+                  {new Date(h.at).toLocaleString(undefined, {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </time>
+              </header>
+              {h.text && <p>{h.text}</p>}
+              {h.files?.map((f) => (
+                <Media
+                  key={f.id}
+                  file={f}
+                  load={async () => openPrivate(f, await workspaceKey())}
+                />
+              ))}
+            </li>
+          ))}
+        </ol>
+      )}
+      <form
+        className={s.noteForm}
+        onSubmit={(e) => {
+          e.preventDefault();
+          add();
+        }}
+      >
+        {files.length > 0 && (
+          <ul className={s.noteFiles}>
+            {files.map((f) => (
+              <li key={f.id}>
+                {f.name}
+                <button
+                  type="button"
+                  aria-label={`Remove ${f.name}`}
+                  onClick={() => {
+                    setFiles((x) => x.filter((y) => y.id !== f.id));
+                    deletePrivate(f.id);
+                  }}
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className={s.noteRow}>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Add a note"
+            aria-label="Note"
+            maxLength={4000}
+            rows={2}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.nativeEvent.isComposing
+              ) {
+                e.preventDefault();
+                add();
+              }
+            }}
+          />
+          <input
+            ref={input}
+            type="file"
+            accept={ACCEPT}
+            multiple
+            hidden
+            onChange={(e) => attach(e.target.files)}
+          />
+          <button
+            type="button"
+            className={s.noteIcon}
+            onClick={() => input.current?.click()}
+            aria-label="Attach files"
+          >
+            <Paperclip size={16} strokeWidth={2.5} />
+          </button>
+          <button
+            className={`${s.noteIcon} ${s.noteSend}`}
+            disabled={!!busy}
+            aria-label="Add note"
+          >
+            <Send size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+        <p className={s.panelHint}>
+          {busy ? "Uploading…" : "Enter to add · Shift+Enter for a new line"}
+        </p>
+        {err && (
+          <p className={s.err} role="alert">
+            {err}
+          </p>
+        )}
+      </form>
+    </section>
   );
 }

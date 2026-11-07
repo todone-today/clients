@@ -3062,3 +3062,126 @@ input.stick[data-custom][aria-invalid="true"] {
     transform: scale(0.4);
   }
 }
+
+/* Notes on a task: sticker notes, and a box to add one. */
+.keptHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.keptHead time {
+  margin-left: auto;
+}
+.noteForm {
+  display: grid;
+  gap: 0.35rem;
+}
+.noteRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.4rem;
+  align-items: end;
+}
+.noteRow textarea {
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  resize: vertical;
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.noteRow textarea:focus-visible {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--fill);
+}
+.noteIcon {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.noteIcon:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.noteSend {
+  background: var(--lime);
+}
+.noteIcon:disabled {
+  opacity: 0.5;
+}
+.noteFiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+}
+.noteFiles li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1.5px solid var(--hair);
+}
+
+/* The list's icon, beside its privacy line; click to pick another. */
+.listMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.iconPick {
+  position: relative;
+}
+.iconNow {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.15s var(--ease);
+}
+.iconNow:hover,
+.iconNow[aria-expanded="true"] {
+  transform: rotate(-6deg) scale(1.06);
+}
+.iconGrid {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(5, 2.4rem);
+  gap: 0.35rem;
+  padding: 0.6rem;
+  background: var(--ground);
+  border: 2.5px solid var(--ink);
+  box-shadow: var(--lift);
+}
+.iconGrid button {
+  display: grid;
+  place-items: center;
+  height: 2.4rem;
+  color: var(--ink);
+  border: 2px solid transparent;
+}
+.iconGrid button:hover {
+  border-color: var(--ink);
+}
+.iconGrid button[aria-selected="true"] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--black);
+}

@@ -1,7 +1,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { createList, deleteList, fetchLists, reorderLists, saveList } from "@/app/app/actions";
+import {
+  createList,
+  deleteList,
+  fetchLists,
+  reorderLists,
+  saveList,
+} from "@/app/app/actions";
 import { type List, type Task } from "@todone/sdk/tasks";
 import { lockVault, openCache, sealCache } from "./vault";
 
@@ -70,7 +76,10 @@ function enqueue(op: () => Promise<void>) {
     });
 }
 
-const put = (ls: List[], l: List) => (ls.some((x) => x.id === l.id) ? ls.map((x) => (x.id === l.id ? l : x)) : [...ls, l]);
+const put = (ls: List[], l: List) =>
+  ls.some((x) => x.id === l.id)
+    ? ls.map((x) => (x.id === l.id ? l : x))
+    : [...ls, l];
 
 export async function reload(personal: boolean) {
   cache = null;
@@ -134,7 +143,17 @@ function subscribe(f: () => void) {
 
 export function add(name: string, tasks: Task[] = [], kind?: "ideas" | "bin") {
   const id = crypto.randomUUID();
-  show([...(cache ?? []), { id, name, tasks, updated: Date.now(), version: 0, ...(kind ? { kind } : {}) }]);
+  show([
+    ...(cache ?? []),
+    {
+      id,
+      name,
+      tasks,
+      updated: Date.now(),
+      version: 0,
+      ...(kind ? { kind } : {}),
+    },
+  ]);
   enqueue(async () => {
     server = put(server, await createList(id, name, tasks, kind));
   });
@@ -160,7 +179,14 @@ export function update(id: string, f: (l: List) => List | null) {
         server = server.filter((l) => l.id !== id);
         return;
       }
-      const r = await saveList(id, base.version, next.name, next.tasks, next.plain);
+      const r = await saveList(
+        id,
+        base.version,
+        next.name,
+        next.tasks,
+        next.plain,
+        next.icon,
+      );
       server = r.list ? put(server, r.list) : server.filter((l) => l.id !== id);
       if (r.ok) return;
     }
@@ -171,7 +197,8 @@ export function update(id: string, f: (l: List) => List | null) {
 // Puts lists in the given order (the sidebar after a drag).
 export function reorder(ids: string[]) {
   const pos = new Map(ids.map((id, i) => [id, i + 1]));
-  const apply = (ls: List[]) => ls.map((l) => (pos.has(l.id) ? { ...l, position: pos.get(l.id) } : l));
+  const apply = (ls: List[]) =>
+    ls.map((l) => (pos.has(l.id) ? { ...l, position: pos.get(l.id) } : l));
   show(apply(cache ?? []));
   enqueue(async () => {
     await reorderLists(ids);
@@ -180,7 +207,11 @@ export function reorder(ids: string[]) {
 }
 
 // Moves tasks to another list: out of one, onto the end of the other.
-export function moveToList(from: string, to: string, take: (tasks: Task[]) => [Task[], Task[]]) {
+export function moveToList(
+  from: string,
+  to: string,
+  take: (tasks: Task[]) => [Task[], Task[]],
+) {
   if (from === to) return;
   let taken: Task[] = [];
   update(from, (l) => {
@@ -194,22 +225,37 @@ export function moveToList(from: string, to: string, take: (tasks: Task[]) => [T
 // The bin: deleted tasks wait 7 days in the workspace's "bin" list (end-to-end encrypted like any list), each with
 // when it went and which list it came from, so they can be restored. Older ones are dropped on the next change.
 const WEEK = 7 * 86_400_000;
-export type Binned = Task & { binnedAt: number; from: string; fromName: string };
-export const fresh = (ts: Task[]) => (ts as Binned[]).filter((t) => t.binnedAt > Date.now() - WEEK);
+export type Binned = Task & {
+  binnedAt: number;
+  from: string;
+  fromName: string;
+};
+export const fresh = (ts: Task[]) =>
+  (ts as Binned[]).filter((t) => t.binnedAt > Date.now() - WEEK);
 const binList = () => (cache ?? []).find((l) => l.kind === "bin");
 
 export function toBin(tasks: Task[], from: { id: string; name: string }) {
   if (!tasks.length) return;
   const at = Date.now();
-  const entries: Binned[] = tasks.map((t) => ({ ...t, binnedAt: at, from: from.id, fromName: from.name }));
+  const entries: Binned[] = tasks.map((t) => ({
+    ...t,
+    binnedAt: at,
+    from: from.id,
+    fromName: from.name,
+  }));
   const bin = binList();
-  if (bin) update(bin.id, (l) => ({ ...l, tasks: [...entries, ...fresh(l.tasks)] }));
+  if (bin)
+    update(bin.id, (l) => ({ ...l, tasks: [...entries, ...fresh(l.tasks)] }));
   else add("Bin", entries, "bin");
 }
 // Takes tasks out of the bin without restoring them (the undo bar already put them back).
 export function unbin(ids: string[]) {
   const bin = binList();
-  if (bin) update(bin.id, (l) => ({ ...l, tasks: fresh(l.tasks).filter((t) => !ids.includes(t.id)) }));
+  if (bin)
+    update(bin.id, (l) => ({
+      ...l,
+      tasks: fresh(l.tasks).filter((t) => !ids.includes(t.id)),
+    }));
 }
 // Empties the bin for good (asked twice in the UI).
 export function emptyBin() {
@@ -223,14 +269,24 @@ export function restore(id: string, fallback: string) {
   if (!bin || !entry) return;
   const { from } = entry;
   const task: Task = { ...entry };
-  for (const k of ["binnedAt", "from", "fromName"]) delete (task as Record<string, unknown>)[k];
-  const to = (cache ?? []).some((l) => l.id === from && !l.kind) ? from : fallback;
-  update(bin.id, (l) => ({ ...l, tasks: fresh(l.tasks).filter((t) => t.id !== id) }));
+  for (const k of ["binnedAt", "from", "fromName"])
+    delete (task as Record<string, unknown>)[k];
+  const to = (cache ?? []).some((l) => l.id === from && !l.kind)
+    ? from
+    : fallback;
+  update(bin.id, (l) => ({
+    ...l,
+    tasks: fresh(l.tasks).filter((t) => t.id !== id),
+  }));
   update(to, (l) => ({ ...l, tasks: [...l.tasks, task] }));
 }
 
 // Maps a task (or subtask) by id; the callback returns the new task, or null to delete it.
-export function mapTask(tasks: Task[], id: string, f: (t: Task) => Task | null): Task[] {
+export function mapTask(
+  tasks: Task[],
+  id: string,
+  f: (t: Task) => Task | null,
+): Task[] {
   return tasks.flatMap((t) => {
     if (t.id === id) {
       const r = f(t);
