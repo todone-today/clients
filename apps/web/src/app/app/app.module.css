@@ -1750,6 +1750,17 @@
   background: var(--lime);
 }
 
+/* Effort: XS to XL, as stickers and a chip on the note. */
+.stick[data-kind="effort"] {
+  background: var(--orange);
+}
+.chips .chip[data-effort] {
+  font-weight: 900;
+  color: var(--black);
+  background: var(--orange);
+  border-color: var(--black);
+}
+
 /* The tour: a spotlight cut out of a dimmed page, and a card beside it. Clicks pass through to the page. */
 .tour {
   position: fixed;
@@ -2763,7 +2774,7 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .panelFields {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 @media (max-width: 640px) {
@@ -3210,9 +3221,12 @@ input.stick[data-custom][aria-invalid="true"] {
   --tone: var(--cyan);
 }
 .panelFields > :nth-child(4) {
-  --tone: var(--pink);
+  --tone: var(--orange);
 }
 .panelFields > :nth-child(5) {
+  --tone: var(--pink);
+}
+.panelFields > :nth-child(6) {
   --tone: var(--lime);
 }
 .panelFields input,
@@ -3405,7 +3419,7 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 
 /* ---------- Goals and rewards ---------- */
-.panelFields > :nth-child(6) {
+.panelFields > :nth-child(7) {
   --tone: var(--peri);
 }
 .goalEmpty {

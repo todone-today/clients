@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { addDays, shiftMonths } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
-import { type Task, fmtMinutes, parseMinutes } from "@todone/sdk/tasks";
+import {
+  EFFORTS,
+  type Task,
+  fmtMinutes,
+  parseMinutes,
+} from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 const WHEN: [string, string, (today: string) => Partial<Task>][] = [
@@ -26,6 +31,9 @@ const REP: [string, string, (today: string) => Partial<Task>][] = [
   ["r-month", "Monthly", () => ({ rep: "every month" })],
   ["r-year", "Yearly", () => ({ rep: "every year" })],
 ];
+// Effort: how hard, apart from how long. Bigger earns more XP (sdk goals.ts EFFORT_XP).
+const EFFORT: [string, string, (today: string) => Partial<Task>][] =
+  EFFORTS.map((e) => [`e-${e}`, e.toUpperCase(), () => ({ effort: e })]);
 const LONG: [string, string, (today: string) => Partial<Task>][] = [
   ...[15, 30, 60, 120, 240].map((m): [string, string, () => Partial<Task>] => [
     `est${m}`,
@@ -39,12 +47,16 @@ export function sticker(key: string, today: string): Partial<Task> | null {
   const [kind, v] = key.split(":");
   if (kind === "due" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return { due: v };
   if (kind === "est" && +v > 0) return { est: +v };
-  return [...WHEN, ...LONG, ...PRI, ...REP].find(([k]) => k === key)?.[2](today) ?? null;
+  return (
+    [...WHEN, ...LONG, ...EFFORT, ...PRI, ...REP].find(([k]) => k === key)?.[2](
+      today,
+    ) ?? null
+  );
 }
 // A custom sticker keeps showing what was last picked for this long, so it can be used again (click or drag).
 const HOLD = 15_000;
 
-// The right-hand sidebar: sticky notes for when, how long, priority and repeat (drop a task card on one, or pick a
+// The right-hand sidebar: sticky notes for when, how long, effort, priority and repeat (drop a task card on one, or pick a
 // task and click one), each with a Custom row for anything the stickers don't cover, so a card never has to open up.
 export function Stickers({
   selected,
@@ -65,7 +77,10 @@ export function Stickers({
   const hold = (k: "due" | "est", v: string | number) => {
     setHeld((h) => ({ ...h, [k]: v }));
     clearTimeout(timer.current[k]);
-    timer.current[k] = setTimeout(() => setHeld((h) => ({ ...h, [k]: undefined })), HOLD);
+    timer.current[k] = setTimeout(
+      () => setHeld((h) => ({ ...h, [k]: undefined })),
+      HOLD,
+    );
   };
   const forIds = useRef<string[] | undefined>(undefined);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -80,7 +95,8 @@ export function Stickers({
   // "Custom…" dropped on a task (see TodoApp's applySticker): ask for the value, for that task.
   useEffect(() => {
     const on = (e: Event) => {
-      const { key, ids } = (e as CustomEvent<{ key: string; ids: string[] }>).detail;
+      const { key, ids } = (e as CustomEvent<{ key: string; ids: string[] }>)
+        .detail;
       forIds.current = ids;
       if (key === "custom-when") openPicker();
       else setTyping(true);
@@ -104,7 +120,12 @@ export function Stickers({
     onApply(key, forIds.current);
     forIds.current = undefined;
   };
-  const group = (title: string, items: typeof WHEN, kind: string, custom?: React.ReactNode) => (
+  const group = (
+    title: string,
+    items: typeof WHEN,
+    kind: string,
+    custom?: React.ReactNode,
+  ) => (
     <div className={s.stickGroup}>
       <h3>{title}</h3>
       <div>
@@ -128,14 +149,21 @@ export function Stickers({
   );
   // Custom stickers: any day (the date picker opens) and any length (typed on the sticker). Once picked, the value
   // stays on the sticker for a while, as a normal sticker: click it for the picked task, or drag it onto any task.
-  const dayLabel = (d: string) => new Date(`${d}T12:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const dayLabel = (d: string) =>
+    new Date(`${d}T12:00`).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+    });
   const when = (
     <span className={s.stick} data-kind="when" data-custom>
       {held.due ? (
         <button
           type="button"
           {...drop(`due:${held.due}`)}
-          {...draggable({ kind: "sticker", key: `due:${held.due}` }, dayLabel(held.due))}
+          {...draggable(
+            { kind: "sticker", key: `due:${held.due}` },
+            dayLabel(held.due),
+          )}
           onClick={() => selected && onApply(`due:${held.due}`)}
           title={selected ? `Apply to “${selected}”` : "Drag onto a task"}
         >
@@ -174,7 +202,9 @@ export function Stickers({
       data-custom
       autoFocus
       aria-label="Custom length"
-      defaultValue={held.est ? fmtMinutes(held.est) : task?.est ? fmtMinutes(task.est) : ""}
+      defaultValue={
+        held.est ? fmtMinutes(held.est) : task?.est ? fmtMinutes(task.est) : ""
+      }
       placeholder="45m"
       aria-invalid={estErr}
       title="Like 45m, 2h or 1h30m"
@@ -204,7 +234,10 @@ export function Stickers({
       data-kind="long"
       data-custom
       {...drop(`est:${held.est}`)}
-      {...draggable({ kind: "sticker", key: `est:${held.est}` }, fmtMinutes(held.est))}
+      {...draggable(
+        { kind: "sticker", key: `est:${held.est}` },
+        fmtMinutes(held.est),
+      )}
       onClick={() => selected && onApply(`est:${held.est}`)}
       title={selected ? `Apply to “${selected}”` : "Drag onto a task"}
     >
@@ -225,10 +258,16 @@ export function Stickers({
     </button>
   );
   return (
-    <aside className={s.stickers} aria-label="Stickers" data-tour="stickers" data-active={active}>
+    <aside
+      className={s.stickers}
+      aria-label="Stickers"
+      data-tour="stickers"
+      data-active={active}
+    >
       {selected && <p>Tap or click one to apply it to “{selected}”.</p>}
       {group("When", WHEN, "when", when)}
       {group("How long", LONG, "long", long)}
+      {group("Effort", EFFORT, "effort")}
       {group("Priority", PRI, "pri")}
       {group("Repeat", REP, "rep")}
     </aside>

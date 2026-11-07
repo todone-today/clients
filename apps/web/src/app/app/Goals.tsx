@@ -1248,6 +1248,9 @@ export function Rewards() {
                     4 h)
                   </li>
                   <li>
+                    <b>+3</b> S, <b>+6</b> M, <b>+10</b> L, <b>+15</b> XL effort
+                  </li>
+                  <li>
                     <b>+6</b> high priority, <b>+3</b> medium
                   </li>
                   <li>

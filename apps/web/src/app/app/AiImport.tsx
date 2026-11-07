@@ -14,7 +14,7 @@ const prompt = (
 ) => `Turn what I describe below into todo lists. Reply with only the lists, in exactly this format:
 
 ## List name
-- [ ] Task name ⏱ 30m 📅 2026-11-02 ⏰ 09:30
+- [ ] Task name ⏱ 30m 💪 m 📅 2026-11-02 ⏰ 09:30
   - [ ] A subtask (indent two spaces, one level only)
 
 Rules:
@@ -25,6 +25,7 @@ Rules:
 }
 - Everything after the task name is optional. Leave a part out unless I said or clearly implied it.
 - ⏱ is how long it takes: 15m, 30m, 1h, 1h30m, 2h.
+- 💪 is how hard it is, apart from how long: xs, s, m, l or xl.
 - 📅 is the day it's due, as YYYY-MM-DD. Today is ${label(today, { weekday: "long" })} ${today}; work out "Friday", "next week" and so on from that.
 - ⏰ is a start time, 24-hour HH:MM, only if I gave a time.
 - Write "- [x]" for anything already done.

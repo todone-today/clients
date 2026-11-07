@@ -1435,6 +1435,17 @@ function TaskRow({
               {PRI_NAME[task.pri]}
             </button>
           ) : null}
+          {task.effort ? (
+            <button
+              className={s.chip}
+              data-effort
+              onClick={() => edit((t) => ({ ...t, effort: undefined }))}
+              aria-label={`Remove effort ${task.effort.toUpperCase()}`}
+              title="Remove effort"
+            >
+              {task.effort.toUpperCase()}
+            </button>
+          ) : null}
           {task.est ? (
             <button
               className={s.chip}

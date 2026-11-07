@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const SECTIONS = [
   ["start", "Getting started"],
   ["notes", "Lists and notes"],
-  ["stickers", "Stickers: when, how long, priority, repeat"],
+  ["stickers", "Stickers: when, how long, effort, priority, repeat"],
   ["board", "Moving things around"],
   ["calendar", "Calendar"],
   ["ideas", "Brainstorm"],
@@ -78,11 +78,12 @@ export default function Docs() {
         </li>
       </ul>
 
-      <h2 id="stickers">Stickers: when, how long, priority, repeat</h2>
+      <h2 id="stickers">Stickers: when, how long, effort, priority, repeat</h2>
       <p>
         The stickers beside the board set things by drag and drop: drag a note
         onto <b>Tomorrow</b> or <b>1 hr</b>, or a sticker onto a note.{" "}
-        <b>Repeat</b> stickers (Daily, Weekdays, Weekends, Weekly, Monthly,
+        <b>Effort</b> (XS to XL) is how hard a task is, apart from how long it
+        takes; a bigger one earns more XP. <b>Repeat</b> stickers (Daily, Weekdays, Weekends, Weekly, Monthly,
         Yearly) bring a task back: tick it off and the next one waits until its
         day. Ctrl/⌘-click notes to select several and set them all at once.
       </p>
@@ -171,8 +172,9 @@ export default function Docs() {
         </li>
         <li>
           Finishing a task earns XP: 5, plus a point per 5 minutes estimated (up
-          to 4 hours), 6 for high or 3 for medium priority, 4 for on time, 2 a
-          step (up to 10) and 5 toward a goal. Unticking takes it back.
+          to 4 hours), its effort (3 for S, 6 for M, 10 for L, 15 for XL), 6
+          for high or 3 for medium priority, 4 for on time, 2 a step (up to 10)
+          and 5 toward a goal. Unticking takes it back.
         </li>
         <li>
           Rewards: set your own (&ldquo;cheat meal · 150&rdquo;) and claim them

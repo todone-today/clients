@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  EFFORTS,
   type FileRef,
   type Task,
   fmtMinutes,
@@ -45,7 +46,7 @@ import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
-import type { Goal } from "@todone/sdk/goals";
+import { EFFORT_XP, type Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
 
 const REPEATS = [
@@ -250,6 +251,27 @@ export function TaskPanel({
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
           </label>
+          <div className={s.panelField}>
+            <span>Effort</span>
+            <Select
+              className={s.panelSelect}
+              label="Effort"
+              value={task.effort ?? ""}
+              options={[
+                { value: "", label: "None" },
+                ...EFFORTS.map((e) => ({
+                  value: e,
+                  label: `${e.toUpperCase()} · +${EFFORT_XP[e]} XP`,
+                })),
+              ]}
+              onChange={(v) =>
+                edit((t) => ({
+                  ...t,
+                  effort: (v || undefined) as Task["effort"],
+                }))
+              }
+            />
+          </div>
           <div className={s.panelField}>
             <span>Priority</span>
             <Select

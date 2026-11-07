@@ -10,6 +10,13 @@ export const metadata: Metadata = {
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "9 November 2026",
+    title: "Effort",
+    items: [
+      "Give a task an effort, XS to XL: how hard it is, apart from how long it takes. Drop an Effort sticker on it or set it in its panel. Bigger efforts earn more XP: +3 for S up to +15 for XL.",
+    ],
+  },
+  {
+    date: "9 November 2026",
     title: "Goals that live in your lists",
     items: [
       "A list can have its own goals, shown as sticky notes at its top: \"weigh 68 kg\", \"gym 5× a week\", \"140 g protein a day\". Log progress right there.",
