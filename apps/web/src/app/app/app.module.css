@@ -892,6 +892,10 @@
   border: 2px solid var(--ink);
 }
 .tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   padding: 0.4rem 0.8rem;
   font-size: 0.875rem;
   font-weight: 800;

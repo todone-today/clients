@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Target,
+  ListChecks,
+  CalendarDays,
+  Gift,
   AlignLeft,
   Lightbulb,
   Lock,
@@ -372,19 +375,19 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <nav className={s.tabs} aria-label="Views">
           {(
             [
-              [null, "Lists"],
-              ["calendar", "Calendar"],
-              ["goals", "Goals"],
-              ["rewards", "Rewards"],
+              [null, "Lists", ListChecks],
+              ["calendar", "Calendar", CalendarDays],
+              ["goals", "Goals", Target],
+              ["rewards", "Rewards", Gift],
             ] as const
-          ).map(([p, name]) => (
+          ).map(([p, name, Icon]) => (
             <button
               key={name}
               aria-pressed={panel === p}
               onClick={() => setPanel(p)}
               data-tour={p ?? "lists-tab"}
             >
-              {name}
+              <Icon size={16} strokeWidth={2.5} aria-hidden /> {name}
             </button>
           ))}
         </nav>
