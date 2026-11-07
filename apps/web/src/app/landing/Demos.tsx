@@ -316,8 +316,13 @@ const TOOLS: Tool[] = [
   },
   {
     name: "Apple Calendar",
-    how: "Subscribe to a private feed of everything that's due. Outlook and other calendar apps can use it too.",
+    how: "Subscribe to a private feed of everything that's due.",
     mark: siApple,
+  },
+  {
+    name: "Outlook",
+    how: "The same private feed, subscribed in Outlook: your dated tasks show up in your calendar.",
+    mark: "calendar",
   },
 ];
 

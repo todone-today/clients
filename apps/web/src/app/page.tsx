@@ -112,8 +112,8 @@ export default function Home() {
           <article className={`${s.feat} ${s.full}`}>
             <h2 className="display">Your calendar, in step.</h2>
             <p>
-              Two integrations for now, done properly: Google Calendar both
-              ways, and a private feed for Apple Calendar. More once these are
+              Three for now, done properly: Google Calendar both ways, and a
+              private feed for Apple Calendar and Outlook. More once these are
               rock solid.
             </p>
             <ToolsDemo />
@@ -217,10 +217,10 @@ export default function Home() {
             What we can still see: your email and name, which teams you&apos;re
             in, how many lists you have, roughly how big they are and when they
             change. Lists you choose to connect to integrations (Google
-            Calendar, the Apple Calendar feed) are stored readable so those can
-            work; each list says which it is. Share a single task by link and
-            that task, its comments and its files are readable too, until you
-            stop sharing.
+            Calendar, the Apple Calendar and Outlook feed) are stored readable
+            so those can work; each list says which it is. Share a single task
+            by link and that task, its comments and its files are readable too,
+            until you stop sharing.
           </p>
         </section>
 
@@ -248,7 +248,7 @@ export default function Home() {
                   "Calendar and planning",
                   "Teams and shared lists",
                   "Works offline",
-                  "Google & Apple Calendar",
+                  "Google, Apple & Outlook calendars",
                   "Open source, self-hostable",
                 ].map((t) => (
                   <li key={t} data-done>

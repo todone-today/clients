@@ -204,11 +204,13 @@ export default function Docs() {
         </li>
         <li>
           <b>Apple Calendar</b>: a private feed of everything that&apos;s due.
-          Outlook and other calendar apps can subscribe to it too.
+        </li>
+        <li>
+          <b>Outlook</b>: subscribe to the same private feed in Outlook.
         </li>
       </ul>
       <p>
-        We&apos;re keeping it to these two until they&apos;re rock solid; more
+        We&apos;re keeping it to these three until they&apos;re rock solid; more
         integrations will follow.
       </p>
 

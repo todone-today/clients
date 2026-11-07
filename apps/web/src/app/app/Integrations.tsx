@@ -96,12 +96,12 @@ export function Integrations() {
     { key: "markdown", name: "Obsidian & Markdown", on: !!st.syncToken },
     {
       key: "link",
-      name: "Calendar link (Outlook, any app)",
+      name: "Outlook",
       on: !!st.icsToken,
     },
     {
       key: "apple",
-      name: "Apple Calendar (or any calendar app)",
+      name: "Apple Calendar",
       on: !!st.icsToken,
     },
     { key: "discord", name: "Discord", on: st.discord },
@@ -109,13 +109,9 @@ export function Integrations() {
     { key: "keep", name: "Google Keep", on: false },
   ];
   const items = every.filter(
-    // For now: Google and Apple Calendar (plus this device's notifications). Others show only while still connected,
-    // so a workspace that set one up can switch it off.
-    (i) =>
-      i.key === "notify" ||
-      i.key === "google" ||
-      i.key === "apple" ||
-      (i.on && i.key !== "link"),
+    // For now: Google Calendar, Apple Calendar and Outlook (plus this device's notifications). Others show only while
+    // still connected, so a workspace that set one up can switch it off.
+    (i) => ["notify", "google", "apple", "link"].includes(i.key) || i.on,
   );
   const key = pick ?? items.find((i) => i.on)?.key ?? "google";
 
