@@ -105,3 +105,31 @@
 .foot a {
   text-decoration: underline;
 }
+
+.name {
+  display: grid;
+  gap: 0.3rem;
+  max-width: 20rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+.name input {
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.name input:focus-visible {
+  outline: none;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}

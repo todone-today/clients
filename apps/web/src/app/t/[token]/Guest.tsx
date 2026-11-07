@@ -13,7 +13,7 @@ import s from "./guest.module.css";
 
 const PRI = { 1: "High", 2: "Medium", 3: "Low" } as const;
 
-// Each browser is one anonymous guest ("Guest 2"), by a random key kept here.
+// Each browser is one guest, by a random key kept here; their name (optional, "Anonymous" without one) is kept too.
 function guestKey() {
   try {
     let k = localStorage.getItem("todone:guest");
@@ -27,19 +27,38 @@ function guestKey() {
   }
 }
 
+const NAME = "todone:guest-name";
+function savedName() {
+  try {
+    return localStorage.getItem(NAME) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export function Guest({ token }: { token: string }) {
   const [headers, setHeaders] = useState<Record<string, string> | null>(null);
-  const [data, setData] = useState<{ task: Task; comments: Comment[] } | null>(null);
+  const [name, setName] = useState("");
+  const [data, setData] = useState<{ task: Task; comments: Comment[] } | null>(
+    null,
+  );
   const [gone, setGone] = useState("");
   const base = `/s/${encodeURIComponent(token)}`;
   useEffect(() => {
-    Promise.resolve().then(() => setHeaders({ "x-guest": guestKey() }));
+    Promise.resolve().then(() => {
+      setHeaders({ "x-guest": guestKey() });
+      setName(savedName());
+    });
   }, []);
   const load = useCallback(async () => {
     const r = await fetch(`/api${base}`, { headers: headers ?? {} });
     const j = await r.json().catch(() => null);
     if (!r.ok) {
-      setGone(r.status === 429 ? "Too many requests. Wait a moment and reload." : "This link doesn't work any more. Ask whoever shared it to share it again.");
+      setGone(
+        r.status === 429
+          ? "Too many requests. Wait a moment and reload."
+          : "This link doesn't work any more. Ask whoever shared it to share it again.",
+      );
       throw new Error("gone");
     }
     setData(j);
@@ -83,7 +102,10 @@ export function Guest({ token }: { token: string }) {
               )}
               {data.task.due && (
                 <span>
-                  {new Date(`${data.task.due}T12:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                  {new Date(`${data.task.due}T12:00`).toLocaleDateString(
+                    undefined,
+                    { weekday: "short", day: "numeric", month: "short" },
+                  )}
                   {data.task.at ? ` · ${data.task.at}` : ""}
                 </span>
               )}
@@ -91,7 +113,9 @@ export function Guest({ token }: { token: string }) {
               {data.task.pri ? <span>{PRI[data.task.pri]}</span> : null}
               {data.task.rep ? <span>{data.task.rep}</span> : null}
             </p>
-            {data.task.note && <Note text={data.task.note} className={s.note} />}
+            {data.task.note && (
+              <Note text={data.task.note} className={s.note} />
+            )}
             {data.task.sub.length > 0 && (
               <ul className={s.steps}>
                 {data.task.sub.map((x) => (
@@ -104,14 +128,39 @@ export function Guest({ token }: { token: string }) {
             {data.task.files?.length ? (
               <div className={s.files}>
                 {data.task.files.map((f) => (
-                  <Media key={f.id} file={f} load={() => sharedUrl(base, f.id, headers)} />
+                  <Media
+                    key={f.id}
+                    file={f}
+                    load={() => sharedUrl(base, f.id, headers)}
+                  />
                 ))}
               </div>
             ) : null}
           </section>
           <section className={s.thread}>
             <h2>Conversation</h2>
-            <Thread base={base} headers={headers} initial={data.comments} load={load} />
+            <label className={s.name}>
+              <span>Your name</span>
+              <input
+                value={name}
+                maxLength={40}
+                placeholder="Anonymous"
+                autoComplete="nickname"
+                onChange={(e) => {
+                  setName(e.target.value);
+                  try {
+                    localStorage.setItem(NAME, e.target.value);
+                  } catch {}
+                }}
+              />
+            </label>
+            <Thread
+              base={base}
+              headers={headers}
+              initial={data.comments}
+              load={load}
+              name={name.trim()}
+            />
           </section>
         </>
       )}

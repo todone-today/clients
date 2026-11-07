@@ -26,11 +26,13 @@ export function Thread({
   headers,
   initial,
   load,
+  name,
 }: {
   base: string;
   headers?: Record<string, string>;
   initial: Comment[];
   load: () => Promise<Comment[]>;
+  name?: string; // a guest's chosen name, sent with each comment ("" = Anonymous)
 }) {
   const [comments, setComments] = useState(initial);
   const [err, setErr] = useState("");
@@ -48,7 +50,7 @@ export function Thread({
       await shareCall(
         "POST",
         `${base}/comments`,
-        { body, files, parent },
+        { body, files, parent, ...(name === undefined ? {} : { name }) },
         headers,
       );
       await refresh();
