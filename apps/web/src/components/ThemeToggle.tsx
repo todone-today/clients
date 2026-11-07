@@ -29,8 +29,17 @@ export function ThemeToggle({ tile }: { tile?: string }) {
   if (tile) {
     const next = theme === "night" ? "day" : "night";
     return (
-      <button className={tile} onClick={() => pick(next)} aria-label={`Switch to ${next}`} title={`Switch to ${next}`}>
-        {theme === "night" ? <Moon size={18} strokeWidth={2.5} aria-hidden /> : <Sun size={18} strokeWidth={2.5} aria-hidden />}
+      <button
+        className={tile}
+        onClick={() => pick(next)}
+        aria-label={`Switch to ${next}`}
+        data-tip={`Switch to ${next}`}
+      >
+        {theme === "night" ? (
+          <Moon size={18} strokeWidth={2.5} aria-hidden />
+        ) : (
+          <Sun size={18} strokeWidth={2.5} aria-hidden />
+        )}
       </button>
     );
   }
@@ -38,7 +47,12 @@ export function ThemeToggle({ tile }: { tile?: string }) {
   return (
     <div className={s.toggle} role="group" aria-label="Theme">
       {(["day", "night"] as const).map((t) => (
-        <button key={t} className={s.opt} aria-pressed={theme === t} onClick={() => pick(t)}>
+        <button
+          key={t}
+          className={s.opt}
+          aria-pressed={theme === t}
+          onClick={() => pick(t)}
+        >
           {t === "day" ? "Day" : "Night"}
         </button>
       ))}

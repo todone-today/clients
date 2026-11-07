@@ -404,7 +404,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           }}
           data-tour="tour"
           aria-label="Tour"
-          title="Tour"
+          data-tip="Tour"
         >
           <Info size={18} strokeWidth={2.5} aria-hidden />
         </button>
@@ -424,7 +424,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             aria-pressed={panel === "account"}
             onClick={() => show("account")}
             aria-label="Account"
-            title={session?.user.email}
+            data-tip={
+              session?.user.email
+                ? `Account · ${session.user.email}`
+                : "Account"
+            }
+            data-tip-end
           >
             <Avatar
               image={session?.user.image}
@@ -473,7 +478,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           className={s.foldIn}
           onClick={toggleSlim}
           aria-label={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
-          title={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
+          data-tip={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
         >
           {slim ? (
             <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
@@ -498,7 +503,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           aria-current={panel === "ideas"}
           onClick={() => show("ideas")}
           data-tour="ideas"
-          title="Brainstorm"
+          data-tip="Brainstorm"
         >
           <span>
             <Lightbulb size={16} strokeWidth={2.5} aria-hidden />{" "}
@@ -521,7 +526,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                     onClick={() => open(l.id)}
                     {...dropOnList(l.id)}
                     {...draggable({ kind: "list", id: l.id }, l.name)}
-                    title={l.name}
+                    data-tip={l.name}
                   >
                     <span>
                       <ListIcon id={l.id} name={l.name} icon={l.icon} />{" "}
@@ -543,7 +548,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             className={`${s.listBtn} ${s.ideasBtn} ${s.binBtn}`}
             aria-current={panel === "bin"}
             onClick={() => show("bin")}
-            title="Bin"
+            data-tip="Bin"
           >
             <span>
               <Trash2 size={16} strokeWidth={2.5} aria-hidden />{" "}

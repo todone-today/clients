@@ -19,7 +19,7 @@ import {
   type Reward,
   type Win,
 } from "@todone/sdk/goals";
-import { type List, todayISO, uid } from "@todone/sdk/tasks";
+import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
 import { useLists } from "@/lib/store";
@@ -43,6 +43,27 @@ const fillFor = (id: string) =>
 const daysLeft = (by: string) =>
   Math.round((+new Date(by) - +new Date(todayISO())) / 86_400_000);
 export const useMe = () => authClient.useSession().data?.user.id;
+
+// A habit is a repeating task. Repeats can't pick days of the week, so "N times a week" takes the nearest rule;
+// it can be changed in the task's panel. The goal counts the weeks either way.
+export const habitRule = (perWeek = 3) =>
+  perWeek >= 6
+    ? "every day"
+    : perWeek === 5
+      ? "every weekday"
+      : perWeek >= 3
+        ? "every 2 days"
+        : perWeek === 2
+          ? "every 3 days"
+          : "every week";
+const goalTask = (g: Goal, title: string, habit: boolean): Task => ({
+  id: uid(),
+  title,
+  done: false,
+  sub: [],
+  goal: g.id,
+  ...(habit ? { rep: habitRule(g.perWeek), due: todayISO() } : {}),
+});
 
 // Goals: why each one matters, how it's going, the next step, and the if-then plan. Outcome goals have milestones
 // (their linked tasks); habits count the weeks you showed up. Nothing here ever "fails".
@@ -116,18 +137,14 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           onClose={() => setMaking(false)}
           onSave={(g, steps, listId) => {
             changeGoals(lists, (xs) => [...xs, g]);
-            if (steps.length && listId)
+            if ((steps.length || g.kind === "habit") && listId)
               update(listId, (l) => ({
                 ...l,
                 tasks: [
                   ...l.tasks,
-                  ...steps.map((title) => ({
-                    id: uid(),
-                    title,
-                    done: false,
-                    sub: [],
-                    goal: g.id,
-                  })),
+                  ...(g.kind === "habit"
+                    ? [goalTask(g, steps[0] || g.title, true)]
+                    : steps.map((title) => goalTask(g, title, false))),
                 ],
               }));
             setMaking(false);
@@ -151,7 +168,7 @@ function GoalCard({
   lists: List[];
   onOpen: (listId: string) => void;
 }) {
-  const { lists: all } = useLists();
+  const { lists: all, update } = useLists();
   const [reflecting, setReflecting] = useState(false);
   const p = goalProgress(goal, tasks, items);
   const set = (f: (g: Goal) => Goal | null) =>
@@ -240,7 +257,23 @@ function GoalCard({
           Next: <b>{p.next.title}</b>
         </button>
       )}
-      {!p.total && !goal.done && (
+      {goal.kind === "habit" && !p.next && lists[0] && (
+        <button
+          className={`btn ${s.claim}`}
+          style={{ "--fill": "#fff" } as React.CSSProperties}
+          onClick={() => {
+            update(lists[0].id, (l) => ({
+              ...l,
+              tasks: [...l.tasks, goalTask(goal, goal.title, true)],
+            }));
+            onOpen(lists[0].id);
+          }}
+          title={`Adds “${goal.title}” to ${lists[0].name}, repeating ${habitRule(goal.perWeek)}`}
+        >
+          Make it a repeating task
+        </button>
+      )}
+      {!p.total && !goal.done && goal.kind === "outcome" && (
         <p className={s.goalHint}>
           Link tasks to this goal from a task&apos;s panel (Goal field).
         </p>
@@ -549,9 +582,11 @@ function GoalDialog({
         {step === 3 && (
           <>
             <p className={s.goalHint}>
-              Make the first one tiny: something you could do in 5 minutes.
+              {g.kind === "habit"
+                ? `This becomes a task that repeats ${habitRule(g.perWeek ?? 3)}; change how often in its panel. Keep it small enough to do on a bad day.`
+                : "Make the first one tiny: something you could do in 5 minutes."}
             </p>
-            {steps.map((v, i) => (
+            {(g.kind === "habit" ? steps.slice(0, 1) : steps).map((v, i) => (
               <input
                 key={i}
                 className={s.goalStepInput}
@@ -559,9 +594,11 @@ function GoalDialog({
                 maxLength={500}
                 autoFocus={i === 0}
                 placeholder={
-                  ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]
+                  g.kind === "habit"
+                    ? g.title || "Go to the gym"
+                    : ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]
                 }
-                aria-label={`Step ${i + 1}`}
+                aria-label={g.kind === "habit" ? "The habit" : `Step ${i + 1}`}
                 onChange={(e) =>
                   setSteps((xs) =>
                     xs.map((x, j) => (j === i ? e.target.value : x)),
@@ -807,7 +844,7 @@ export function XpTile({ onClick }: { onClick: () => void }) {
       style={{ "--fill": "var(--lime)" } as React.CSSProperties}
       onClick={onClick}
       aria-label={`${xp} XP: rewards`}
-      title="Your XP: spend it on rewards"
+      data-tip="Your XP: spend it on rewards"
     >
       <Zap size={15} strokeWidth={2.75} aria-hidden />
       <span>{xp}</span>

@@ -3809,3 +3809,27 @@ input.stick[data-custom][aria-invalid="true"] {
 .goalMeter .bar i {
   background: var(--black);
 }
+.goalGrid {
+  align-items: start;
+}
+
+/* Tooltips: in the sidebar they sit to the right; an open sidebar shows names already, so only the rail has them. */
+.side [data-tip]:is(:hover, :focus-visible)::after {
+  top: 50%;
+  left: calc(100% + 0.6rem);
+  translate: 0 -50%;
+}
+.shell:not([data-slim]) .side .listBtn[data-tip]::after {
+  content: none !important;
+}
+.tile {
+  overflow: visible;
+}
+.tile > span {
+  overflow: hidden;
+}
+@media (min-width: 761px) {
+  .shell[data-slim] > .side {
+    overflow: visible;
+  }
+}
