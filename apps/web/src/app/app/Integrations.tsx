@@ -629,16 +629,17 @@ function Encryption() {
         <Lock size={18} strokeWidth={2.5} aria-hidden /> End-to-end encryption
       </h2>
       <p>
-        Your lists are locked on your device before they&apos;re saved. Our
-        server and these integrations can&apos;t read them. To use a list with
-        an integration, switch its encryption off below: from then on our server
-        and the integrations you connect can read that list. Switch it back on
-        any time.
+        Privacy comes first: your lists are locked on your device before
+        they&apos;re saved, and nobody else can read them, not us and not your
+        calendar. So even with your calendar link added or shared, an encrypted
+        list never shows up in it. Only the lists you make readable below go
+        into the calendar, and our server can read those too. Switch encryption
+        back on any time and the list leaves the calendar on its next refresh.
       </p>
       <p className={s.e2eCount}>
         {open
-          ? `${open} of ${mine.length} lists readable by integrations`
-          : "Every list is encrypted: integrations see nothing yet."}
+          ? `${open} of ${mine.length} lists readable in your calendar`
+          : "Every list is encrypted: your calendar shows nothing yet."}
       </p>
       <ul className={s.e2eLists}>
         {mine.map((l) => {
