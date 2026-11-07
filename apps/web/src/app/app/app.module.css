@@ -3737,29 +3737,27 @@ input.stick[data-custom][aria-invalid="true"] {
 .rewardNew .goalField {
   color: var(--ink);
 }
+/* Recent: one sticker card, a light row per entry. */
 .wins {
   display: grid;
-  gap: 0.5rem;
-  max-width: 40rem;
-  margin-top: 0.6rem;
+  padding: 0.25rem 0.9rem;
   list-style: none;
-}
-/* Each win a small sticker: what it was, when, and the XP as a chip. */
-.wins li {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  font-size: 0.9rem;
-  font-weight: 700;
   color: var(--black);
   background: #fff;
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
 }
-.wins li:nth-child(odd) {
-  transform: rotate(-0.25deg);
+.wins li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.wins li + li {
+  border-top: 2px dashed #ddd5c6;
 }
 .wins li > span {
   min-width: 0;
@@ -3768,26 +3766,54 @@ input.stick[data-custom][aria-invalid="true"] {
   white-space: nowrap;
 }
 .wins time {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
   color: #6b655c;
 }
 .wins b {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 0.1rem 0.45rem;
-  font-size: 0.8rem;
+  min-width: 2.6rem;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.78rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
+  text-align: center;
   background: var(--lime);
   border: 2px solid var(--black);
 }
-.wins li[data-spend] {
-  background: var(--butter);
-}
 .wins li[data-spend] b {
   background: var(--pink);
+}
+/* Rewards: what you can claim and what you're saving for, with adding one and recent XP beside them. */
+.rewardsPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 19rem;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+.rewardsPage .sideHead:first-child {
+  margin-top: 0;
+}
+.rewardSide {
+  display: grid;
+  gap: 1.75rem;
+}
+.rewardSide .sideHead {
+  margin-top: 0;
+}
+.rewardStart {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.1rem 1.2rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+  transform: rotate(-0.5deg);
+}
+@media (max-width: 900px) {
+  .rewardsPage {
+    grid-template-columns: 1fr;
+  }
 }
 /* Goals and rewards reorder by dragging; the card it would land next to shows which side. */
 .goal,
@@ -3881,6 +3907,7 @@ input.stick[data-custom][aria-invalid="true"] {
   opacity: 0.6;
 }
 .rewardX {
+  margin-left: auto;
   display: grid;
   place-items: center;
   width: 2.2rem;
@@ -4148,4 +4175,7 @@ input.stick[data-custom][aria-invalid="true"] {
   font-family: var(--display);
   font-size: 2.4rem;
   line-height: 1;
+}
+.rewardsPage .sideHead {
+  margin: 1.5rem 0 0.7rem;
 }

@@ -660,6 +660,14 @@ function GoalDialog({
 }
 
 // Rewards you set for yourself, bought with the XP your finished tasks earn. In a team, each person has their own XP.
+// Starting points for a first reward, priced in "tasks like yours".
+const IDEAS = [
+  ["Cheat meal", 10],
+  ["20 min of Instagram", 3],
+  ["Movie night", 10],
+  ["A new book", 30],
+] as const;
+
 export function Rewards() {
   const { lists } = useLists();
   const { items } = useGoalItems();
@@ -709,6 +717,61 @@ export function Rewards() {
     setClaimed(r.title);
     setTimeout(() => setClaimed(""), 2500);
   };
+  const ready = rewards.filter((r) => xp >= r.cost);
+  const saving = rewards.filter((r) => xp < r.cost);
+  const card = (r: Reward) => (
+    <li
+      key={r.id}
+      {...draggable({ kind: "reward", id: r.id }, r.title)}
+      {...dropReward(r.id)}
+      className={s.reward}
+      style={{ "--fill": fillFor(r.id) } as React.CSSProperties}
+    >
+      <header>
+        <Gift size={18} strokeWidth={2.5} aria-hidden />
+        <h3>{r.title}</h3>
+        <span className={s.goalKind}>
+          <Zap size={11} strokeWidth={2.75} aria-hidden /> {r.cost}
+        </span>
+      </header>
+      {xp < r.cost && (
+        <div className={s.goalMeter}>
+          <span className={s.bar} aria-hidden>
+            <i
+              style={{
+                transform: `scaleX(${Math.min(1, Math.max(0, xp) / r.cost)})`,
+              }}
+            />
+          </span>
+          <small>
+            {r.cost - xp} XP to go · about{" "}
+            {Math.max(1, Math.ceil((r.cost - xp) / perTask))} task
+            {Math.ceil((r.cost - xp) / perTask) === 1 ? "" : "s"}
+          </small>
+        </div>
+      )}
+      <footer>
+        {xp >= r.cost && (
+          <button
+            className={`btn ${s.claim}`}
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            onClick={() => claim(r)}
+          >
+            <Gift size={15} strokeWidth={2.5} aria-hidden /> Claim
+          </button>
+        )}
+        <button
+          className={s.rewardX}
+          aria-label={`Delete reward ${r.title}`}
+          onClick={() =>
+            changeGoals(lists, (xs) => xs.filter((x) => x.id !== r.id))
+          }
+        >
+          <Trash2 size={15} strokeWidth={2.5} aria-hidden />
+        </button>
+      </footer>
+    </li>
+  );
   return (
     <>
       <div className={s.listHead}>
@@ -737,187 +800,168 @@ export function Rewards() {
           earned it.
         </p>
       )}
-      <ul className={s.rewardGrid}>
-        {rewards.map((r) => (
-          <li
-            key={r.id}
-            {...draggable({ kind: "reward", id: r.id }, r.title)}
-            {...dropReward(r.id)}
-            className={s.reward}
-            style={{ "--fill": fillFor(r.id) } as React.CSSProperties}
-          >
-            <header>
-              <Gift size={18} strokeWidth={2.5} aria-hidden />
-              <h3>{r.title}</h3>
-              <span className={s.goalKind}>
-                <Zap size={11} strokeWidth={2.75} aria-hidden /> {r.cost}
-              </span>
-            </header>
-            <div className={s.goalMeter}>
-              <span className={s.bar} aria-hidden>
-                <i
-                  style={{
-                    transform: `scaleX(${Math.min(1, Math.max(0, xp) / r.cost)})`,
-                  }}
-                />
-              </span>
-              <small>
-                {xp >= r.cost ? "Ready to claim" : `${r.cost - xp} XP to go`}
-              </small>
-            </div>
-            <footer>
-              <button
-                className={`btn ${s.claim}`}
-                style={
-                  {
-                    "--fill": xp >= r.cost ? "var(--lime)" : "#fff",
-                  } as React.CSSProperties
-                }
-                disabled={xp < r.cost}
-                onClick={() => claim(r)}
-              >
-                <Gift size={15} strokeWidth={2.5} aria-hidden /> Claim
-              </button>
-              <button
-                className={s.rewardX}
-                aria-label={`Delete reward ${r.title}`}
-                onClick={() =>
-                  changeGoals(lists, (xs) => xs.filter((x) => x.id !== r.id))
-                }
-              >
-                <Trash2 size={15} strokeWidth={2.5} aria-hidden />
-              </button>
-            </footer>
-          </li>
-        ))}
-        <li className={s.rewardNew}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const c = Math.round(+cost);
-              if (!title.trim() || !(c >= 1 && c <= 100_000)) return;
-              changeGoals(lists, (xs) => [
-                ...xs,
-                {
-                  t: "reward",
-                  id: uid() + uid(),
-                  title: title.trim(),
-                  cost: c,
-                },
-              ]);
-              setTitle("");
-            }}
-          >
-            <label className={s.goalField}>
-              <span>A reward</span>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={80}
-                placeholder="Cheat meal, 20 min Instagram…"
-              />
-            </label>
-            <label className={s.goalField}>
-              <span>Costs (XP)</span>
-              <input
-                type="number"
-                min={1}
-                max={100000}
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
-              />
-            </label>
-            <div className={s.priceChips} role="group" aria-label="Sizes">
-              {(
-                [
-                  ["Small", 3],
-                  ["Medium", 10],
-                  ["Big", 30],
-                ] as const
-              ).map(([name, n]) => (
-                <button
-                  key={name}
-                  type="button"
-                  aria-pressed={price === perTask * n}
-                  onClick={() => setCost(String(perTask * n))}
-                >
-                  {name} · {perTask * n}
-                </button>
-              ))}
-            </div>
-            {price >= 1 && (
-              <p className={s.priceHint} role="status">
-                About <b>{Math.max(1, Math.round(price / perTask))}</b> task
-                {Math.round(price / perTask) === 1 ? "" : "s"}
-                {thisWeek > 0 &&
-                  ` · about ${Math.max(1, Math.ceil(price / (thisWeek / 7)))} day${Math.ceil(price / (thisWeek / 7)) === 1 ? "" : "s"} at this week's pace`}
-                {earned.length
-                  ? `, at ${perTask} XP a task, your average.`
-                  : ", at about 15 XP a task."}
+      <div className={s.rewardsPage}>
+        <div>
+          {!rewards.length && (
+            <div className={s.rewardStart}>
+              <p>
+                <b>What would feel like a treat?</b> Pick one to start, then
+                finish tasks to earn it.
               </p>
-            )}
-            <details className={s.priceHow}>
-              <summary>How a task earns XP</summary>
-              <ul>
-                <li>
-                  <b>5</b> for finishing it
-                </li>
-                <li>
-                  <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
-                  4 h)
-                </li>
-                <li>
-                  <b>+6</b> high priority, <b>+3</b> medium
-                </li>
-                <li>
-                  <b>+4</b> done on or before its day
-                </li>
-                <li>
-                  <b>+2</b> a step (up to 10)
-                </li>
-                <li>
-                  <b>+5</b> toward a goal
-                </li>
-              </ul>
-            </details>
-            <button
-              className="btn"
-              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-              disabled={!title.trim()}
+              <div className={s.priceChips}>
+                {IDEAS.map(([idea, n]) => (
+                  <button
+                    key={idea}
+                    type="button"
+                    onClick={() => {
+                      setTitle(idea);
+                      setCost(String(perTask * n));
+                    }}
+                  >
+                    {idea}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {ready.length > 0 && (
+            <>
+              <h2 className={s.sideHead}>Ready to claim</h2>
+              <ul className={s.rewardGrid}>{ready.map(card)}</ul>
+            </>
+          )}
+          {saving.length > 0 && (
+            <>
+              <h2 className={s.sideHead}>Saving up for</h2>
+              <ul className={s.rewardGrid}>{saving.map(card)}</ul>
+            </>
+          )}
+        </div>
+        <aside className={s.rewardSide}>
+          <section className={s.rewardNew}>
+            <h2 className={s.sideHead}>New reward</h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const c = Math.round(+cost);
+                if (!title.trim() || !(c >= 1 && c <= 100_000)) return;
+                changeGoals(lists, (xs) => [
+                  ...xs,
+                  {
+                    t: "reward",
+                    id: uid() + uid(),
+                    title: title.trim(),
+                    cost: c,
+                  },
+                ]);
+                setTitle("");
+              }}
             >
-              <Plus size={16} strokeWidth={2.75} aria-hidden /> Add reward
-            </button>
-          </form>
-        </li>
-      </ul>
-      {mine.length > 0 && (
-        <>
-          <h2 className={s.sideHead}>Recent</h2>
-          <ol className={s.wins}>
-            {mine.slice(0, 20).map((w) => (
-              <li key={w.id} data-spend={w.spend || undefined}>
-                {w.spend ? (
-                  <Gift size={15} strokeWidth={2.5} aria-hidden />
-                ) : (
-                  <Check size={15} strokeWidth={3} aria-hidden />
-                )}
-                <span>{w.spend ? `Claimed ${w.title}` : w.title}</span>
-                <time>
-                  {new Date(w.at).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </time>
-                <b>
-                  <Zap size={11} strokeWidth={2.75} aria-hidden />
-                  {w.xp > 0 ? "+" : ""}
-                  {w.xp}
-                </b>
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
+              <label className={s.goalField}>
+                <span>A reward</span>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={80}
+                  placeholder="Cheat meal, 20 min Instagram…"
+                />
+              </label>
+              <label className={s.goalField}>
+                <span>Costs (XP)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100000}
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                />
+              </label>
+              <div className={s.priceChips} role="group" aria-label="Sizes">
+                {(
+                  [
+                    ["Small", 3],
+                    ["Medium", 10],
+                    ["Big", 30],
+                  ] as const
+                ).map(([name, n]) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={price === perTask * n}
+                    onClick={() => setCost(String(perTask * n))}
+                  >
+                    {name} · {perTask * n}
+                  </button>
+                ))}
+              </div>
+              {price >= 1 && (
+                <p className={s.priceHint} role="status">
+                  About <b>{Math.max(1, Math.round(price / perTask))}</b> task
+                  {Math.round(price / perTask) === 1 ? "" : "s"}
+                  {thisWeek > 0 &&
+                    ` · about ${Math.max(1, Math.ceil(price / (thisWeek / 7)))} day${Math.ceil(price / (thisWeek / 7)) === 1 ? "" : "s"} at this week's pace`}
+                  {earned.length
+                    ? `, at ${perTask} XP a task, your average.`
+                    : ", at about 15 XP a task."}
+                </p>
+              )}
+              <details className={s.priceHow}>
+                <summary>How a task earns XP</summary>
+                <ul>
+                  <li>
+                    <b>5</b> for finishing it
+                  </li>
+                  <li>
+                    <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
+                    4 h)
+                  </li>
+                  <li>
+                    <b>+6</b> high priority, <b>+3</b> medium
+                  </li>
+                  <li>
+                    <b>+4</b> done on or before its day
+                  </li>
+                  <li>
+                    <b>+2</b> a step (up to 10)
+                  </li>
+                  <li>
+                    <b>+5</b> toward a goal
+                  </li>
+                </ul>
+              </details>
+              <button
+                className="btn"
+                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+                disabled={!title.trim()}
+              >
+                <Plus size={16} strokeWidth={2.75} aria-hidden /> Add reward
+              </button>
+            </form>
+          </section>
+          {mine.length > 0 && (
+            <section>
+              <h2 className={s.sideHead}>Recent</h2>
+              <ol className={s.wins}>
+                {mine.slice(0, 5).map((w) => (
+                  <li key={w.id} data-spend={w.spend || undefined}>
+                    <span>{w.spend ? `Claimed ${w.title}` : w.title}</span>
+                    <time>
+                      {new Date(w.at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </time>
+                    <b>
+                      {w.xp > 0 ? "+" : ""}
+                      {w.xp}
+                    </b>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </aside>
+      </div>
     </>
   );
 }
