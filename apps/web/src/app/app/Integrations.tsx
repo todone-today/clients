@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  Bell,
   CalendarDays,
   Copy,
   Lock,
@@ -429,6 +428,8 @@ function CalendarLink({
   act: Act;
 }) {
   const feed = token && `${location.origin}/api/calendar/${token}.ics`;
+  // The feed is read by Apple's (or Outlook's) servers from ours, so it can only hold lists our server can read.
+  const readable = (useLists().lists ?? []).filter((l) => !l.kind && l.plain);
   return (
     <>
       <h2>
@@ -439,6 +440,31 @@ function CalendarLink({
           ? "Apple Calendar subscribes to the calendar link: File → New Calendar Subscription, then paste it. It refreshes on its own. Apple's calendar has no API todone can write back through, so edits there don't come back."
           : "Opened in a browser it shows the calendar; added to Outlook or any calendar app it stays in sync. Anyone with the link can read your dated tasks."}
       </p>
+      {readable.length ? (
+        <p className={s.e2eCount}>
+          In this calendar: {readable.map((l) => l.name).join(", ")}
+        </p>
+      ) : (
+        <p className={s.remindAsk}>
+          <Lock size={15} strokeWidth={2.5} aria-hidden />
+          <span>
+            Empty for now: every list is end-to-end encrypted, so our server
+            can&apos;t read a task to put in it. Switch encryption off for the
+            lists you want here.
+          </span>
+          <button
+            className={`btn ${s.claim}`}
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            onClick={() =>
+              document
+                .getElementById("e2e-h")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+          >
+            Choose lists
+          </button>
+        </p>
+      )}
       {feed ? (
         <>
           <input
@@ -461,7 +487,7 @@ function CalendarLink({
               <>
                 <button
                   className={s.ghost}
-                  onClick={() => act(() => setCalendar(true))}
+                  onClick={() => act(() => setCalendar(true).then(() => {}))}
                 >
                   <RefreshCw size={16} strokeWidth={2.5} /> New link
                 </button>
@@ -479,7 +505,7 @@ function CalendarLink({
         <button
           className="btn"
           disabled={!manager}
-          onClick={() => act(() => setCalendar(true))}
+          onClick={() => act(() => setCalendar(true).then(() => {}))}
         >
           Make a calendar link
         </button>
