@@ -1224,6 +1224,7 @@ function TaskRow({
       <div
         className={s.row}
         data-done={task.done}
+        data-waiting={waiting(task, today) || undefined}
         data-picked={picked.has(task.id) || undefined}
         {...drop(task.id)}
         {...draggable(
@@ -1243,6 +1244,13 @@ function TaskRow({
           role="checkbox"
           aria-checked={task.done}
           aria-label={task.title}
+          // A repeat's next copy waits for its day: it can't be ticked ahead (and earn XP for days not here yet).
+          disabled={waiting(task, today)}
+          data-tip={
+            waiting(task, today)
+              ? `Comes back ${dueName(task.due!, today)}`
+              : undefined
+          }
           onClick={() => setTasks((ts) => tick(ts, task.id, today, me))}
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
@@ -1391,3 +1399,14 @@ function GoalChip({ goal }: { goal: string }) {
     </span>
   );
 }
+
+// "tomorrow", "Mon", or "12 Nov" for a day after today.
+const dueName = (due: string, today: string) => {
+  const d = new Date(`${due}T00:00`);
+  const days = Math.round((+d - +new Date(`${today}T00:00`)) / 86_400_000);
+  return days === 1
+    ? "tomorrow"
+    : days < 7
+      ? `on ${d.toLocaleDateString(undefined, { weekday: "long" })}`
+      : `on ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
+};

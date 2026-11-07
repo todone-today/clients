@@ -3833,3 +3833,15 @@ input.stick[data-custom][aria-invalid="true"] {
     overflow: visible;
   }
 }
+
+/* A repeat's next copy, shown under "All": faded until its day, box locked. */
+.row[data-waiting] {
+  opacity: 0.55;
+}
+.check:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.check:disabled:hover {
+  transform: none;
+}

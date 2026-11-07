@@ -22,6 +22,7 @@ import {
   fmtMinutes,
   tick,
   todayISO,
+  waiting,
 } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
@@ -174,6 +175,10 @@ export function CalendarView({
           role="checkbox"
           aria-checked={it.task.done}
           aria-label={it.task.title}
+          disabled={waiting(it.task, today)}
+          title={
+            waiting(it.task, today) ? "Repeats: tick it on its day" : undefined
+          }
           onClick={() =>
             update?.(it.list.id, (l) => ({
               ...l,
