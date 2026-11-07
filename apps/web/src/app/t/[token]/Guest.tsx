@@ -111,10 +111,6 @@ export function Guest({ token }: { token: string }) {
           </section>
           <section className={s.thread}>
             <h2>Conversation</h2>
-            <p className={s.hint}>
-              You&apos;re a guest: no account needed. Anything you write or upload here can be seen by the task&apos;s owner,
-              their team, and anyone with this link.
-            </p>
             <Thread base={base} headers={headers} initial={data.comments} load={load} />
           </section>
         </>
