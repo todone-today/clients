@@ -2553,3 +2553,34 @@ input.stick[data-custom][aria-invalid="true"] {
     display: none;
   }
 }
+
+@media (min-width: 761px) {
+  .side {
+    position: relative;
+  }
+  /* The demo has no Workspace heading for the fold button to sit beside, so it gets its own row. */
+  .side[data-demo] {
+    padding-top: 3.6rem;
+  }
+}
+.foldIn {
+  position: absolute;
+  top: 1rem;
+  right: 0.9rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--ink-2);
+  border: 2px solid transparent;
+}
+.foldIn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+@media (max-width: 760px) {
+  .foldIn {
+    display: none;
+  }
+}

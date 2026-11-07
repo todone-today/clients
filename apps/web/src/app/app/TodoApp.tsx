@@ -259,20 +259,18 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Logo size={26} />
           </button>
         )}
-        <button
-          className={`${s.tile} ${s.fold}`}
-          style={{ "--fill": "var(--pink)" } as React.CSSProperties}
-          onClick={toggleSlim}
-          aria-label={slim ? "Show the sidebar" : "Hide the sidebar"}
-          title={slim ? "Show the sidebar" : "Hide the sidebar"}
-          aria-pressed={slim}
-        >
-          {slim ? (
+        {slim && (
+          // Hidden sidebar: bring it back from here, next to the logo.
+          <button
+            className={`${s.tile} ${s.fold}`}
+            style={{ "--fill": "var(--pink)" } as React.CSSProperties}
+            onClick={toggleSlim}
+            aria-label="Show the sidebar"
+            title="Show the sidebar"
+          >
             <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
-          ) : (
-            <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
-          )}
-        </button>
+          </button>
+        )}
         <nav className={s.tabs} aria-label="Views">
           {(
             [
@@ -336,7 +334,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
 
       {/* On a phone the sidebar is a drawer, opened from the header. */}
       {drawer && <div className={s.backdrop} onClick={() => setDrawer(false)} aria-hidden />}
-      <aside className={s.side} aria-label="Lists" data-open={drawer}>
+      <aside className={s.side} aria-label="Lists" data-open={drawer} data-demo={demo || undefined}>
+        {/* Fold the sidebar away (desktop), top right beside Workspace; the top bar brings it back. */}
+        <button className={s.foldIn} onClick={toggleSlim} aria-label="Hide the sidebar" title="Hide the sidebar">
+          <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
+        </button>
         {!demo && (
           <Workspaces
             orgId={orgId}
