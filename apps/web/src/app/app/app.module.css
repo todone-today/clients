@@ -3035,3 +3035,30 @@ input.stick[data-custom][aria-invalid="true"] {
   transform: translate(3px, 3px);
   box-shadow: none;
 }
+
+/* New anonymous comments on a shared task. */
+.unread {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.3rem;
+  padding: 0 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  background: var(--hot);
+  border: 2px solid var(--black);
+  border-radius: 999px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .unread {
+    animation: unreadPop 0.35s var(--ease) both;
+  }
+}
+@keyframes unreadPop {
+  from {
+    transform: scale(0.4);
+  }
+}

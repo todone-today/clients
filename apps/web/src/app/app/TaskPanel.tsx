@@ -40,6 +40,7 @@ import {
   workspaceKey,
 } from "./actions";
 import s from "./app.module.css";
+import { markSeen } from "./unread";
 
 const REPEATS = [
   "every day",
@@ -524,6 +525,7 @@ function SharedPart({
       files: v.task.files ?? [],
       comments: v.comments,
     });
+    markSeen(id, v.comments.filter((c) => c.guest).length);
     return v.comments;
   }, [id]);
   useEffect(() => {

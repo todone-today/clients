@@ -43,6 +43,7 @@ import {
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
 import { listIcon } from "./listIcon";
+import { useUnread } from "./unread";
 import { Account } from "./Account";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -1265,14 +1266,7 @@ function TaskRow({
           {task.spent ? (
             <span title="Time spent in focus">⏳ {fmtMinutes(task.spent)}</span>
           ) : null}
-          {task.share ? (
-            <span
-              className={s.sharedChip}
-              title="Shared by link: not end-to-end encrypted"
-            >
-              <LockOpen size={11} strokeWidth={2.75} aria-hidden /> Shared
-            </span>
-          ) : null}
+          {task.share ? <SharedChip share={task.share} /> : null}
           {task.files?.length ? (
             <span
               title={`${task.files.length} attachment${task.files.length === 1 ? "" : "s"}`}
@@ -1311,5 +1305,27 @@ function TaskRow({
         </ul>
       )}
     </li>
+  );
+}
+
+// A shared task's chip, with a badge for new anonymous comments (1, 2 … 9+) until its panel is opened.
+function SharedChip({ share }: { share: string }) {
+  const n = useUnread(share);
+  return (
+    <span
+      className={s.sharedChip}
+      title={
+        n
+          ? `${n} new comment${n === 1 ? "" : "s"} · shared by link, not end-to-end encrypted`
+          : "Shared by link: not end-to-end encrypted"
+      }
+    >
+      <LockOpen size={11} strokeWidth={2.75} aria-hidden /> Shared
+      {n > 0 && (
+        <b className={s.unread} aria-label={`${n} new`}>
+          {n > 9 ? "9+" : n}
+        </b>
+      )}
+    </span>
   );
 }
