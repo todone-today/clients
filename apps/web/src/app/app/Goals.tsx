@@ -108,13 +108,6 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </button>
         </div>
       </div>
-      {!goals.length && (
-        <p className={s.goalEmpty}>
-          A goal links your tasks to something you care about: why it matters,
-          what could get in the way, and what you&apos;ll do then. Finishing its
-          tasks earns XP you can spend on rewards you choose.
-        </p>
-      )}
       <ul className={s.goalGrid}>
         {open.map((g) => (
           <GoalCard
@@ -683,6 +676,12 @@ export function Rewards() {
     .filter((w) => !w.spend && w.at > week)
     .reduce((n, w) => n + w.xp, 0);
   const rewards = items.filter((i): i is Reward => i.t === "reward");
+  // For pricing a reward: what one of your tasks usually earns, and what you earn in a day lately.
+  const earned = mine.filter((w) => !w.spend).slice(0, 30);
+  const perTask = earned.length
+    ? Math.round(earned.reduce((n, w) => n + w.xp, 0) / earned.length)
+    : 15;
+  const price = Math.round(+cost);
   const dropReward = useDrop("rewards", {
     accept: (p, id) => p.kind === "reward" && p.id !== id,
     where: (_, __, at) => placeOn(at, "x", false),
@@ -828,6 +827,59 @@ export function Rewards() {
                 onChange={(e) => setCost(e.target.value)}
               />
             </label>
+            <div className={s.priceChips} role="group" aria-label="Sizes">
+              {(
+                [
+                  ["Small", 3],
+                  ["Medium", 10],
+                  ["Big", 30],
+                ] as const
+              ).map(([name, n]) => (
+                <button
+                  key={name}
+                  type="button"
+                  aria-pressed={price === perTask * n}
+                  onClick={() => setCost(String(perTask * n))}
+                >
+                  {name} · {perTask * n}
+                </button>
+              ))}
+            </div>
+            {price >= 1 && (
+              <p className={s.priceHint} role="status">
+                About <b>{Math.max(1, Math.round(price / perTask))}</b> task
+                {Math.round(price / perTask) === 1 ? "" : "s"}
+                {thisWeek > 0 &&
+                  ` · about ${Math.max(1, Math.ceil(price / (thisWeek / 7)))} day${Math.ceil(price / (thisWeek / 7)) === 1 ? "" : "s"} at this week's pace`}
+                {earned.length
+                  ? `, at ${perTask} XP a task, your average.`
+                  : ", at about 15 XP a task."}
+              </p>
+            )}
+            <details className={s.priceHow}>
+              <summary>How a task earns XP</summary>
+              <ul>
+                <li>
+                  <b>5</b> for finishing it
+                </li>
+                <li>
+                  <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
+                  4 h)
+                </li>
+                <li>
+                  <b>+6</b> high priority, <b>+3</b> medium
+                </li>
+                <li>
+                  <b>+4</b> done on or before its day
+                </li>
+                <li>
+                  <b>+2</b> a step (up to 10)
+                </li>
+                <li>
+                  <b>+5</b> toward a goal
+                </li>
+              </ul>
+            </details>
             <button
               className="btn"
               style={{ "--fill": "var(--lime)" } as React.CSSProperties}

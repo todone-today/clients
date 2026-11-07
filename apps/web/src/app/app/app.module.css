@@ -3692,6 +3692,48 @@ input.stick[data-custom][aria-invalid="true"] {
   padding: 1rem 1.1rem;
   border: 2.5px dashed var(--ink);
 }
+/* Pricing a reward: three sizes in "tasks like yours", what the price means, and the XP recipe. */
+.priceChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.priceChips button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--butter);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.priceChips button[aria-pressed="true"] {
+  background: var(--lime);
+}
+.priceHint {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.priceHint b {
+  color: var(--ink);
+}
+.priceHow {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.priceHow summary {
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+}
+.priceHow ul {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.4rem 0 0 1rem;
+}
+.priceHow b {
+  color: var(--ink);
+}
 .rewardNew .goalField {
   color: var(--ink);
 }
