@@ -6,7 +6,6 @@ import {
   Check,
   Send,
   Copy,
-  Link2,
   Lock,
   LockOpen,
   Paperclip,
@@ -84,6 +83,7 @@ export function TaskPanel({
   const [asking, setAsking] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
+  const stopping = useStopSharing(task, edit);
   const goals = useGoalItems().items.filter((i): i is Goal => i.t === "goal");
   const goal = goals.find((g) => g.id === task.goal);
   const reminders = useReminders();
@@ -370,7 +370,7 @@ export function TaskPanel({
         </section>
 
         {shared ? (
-          <SharedPart task={task} edit={edit} />
+          <SharedPart task={task} />
         ) : (
           <section className={s.panelSection}>
             <h3>
@@ -420,12 +420,12 @@ export function TaskPanel({
 
         <Notes task={task} edit={edit} shared={shared} />
 
-        {(busy || err) && (
+        {(busy || err || stopping.busy || stopping.err) && (
           <p
-            className={err ? s.err : s.panelHint}
-            role={err ? "alert" : "status"}
+            className={err || stopping.err ? s.err : s.panelHint}
+            role={err || stopping.err ? "alert" : "status"}
           >
-            {err || busy}
+            {err || stopping.err || busy || stopping.busy}
           </p>
         )}
 
@@ -438,7 +438,17 @@ export function TaskPanel({
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
           {!top && <span className={s.panelHint}>A step of a task.</span>}
-          {!shared && (
+          {shared ? (
+            <button
+              className={`btn ${s.panelShare}`}
+              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+              onClick={stopping.stop}
+              disabled={!!stopping.busy}
+              title="The link stops working; the conversation stays here, encrypted"
+            >
+              <Lock size={16} strokeWidth={2.5} aria-hidden /> Stop sharing
+            </button>
+          ) : (
             <button
               className={`btn ${s.panelShare}`}
               onClick={() => setAsking(true)}
@@ -519,47 +529,16 @@ function Disclosure({
   );
 }
 
-// A shared task: the link, its controls, the shared attachments and the conversation.
-function SharedPart({
-  task,
-  edit,
-}: {
-  task: Task;
-  edit: (f: (t: Task) => Task | null) => void;
-}) {
-  const id = task.share!;
+// Stop sharing: keep the conversation and media, encrypted, in the task; then the link dies.
+function useStopSharing(
+  task: Task,
+  edit: (f: (t: Task) => Task | null) => void,
+) {
+  const id = task.share ?? "";
   const base = `/task-shares/${id}`;
-  const [view, setView] = useState<{
-    token: string;
-    files: FileRef[];
-    comments: Comment[];
-  } | null>(null);
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [armed, setArmed] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const load = useCallback(async () => {
-    const v = await shareView(id);
-    setView({
-      token: v.token,
-      files: v.task.files ?? [],
-      comments: v.comments,
-    });
-    markSeen(id, v.comments.filter((c) => c.guest).length);
-    return v.comments;
-  }, [id]);
-  useEffect(() => {
-    Promise.resolve()
-      .then(load)
-      .catch((x) =>
-        setErr(
-          x instanceof Error ? x.message : "Couldn't load the shared task.",
-        ),
-      );
-  }, [load]);
-  const link = view ? `${location.origin}/t/${view.token}` : "";
-
-  // Stop sharing: keep the conversation and media, encrypted, in the task; then the link dies.
   const stop = async () => {
     setBusy("Keeping the conversation, encrypted…");
     setErr("");
@@ -621,38 +600,66 @@ function SharedPart({
     setBusy("");
   };
 
+  return { stop, busy, err };
+}
+
+// A shared task: the link, its controls, the shared attachments and the conversation.
+function SharedPart({ task }: { task: Task }) {
+  const id = task.share!;
+  const base = `/task-shares/${id}`;
+  const [view, setView] = useState<{
+    token: string;
+    files: FileRef[];
+    comments: Comment[];
+  } | null>(null);
+  const [err, setErr] = useState("");
+  const [copied, setCopied] = useState(false);
+  const load = useCallback(async () => {
+    const v = await shareView(id);
+    setView({
+      token: v.token,
+      files: v.task.files ?? [],
+      comments: v.comments,
+    });
+    markSeen(id, v.comments.filter((c) => c.guest).length);
+    return v.comments;
+  }, [id]);
+  useEffect(() => {
+    Promise.resolve()
+      .then(load)
+      .catch((x) =>
+        setErr(
+          x instanceof Error ? x.message : "Couldn't load the shared task.",
+        ),
+      );
+  }, [load]);
+  const link = view ? `${location.origin}/t/${view.token}` : "";
+
   return (
     <>
       <section className={s.panelSection}>
         <h3>Shared by link</h3>
-        {view ? (
-          <div className={s.shareLink}>
-            <Link2 size={15} strokeWidth={2.5} aria-hidden />
-            <input
-              readOnly
-              value={link}
-              aria-label="Share link"
-              onFocus={(e) => e.target.select()}
-            />
-            <button
-              className={s.ghost}
-              onClick={async () => {
-                await navigator.clipboard.writeText(link).catch(() => {});
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-            >
-              <Copy size={14} strokeWidth={2.5} aria-hidden />{" "}
-              {copied ? "Copied" : "Copy"}
-            </button>
-          </div>
-        ) : (
-          !err && <p className={s.panelHint}>Loading…</p>
-        )}
+        <p className={s.panelHint}>
+          Anyone with the link can see this task, comment and add photos. No
+          account needed.
+        </p>
         <div className={s.tools}>
           <button
+            className="btn"
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            disabled={!view}
+            onClick={async () => {
+              await navigator.clipboard.writeText(link).catch(() => {});
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+          >
+            <Copy size={14} strokeWidth={2.5} aria-hidden />{" "}
+            {copied ? "Copied" : "Copy link"}
+          </button>
+          <button
             className={s.ghost}
-            disabled={!!busy}
+            disabled={!view}
             onClick={async () => {
               const r = await rotateShare(id).catch(() => null);
               if (r) setView((v) => (v ? { ...v, token: r.token } : v));
@@ -661,20 +668,10 @@ function SharedPart({
           >
             <RefreshCw size={14} strokeWidth={2.5} aria-hidden /> New link
           </button>
-          <button
-            className={`${s.ghost} ${s.danger}`}
-            disabled={!!busy}
-            onClick={stop}
-          >
-            <Lock size={14} strokeWidth={2.5} aria-hidden /> Stop sharing
-          </button>
         </div>
-        {(busy || err) && (
-          <p
-            className={err ? s.err : s.panelHint}
-            role={err ? "alert" : "status"}
-          >
-            {err || busy}
+        {err && (
+          <p className={s.err} role="alert">
+            {err}
           </p>
         )}
       </section>

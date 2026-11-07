@@ -121,19 +121,29 @@
   width: 100%;
   justify-content: center;
 }
+/* A small neon sticker, so feedback is easy to find without shouting. */
 .feedbackLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  align-self: center;
-  margin-top: -0.4rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--ink-2);
+  justify-content: center;
+  gap: 0.4rem;
+  align-self: stretch;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 .feedbackLink:hover {
-  color: var(--ink);
-  text-decoration: underline;
+  transform: translate(-1px, -1px) rotate(-1deg);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.feedbackLink:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .ghost {
@@ -3687,25 +3697,68 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .wins {
   display: grid;
-  gap: 0.3rem;
-  max-width: 34rem;
+  gap: 0.5rem;
+  max-width: 40rem;
   margin-top: 0.6rem;
   list-style: none;
 }
+/* Each win a small sticker: what it was, when, and the XP as a chip. */
 .wins li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.35rem 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
   font-size: 0.9rem;
-  border-bottom: 2px dashed var(--hair);
+  font-weight: 700;
+  color: var(--black);
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.wins li:nth-child(odd) {
+  transform: rotate(-0.25deg);
+}
+.wins li > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wins time {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b655c;
 }
 .wins b {
-  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.wins li[data-spend] {
+  background: var(--butter);
 }
 .wins li[data-spend] b {
-  color: var(--hot);
+  background: var(--pink);
+}
+/* Goals and rewards reorder by dragging; the card it would land next to shows which side. */
+.goal,
+.reward {
+  cursor: grab;
+}
+.goal[data-over="before"],
+.reward[data-over="before"] {
+  box-shadow: -7px 0 0 var(--ink);
+}
+.goal[data-over="after"],
+.reward[data-over="after"] {
+  box-shadow: 7px 0 0 var(--ink);
 }
 .xpTile {
   position: relative;
@@ -4017,4 +4070,40 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .remindAsk span {
   flex: 1;
+}
+
+/* Rewards: the balance and this week's XP as two sticky notes. */
+.xpNotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.4rem;
+}
+.xpNotes p {
+  display: grid;
+  min-width: 9.5rem;
+  padding: 0.6rem 0.9rem 0.7rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: 4px 4px 0 var(--ink);
+  transform: rotate(-1.5deg);
+}
+.xpNotes p + p {
+  transform: rotate(1.25deg);
+}
+.xpNotes small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.xpNotes b {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  line-height: 1;
 }

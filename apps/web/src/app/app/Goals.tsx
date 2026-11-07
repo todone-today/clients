@@ -23,7 +23,8 @@ import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { Select } from "@/components/Select";
 import { authClient } from "@/lib/auth-client";
 import { useLists } from "@/lib/store";
-import { changeGoals, useGoalItems } from "./goalStore";
+import { changeGoals, moveGoalItem, useGoalItems } from "./goalStore";
+import { draggable, placeOn, useDrop } from "@/lib/drag";
 import s from "./app.module.css";
 
 const FILLS = [
@@ -72,6 +73,18 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   const { items } = useGoalItems();
   const [making, setMaking] = useState(false);
   const goals = items.filter((i): i is Goal => i.t === "goal");
+  // Drag a goal onto another to put it before or after it.
+  const dropGoal = useDrop("goals", {
+    accept: (p, id) => p.kind === "goal" && p.id !== id,
+    where: (_, __, at) => placeOn(at, "x", false),
+    drop: (p, id, at) =>
+      p.kind === "goal" &&
+      moveGoalItem(lists, p.id, id, placeOn(at, "x", false)),
+  });
+  const dnd = (g: Goal) => ({
+    ...draggable({ kind: "goal", id: g.id }, g.title),
+    ...dropGoal(g.id),
+  });
   const open = goals.filter((g) => !g.done);
   const achieved = goals.filter((g) => g.done);
   const all = (lists ?? []).filter((l) => !l.kind);
@@ -106,6 +119,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
         {open.map((g) => (
           <GoalCard
             key={g.id}
+            dnd={dnd(g)}
             goal={g}
             items={items}
             tasks={tasks}
@@ -121,6 +135,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
             {achieved.map((g) => (
               <GoalCard
                 key={g.id}
+                dnd={dnd(g)}
                 goal={g}
                 items={items}
                 tasks={tasks}
@@ -161,12 +176,14 @@ function GoalCard({
   tasks,
   lists,
   onOpen,
+  dnd,
 }: {
   goal: Goal;
   items: GoalItem[];
   tasks: List["tasks"];
   lists: List[];
   onOpen: (listId: string) => void;
+  dnd: object;
 }) {
   const { lists: all, update } = useLists();
   const [reflecting, setReflecting] = useState(false);
@@ -187,6 +204,7 @@ function GoalCard({
   const left = goal.by ? daysLeft(goal.by) : null;
   return (
     <li
+      {...dnd}
       className={s.goal}
       style={{ "--fill": fillFor(goal.id) } as React.CSSProperties}
       data-done={goal.done ? "" : undefined}
@@ -665,6 +683,13 @@ export function Rewards() {
     .filter((w) => !w.spend && w.at > week)
     .reduce((n, w) => n + w.xp, 0);
   const rewards = items.filter((i): i is Reward => i.t === "reward");
+  const dropReward = useDrop("rewards", {
+    accept: (p, id) => p.kind === "reward" && p.id !== id,
+    where: (_, __, at) => placeOn(at, "x", false),
+    drop: (p, id, at) =>
+      p.kind === "reward" &&
+      moveGoalItem(lists, p.id, id, placeOn(at, "x", false)),
+  });
   const claim = (r: Reward) => {
     changeGoals(lists, (xs) =>
       balance(xs, me) < r.cost
@@ -689,15 +714,22 @@ export function Rewards() {
     <>
       <div className={s.listHead}>
         <h1 className={`display ${s.title}`}>Rewards</h1>
-        <p className={s.progress}>
-          <Zap size={18} strokeWidth={2.75} aria-hidden /> {xp} XP to spend ·{" "}
-          {thisWeek} earned this week
-        </p>
-        <p className={s.open}>
-          Finishing a task earns XP: more for longer, higher-priority and
-          on-time tasks, tasks with steps, and tasks toward a goal. Spend it on
-          treats you choose.
-        </p>
+        <div className={s.xpNotes}>
+          <p style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            <small>
+              <Zap size={13} strokeWidth={2.75} aria-hidden /> To spend
+            </small>
+            <span>
+              <b>{xp}</b> XP
+            </span>
+          </p>
+          <p style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
+            <small>This week</small>
+            <span>
+              <b>+{thisWeek}</b> earned
+            </span>
+          </p>
+        </div>
       </div>
       {claimed && <Confetti key={claimed} />}
       {claimed && (
@@ -710,6 +742,8 @@ export function Rewards() {
         {rewards.map((r) => (
           <li
             key={r.id}
+            {...draggable({ kind: "reward", id: r.id }, r.title)}
+            {...dropReward(r.id)}
             className={s.reward}
             style={{ "--fill": fillFor(r.id) } as React.CSSProperties}
           >
@@ -810,8 +844,20 @@ export function Rewards() {
           <ol className={s.wins}>
             {mine.slice(0, 20).map((w) => (
               <li key={w.id} data-spend={w.spend || undefined}>
+                {w.spend ? (
+                  <Gift size={15} strokeWidth={2.5} aria-hidden />
+                ) : (
+                  <Check size={15} strokeWidth={3} aria-hidden />
+                )}
                 <span>{w.spend ? `Claimed ${w.title}` : w.title}</span>
+                <time>
+                  {new Date(w.at).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
                 <b>
+                  <Zap size={11} strokeWidth={2.75} aria-hidden />
                   {w.xp > 0 ? "+" : ""}
                   {w.xp}
                 </b>

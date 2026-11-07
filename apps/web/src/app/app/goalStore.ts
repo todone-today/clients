@@ -17,6 +17,23 @@ export function useGoalItems() {
 // saved first (see store.update).
 // ponytail: two tabs making the very first goal at the same moment could make two goals lists; the first one wins
 // in useGoalItems. Merge them on load if that ever shows up.
+// Puts goal or reward `id` just before or after `target`; their order in the list is the order they show in.
+export function moveGoalItem(
+  lists: { id: string; kind?: string }[] | null,
+  id: string,
+  target: string,
+  place: string,
+) {
+  changeGoals(lists, (xs) => {
+    const it = xs.find((x) => x.id === id);
+    if (!it || id === target) return xs;
+    const rest = xs.filter((x) => x !== it);
+    const i =
+      rest.findIndex((x) => x.id === target) + (place === "after" ? 1 : 0);
+    return [...rest.slice(0, i), it, ...rest.slice(i)];
+  });
+}
+
 export function changeGoals(
   lists: { id: string; kind?: string }[] | null,
   f: (items: GoalItem[]) => GoalItem[],
