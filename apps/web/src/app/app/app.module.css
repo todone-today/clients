@@ -5198,10 +5198,6 @@ body[data-drag="task"] .listGoal {
   font-weight: 600;
   color: #4a4540;
 }
-.paywallFoot {
-  font-size: 0.85rem;
-  color: #4a4540;
-}
 .paywallDone {
   display: grid;
   justify-items: center;

@@ -191,10 +191,6 @@ export function PlanPrompt() {
             )}
             {!founding && note}
             {err && st && <p className={s.err}>{err}</p>}
-            <p className={s.paywallFoot}>
-              UPI, cards, netbanking through Razorpay. Prices include taxes; a refund within 7 days is one click. Everything
-              you&apos;ve made stays either way.
-            </p>
           </>
         )}
       </div>
