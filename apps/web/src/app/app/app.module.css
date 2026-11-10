@@ -5286,3 +5286,59 @@ body[data-drag="task"] .listGoal {
   font-weight: 800;
   color: var(--ink) !important;
 }
+
+/* Rewards → Claimed: a strip of small stickers, one per reward enjoyed. */
+.claimedBox {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 2rem;
+}
+.claimedSum {
+  color: var(--ink-2);
+}
+.claimedSum b {
+  color: var(--ink);
+}
+.claimedList {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+}
+.claimedList li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  color: var(--black);
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.claimedList li:nth-child(odd) {
+  rotate: -0.4deg;
+}
+.claimedList li:nth-child(even) {
+  rotate: 0.3deg;
+}
+.claimedList span {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.claimedList time {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4a4540;
+}
+.claimedList b {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 520px) {
+  .claimedList li {
+    grid-template-columns: auto 1fr auto;
+  }
+  .claimedList time {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
