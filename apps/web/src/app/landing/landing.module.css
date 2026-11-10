@@ -1631,50 +1631,225 @@ button.box:hover {
 .remindDemo {
   display: grid;
   justify-items: start;
-  gap: 0.8rem;
+  gap: 1.1rem;
 }
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: min(100%, 20rem);
-  min-height: 3.6rem;
-  padding: 0.7rem 0.9rem;
-  color: var(--black);
-  background: #fff;
-  border: var(--key);
-  box-shadow: var(--lift-sm);
-}
-.toast[data-in] {
-  animation: toastIn 0.45s var(--ease);
-}
-.toast span {
+/* The trip: three stops joined by a dashed line that fills in as the reminder travels. */
+.trip {
   display: grid;
+  gap: 1.4rem;
+  width: min(100%, 26rem);
+  list-style: none;
 }
-@keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateY(-0.8rem) rotate(-2deg);
-  }
+.trip > li {
+  position: relative;
+  padding: 0.9rem 1rem 1rem;
+  border: var(--key);
+  opacity: 0.72;
+  filter: saturate(0.7);
+  transition:
+    opacity 0.35s var(--ease),
+    filter 0.35s var(--ease),
+    transform 0.35s var(--ease);
 }
-.sealed {
-  display: flex;
-  flex-wrap: wrap;
+.trip > li[data-on] {
+  opacity: 1;
+  filter: none;
+}
+.trip > li + li::before {
+  content: "";
+  position: absolute;
+  left: 1.6rem;
+  top: calc(-1.4rem - 2.5px);
+  height: 1.4rem;
+  border-left: 3px dashed var(--black);
+}
+.trip > li[data-on] + li[data-on]::before {
+  border-left-style: solid;
+}
+.tripTag {
+  display: inline-block;
+  margin-bottom: 0.55rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ground);
+  background: var(--ink);
+}
+.tripDevice {
+  color: var(--black);
+  background: #fff8ef;
+  box-shadow: var(--lift-sm);
+  rotate: -0.8deg;
+}
+.tripTask {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
   align-items: center;
-  gap: 0.35rem;
+}
+.tripBox {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2.5px solid var(--black);
+}
+.tripTask b {
+  overflow: hidden;
+  font-family: var(--sans);
+  white-space: nowrap;
+  text-overflow: clip;
+}
+.remindDemo:not([data-leg="idle"]) .tripTask b {
+  font-family: var(--mono);
   font-size: 0.9rem;
+  letter-spacing: -0.02em;
+}
+.tripTask small {
+  grid-column: 2;
   font-weight: 700;
 }
-.sealed code {
-  padding: 0.1rem 0.35rem;
+.tripStamp {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--lime);
+  border: 2.5px solid var(--black);
+  rotate: -6deg;
+  opacity: 0;
+  scale: 1.6;
+  transition:
+    opacity 0.25s var(--ease),
+    scale 0.35s var(--ease);
+}
+.tripStamp[data-in] {
+  opacity: 1;
+  scale: 1;
+}
+.tripServer {
+  display: grid;
+  gap: 0.25rem;
+  color: #fff8ef;
+  background: var(--black);
+  border-color: #fff8ef !important;
+  box-shadow: 4px 4px 0 #fff8ef;
+  rotate: 0.6deg;
+}
+.tripServer .tripTag {
+  justify-self: start;
+  color: var(--black);
+  background: #fff8ef;
+}
+.tripServer p {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+.tripServer p > span {
+  min-width: 4.2rem;
   font-size: 0.8rem;
-  background: rgb(255 255 255 / 0.6);
+  color: #c9c2b8;
+}
+.tripServer b {
+  font-family: var(--mono);
+}
+.tripServer code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--lime);
+  overflow-wrap: anywhere;
+}
+.tripServer small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  font-weight: 700;
+  color: var(--lime);
+}
+.tripPhone {
+  color: var(--black);
+  background: #fff8ef;
+  box-shadow: var(--lift-sm);
+  rotate: -0.5deg;
+}
+/* A small lock screen: the time, and the notification dropping in from the top. */
+.lockScreen {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.7rem;
+  min-height: 8.5rem;
+  padding: 0.9rem 0.8rem;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(circle at 20% 10%, rgb(143 162 255 / 0.9), transparent 55%),
+    radial-gradient(circle at 85% 90%, rgb(242 167 198 / 0.9), transparent 55%),
+    #1d1b33;
+  border: 2.5px solid var(--black);
+}
+.lockTime {
+  font: 900 2.2rem/1 var(--display);
+  color: #fff8ef;
+  letter-spacing: 0.02em;
+}
+.push {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.8rem;
+  color: var(--black);
+  background: rgb(255 248 239 / 0.92);
+  opacity: 0;
+  transform: translateY(-140%);
+}
+.push[data-in] {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform 0.55s cubic-bezier(0.2, 1.4, 0.4, 1),
+    opacity 0.2s;
+}
+.push > span:last-child {
+  display: grid;
+  line-height: 1.25;
+}
+.push small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a4540;
+}
+.pushIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+  background: var(--lime);
   border: 2px solid var(--black);
 }
 @media (prefers-reduced-motion: reduce) {
-  .toast[data-in] {
-    animation: none;
+  .trip > li,
+  .tripStamp,
+  .push[data-in] {
+    transition: none;
   }
+}
+@media (prefers-reduced-motion: reduce) {
   .goalBar i {
     transition: none;
   }

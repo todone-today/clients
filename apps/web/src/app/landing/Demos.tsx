@@ -457,30 +457,97 @@ export function GoalsDemo() {
   );
 }
 
-// A reminder as it lands with todone closed, and what our server saw of it.
+// A reminder's trip, played step by step: written on your device, sealed there, held by our server knowing only the
+// time, then shown on your phone's lock screen. The server never sees the words.
+const TASK = "Plan the week";
+const HEX = "0123456789abcdef";
+const noise = (n: number) => Array.from({ length: n }, () => HEX[Math.floor(Math.random() * 16)]).join("");
+type Leg = "idle" | "sealing" | "held" | "shown";
 export function RemindDemo() {
-  const [sent, setSent] = useState(false);
+  const [leg, setLeg] = useState<Leg>("idle");
+  const [blob, setBlob] = useState("");
+  useEffect(() => {
+    if (leg === "idle") return;
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let scramble: ReturnType<typeof setInterval> | undefined;
+    if (leg === "sealing") {
+      // The words turn into noise, a little more each frame, until nothing readable is left.
+      let k = 0;
+      scramble = setInterval(() => {
+        k++;
+        setBlob(TASK.slice(0, Math.max(0, TASK.length - k)) + noise(Math.min(k, 24)));
+        if (k >= TASK.length + 6) clearInterval(scramble);
+      }, calm ? 0 : 45);
+      timers.push(setTimeout(() => setLeg("held"), calm ? 50 : 1300));
+    }
+    if (leg === "held") timers.push(setTimeout(() => setLeg("shown"), calm ? 50 : 1500));
+    return () => {
+      clearInterval(scramble);
+      timers.forEach(clearTimeout);
+    };
+  }, [leg]);
+  const at = (l: Leg) => ["idle", "sealing", "held", "shown"].indexOf(l) <= ["idle", "sealing", "held", "shown"].indexOf(leg);
+  const sealed = leg !== "idle";
   return (
-    <div className={s.remindDemo}>
-      <div className={s.toast} data-in={sent || undefined} aria-live="polite">
-        {sent ? (
-          <>
-            <Bell size={16} strokeWidth={2.5} aria-hidden />
-            <span>
-              <b>Plan the week</b>
-              <small>At 16:00 · Todone</small>
-            </span>
-          </>
-        ) : (
-          <small>Nothing yet.</small>
-        )}
-      </div>
-      <p className={s.sealed}>
-        <Lock size={14} strokeWidth={2.75} aria-hidden /> Our server saw:{" "}
-        <code>{sent ? "15:45 · 4f9a…c2e1 (sealed)" : "—"}</code>
-      </p>
-      <button type="button" className="btn" onClick={() => setSent((x) => !x)}>
-        {sent ? "Again" : "Send the 15:45 reminder"}
+    <div className={s.remindDemo} data-leg={leg}>
+      <ol className={s.trip}>
+        <li className={s.tripDevice} data-on={at("idle") || undefined}>
+          <span className={s.tripTag}>1 · Your device</span>
+          <div className={s.tripTask}>
+            <span className={s.tripBox} aria-hidden />
+            <b>{sealed ? blob : TASK}</b>
+            <small>⏰ 16:00</small>
+          </div>
+          <span className={s.tripStamp} data-in={sealed || undefined} aria-hidden>
+            <Lock size={12} strokeWidth={3} /> Sealed here
+          </span>
+        </li>
+        <li className={s.tripServer} data-on={at("held") || undefined}>
+          <span className={s.tripTag}>2 · Our server</span>
+          <p>
+            <span>Send at</span> <b>{at("held") ? "15:45" : "—"}</b>
+          </p>
+          <p>
+            <span>What</span> <code>{at("held") ? `${blob.slice(-12) || noise(12)}…` : "—"}</code>
+          </p>
+          <small>
+            <Lock size={11} strokeWidth={3} aria-hidden /> Knows when, never what.
+          </small>
+        </li>
+        <li className={s.tripPhone} data-on={at("shown") || undefined}>
+          <span className={s.tripTag}>3 · Your phone, todone closed</span>
+          <div className={s.lockScreen}>
+            <span className={s.lockTime}>15:45</span>
+            <div className={s.push} data-in={leg === "shown" || undefined} aria-live="polite">
+              {leg === "shown" && (
+                <>
+                  <span className={s.pushIcon} aria-hidden>
+                    <Bell size={14} strokeWidth={2.75} />
+                  </span>
+                  <span>
+                    <small>todone · now</small>
+                    <b>{TASK}</b>
+                    <small>At 16:00 · in 15 minutes</small>
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </li>
+      </ol>
+      <button
+        type="button"
+        className="btn"
+        style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+        disabled={leg === "sealing" || leg === "held"}
+        onClick={() => {
+          setBlob("");
+          setLeg("sealing");
+        }}
+      >
+        <Bell size={16} strokeWidth={2.75} aria-hidden />
+        {leg === "idle" ? "Send the 15:45 reminder" : leg === "shown" ? "Send it again" : "On its way…"}
       </button>
     </div>
   );
