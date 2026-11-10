@@ -132,6 +132,20 @@ export default function Privacy() {
         done before.
       </p>
 
+      <h2 id="still-see">What we can see, even with encryption</h2>
+      <p>Your lists are scrambled on your device, so we can&apos;t read them. A few things we still see, because the
+        service needs them to work:</p>
+      <ul>
+        <li>Your name and email, and which teams you&apos;re in.</li>
+        <li>How many lists you have, roughly how big they are, and when they change. Not what&apos;s in them.</li>
+        <li>
+          Lists you choose to put in your calendar link (for Google Calendar, Apple Calendar or Outlook). These are stored
+          readable so your calendar can fetch them, and each list says so.
+        </li>
+        <li>A task you share by link, with its comments and files, until you stop sharing it.</li>
+        <li>When a reminder is due. Never what it says.</li>
+      </ul>
+
       <h2>Who else handles it</h2>
       <p>
         We use these providers to run the service. They process data for us and

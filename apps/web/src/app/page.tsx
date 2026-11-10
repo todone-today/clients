@@ -3,7 +3,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bug,
-  EyeOff,
   GitPullRequest,
   Lightbulb,
   Lock,
@@ -141,9 +140,9 @@ export default function Home() {
             For your eyes only.
           </h2>
           <p className={s.sub}>
-            Your lists are locked on your device before they&apos;re saved. Our
-            servers only ever hold scrambled data: we can&apos;t read your
-            plans, and neither can anyone who breaks in.
+            Everything you write is scrambled on your phone or computer before
+            it&apos;s saved. Only you can unscramble it. Not us, not a hacker,
+            nobody.
           </p>
 
           {/* The same task, as you see it and as our server stores it. */}
@@ -161,66 +160,10 @@ export default function Home() {
             </figure>
           </div>
 
-          <ul className={s.zkLines}>
-            <li style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
-              <p className={`display ${s.zkBig}`}>
-                Locked on <mark>your device.</mark>
-              </p>
-              <span>
-                List names, tasks, steps, notes, ideas, goals and rewards, with
-                AES-256. Teams share a key only members hold.
-              </span>
-            </li>
-            <li style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
-              <p className={`display ${s.zkBig}`}>
-                We never see <mark>your password.</mark>
-              </p>
-              <span>
-                It unlocks your key in the browser; the server only gets a
-                one-way hash of it.
-              </span>
-            </li>
-            <li style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
-              <p className={`display ${s.zkBig}`}>
-                A recovery key <mark>just for you.</mark>
-              </p>
-              <span>
-                Forget your password and it gets you back in. Nobody else can,
-                us included.
-              </span>
-            </li>
-            <li style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
-              <p className={`display ${s.zkBig}`}>
-                Open source. <mark>Check it.</mark>
-              </p>
-              <span>
-                The encryption is in our public code for anyone to read.
-              </span>
-            </li>
-          </ul>
-
-          <div className={s.zkSee}>
-            <h3>
-              <EyeOff size={18} strokeWidth={2.5} aria-hidden /> What we can
-              still see
-            </h3>
-            <ul>
-              <li>Your email and name, and which teams you&apos;re in.</li>
-              <li>
-                How many lists you have, roughly how big they are, and when
-                they change.
-              </li>
-              <li>
-                Lists you put in your calendar link, so Google, Apple or
-                Outlook can fetch them. Each list says which it is.
-              </li>
-              <li>
-                A task you share by link, with its comments and files, until
-                you stop sharing.
-              </li>
-              <li>When a reminder is due. Never what it says.</li>
-            </ul>
-          </div>
+          <p className={s.zkMore}>
+            What we can and can&apos;t see, in full:{" "}
+            <Link href="/privacy#still-see">Privacy Policy</Link>.
+          </p>
         </section>
 
         {/* The roadmap: three lists on the same board, in order. */}
