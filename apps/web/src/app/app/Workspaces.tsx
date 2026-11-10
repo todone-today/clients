@@ -6,11 +6,12 @@ import { Select } from "@/components/Select";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { confirmMember, fingerprint, type Member, teamKey, teamMembers } from "@/lib/vault";
+import { needsPlan } from "./PlanPrompt";
 import s from "./app.module.css";
 
 const org = authClient.organization;
 const NEW = "__new";
-export type Panel = "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | null;
+export type Panel = "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | "plan" | null;
 
 // Personal lists or a team's; switching changes which lists the server returns.
 export function Workspaces({
@@ -84,6 +85,11 @@ export function Workspaces({
               .slice(0, 40)}-${crypto.randomUUID().slice(0, 6)}`;
             onSwitch();
             const r = await org.create({ name: n, slug });
+            // Teams come with a paid plan (the server refuses otherwise): offer the plans instead of an error.
+            if (r.error?.status === 403) {
+              stop();
+              return needsPlan("Teams come with Plus. Share with up to 6 people, or get Team for everyone.");
+            }
             setErr(r.error?.message ?? "");
             if (!r.error) stop();
           }}
@@ -136,8 +142,10 @@ export function Members() {
   if (!o || !me) return null;
   const manager = me.role === "owner" || me.role === "admin";
   const link = (id: string) => `${location.origin}/invite/${id}`;
-  const run = async (p: Promise<{ error: { message?: string } | null }>) => {
+  const run = async (p: Promise<{ error: { message?: string; status?: number } | null }>) => {
     const r = await p;
+    // Out of room on the owner's plan (seats or Plus's 6 people): offer the plans.
+    if (r.error?.status === 403 && /seats|Plus|Team/.test(r.error.message ?? "")) needsPlan(r.error.message!);
     setMsg(r.error?.message ?? "");
     refetch();
     return !r.error;

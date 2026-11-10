@@ -23,6 +23,7 @@ const SECTIONS = [
   ["sharing", "Sharing one task"],
   ["integrations", "Integrations"],
   ["reminders", "Reminders, offline and devices"],
+  ["plans", "Plans and billing"],
   ["account", "Your account and data"],
   ["keys", "Keyboard"],
 ] as const;
@@ -228,8 +229,9 @@ export default function Docs() {
           into your task, encrypted.
         </li>
         <li>
-          Limits: photos and documents up to 10 MB, videos up to 50 MB, 200 MB
-          per shared task.
+          Limits: photos up to 5 MB (todone shrinks big photos to 2560 px
+          before uploading, which also drops their location data), documents
+          up to 10 MB, videos up to 50 MB, 200 MB per shared task.
         </li>
       </ul>
 
@@ -273,6 +275,33 @@ export default function Docs() {
         <li>
           Open tabs pick up changes from your other devices and teammates within
           about 20 seconds.
+        </li>
+      </ul>
+
+      <h2 id="plans">Plans and billing</h2>
+      <p>
+        Free covers up to 10 lists, just you. <b>Plus</b> adds unlimited lists
+        and sharing (teams with up to 6 other people, share links);{" "}
+        <b>Team</b> is a seat per person, for as many people and teams as you
+        need. Everything else (calendar, Brainstorm, goals, integrations,
+        offline, export) is in every plan. If you joined before paid plans,
+        everything stays free for you.
+      </p>
+      <ul>
+        <li>
+          <b>Account → Plan &amp; billing</b>: pick a plan, see what you use,
+          stop renewing, refund a payment from the last 7 days, and open
+          receipts.
+        </li>
+        <li>
+          Paying is through Razorpay (UPI, cards, netbanking) and renews by
+          itself. Moving up applies now for the difference; moving down starts
+          at your next renewal.
+        </li>
+        <li>
+          When a plan ends, nothing you made goes away; you just can&apos;t add
+          past the free limits. See the{" "}
+          <Link href="/refunds">Refund &amp; Cancellation Policy</Link>.
         </li>
       </ul>
 

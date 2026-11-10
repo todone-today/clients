@@ -53,8 +53,12 @@ export default function Terms() {
 
       <h2>Price</h2>
       <p>
-        {NAME} is free. If we ever charge for something, we&apos;ll say so clearly before you pay, and the{" "}
-        <Link href="/refunds">Refund &amp; Cancellation Policy</Link> will apply.
+        {NAME} is free to use, up to 10 lists, just you. Plus and Team are paid plans, billed through Razorpay in Indian
+        rupees, taxes included; they renew automatically at the price shown when you pay until you stop them. Founding
+        member is paid once for three years of Plus. When a plan ends, nothing you made is removed; only the paid extras
+        stop. People who joined before paid plans keep everything free. Refunds, cancelling and changing plans are covered
+        by the <Link href="/refunds">Refund &amp; Cancellation Policy</Link>. If we change a price, we&apos;ll tell you
+        before your next renewal at least 7 days ahead, and you can stop it.
       </p>
 
       <h2>Open source</h2>

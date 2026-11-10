@@ -159,6 +159,12 @@ export default function Privacy() {
           the picture matching a scrambled (hashed) form of your email. If you
           have no Gravatar, you see your initial.
         </li>
+        <li>
+          Razorpay, if you pay for a plan: they get your name, email, phone and
+          payment details and handle the payment. We get back only the amount,
+          date and status, never your card or bank details, and keep a record of
+          each payment for tax law. Your lists never go anywhere near billing.
+        </li>
         <li>Google, if you connect Google Calendar.</li>
         <li>Notion and Discord, if you connect them.</li>
       </ul>
@@ -177,7 +183,8 @@ export default function Privacy() {
         them. Deleting a task, list or team removes it; deleting your account
         removes your account, personal lists, settings, sessions,
         connected-service tokens, keys and feedback straight away, along with
-        any team where you&apos;re the only member. Copies can stay in our
+        any team where you&apos;re the only member. Records of payments (amount,
+        date, plan, email) are kept for as long as tax law requires. Copies can stay in our
         database provider&apos;s backups for up to 30 days before they roll off.
       </p>
 

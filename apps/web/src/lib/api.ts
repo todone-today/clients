@@ -8,6 +8,10 @@ export async function api<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: st
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await r.json().catch(() => null);
-  if (!r.ok) throw new Error(data?.error ?? `The server said ${r.status}.`);
+  // 402: it needs a paid plan; the app shows the plans (app/app/PlanPrompt.tsx).
+  if (r.status === 402) dispatchEvent(new CustomEvent(PLAN_EVENT, { detail: data?.error }));
+  if (!r.ok) throw Object.assign(new Error(data?.error ?? `The server said ${r.status}.`), { status: r.status });
   return data as T;
 }
+
+export const PLAN_EVENT = "todone:plan";

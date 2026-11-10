@@ -42,8 +42,32 @@ async function put(url: string, body: Blob) {
   if (!r.ok) throw new Error("The upload didn't go through. Try again.");
 }
 
+// Photos are made smaller before they go up: at most 2560 px on the long side and re-encoded, which also drops
+// their metadata (camera, location). GIFs (may be animated) and HEIC (most browsers can't draw it) go as they are, and
+// so does anything that wouldn't come out smaller.
+const EDGE = 2560;
+const SHRINKS: Record<string, string> = { "image/jpeg": "image/jpeg", "image/png": "image/webp", "image/webp": "image/webp" };
+export async function shrink(file: File): Promise<File> {
+  const out = SHRINKS[typeOf(file)];
+  if (!out || file.size < 300_000) return file;
+  try {
+    const img = await createImageBitmap(file);
+    const k = Math.min(1, EDGE / Math.max(img.width, img.height));
+    const c = Object.assign(document.createElement("canvas"), { width: Math.round(img.width * k), height: Math.round(img.height * k) });
+    c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+    img.close();
+    const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, out, 0.85));
+    if (!blob || blob.type !== out || blob.size >= file.size) return file;
+    const name = out === file.type ? file.name : file.name.replace(/\.\w+$/, "") + ".webp";
+    return new File([blob], name, { type: out });
+  } catch {
+    return file;
+  }
+}
+
 // Private: encrypted with `key` (the workspace's), stored as iv ‖ ciphertext.
-export async function uploadPrivate(file: File, key: CryptoKey): Promise<FileRef> {
+export async function uploadPrivate(original: File, key: CryptoKey): Promise<FileRef> {
+  const file = await shrink(original);
   const type = typeOf(file);
   const { id, uploadUrl } = await call<{ id: string; uploadUrl: string }>("POST", "/files", {
     name: file.name,
@@ -72,7 +96,8 @@ export async function openPrivate(ref: FileRef, key: CryptoKey): Promise<Blob> {
 export const deletePrivate = (id: string) => call("DELETE", `/files/${id}`).catch(() => {});
 
 // Shared: `base` is the owner's "/task-shares/<id>" or a guest's "/s/<token>" (with their x-guest header).
-export async function uploadShared(base: string, file: File, headers?: Headers): Promise<FileRef> {
+export async function uploadShared(base: string, original: File, headers?: Headers): Promise<FileRef> {
+  const file = await shrink(original);
   const { id, uploadUrl } = await call<{ id: string; uploadUrl: string }>(
     "POST",
     `${base}/files`,

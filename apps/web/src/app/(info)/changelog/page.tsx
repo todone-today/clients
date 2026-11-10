@@ -10,6 +10,17 @@ export const metadata: Metadata = {
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "10 November 2026",
+    title: "Plans, and paying for them",
+    items: [
+      "Plus and Team are open: pick one in Account → Plan & billing and pay with UPI, a card or netbanking through Razorpay.",
+      "Free stays: up to 10 lists, just you. Plus adds unlimited lists and sharing with up to 6 people; Team, a seat per person.",
+      "Joined before today? Everything stays free for you, for good.",
+      "Stop renewing any time, get a refund within 7 days in a click, and print receipts.",
+      "Photos shrink to 2560 px before they upload (faster, and their location data stays with you).",
+    ],
+  },
+  {
+    date: "10 November 2026",
     title: "Dragging, smoothed out",
     items: [
       "You now carry the card itself, tilted in the air where you grabbed it, instead of a small label. Several picked show a count.",

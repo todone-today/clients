@@ -138,8 +138,6 @@ export const GOALS: Goal[] = [
   },
 ];
 
-// Razorpay payment page (UPI, cards, netbanking). Empty until it's live; buttons then say "Opening soon".
-export const PAY_URL = "";
 
 export type Billing = "month" | "half" | "year";
 export const BILLING: [Billing, string][] = [

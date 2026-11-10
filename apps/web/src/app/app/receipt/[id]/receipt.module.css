@@ -1,0 +1,72 @@
+.page {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2.5rem 16px 4rem;
+  display: grid;
+  gap: 1.5rem;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page h1 {
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+}
+.meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1.25rem;
+}
+.meta dt,
+.parties h2 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.meta dd {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.parties p {
+  font-weight: 600;
+}
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--key);
+  border-color: var(--ink);
+}
+.lines td {
+  padding: 0.8rem 1rem;
+  border-bottom: 2px solid var(--hair);
+}
+.lines td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sub td {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+.total td {
+  font-weight: 900;
+  font-size: 1.15rem;
+  border-bottom: 0;
+}
+.note {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+@media print {
+  .head button {
+    display: none;
+  }
+}

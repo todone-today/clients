@@ -22,7 +22,6 @@ import {
   BILLING,
   FUNDING,
   GOALS,
-  PAY_URL,
   PLANS,
   PLUS_YEAR_INR,
   SHOTS,
@@ -616,32 +615,31 @@ export function Goals() {
           Every Plus, Team or Founding purchase counts, goals fill in order, and
           this section goes once they&apos;re all met. Before fees and taxes.
         </p>
-        <Pay>Back todone with UPI</Pay>
+        <Pay>Back todone with Plus</Pay>
       </div>
     </div>
   );
 }
 
 // A payment button that admits it isn't live yet rather than leading nowhere.
+// Checkout happens in the app (Plan): signed out, it's sign in or make an account first, then straight there.
 export function Pay({
   children,
+  plan = "plus-year",
   fill = "var(--lime)",
 }: {
   children: React.ReactNode;
+  plan?: string;
   fill?: string;
 }) {
-  return PAY_URL ? (
+  return (
     <a
-      href={PAY_URL}
+      href={`/app?plan=${plan}`}
       className="btn"
       style={{ "--fill": fill } as React.CSSProperties}
     >
       {children}
     </a>
-  ) : (
-    <span className={`btn ${s.soon}`} aria-disabled="true">
-      Opening soon
-    </span>
   );
 }
 
@@ -744,7 +742,10 @@ export function Pricing() {
                 ))}
               </ul>
               {p.price ? (
-                <Pay fill={p.lead ? "#fff8ef" : "var(--butter)"}>
+                <Pay
+                  plan={`${p.name.toLowerCase()}-${billing}`}
+                  fill={p.lead ? "#fff8ef" : "var(--butter)"}
+                >
                   Choose {p.name}
                 </Pay>
               ) : (

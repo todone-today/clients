@@ -67,8 +67,9 @@ function enqueue(op: () => Promise<void>) {
   queue = queue
     .then(() => attempt(op))
     .then(() => void (error = ""))
-    .catch(async () => {
-      error = "Couldn't save the last change; showing what is saved.";
+    .catch(async (e) => {
+      // A paid-plan limit (402) has its own note with the plans (PlanPrompt); the change is just undone.
+      error = (e as { status?: number }).status === 402 ? "" : "Couldn't save the last change; showing what is saved.";
       server = await fetchLists().catch(() => server);
     })
     .finally(() => {

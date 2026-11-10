@@ -4676,3 +4676,195 @@ body[data-drag="task"] .listGoal {
 .tasks:has(> .note > .row[data-over="inside"]) > .slot {
   opacity: 0.2;
 }
+
+/* Plan & billing (Billing.tsx) and the "needs a plan" note (PlanPrompt.tsx). */
+.usage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: 0.75rem;
+  max-width: 44rem;
+}
+.meter {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+.meter > i {
+  height: 0.7rem;
+  background: var(--raise);
+  border: 2px solid var(--ink);
+}
+.meter > i > i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+}
+.planPick,
+.termPick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.planPick button {
+  display: grid;
+  gap: 0.15rem;
+  min-width: min(13rem, 100%);
+  padding: 0.8rem 1rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2.5px solid var(--hair);
+}
+.planPick button b {
+  font: 900 1.4rem/1 var(--display);
+  text-transform: uppercase;
+}
+.planPick button small {
+  font-weight: 600;
+  opacity: 0.8;
+}
+.planPick button[aria-checked="true"] {
+  color: var(--black);
+  background: var(--fill);
+  border-color: var(--black);
+  box-shadow: var(--lift-sm);
+}
+.termPick button {
+  display: grid;
+  padding: 0.45rem 0.9rem;
+  font-weight: 800;
+  color: var(--ink);
+  border: 2.5px solid var(--hair);
+}
+.termPick button small {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.termPick button[aria-checked="true"] {
+  color: var(--ground);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.termPick button[aria-checked="true"] small {
+  color: inherit;
+}
+.seats {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+.seats > span {
+  margin-right: 0.4rem;
+}
+.seats button {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--ink);
+  border: 2.5px solid var(--ink);
+}
+.seats button:disabled {
+  opacity: 0.35;
+}
+.seats input {
+  width: 4rem;
+  padding: 0.4rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.quote {
+  min-height: 1.5em;
+  font-weight: 700;
+}
+.fine {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.saved {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  font-weight: 800;
+}
+.payments {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 44rem;
+}
+.payments li {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dashed var(--hair);
+}
+.payments time {
+  color: var(--ink-2);
+}
+.payments a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  color: inherit;
+}
+@media (max-width: 640px) {
+  .payments li {
+    grid-template-columns: 1fr auto;
+  }
+}
+.planScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(11 11 11 / 0.55);
+}
+.planNote {
+  display: grid;
+  gap: 0.7rem;
+  width: min(100%, 26rem);
+  padding: 1.4rem 1.5rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: 6px 6px 0 var(--black);
+  rotate: -1deg;
+  animation: planIn 0.35s var(--ease);
+}
+.planMsg {
+  font-size: 1.7rem;
+  line-height: 1.05;
+}
+.planNote .fine {
+  color: #4a4540;
+}
+.planNote > div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.planNote .link {
+  color: var(--black);
+}
+@keyframes planIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planNote {
+    animation: none;
+  }
+}

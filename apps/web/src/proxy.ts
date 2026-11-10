@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
   // Optimistic check only: the server verifies the session on every call.
   if (getSessionCookie(request)) return NextResponse.next();
   const login = new URL("/login", request.url);
-  login.searchParams.set("next", request.nextUrl.pathname);
+  login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search); // e.g. /app?plan=plus-year
   return NextResponse.redirect(login);
 }
 

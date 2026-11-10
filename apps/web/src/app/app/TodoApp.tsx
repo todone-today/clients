@@ -55,6 +55,8 @@ import { fold, reconcile, type Goal } from "@todone/sdk/goals";
 import { IconPick, ListIcon } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
+import { Billing } from "./Billing";
+import { PlanPrompt } from "./PlanPrompt";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
@@ -157,6 +159,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  // ?plan=plus-year from the pricing page, read once (the address is tidied up after loading).
+  const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
   const [touring, setTouring] = useState(false);
   const [drawer, setDrawer] = useState(false);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
@@ -357,6 +361,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
       if (new URLSearchParams(location.search).has("connect"))
         return setPanel("integrations");
+      // From a "Choose Plus" on the pricing page: straight to the plans.
+      if (planWant) return setPanel("plan");
       // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
       if (!orgId && (await startOnboarding())) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
@@ -365,7 +371,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         setTouring(true);
       }
     })().catch(() => {});
-  }, [demo, userId, orgId, vault, add]);
+  }, [demo, userId, orgId, vault, add, planWant]);
   // Reminders come from the open app (the server can't read what's due): a check every minute.
   useEffect(() => {
     if (demo) return;
@@ -412,6 +418,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     <div className={s.shell} data-slim={folded || undefined}>
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
+      <PlanPrompt onPlans={() => show("plan")} />
       <header className={s.top}>
         <button
           className={s.menu}
@@ -429,7 +436,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                   ? "Integrations"
                   : panel === "account"
                     ? "Account"
-                    : (list?.name ?? "Lists")}
+                    : panel === "plan"
+                      ? "Plan"
+                      : (list?.name ?? "Lists")}
           </span>
         </button>
         {demo ? (
@@ -682,7 +691,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         ) : panel === "integrations" ? (
           <Integrations key={orgId} />
         ) : panel === "account" ? (
-          <Account />
+          <Account onPlan={() => show("plan")} />
+        ) : panel === "plan" ? (
+          <Billing want={planWant} />
         ) : !lists ? null : list ? (
           <ListView
             key={list.id}

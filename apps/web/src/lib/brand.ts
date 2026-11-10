@@ -4,7 +4,7 @@ export const REPO = "https://github.com/todone-today";
 // Who runs the hosted service, for the legal pages. Contact also handles privacy requests and grievances.
 export const OPERATOR = "Kartikey Kushwah";
 export const CONTACT = "kushwah.kartikey@icloud.com";
-export const LEGAL_UPDATED = "6 November 2026";
+export const LEGAL_UPDATED = "10 November 2026";
 export const LEGAL_DOCS = [
   ["/privacy", "Privacy"],
   ["/terms", "Terms"],

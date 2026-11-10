@@ -376,12 +376,13 @@ export default function Home() {
             todone is free and open source, and self-hosting is free forever.
             The hosted cloud is free for everyday use; paid plans are for heavy
             use and teams, pay for the servers, and fund the goals above.
-            Checkout opens soon through Razorpay: UPI, cards and netbanking.
+            Checkout is through Razorpay: UPI, cards and netbanking.
           </p>
           <Pricing />
           <p className={s.provisional}>
-            Plan limits and extras are our plan for launch and may change before
-            checkout opens; nothing changes for anyone already using todone.
+            Prices are in rupees and include taxes; dollars are a guide. Anyone
+            who joined before paid plans keeps everything free, for good.
+            Refunds within 7 days, no questions.
           </p>
           <div className={s.founding}>
             <p>
@@ -389,7 +390,9 @@ export default function Home() {
               three years of Plus, instead of {FOUNDING.yearly} paying yearly at
               launch prices. It all goes to the goals above straight away.
             </p>
-            <Pay fill="var(--butter)">Become a founding member</Pay>
+            <Pay plan="founding" fill="var(--butter)">
+              Become a founding member
+            </Pay>
           </div>
           <p className={s.selfhost}>
             Rather run it yourself?{" "}
