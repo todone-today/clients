@@ -379,11 +379,6 @@ export default function Home() {
             Checkout is through Razorpay: UPI, cards and netbanking.
           </p>
           <Pricing />
-          <p className={s.provisional}>
-            Prices are in rupees and include taxes; dollars are a guide. Anyone
-            who joined before paid plans keeps everything free, for good.
-            Refunds within 7 days, no questions.
-          </p>
           <div className={s.founding}>
             <span className={s.foundingTag}>Founding member</span>
             <span className={s.foundingFace} aria-hidden>
