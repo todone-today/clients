@@ -5376,3 +5376,95 @@ body[data-drag="task"] .listGoal {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Goals, before the first one: starting points as stickers, then how it works. */
+.goalStart {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: 1.5rem;
+}
+.goalStart h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+.starters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+  list-style: none;
+}
+.starters button {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+.starters li:nth-child(odd) button {
+  rotate: -0.8deg;
+}
+.starters li:nth-child(even) button {
+  rotate: 0.6deg;
+}
+.starters button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--lift);
+}
+.starters b {
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+.starters small {
+  font-weight: 700;
+  color: #4a4540;
+}
+.starterGo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-self: start;
+  margin-top: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #fff8ef;
+  background: var(--black);
+}
+.goalHow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem 2rem;
+  max-width: 60rem;
+  padding: 1.2rem 0 0;
+  list-style: none;
+  counter-reset: how;
+  border-top: 2px solid var(--hair);
+}
+.goalHow li {
+  counter-increment: how;
+  color: var(--ink-2);
+}
+.goalHow li::before {
+  content: counter(how);
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-bottom: 0.5rem;
+  font: 900 1rem var(--display);
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.goalHow b {
+  color: var(--ink);
+}

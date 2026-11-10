@@ -188,7 +188,8 @@ export function ListGoals({ list }: { list: List }) {
 export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   const { lists, update } = useLists();
   const { items } = useGoalItems();
-  const [making, setMaking] = useState(false);
+  // `true` for a blank goal, or a suggestion to start from.
+  const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const goals = items.filter((i): i is Goal => i.t === "goal");
   // Drag a goal onto another to put it before or after it.
   const dropGoal = useDrop("goals", {
@@ -225,8 +226,8 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
         <h1 className={`display ${s.title}`}>Goals</h1>
         <p className={s.progress}>
           {open.length
-            ? `${open.length} going, ${achieved.length} achieved`
-            : "Something worth working toward."}
+            ? `${open.length} going${achieved.length ? `, ${achieved.length} achieved` : ""}. One small step today counts.`
+            : "Pick one thing. Small steps, every one counted."}
         </p>
         <div className={s.tools}>
           <button
@@ -238,6 +239,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </button>
         </div>
       </div>
+      {!goals.length && <GoalStart onPick={(p) => setMaking(p)} />}
       {groups.map(({ id, name, goals }) => (
         <section key={id} className={s.goalGroup}>
           {groups.length > 1 && (
@@ -287,6 +289,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
       {making && (
         <GoalDialog
           lists={all}
+          preset={making === true ? undefined : making}
           onClose={() => setMaking(false)}
           onSave={(g, steps, listId) => {
             saveGoal(lists, update, g, steps, listId);
@@ -295,6 +298,46 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
         />
       )}
     </>
+  );
+}
+
+// No goals yet: one-tap starting points (one of each kind), and how it works in three steps. A goal you can start
+// in a tap is a goal you start; the dialog still lets you change everything.
+const STARTERS: { goal: Partial<Goal>; note: string; fill: string }[] = [
+  { goal: { title: "Read most days", kind: "habit", perWeek: 5 }, note: "A habit · 5× a week", fill: "var(--lime)" },
+  { goal: { title: "Drink 8 glasses of water", kind: "daily", target: 8, unit: "glasses" }, note: "A daily amount", fill: "var(--cyan)" },
+  { goal: { title: "Save ₹50,000", kind: "target", start: 0, target: 50000, unit: "₹" }, note: "A number to reach", fill: "var(--butter)" },
+  { goal: { title: "Ship my side project", kind: "outcome" }, note: "Milestones, by a date", fill: "var(--pink)" },
+];
+function GoalStart({ onPick }: { onPick: (g: Partial<Goal>) => void }) {
+  return (
+    <section className={s.goalStart}>
+      <h2 className="display">Start with one.</h2>
+      <ul className={s.starters}>
+        {STARTERS.map(({ goal, note, fill }) => (
+          <li key={goal.title}>
+            <button type="button" onClick={() => onPick(goal)} style={{ "--fill": fill } as React.CSSProperties}>
+              <b>{goal.title}</b>
+              <small>{note}</small>
+              <span className={s.starterGo}>
+                <Plus size={14} strokeWidth={3} aria-hidden /> Make it mine
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <ol className={s.goalHow}>
+        <li>
+          <b>Pick one thing.</b> Say why it matters, and what you&apos;ll do when it gets hard.
+        </li>
+        <li>
+          <b>Log tiny wins.</b> A tap a day. A quiet week never resets anything.
+        </li>
+        <li>
+          <b>Treat yourself.</b> Every finished task earns XP; spend it on rewards you choose.
+        </li>
+      </ol>
+    </section>
   );
 }
 
@@ -709,12 +752,14 @@ export function GoalDialog({
   lists,
   list,
   initial,
+  preset,
   onClose,
   onSave,
 }: {
   lists: List[];
   list?: string;
   initial?: Goal; // editing this goal rather than making one
+  preset?: Partial<Goal>; // a new goal started from a suggestion
   onClose: () => void;
   onSave: (g: Goal, steps: string[], listId: string | null) => void;
 }) {
@@ -729,6 +774,7 @@ export function GoalDialog({
         kind: "target",
         created: Date.now(),
         ...(list ? { list } : {}),
+        ...preset,
       },
   );
   const [steps, setSteps] = useState(["", "", ""]);
