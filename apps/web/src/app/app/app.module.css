@@ -4500,3 +4500,143 @@ body[data-drag="task"] .listGoal {
   text-decoration: none;
   border-color: var(--ink);
 }
+
+/* ---------- Focus: one task, full screen, with a clock ---------- */
+.panelFocus {
+  margin-left: auto;
+}
+.focus {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) var(--gutter) max(1rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--ground);
+}
+.focusCard {
+  width: min(100%, 44rem);
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  color: var(--black);
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -0.6deg;
+}
+.focusCard h1 {
+  font-size: clamp(2.2rem, 7vw, 4.5rem);
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+}
+.focusKicker {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.focusClock {
+  font-family: var(--mono);
+  font-size: clamp(3.5rem, 16vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+.focusClock[data-paused] {
+  opacity: 0.45;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .focusClock[data-paused] {
+    animation: focusBlink 1.6s steps(2, jump-none) infinite;
+  }
+}
+@keyframes focusBlink {
+  50% {
+    opacity: 0.2;
+  }
+}
+.focusGoal {
+  display: grid;
+  gap: 0.4rem;
+}
+.focusGoal small,
+.focusSaved {
+  font-weight: 700;
+}
+.focusBar {
+  display: block;
+  height: 0.8rem;
+  overflow: hidden;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.focusBar i {
+  display: block;
+  height: 100%;
+  background: var(--black);
+  transform-origin: left;
+  transition: transform 0.3s linear;
+}
+.focusSteps {
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 2px dashed rgb(11 11 11 / 0.35);
+}
+.focusSteps button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.25rem;
+  font-weight: 700;
+  text-align: left;
+  color: var(--black);
+}
+.focusSteps [data-done] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.focusSteps .check {
+  flex: none;
+}
+.focusTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.focusTools :global(.btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.focusIcon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: auto;
+  color: var(--black);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.focusIcon[aria-pressed="false"] {
+  opacity: 0.6;
+}
+.focusExit {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}

@@ -11,6 +11,7 @@ import {
   Paperclip,
   RefreshCw,
   Share2,
+  Timer,
   Trash2,
   X,
 } from "lucide-react";
@@ -44,6 +45,7 @@ import {
 } from "./actions";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
+import { Focus } from "./Focus";
 import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
 import { type Goal } from "@todone/sdk/goals";
@@ -82,6 +84,7 @@ export function TaskPanel({
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [asking, setAsking] = useState(false);
+  const [focusing, setFocusing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
   const stopping = useStopSharing(task, edit);
@@ -460,6 +463,16 @@ export function TaskPanel({
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
           {!top && <span className={s.panelHint}>A step of a task.</span>}
+          {!task.done && (
+            <button
+              className={`btn ${s.panelShare} ${s.panelFocus}`}
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+              onClick={() => setFocusing(true)}
+              title="Full screen, with a timer. The time goes on the task."
+            >
+              <Timer size={16} strokeWidth={2.5} aria-hidden /> Focus
+            </button>
+          )}
           {shared ? (
             <button
               className={`btn ${s.panelShare}`}
@@ -482,6 +495,9 @@ export function TaskPanel({
           )}
         </footer>
 
+        {focusing && (
+          <Focus task={task} fill={fill} edit={edit} onTick={onTick} onExit={() => setFocusing(false)} />
+        )}
         {asking && (
           <Disclosure
             onCancel={() => setAsking(false)}

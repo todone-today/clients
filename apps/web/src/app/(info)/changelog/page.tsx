@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "10 November 2026",
+    title: "Focus mode",
+    items: [
+      "Open a task and press Focus: just that task, full screen, with a clock (and a soft tick-tock you can turn off).",
+      "Space pauses, Enter finishes, Esc steps out. Either way the minutes go on the task (⏳ on its card).",
+      "Tick its steps as you go. If it has a length, you see what's left; going over is fine.",
+    ],
+  },
+  {
+    date: "10 November 2026",
     title: "Fold steps, see your password",
     items: [
       "Fold a task's steps away with the chip on its card (it shows how many are done); this device remembers.",
