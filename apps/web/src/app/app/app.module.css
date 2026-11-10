@@ -132,6 +132,12 @@
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
@@ -193,6 +199,12 @@
 .ghost[aria-pressed="true"] {
   background: var(--lime);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   border-color: var(--black);
 }
 
@@ -336,11 +348,23 @@
 .chips .due {
   background: var(--butter);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   border-color: var(--black);
 }
 .chips .late {
   background: var(--hot);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   border-color: var(--black);
 }
 
@@ -394,6 +418,12 @@
 }
 .quick button[aria-pressed="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border-color: var(--black);
 }
@@ -528,6 +558,12 @@
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: 2px solid var(--black);
 }
@@ -569,6 +605,12 @@
 .seg button[aria-pressed="true"] {
   background: var(--lime);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
 }
 
 /* Month */
@@ -610,6 +652,12 @@
 .day[data-today="true"] .dayNum,
 .tgDay[data-today="true"] b {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: 2px solid var(--black);
 }
@@ -778,6 +826,12 @@
   line-height: 1.2;
   text-align: left;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--peri);
   border: 2px solid var(--black);
   cursor: grab;
@@ -814,6 +868,12 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
   box-shadow: var(--lift-sm);
@@ -856,6 +916,12 @@
 }
 .miniGrid button[data-n="3"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
 }
 .miniGrid button[data-today="true"] {
@@ -916,6 +982,12 @@
 .tabs button[aria-pressed="true"] {
   background: var(--lime);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
 }
 
 /* Brainstorm */
@@ -930,6 +1002,12 @@
   gap: 0.5rem;
   padding: 0.75rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1082,6 +1160,12 @@
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
   box-shadow: var(--lift-sm);
@@ -1285,6 +1369,12 @@
 .bin[data-armed="true"],
 .bin[data-over] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--hot);
   border: 2.5px solid var(--black);
 }
@@ -1315,6 +1405,12 @@
   padding: 0.5rem 0.5rem 0.5rem 0.9rem;
   font-weight: 700;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1480,6 +1576,12 @@
   padding: 0.5rem 0.5rem 0.5rem 0.9rem;
   font-size: 0.9rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: var(--key);
 }
@@ -1750,6 +1852,12 @@
 .chips .chip[data-effort] {
   font-weight: 900;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--orange);
   border-color: var(--black);
 }
@@ -1783,6 +1891,12 @@
   max-width: calc(100vw - 2rem);
   padding: 1.1rem 1.25rem 1rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
@@ -2029,6 +2143,12 @@
 .edDelete:hover,
 .edDelete:focus-visible {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--hot);
   border-style: solid;
 }
@@ -2114,6 +2234,12 @@
   height: 2.2rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--peri);
   border: 2px solid var(--black);
 }
@@ -2157,6 +2283,12 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: 2px solid var(--black);
 }
@@ -2359,6 +2491,12 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border-bottom: 2px solid var(--hair);
 }
@@ -2373,6 +2511,12 @@
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--pink);
   border-bottom: 2px solid var(--black);
 }
@@ -2394,6 +2538,12 @@
   padding: 0;
   overflow: hidden;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill, var(--butter));
   border: 2.5px solid var(--black);
   box-shadow: var(--lift-sm);
@@ -2471,6 +2621,12 @@
   letter-spacing: 0.04em;
   word-break: break-all;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2.5px solid var(--black);
   user-select: all;
@@ -2512,6 +2668,12 @@
   background: var(--butter);
   border: 2px solid var(--black);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
 }
 
 /* The picked task, at the top of the sidebar: a small card with its name, list, steps and delete. */
@@ -2714,6 +2876,12 @@ input.stick[data-custom][aria-invalid="true"] {
   margin: 0 -1.5rem;
   padding: 1.1rem 1.5rem 1rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border-bottom: var(--key);
 }
@@ -2763,6 +2931,12 @@ input.stick[data-custom][aria-invalid="true"] {
   font-size: 0.78rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: var(--key);
   rotate: -1deg;
@@ -2917,6 +3091,12 @@ input.stick[data-custom][aria-invalid="true"] {
   gap: 0.3rem;
   padding: 0.6rem 0.8rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -2961,6 +3141,12 @@ input.stick[data-custom][aria-invalid="true"] {
   max-width: min(32rem, calc(100vw - 2rem));
   padding: 1.5rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
@@ -2981,6 +3167,12 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .sharedChip {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border-color: var(--black) !important;
 }
@@ -2990,6 +3182,12 @@ input.stick[data-custom][aria-invalid="true"] {
 /* Buttons in the panel are little stickers too. */
 .panel .ghost {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
@@ -3125,6 +3323,12 @@ input.stick[data-custom][aria-invalid="true"] {
   width: 2.3rem;
   height: 2.3rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
@@ -3205,6 +3409,12 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .iconGrid button[aria-selected="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border-color: var(--black);
 }
@@ -3278,6 +3488,12 @@ input.stick[data-custom][aria-invalid="true"] {
   margin: 1.25rem 0 1.5rem;
   padding: 1.1rem 1.25rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: var(--key);
   box-shadow: var(--lift);
@@ -3442,6 +3658,12 @@ input.stick[data-custom][aria-invalid="true"] {
   gap: 0.7rem;
   padding: 1rem 1.1rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift);
@@ -3557,6 +3779,12 @@ input.stick[data-custom][aria-invalid="true"] {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
   rotate: -0.6deg;
@@ -3592,6 +3820,12 @@ input.stick[data-custom][aria-invalid="true"] {
   margin: auto;
   padding: 1.4rem 1.5rem 1.5rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
@@ -3715,6 +3949,12 @@ input.stick[data-custom][aria-invalid="true"] {
   font-size: 0.78rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
   box-shadow: 2px 2px 0 var(--ink);
@@ -3817,6 +4057,12 @@ input.stick[data-custom][aria-invalid="true"] {
   gap: 0.8rem;
   padding: 1.1rem 1.2rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
@@ -4054,6 +4300,12 @@ input.stick[data-custom][aria-invalid="true"] {
   line-height: 1.25;
   text-align: left;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
   box-shadow: 2px 2px 0 var(--black);
@@ -4112,6 +4364,12 @@ input.stick[data-custom][aria-invalid="true"] {
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--pink);
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
@@ -4133,6 +4391,12 @@ input.stick[data-custom][aria-invalid="true"] {
   padding: 0.6rem 0.9rem 0.7rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: 4px 4px 0 var(--ink);
@@ -4214,6 +4478,12 @@ input.stick[data-custom][aria-invalid="true"] {
   width: 15.5rem;
   padding: 0.7rem 0.8rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: 3px 3px 0 var(--ink);
@@ -4526,6 +4796,12 @@ body[data-drag="task"] .listGoal {
   gap: 1rem;
   padding: clamp(1.25rem, 4vw, 2.5rem);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift);
@@ -4627,6 +4903,12 @@ body[data-drag="task"] .listGoal {
   height: 2.75rem;
   margin-right: auto;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: #fff8ef;
   border: 2px solid var(--black);
 }
@@ -4725,6 +5007,12 @@ body[data-drag="task"] .listGoal {
 }
 .planPick button[aria-checked="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border-color: var(--black);
   box-shadow: var(--lift-sm);
@@ -4836,6 +5124,12 @@ body[data-drag="task"] .listGoal {
   width: min(100%, 26rem);
   padding: 1.4rem 1.5rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: 6px 6px 0 var(--black);

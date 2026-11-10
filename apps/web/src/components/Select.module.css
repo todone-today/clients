@@ -58,6 +58,12 @@
 }
 .list li[data-active="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
 }
 .list li[aria-selected="true"]:not([data-active="true"]) {

@@ -87,6 +87,12 @@
   font: inherit;
   text-align: left;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill, var(--butter));
   border: var(--key);
   box-shadow: var(--lift);
@@ -187,6 +193,12 @@ button.box:hover {
   padding: 0.15rem 0.5rem;
   font: normal 700 0.8rem var(--sans);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: #fff8ef;
   border: 2px solid var(--black);
 }
@@ -261,6 +273,12 @@ button.box:hover {
   padding: 0.5rem 0.85rem;
   font: 800 0.95rem var(--sans);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -335,6 +353,12 @@ button.box:hover {
   gap: 0.6rem;
   padding: 1.1rem 1.2rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--peri);
   border: var(--key);
   box-shadow: var(--lift);
@@ -506,6 +530,12 @@ button.box:hover {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: 2px solid var(--black);
 }
@@ -531,6 +561,12 @@ button.box:hover {
   gap: 0.9rem;
   padding: 1.6rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift);
@@ -623,6 +659,12 @@ button.box:hover {
   justify-items: start;
   padding: 1.75rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift);
@@ -673,6 +715,12 @@ button.box:hover {
   justify-items: center;
   padding: 0.45rem 0.8rem 0.5rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   text-align: center;
   text-transform: uppercase;
   background: var(--pink);
@@ -740,6 +788,12 @@ button.box:hover {
   margin-top: 2.5rem;
   padding: clamp(1.5rem, 3vw, 2.25rem);
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
@@ -774,6 +828,12 @@ button.box:hover {
   font-weight: 900;
   text-transform: uppercase;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--hot);
   border: 2.5px solid var(--black);
   rotate: 2deg;
@@ -803,6 +863,12 @@ button.box:hover {
   gap: 0.5rem;
   padding: 1.4rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   text-decoration: none;
   background: var(--fill);
   border: var(--key);
@@ -832,6 +898,12 @@ button.box:hover {
   gap: 2.5rem;
   padding: 6rem var(--gutter) 7rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border-top: var(--key);
 }
@@ -1066,6 +1138,12 @@ button.box:hover {
   font: 700 0.78rem/1.2 var(--sans);
   text-align: left;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: 2px solid var(--black);
   box-shadow: var(--lift-sm);
@@ -1117,6 +1195,12 @@ button.box:hover {
 }
 .switch[aria-pressed="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: #fff8ef;
 }
 .syncState {
@@ -1143,6 +1227,12 @@ button.box:hover {
   padding: 0.7rem 1rem;
   font: inherit;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: #fff8ef;
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1196,6 +1286,12 @@ button.box:hover {
   gap: 0.5rem;
   padding: 1.1rem 1.25rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1295,6 +1391,12 @@ button.box:hover {
 }
 .billing button[aria-checked="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
 }
 .billing small {
@@ -1353,6 +1455,12 @@ button.box:hover {
 }
 .places button[aria-selected="true"] {
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border-color: var(--lime);
 }
@@ -1462,6 +1570,12 @@ button.box:hover {
   gap: 0.5rem;
   padding: 0.85rem 0.95rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1498,6 +1612,12 @@ button.box:hover {
   font: inherit;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: 2px solid var(--black);
   box-shadow: 2px 2px 0 var(--black);
@@ -1575,6 +1695,12 @@ button.box:hover {
   font-size: 0.8rem;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: #fff8ef;
   border: 2px solid var(--black);
   cursor: pointer;
@@ -1594,6 +1720,12 @@ button.box:hover {
   gap: 0.4rem 0.75rem;
   padding: 0.85rem 0.95rem;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--pink);
   border: var(--key);
   box-shadow: var(--lift-sm);
@@ -1615,6 +1747,12 @@ button.box:hover {
   font-weight: 800;
   white-space: nowrap;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--lime);
   border: 2px solid var(--black);
   box-shadow: 2px 2px 0 var(--black);

@@ -150,6 +150,12 @@ img {
 .sticker {
   background: var(--fill, var(--butter));
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   border: var(--key);
   box-shadow: var(--lift);
 }
@@ -164,6 +170,12 @@ img {
   text-decoration: none;
   background: var(--fill, var(--butter));
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   border: var(--key);
   box-shadow: var(--lift-sm);
   transition:
@@ -213,6 +225,12 @@ img {
   overflow: hidden;
   font-weight: 800;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;

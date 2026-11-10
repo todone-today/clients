@@ -4,6 +4,12 @@
   padding: 2.25rem 2rem 1.75rem;
   text-align: center;
   color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
   background: var(--butter);
   border: var(--key);
   box-shadow: var(--lift);
