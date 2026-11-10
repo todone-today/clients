@@ -729,18 +729,54 @@ button.box:hover {
   gap: 0.5rem;
   align-items: baseline;
 }
+/* Founding member: a big butter sticker, slightly tilted, with a hot tag pinned to its corner. */
 .founding {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 2rem;
-  margin-top: 2rem;
-  padding: 1.25rem 1.5rem;
-  border: 2.5px dashed var(--ink-2);
+  gap: 1.25rem 2rem;
+  margin-top: 2.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -0.6deg;
+}
+.founding > div {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 44rem;
+}
+.founding h3 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.95;
+}
+.foundingPrice b {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 1;
+}
+.foundingPrice small {
+  font-size: 1rem;
+  font-weight: 700;
 }
 .founding p {
-  max-width: 48rem;
+  font-size: 1.05rem;
+}
+.foundingTag {
+  position: absolute;
+  top: -1rem;
+  left: 1.5rem;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--hot);
+  border: 2.5px solid var(--black);
+  rotate: 2deg;
 }
 .selfhost {
   margin-top: 1.5rem;

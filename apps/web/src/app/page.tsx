@@ -385,12 +385,19 @@ export default function Home() {
             Refunds within 7 days, no questions.
           </p>
           <div className={s.founding}>
-            <p>
-              <b>{FOUNDING.name}:</b> {FOUNDING.inr} / {FOUNDING.usd} once for
-              three years of Plus, instead of {FOUNDING.yearly} paying yearly at
-              launch prices. It all goes to the goals above straight away.
-            </p>
-            <Pay plan="founding" fill="var(--butter)">
+            <span className={s.foundingTag}>Limited: early supporters</span>
+            <div>
+              <h3 className="display">{FOUNDING.name}</h3>
+              <p className={s.foundingPrice}>
+                <b className="display">{FOUNDING.inr}</b> / {FOUNDING.usd}{" "}
+                <small>once, for three years of Plus</small>
+              </p>
+              <p>
+                Instead of {FOUNDING.yearly} paying yearly at launch prices. No
+                renewals, and it all goes to the goals above straight away.
+              </p>
+            </div>
+            <Pay plan="founding" fill="var(--lime)">
               Become a founding member
             </Pay>
           </div>
