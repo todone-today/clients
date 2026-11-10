@@ -15,6 +15,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { Confetti } from "@/components/Confetti";
 import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
 import {
@@ -369,6 +370,7 @@ export function GoalsDemo() {
   const [protein, setProtein] = useState(90);
   const [xp, setXp] = useState(0);
   const [claimed, setClaimed] = useState(false);
+  const [claims, setClaims] = useState(0); // a fresh shower for every claim
   const earn = (n: number) => {
     setXp((x) => x + n);
     setClaimed(false);
@@ -423,6 +425,7 @@ export function GoalsDemo() {
           + 25 g
         </button>
       </div>
+      {claimed && <Confetti key={claims} />}
       <div className={s.rewardNote} data-claimed={claimed || undefined}>
         <Popcorn size={22} strokeWidth={2.5} aria-hidden />
         <span>
@@ -445,6 +448,7 @@ export function GoalsDemo() {
             if (claimed) return setClaimed(false);
             setXp((x) => x - MOVIE);
             setClaimed(true);
+            setClaims((n) => n + 1);
           }}
         >
           {claimed ? "Again" : `Claim · ${MOVIE} XP`}
