@@ -1478,13 +1478,6 @@ button.box:hover {
   opacity: 0.5;
   cursor: default;
 }
-.goalXp {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 700;
-}
 /* Reminders demo: the notification, and the sealed line the server stored. */
 .remindDemo {
   display: grid;
@@ -1536,4 +1529,77 @@ button.box:hover {
   .goalBar i {
     transition: none;
   }
+}
+/* Steps demo: the fold chip, top right of the note, as on a card in the app. */
+.stepNote {
+  position: relative;
+}
+.fold {
+  position: absolute;
+  top: 0.1rem;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--black);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+.fold svg {
+  transition: rotate 0.15s var(--ease);
+}
+.fold[aria-expanded="false"] svg {
+  rotate: -90deg;
+}
+/* Goals demo: the reward the XP buys. */
+.rewardNote {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  padding: 0.85rem 0.95rem;
+  color: var(--black);
+  background: var(--pink);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  rotate: 0.4deg;
+}
+.rewardNote > span:first-of-type {
+  display: grid;
+}
+.rewardNote small {
+  font-weight: 700;
+}
+.rewardNote .goalBar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.rewardNote button {
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+  cursor: pointer;
+}
+.rewardNote button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rewardNote[data-claimed] {
+  background: var(--butter);
+  rotate: -0.6deg;
+  transition: rotate 0.2s var(--ease);
+}
+.stepNote ul[hidden] {
+  display: none;
 }

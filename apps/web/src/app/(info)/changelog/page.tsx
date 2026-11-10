@@ -9,6 +9,16 @@ export const metadata: Metadata = {
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "10 November 2026",
+    title: "Fold steps, see your password",
+    items: [
+      "Fold a task's steps away with the chip on its card (it shows how many are done); this device remembers.",
+      "An eye on password fields shows what you typed, at sign-in, sign-up, reset and unlock.",
+      "The tour now covers goals, rewards, effort and reminders, and new accounts start with tasks that try them.",
+      "Clear done has a broom, and comments on tasks you've shared arrive as notifications.",
+    ],
+  },
+  {
     date: "9 November 2026",
     title: "Effort",
     items: [

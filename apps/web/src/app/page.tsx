@@ -71,7 +71,7 @@ export default function Home() {
             <h2 className="display">Big task, small steps.</h2>
             <p>
               Drop one note onto another and it becomes a step. Steps travel
-              with their task.
+              with their task, and fold away when you don&apos;t need them.
             </p>
             <StepsDemo />
           </article>
@@ -116,8 +116,9 @@ export default function Home() {
             <h2 className="display">Goals you can feel.</h2>
             <p>
               Give a list its goals: a number to reach, a habit, a daily amount,
-              or milestones. Log in a tap, earn XP, spend it on rewards you set
-              yourself. No streak to break.
+              or milestones. Log in a tap and earn XP; bigger tasks (XS to XL)
+              earn more. Spend it on rewards you set yourself. No streak to
+              break.
             </p>
             <GoalsDemo />
           </article>
@@ -268,7 +269,7 @@ export default function Home() {
               <ul>
                 {[
                   "End-to-end encrypted",
-                  "Sticky-note lists with steps",
+                  "Sticky-note lists, steps and effort",
                   "Calendar and planning",
                   "Teams and shared lists",
                   "Share a task by link",

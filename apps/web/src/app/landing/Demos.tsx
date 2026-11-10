@@ -8,11 +8,12 @@ import {
   Check,
   Cloud,
   CloudOff,
+  ChevronDown,
   Lock,
+  Popcorn,
   Target,
   Wifi,
   WifiOff,
-  Zap,
 } from "lucide-react";
 import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
@@ -50,6 +51,7 @@ export function StepsDemo() {
     ["Pack the chargers", false],
   ] as [string, boolean][]);
   const [done, setDone] = useState(false);
+  const [folded, setFolded] = useState(false);
   return (
     <div className={s.stepNote}>
       <button
@@ -65,7 +67,17 @@ export function StepsDemo() {
         <Box on={done} />
         <b data-done={done || undefined}>Plan the trip</b>
       </button>
-      <ul>
+      <button
+        type="button"
+        className={s.fold}
+        aria-expanded={!folded}
+        aria-label={`${folded ? "Show" : "Hide"} the steps`}
+        onClick={() => setFolded(!folded)}
+      >
+        <ChevronDown size={13} strokeWidth={3} aria-hidden />
+        {steps.filter(([, on]) => on).length}/{steps.length}
+      </button>
+      <ul hidden={folded}>
         {steps.map(([t, on], i) => (
           <li key={t}>
             <button
@@ -84,7 +96,10 @@ export function StepsDemo() {
           </li>
         ))}
       </ul>
-      <p className={s.try}>Tick or untick the task and its steps go with it.</p>
+      <p className={s.try}>
+        Tick or untick the task and its steps go with it. Fold them away when
+        they&apos;re in the way.
+      </p>
     </div>
   );
 }
@@ -347,12 +362,17 @@ function Mark({ mark }: { mark: Tool["mark"] }) {
   );
 }
 
-// A "Gym" list's goals: log a weigh-in or some protein and watch it fill, with the XP it earns.
+// A "Gym" list's goals: log a weigh-in or some protein and watch it fill, then spend the XP on a reward you set.
+const MOVIE = 15;
 export function GoalsDemo() {
   const [kg, setKg] = useState(71.5);
   const [protein, setProtein] = useState(90);
   const [xp, setXp] = useState(0);
-  const earn = (n: number) => setXp((x) => x + n);
+  const [claimed, setClaimed] = useState(false);
+  const earn = (n: number) => {
+    setXp((x) => x + n);
+    setClaimed(false);
+  };
   return (
     <div className={s.goalsDemo}>
       <div
@@ -397,16 +417,39 @@ export function GoalsDemo() {
           type="button"
           onClick={() => {
             setProtein((p) => p + 25);
-            earn(protein < 140 && protein + 25 >= 140 ? 10 : 0);
+            earn((protein === 90 ? 3 : 0) + (protein < 140 && protein + 25 >= 140 ? 10 : 0));
           }}
         >
           + 25 g
         </button>
       </div>
-      <p className={s.goalXp} role="status">
-        <Zap size={15} strokeWidth={2.75} aria-hidden /> {xp} XP, toward a
-        reward you pick: a cheat meal, a movie night.
-      </p>
+      <div className={s.rewardNote} data-claimed={claimed || undefined}>
+        <Popcorn size={22} strokeWidth={2.5} aria-hidden />
+        <span>
+          <b>Movie night</b>
+          <small role="status">
+            {claimed
+              ? "Claimed. Enjoy the film!"
+              : xp >= MOVIE
+                ? `Ready: you have ${xp} XP`
+                : `${xp} of ${MOVIE} XP · log above to earn`}
+          </small>
+        </span>
+        <span className={s.goalBar} aria-hidden>
+          <i style={{ transform: `scaleX(${Math.min(1, xp / MOVIE)})` }} />
+        </span>
+        <button
+          type="button"
+          disabled={!claimed && xp < MOVIE}
+          onClick={() => {
+            if (claimed) return setClaimed(false);
+            setXp((x) => x - MOVIE);
+            setClaimed(true);
+          }}
+        >
+          {claimed ? "Again" : `Claim · ${MOVIE} XP`}
+        </button>
+      </div>
     </div>
   );
 }
