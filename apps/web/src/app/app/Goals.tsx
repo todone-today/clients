@@ -1388,45 +1388,92 @@ export function Rewards() {
 }
 
 // What you've claimed, newest first: straight from the XP log, so it always matches your balance (and syncs with it).
+const PAGE = 8;
 function Claimed({ spends, rewards }: { spends: Win[]; rewards: Reward[] }) {
-  const [all, setAll] = useState(false);
+  // A page at a time: the newest 8, then 10 more each time you ask.
+  const [count, setCount] = useState(PAGE);
   if (!spends.length) return null;
   const spent = spends.reduce((n, w) => n - w.xp, 0);
   const when = (t: number) => {
     const d = new Date(t);
-    const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 86_400_000);
-    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    const days = Math.round(
+      (new Date().setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) /
+        86_400_000,
+    );
+    const time = d.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
     return days === 0
       ? `Today, ${time}`
       : days === 1
         ? `Yesterday, ${time}`
-        : d.toLocaleDateString(undefined, { day: "numeric", month: "short", ...(days > 300 ? { year: "numeric" } : {}) });
+        : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   };
-  const shown = all ? spends : spends.slice(0, 8);
+  // Grouped by month, so a long history stays easy to scan.
+  const month = (t: number) =>
+    new Date(t).toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+  const shown = spends.slice(0, count);
+  const groups: [string, Win[]][] = [];
+  for (const w of shown) {
+    const m = month(w.at);
+    if (groups.at(-1)?.[0] === m) groups.at(-1)![1].push(w);
+    else groups.push([m, [w]]);
+  }
+  const left = spends.length - shown.length;
   return (
     <section className={s.claimedBox}>
       <h2 className={s.sideHead}>Claimed</h2>
       <p className={s.claimedSum}>
-        <b>{spends.length}</b> reward{spends.length === 1 ? "" : "s"} enjoyed · <b>{spent}</b> XP spent
+        <b>{spends.length}</b> reward{spends.length === 1 ? "" : "s"} enjoyed ·{" "}
+        <b>{spent}</b> XP spent
       </p>
-      <ol className={s.claimedList}>
-        {shown.map((w) => (
-          <li
-            key={w.id}
-            // The same colour as the reward's card, while it's still there.
-            style={{ "--fill": fillFor(rewards.find((r) => r.title === w.title)?.id ?? w.title) } as React.CSSProperties}
-          >
-            <Gift size={16} strokeWidth={2.5} aria-hidden />
-            <span>{w.title}</span>
-            <time dateTime={new Date(w.at).toISOString()}>{when(w.at)}</time>
-            <b>{w.xp} XP</b>
-          </li>
-        ))}
-      </ol>
-      {spends.length > shown.length && (
-        <button className={s.link} onClick={() => setAll(true)}>
-          Show all {spends.length}
-        </button>
+      {groups.map(([m, ws]) => (
+        <div key={m} className={s.claimedMonth}>
+          <h3>{m}</h3>
+          <ol className={s.claimedList}>
+            {ws.map((w) => (
+              <li
+                key={w.id}
+                // The same colour as the reward's card, while it's still there.
+                style={
+                  {
+                    "--fill": fillFor(
+                      rewards.find((r) => r.title === w.title)?.id ?? w.title,
+                    ),
+                  } as React.CSSProperties
+                }
+              >
+                <Gift size={16} strokeWidth={2.5} aria-hidden />
+                <span>{w.title}</span>
+                <time dateTime={new Date(w.at).toISOString()}>
+                  {when(w.at)}
+                </time>
+                <b>{w.xp} XP</b>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+      {spends.length > PAGE && (
+        <p className={s.claimedMore}>
+          <span>
+            Showing {shown.length} of {spends.length}
+          </span>
+          {left > 0 && (
+            <button className={s.link} onClick={() => setCount((n) => n + 10)}>
+              Show {Math.min(10, left)} more
+            </button>
+          )}
+          {count > PAGE && (
+            <button className={s.link} onClick={() => setCount(PAGE)}>
+              Show fewer
+            </button>
+          )}
+        </p>
       )}
     </section>
   );
@@ -1541,4 +1588,3 @@ export function XpTile({ onClick }: { onClick: () => void }) {
     </button>
   );
 }
-

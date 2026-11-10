@@ -179,7 +179,7 @@ export const PLANS: Plan[] = [
     per: "",
     fill: "var(--lime)",
     points: [
-      "Unlimited lists (fair use)",
+      "Unlimited lists",
       "Share with up to 6 people",
       "Restorable daily backups (planned)",
       "Early access to the mobile apps (planned)",

@@ -5296,6 +5296,25 @@ body[data-drag="task"] .listGoal {
 .claimedSum {
   color: var(--ink-2);
 }
+.claimedMonth {
+  display: grid;
+  gap: 0.5rem;
+}
+.claimedMonth h3 {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.claimedMore {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
 .claimedSum b {
   color: var(--ink);
 }

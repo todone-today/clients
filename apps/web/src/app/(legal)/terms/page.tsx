@@ -57,7 +57,9 @@ export default function Terms() {
         rupees, taxes included; they renew automatically at the price shown when you pay until you stop them. Founding
         member is paid once for three years of Plus. When a plan ends, nothing you made is removed; only the paid extras
         stop. People who joined before paid plans keep everything free. Refunds, cancelling and changing plans are covered
-        by the <Link href="/refunds">Refund &amp; Cancellation Policy</Link>. If we change a price, we&apos;ll tell you
+        by the <Link href="/refunds">Refund &amp; Cancellation Policy</Link>. &quot;Unlimited&quot; means
+        unlimited for normal personal or team use: if an account&apos;s use looks automated or abusive (scripts creating
+        thousands of lists, say), we may ask about it or limit it, and we&apos;ll tell you first. If we change a price, we&apos;ll tell you
         before your next renewal at least 7 days ahead, and you can stop it.
       </p>
 
