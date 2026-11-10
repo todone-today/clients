@@ -365,8 +365,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
       if (new URLSearchParams(location.search).has("connect"))
         return setPanel("integrations");
-      // From a "Choose Plus" on the pricing page: the plans, straight away.
-      if (planWant) return openPlans({ want: planWant });
+      // From a "Choose Plus" on the pricing page: the plans, straight away (the starter lists still get made
+      // underneath, so closing the plans doesn't leave an empty page; the tour waits for the Tour button).
+      if (planWant) openPlans({ want: planWant });
       if (launch === "calendar") return setPanel("calendar");
       if (launch === "add")
         setTimeout(() => document.querySelector<HTMLInputElement>("input[placeholder^='Add a task']")?.focus(), 300);
@@ -375,7 +376,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
           await fetch(`/api/demo?today=${todayISO()}`).then((r) => r.json());
         reorder(demoLists.map((l) => add(l.name, l.tasks, l.kind)));
-        setTouring(true);
+        if (!planWant) setTouring(true);
       }
     })().catch(() => {});
   }, [demo, userId, orgId, vault, add, planWant, launch]);
@@ -426,7 +427,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <PlanPrompt />
-      {!demo && <InstallPrompt />}
+      {!demo && !touring && <InstallPrompt />}
       <header className={s.top}>
         <button
           className={s.menu}

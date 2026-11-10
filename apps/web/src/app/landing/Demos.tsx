@@ -459,6 +459,31 @@ export function GoalsDemo() {
   );
 }
 
+// Getting todone on a phone, in the two taps each takes, and the full guide.
+export function PhoneDemo() {
+  return (
+    <div className={s.phoneDemo}>
+      <ol>
+        <li>
+          <b className="display">iPhone</b>
+          <span>
+            Safari → <i>Share</i> → <i>Add to Home Screen</i>
+          </span>
+        </li>
+        <li>
+          <b className="display">Android</b>
+          <span>
+            Chrome → <i>⋮</i> → <i>Install app</i>
+          </span>
+        </li>
+      </ol>
+      <a href="/install" className="btn" style={{ "--fill": "#fff8ef" } as React.CSSProperties}>
+        All the steps
+      </a>
+    </div>
+  );
+}
+
 // Focus mode, small: one task, a clock that runs (fast-forwarded so the demo moves), and Done puts the time on the
 // task's card, the ⏳ chip the app shows.
 const clockOf = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -886,7 +911,7 @@ export function Pricing() {
                   Choose {p.name}
                 </Pay>
               ) : (
-                <a href="/app" className="btn">
+                <a href="/app?new=1" className="btn">
                   Start free
                 </a>
               )}

@@ -2242,3 +2242,129 @@ button.box:hover {
   margin-top: 2.5rem;
   text-align: center;
 }
+
+/* Phone chapter: two install recipes as cream stickers, and the guide. */
+.phoneDemo {
+  display: grid;
+  justify-items: center;
+  gap: 1.2rem;
+}
+.phoneDemo ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  list-style: none;
+}
+.phoneDemo li {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem 1.1rem;
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: 4px 4px 0 var(--black);
+}
+.phoneDemo li:first-child {
+  rotate: -1deg;
+}
+.phoneDemo li:last-child {
+  rotate: 1deg;
+}
+.phoneDemo b {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+.phoneDemo span {
+  font-weight: 700;
+}
+.phoneDemo i {
+  font-style: normal;
+  white-space: nowrap;
+  padding: 0 0.25rem;
+  background: var(--butter);
+}
+@media (max-width: 520px) {
+  .phoneDemo ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Why it works: one big cream sticky note, written as a todo list with every line ticked off. */
+.mind {
+  padding: 6rem var(--gutter);
+}
+.mind > h2 {
+  margin-inline: auto;
+  text-align: center;
+  font-size: clamp(3rem, 7vw, 6rem);
+  text-wrap: balance;
+}
+.mindNote {
+  display: grid;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 4vw, 3rem);
+  list-style: none;
+  color: var(--black);
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -0.6deg;
+  --ink: var(--black);
+  --ink-2: #4a4540;
+}
+.mindNote li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 2px dashed rgb(11 11 11 / 0.2);
+}
+.mindNote li:last-child {
+  border-bottom: 0;
+}
+.mindTick {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-top: 0.15rem;
+  color: var(--lime);
+  background: var(--black);
+}
+.mindNote p {
+  color: #4a4540;
+  font-size: 1.05rem;
+}
+.mindNote b {
+  display: block;
+  font: 900 clamp(1.5rem, 2.6vw, 2.1rem) / 1 var(--display);
+  text-transform: uppercase;
+  color: var(--black);
+  margin-bottom: 0.3rem;
+}
+.mindNote small {
+  margin-top: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+  background: var(--lime);
+  border: 2px solid var(--black);
+  rotate: 2deg;
+}
+.mindNote li:nth-child(3n + 2) small {
+  background: var(--cyan);
+}
+.mindNote li:nth-child(3n) small {
+  background: var(--pink);
+}
+@media (max-width: 560px) {
+  .mindNote li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .mindNote small {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

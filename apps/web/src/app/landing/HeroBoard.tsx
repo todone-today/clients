@@ -114,7 +114,7 @@ export function HeroBoard() {
             works offline.
           </p>
           <div className={s.ctas}>
-            <Link href="/app" className={`btn ${s.primary}`}>
+            <Link href="/app?new=1" className={`btn ${s.primary}`}>
               Start a list <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Link>
             <Link href="/demo" className="btn">

@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bug,
+  Check,
   GitPullRequest,
   Lightbulb,
   Lock,
@@ -20,6 +21,7 @@ import {
   Pay,
   Pricing,
   FocusDemo,
+  PhoneDemo,
   RemindDemo,
   SharedDemo,
   StepsDemo,
@@ -96,6 +98,34 @@ export default function Home() {
             Google, Apple and Outlook from one private link. Add it once.
             <ToolsDemo />
           </Chapter>
+          <Chapter tag="Phone" title="In your pocket, too." fill="var(--pink)">
+            No app store needed: add it to your home screen and it opens like an app, works offline and reminds you.
+            <PhoneDemo />
+          </Chapter>
+        </section>
+
+        {/* The psychology the features are built on, as a todo list of its own: every line ticked. */}
+        <section id="why-it-works" className={s.mind} aria-labelledby="mind-h">
+          <h2 id="mind-h" className="display">
+            Built to get you doing.
+          </h2>
+          <p className={s.sub}>
+            Every feature leans on something that helps people actually follow
+            through, not just write things down.
+          </p>
+          <ul className={s.mindNote}>
+            {MIND.map(([idea, line, feature]) => (
+              <li key={idea}>
+                <span className={s.mindTick} aria-hidden>
+                  <Check size={16} strokeWidth={3.5} />
+                </span>
+                <p>
+                  <b>{idea}</b> {line}
+                </p>
+                <small>{feature}</small>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Why it's different, said once, plainly, beside the real thing. */}
@@ -387,7 +417,7 @@ export default function Home() {
             <span className={s.slab}>Tick it off.</span>
           </p>
           <Link
-            href="/app"
+            href="/app?new=1"
             className="btn"
             style={{ "--fill": "var(--butter)" } as React.CSSProperties}
           >
@@ -420,6 +450,17 @@ export default function Home() {
     </>
   );
 }
+
+// The ideas behind the features, said plainly, each with where it lives in todone.
+const MIND = [
+  ["Start tiny.", "A big task is daunting; its first five-minute step isn't. Break it down and begin.", "Steps"],
+  ["Decide when, not just what.", "A task with a time on the calendar gets done far more often than one on a list.", "Calendar"],
+  ["Plan for the hard day.", "\"If I'm too tired, then I'll walk ten minutes.\" Deciding ahead beats willpower later.", "If-then plans"],
+  ["One thing at a time.", "Switching costs focus. Give one task the whole screen and a clock.", "Focus mode"],
+  ["Reward the effort.", "Bigger tasks earn more XP, and you spend it on treats you pick yourself.", "XP & rewards"],
+  ["Miss a day, keep the habit.", "No streak to lose. A quiet week starts fresh, and one small win counts.", "Goals"],
+  ["Know how long things take.", "Focus time goes on the task, so your next plan is honest.", "⏳ on cards"],
+] as const;
 
 // One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
 function Chapter({

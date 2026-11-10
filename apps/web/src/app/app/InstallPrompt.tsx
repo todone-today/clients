@@ -9,6 +9,7 @@ import s from "./app.module.css";
 // and desktop Chrome get the browser's own install prompt; iPhone gets the two taps it takes (/install). Dismissed
 // once, it stays away on this device.
 const KEY = "todone:install-hidden";
+const VISITS = "todone:first-seen";
 type Prompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 export function InstallPrompt() {
@@ -16,9 +17,14 @@ export function InstallPrompt() {
   const [ios, setIos] = useState(false);
   const [native, setNative] = useState<Prompt | null>(null);
   useEffect(() => {
+    // Not in someone's first visit (they're meeting the app and its tour); from the next one on.
     let hidden = false;
     try {
       hidden = localStorage.getItem(KEY) === "1";
+      // The first time todone opens here, remember when; offer the install from a later session (an hour on).
+      const first = Number(localStorage.getItem(VISITS) ?? 0);
+      if (!first) localStorage.setItem(VISITS, String(Date.now()));
+      if (!first || Date.now() - first < 3_600_000) hidden = true;
     } catch {}
     const installed = matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone;
     const phone = matchMedia("(pointer: coarse)").matches && innerWidth < 900;

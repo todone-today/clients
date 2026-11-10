@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthShell } from "./AuthDialog";
 import { authClient } from "@/lib/auth-client";
 import { greet } from "@/components/Welcome";
@@ -27,6 +27,11 @@ export function LoginForm({
   haiku: [string, string, string];
 }) {
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  // Arriving to start (a landing page's "Start a list", "Start free" or a plan): open on making an account.
+  useEffect(() => {
+    const next = new URLSearchParams(location.search).get("next") ?? "";
+    if (/[?&](new=1|plan=)/.test(next)) Promise.resolve().then(() => setMode("up"));
+  }, []);
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +39,8 @@ export function LoginForm({
   const [recovery, setRecovery] = useState<string | null>(null);
 
   const enter = () => {
-    greet(haiku);
+    // Came to buy a plan: straight to the plans, without the welcome haiku in front of them.
+    if (!/[?&]plan=/.test(safeNext())) greet(haiku);
     location.assign(safeNext());
   };
   if (recovery)
