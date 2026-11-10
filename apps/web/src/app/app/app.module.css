@@ -5254,6 +5254,20 @@ body[data-drag="task"] .listGoal {
   align-items: center;
   gap: 0.5rem 1rem;
 }
+.foundPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+  margin-top: 0.2rem;
+}
+.foundPrice b {
+  font-size: clamp(2.6rem, 6vw, 3.4rem);
+  line-height: 1;
+}
+.foundPrice small {
+  font-weight: 800;
+}
 .foundChip {
   padding: 0.2rem 0.6rem;
   font-size: 0.85rem;

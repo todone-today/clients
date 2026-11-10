@@ -214,11 +214,14 @@ function FoundingNote({ price, busy, first, onBack }: { price: string; busy: str
           start.
         </p>
         <p className={s.foundSign}>— Kartikey, who makes todone</p>
+        <p className={s.foundPrice}>
+          <b className="display">{price}</b> <small>paid once</small>
+          <span className={s.foundChip}>3 years of Plus</span>
+        </p>
         <div className={s.foundAct}>
           <button className="btn" style={{ "--fill": "var(--pink)" } as React.CSSProperties} disabled={!!busy} onClick={onBack}>
-            <Heart size={16} strokeWidth={2.75} aria-hidden /> {busy === "founding" ? "Opening…" : `Back todone · ${price} once`}
+            <Heart size={16} strokeWidth={2.75} aria-hidden /> {busy === "founding" ? "Opening…" : "Become a founding member"}
           </button>
-          <span className={s.foundChip}>3 years of Plus</span>
         </div>
       </div>
     </div>
