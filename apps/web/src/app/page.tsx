@@ -46,6 +46,7 @@ export default function Home() {
           <a href="#roadmap">Roadmap</a>
           <a href="#pricing">Pricing</a>
           <Link href="/docs">Guide</Link>
+          <Link href="/install">Get the app</Link>
         </nav>
         <div className={s.end}>
           <a href={REPO} className={s.navGh} aria-label="todone on GitHub">
@@ -402,6 +403,7 @@ export default function Home() {
         <nav className={s.legal} aria-label="More">
           {[
             ["/docs", "Guide"],
+            ["/install", "Get the app"],
             ["/changelog", "Changelog"],
             ["/status", "Status"],
             ...LEGAL_DOCS,

@@ -9,6 +9,15 @@ export const metadata: Metadata = {
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "11 November 2026",
+    title: "todone on your phone",
+    items: [
+      "A new page, Get the app, shows how to add todone to your home screen on iPhone, Android or a computer, and turn on reminders.",
+      "On a phone in the browser, todone offers to install itself (once; dismiss it and it stays away).",
+      "Press and hold the home-screen icon for shortcuts: Add a task and Calendar.",
+    ],
+  },
+  {
     date: "10 November 2026",
     title: "Plans, and paying for them",
     items: [

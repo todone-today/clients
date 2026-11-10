@@ -4,9 +4,12 @@ import { NAME } from "@/lib/brand";
 // Lets todone be added to a phone's home screen, which iOS needs before it allows push notifications.
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/app",
     name: NAME,
     short_name: NAME,
+    description: "Sticky-note todo lists, a calendar and goals. Private, and it works offline.",
     start_url: "/app",
+    scope: "/",
     display: "standalone",
     background_color: "#0b0b0b",
     theme_color: "#d4f04a",
@@ -16,6 +19,11 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
       { src: "/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+    // Long-press the home-screen icon (Android, and Chrome/Edge on computers).
+    shortcuts: [
+      { name: "Add a task", short_name: "Add", url: "/app?go=add", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
+      { name: "Calendar", short_name: "Calendar", url: "/app?go=calendar", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }

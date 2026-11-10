@@ -56,6 +56,7 @@ import { IconPick, ListIcon } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
+import { InstallPrompt } from "./InstallPrompt";
 import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -162,6 +163,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const plan = usePlan();
   // ?plan=plus-year from the pricing page, read once (the address is tidied up after loading).
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
+  // ?go=add or ?go=calendar: the home-screen icon's shortcuts (manifest.ts), read once like ?plan.
+  const [launch] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("go")));
   const [touring, setTouring] = useState(false);
   const [drawer, setDrawer] = useState(false);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
@@ -364,6 +367,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         return setPanel("integrations");
       // From a "Choose Plus" on the pricing page: the plans, straight away.
       if (planWant) return openPlans({ want: planWant });
+      if (launch === "calendar") return setPanel("calendar");
+      if (launch === "add")
+        setTimeout(() => document.querySelector<HTMLInputElement>("input[placeholder^='Add a task']")?.focus(), 300);
       // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
       if (!orgId && (await startOnboarding())) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
@@ -372,7 +378,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         setTouring(true);
       }
     })().catch(() => {});
-  }, [demo, userId, orgId, vault, add, planWant]);
+  }, [demo, userId, orgId, vault, add, planWant, launch]);
   // Reminders come from the open app (the server can't read what's due): a check every minute.
   useEffect(() => {
     if (demo) return;
@@ -420,6 +426,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <PlanPrompt />
+      {!demo && <InstallPrompt />}
       <header className={s.top}>
         <button
           className={s.menu}

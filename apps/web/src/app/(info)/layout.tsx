@@ -5,6 +5,7 @@ import s from "../(legal)/legal.module.css";
 // The guide, changelog and status pages: the same quiet reading layout as the policies.
 const PAGES = [
   ["/docs", "Guide"],
+  ["/install", "Get the app"],
   ["/changelog", "Changelog"],
   ["/status", "Status"],
   ["/demo", "Try the demo"],

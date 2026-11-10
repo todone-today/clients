@@ -260,6 +260,12 @@ export default function Docs() {
       <h2 id="reminders">Reminders, offline and devices</h2>
       <ul>
         <li>
+          <b>On your phone:</b> add todone to your home screen and it opens
+          like an app. Steps for iPhone, Android and computers:{" "}
+          <Link href="/install">Get the app</Link>. Press and hold its icon
+          for Add a task and Calendar.
+        </li>
+        <li>
           The bell (top bar) shows new comments on shared tasks and what&apos;s
           due today. Switch on reminders there, on each device, to get a nudge
           15 minutes before a task&apos;s time and a summary at 8 a.m., even with
