@@ -55,8 +55,8 @@ import { fold, reconcile, type Goal } from "@todone/sdk/goals";
 import { IconPick, ListIcon } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
-import { Billing } from "./Billing";
-import { PlanPrompt } from "./PlanPrompt";
+import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
+import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
@@ -159,6 +159,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  const plan = usePlan();
   // ?plan=plus-year from the pricing page, read once (the address is tidied up after loading).
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
   const [touring, setTouring] = useState(false);
@@ -361,8 +362,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       // Back from connecting a service (e.g. Google's sign-in): show Integrations once lists are in.
       if (new URLSearchParams(location.search).has("connect"))
         return setPanel("integrations");
-      // From a "Choose Plus" on the pricing page: straight to the plans.
-      if (planWant) return setPanel("plan");
+      // From a "Choose Plus" on the pricing page: the plans, straight away.
+      if (planWant) return openPlans({ want: planWant });
       // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
       if (!orgId && (await startOnboarding())) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
@@ -418,7 +419,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     <div className={s.shell} data-slim={folded || undefined}>
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
-      <PlanPrompt onPlans={() => show("plan")} />
+      <PlanPrompt />
       <header className={s.top}>
         <button
           className={s.menu}
@@ -436,9 +437,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                   ? "Integrations"
                   : panel === "account"
                     ? "Account"
-                    : panel === "plan"
-                      ? "Plan"
-                      : (list?.name ?? "Lists")}
+                    : (list?.name ?? "Lists")}
           </span>
         </button>
         {demo ? (
@@ -628,6 +627,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           <NewList
             onAdd={(name) => open(add(name))}
             taken={(n) => !!lists?.some((l) => l.name === n)}
+            full={plan.gated && (lists?.filter((l) => !l.kind).length ?? 0) >= plan.listLimit}
           />
           <button
             className={`${s.listBtn} ${s.ideasBtn} ${s.binBtn}`}
@@ -691,9 +691,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         ) : panel === "integrations" ? (
           <Integrations key={orgId} />
         ) : panel === "account" ? (
-          <Account onPlan={() => show("plan")} />
-        ) : panel === "plan" ? (
-          <Billing want={planWant} />
+          <Account />
+
         ) : !lists ? null : list ? (
           <ListView
             key={list.id}
@@ -714,9 +713,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
 function NewList({
   onAdd,
   taken,
+  full,
 }: {
   onAdd: (name: string) => void;
   taken: (name: string) => boolean;
+  full?: boolean; // Free's lists are all used: a new one needs a plan
 }) {
   const [name, setName] = useState("");
   const clean = name.trim();
@@ -727,6 +728,7 @@ function NewList({
       onSubmit={(e) => {
         e.preventDefault();
         if (!clean || clash) return;
+        if (full) return needsPlan("Free holds 10 lists. Plus has as many as you need.");
         onAdd(clean);
         setName("");
       }}
@@ -741,8 +743,8 @@ function NewList({
         placeholder="New list"
         maxLength={60}
       />
-      <button aria-label="Create list" disabled={!clean || clash}>
-        <Plus size={18} strokeWidth={2.5} />
+      <button aria-label={full ? "Create list (needs Plus)" : "Create list"} disabled={!clean || clash}>
+        {full ? <Diamond /> : <Plus size={18} strokeWidth={2.5} />}
       </button>
       {clash && (
         <p className={s.err}>There is already a list called “{clean}”.</p>

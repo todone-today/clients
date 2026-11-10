@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import s from "./Select.module.css";
 
-export type Option = { value: string; label: string };
+export type Option = { value: string; label: string; badge?: React.ReactNode }; // badge: e.g. a "needs a plan" diamond
 
 // The app's dropdown: a button and a list styled like the rest of todone (native menus can't be).
 // Keyboard: Enter/Space/↓ open it, ↑↓ move, Enter picks, Esc or Tab closes; typing a letter jumps to it.
@@ -102,6 +102,7 @@ export function Select({
               onClick={() => pick(i)}
             >
               <span>{o.label}</span>
+              {o.badge}
               {o.value === value && <Check size={14} strokeWidth={3} aria-hidden />}
             </li>
           ))}

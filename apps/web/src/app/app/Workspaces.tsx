@@ -6,12 +6,12 @@ import { Select } from "@/components/Select";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { confirmMember, fingerprint, type Member, teamKey, teamMembers } from "@/lib/vault";
-import { needsPlan } from "./PlanPrompt";
+import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import s from "./app.module.css";
 
 const org = authClient.organization;
 const NEW = "__new";
-export type Panel = "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | "plan" | null;
+export type Panel = "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | null;
 
 // Personal lists or a team's; switching changes which lists the server returns.
 export function Workspaces({
@@ -26,6 +26,7 @@ export function Workspaces({
   onSwitch: () => void;
 }) {
   const { data: orgs } = authClient.useListOrganizations();
+  const { free } = usePlan();
   const [name, setName] = useState("");
   const [err, setErr] = useState("");
   // "New team…" in the dropdown opens a name field just for that; it closes once the team is made or on Esc.
@@ -47,10 +48,10 @@ export function Workspaces({
         options={[
           { value: "", label: "Personal" },
           ...(orgs ?? []).map((o) => ({ value: o.id, label: o.name })),
-          { value: NEW, label: "+ New team…" },
+          { value: NEW, label: "+ New team…", badge: free ? <Diamond /> : undefined },
         ]}
         onChange={async (v) => {
-          if (v === NEW) return setCreating(true);
+          if (v === NEW) return free ? needsPlan("Teams come with Plus.") : setCreating(true);
           onSwitch();
           await org.setActive({ organizationId: v || null });
         }}

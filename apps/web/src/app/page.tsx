@@ -385,19 +385,30 @@ export default function Home() {
             Refunds within 7 days, no questions.
           </p>
           <div className={s.founding}>
-            <span className={s.foundingTag}>Limited: early supporters</span>
+            <span className={s.foundingTag}>Founding member</span>
+            <span className={s.foundingFace} aria-hidden>
+              K
+            </span>
             <div>
-              <h3 className="display">{FOUNDING.name}</h3>
+              <h3 className="display">
+                Know Kartikey? Like where todone is going?
+              </h3>
+              <p>
+                I&apos;m building todone in the open: private lists, no ads, no
+                selling your data, then phones and a calm e-ink screen. If
+                that&apos;s something you want to exist, back it once and
+                you&apos;re part of it from the start.
+              </p>
+              <p className={s.foundingSign}>— Kartikey, who makes todone</p>
               <p className={s.foundingPrice}>
                 <b className="display">{FOUNDING.inr}</b> / {FOUNDING.usd}{" "}
-                <small>once, for three years of Plus</small>
-              </p>
-              <p>
-                Instead of {FOUNDING.yearly} paying yearly at launch prices. No
-                renewals, and it all goes to the goals above straight away.
+                <small>
+                  once for three years of Plus (instead of {FOUNDING.yearly}),
+                  no renewals
+                </small>
               </p>
             </div>
-            <Pay plan="founding" fill="var(--lime)">
+            <Pay plan="founding" fill="var(--pink)">
               Become a founding member
             </Pay>
           </div>

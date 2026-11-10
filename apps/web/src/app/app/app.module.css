@@ -4981,41 +4981,10 @@ body[data-drag="task"] .listGoal {
   height: 100%;
   background: var(--lime);
 }
-.planPick,
 .termPick {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-}
-.planPick button {
-  display: grid;
-  gap: 0.15rem;
-  min-width: min(13rem, 100%);
-  padding: 0.8rem 1rem;
-  text-align: left;
-  color: var(--ink);
-  background: var(--raise);
-  border: 2.5px solid var(--hair);
-}
-.planPick button b {
-  font: 900 1.4rem/1 var(--display);
-  text-transform: uppercase;
-}
-.planPick button small {
-  font-weight: 600;
-  opacity: 0.8;
-}
-.planPick button[aria-checked="true"] {
-  color: var(--black);
-  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
-  --ink: var(--black);
-  --ink-2: #4a4540;
-  --hair: rgb(11 11 11 / 0.22);
-  --ground: #fff8ef;
-  --raise: #f3eadb;
-  background: var(--fill);
-  border-color: var(--black);
-  box-shadow: var(--lift-sm);
 }
 .termPick button {
   display: grid;
@@ -5066,10 +5035,6 @@ body[data-drag="task"] .listGoal {
   background: var(--raise);
   border: 2.5px solid var(--ink);
 }
-.quote {
-  min-height: 1.5em;
-  font-weight: 700;
-}
 .fine {
   font-size: 0.85rem;
   color: var(--ink-2);
@@ -5118,38 +5083,193 @@ body[data-drag="task"] .listGoal {
   padding: 16px;
   background: rgb(11 11 11 / 0.55);
 }
-.planNote {
+/* The plans dialog (PlanPrompt.tsx): a big butter sheet, Plus and Team side by side, and a note from Kartikey. */
+.paywall {
+  position: relative;
   display: grid;
-  gap: 0.7rem;
-  width: min(100%, 26rem);
-  padding: 1.4rem 1.5rem;
+  gap: 1rem;
+  width: min(100%, 56rem);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: clamp(1.25rem, 3vw, 2rem);
   color: var(--black);
-  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: 8px 8px 0 var(--black);
+  /* A light sticker reads like Day in both themes. */
   --ink: var(--black);
   --ink-2: #4a4540;
   --hair: rgb(11 11 11 / 0.22);
   --ground: #fff8ef;
   --raise: #f3eadb;
-  background: var(--butter);
-  border: var(--key);
-  box-shadow: 6px 6px 0 var(--black);
-  rotate: -1deg;
   animation: planIn 0.35s var(--ease);
 }
-.planMsg {
-  font-size: 1.7rem;
-  line-height: 1.05;
+.paywall h2 {
+  max-width: 40rem;
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
+  line-height: 0.95;
 }
-.planNote .fine {
+.paywallClose {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+}
+.paywallKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #fff8ef;
+  background: var(--black);
+  rotate: -1.5deg;
+}
+.payCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1.1rem;
+}
+.payCard {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 1.1rem 1.2rem 1rem;
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: 5px 5px 0 var(--black);
+}
+.payCard:nth-child(1) {
+  rotate: -0.6deg;
+}
+.payCard:nth-child(2) {
+  rotate: 0.5deg;
+}
+.payCard h3 {
+  font-size: 2rem;
+  line-height: 1;
+}
+.payPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.45rem;
+}
+.payPrice b {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+.payPrice s {
+  font-weight: 800;
+  opacity: 0.55;
+}
+.payPrice small {
+  font-weight: 700;
+}
+.payCard ul {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+.payCard li {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+.payCard li svg {
+  flex: none;
+  margin-top: 0.2rem;
+}
+.payCard .btn {
+  justify-self: start;
+}
+.payNote {
+  min-height: 1.2em;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #4a4540;
 }
-.planNote > div {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.paywallFoot {
+  font-size: 0.85rem;
+  color: #4a4540;
 }
-.planNote .link {
+.paywallDone {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 2rem 0 1rem;
+  text-align: center;
+}
+/* Founding member as a note from the person making todone: a face, a few honest lines, a signature. */
+.foundNote {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: 4px 4px 0 var(--black);
+  rotate: 0.4deg;
+}
+.foundNote[data-first] {
+  background: var(--pink);
+}
+@media (max-width: 520px) {
+  .foundNote {
+    grid-template-columns: 1fr;
+  }
+}
+.foundFace {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  font: 900 1.7rem/1 var(--display);
   color: var(--black);
+  background: var(--lime);
+  border: 2.5px solid var(--black);
+  border-radius: 50%;
+  rotate: -6deg;
+}
+.foundNote > div {
+  display: grid;
+  gap: 0.45rem;
+}
+.foundHi {
+  font: 900 1.35rem/1.05 var(--display);
+  text-transform: uppercase;
+}
+.foundSign {
+  font-style: italic;
+  font-weight: 700;
+}
+.foundAct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.foundAct small {
+  max-width: 22rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4a4540;
+}
+/* The diamond on things that need a plan. */
+.diamond {
+  flex: none;
+  color: var(--peri);
+  fill: color-mix(in srgb, var(--peri) 35%, transparent);
+  filter: drop-shadow(1px 1px 0 var(--black));
 }
 @keyframes planIn {
   from {
@@ -5158,7 +5278,15 @@ body[data-drag="task"] .listGoal {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .planNote {
+  .paywall {
     animation: none;
   }
+}
+.planTitle {
+  font-size: clamp(1.8rem, 4vw, 2.6rem) !important;
+  line-height: 1;
+}
+.planNow {
+  font-weight: 800;
+  color: var(--ink) !important;
 }

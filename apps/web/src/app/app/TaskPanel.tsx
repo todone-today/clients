@@ -43,6 +43,7 @@ import {
   shareView,
   workspaceKey,
 } from "./actions";
+import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { Focus } from "./Focus";
@@ -84,6 +85,7 @@ export function TaskPanel({
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [asking, setAsking] = useState(false);
+  const { gated } = usePlan();
   const [focusing, setFocusing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
@@ -486,11 +488,12 @@ export function TaskPanel({
           ) : (
             <button
               className={`btn ${s.panelShare}`}
-              onClick={() => setAsking(true)}
+              onClick={() => (gated ? needsPlan("Sharing comes with Plus.") : setAsking(true))}
               disabled={!!busy}
               title="Anyone with the link can see it, comment and add photos. No account needed."
             >
               <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share
+              {gated && <Diamond />}
             </button>
           )}
         </footer>

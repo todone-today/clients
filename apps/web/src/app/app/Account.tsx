@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, KeyRound, LogOut, Sparkles } from "lucide-react";
+import { Download, KeyRound, LogOut } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { toCSV } from "@todone/sdk/export";
 import { forget } from "@/lib/store";
 import { exportData } from "./actions";
 import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from "@/lib/vault";
+import { Billing } from "./Billing";
 import s from "./app.module.css";
 
 const save = (name: string, type: string, text: string) => {
@@ -21,7 +22,7 @@ const save = (name: string, type: string, text: string) => {
   URL.revokeObjectURL(a.href);
 };
 
-export function Account({ onPlan }: { onPlan: () => void }) {
+export function Account() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [hasPassword, setHasPassword] = useState(true);
@@ -74,14 +75,6 @@ export function Account({ onPlan }: { onPlan: () => void }) {
       </div>
 
       <section className={s.integration}>
-        <h2>Plan</h2>
-        <p>Your plan, payments and receipts.</p>
-        <button className={s.ghost} onClick={onPlan}>
-          <Sparkles size={16} strokeWidth={2.5} aria-hidden /> Plan &amp; billing
-        </button>
-      </section>
-
-      <section className={s.integration}>
         <h2>Your name</h2>
         <form
           className={s.add}
@@ -104,6 +97,8 @@ export function Account({ onPlan }: { onPlan: () => void }) {
           To change your email, write to us. <Link href="/privacy">Privacy Policy</Link> · <Link href="/terms">Terms</Link>
         </p>
       </section>
+
+      <Billing />
 
       {hasPassword && <ChangePassword email={user.email} />}
       {hasPassword && <Encryption email={user.email} />}

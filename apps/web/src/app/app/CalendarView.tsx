@@ -24,6 +24,7 @@ import {
   todayISO,
   waiting,
 } from "@todone/sdk/tasks";
+import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -56,6 +57,7 @@ export function CalendarView({
   // A shared view: only that period, no way to move to another one.
   locked?: boolean;
 }) {
+  const { gated } = usePlan();
   const today = todayISO();
   const [view, setView] = useState<View>(() =>
     VIEWS.includes(start?.view as View)
@@ -265,6 +267,7 @@ export function CalendarView({
           <button
             className={s.ghost}
             onClick={async () => {
+              if (gated) return needsPlan("Sharing comes with Plus.");
               const r = await share(view, at);
               if ("error" in r) return setShared(r.error);
               await navigator.clipboard.writeText(
@@ -276,6 +279,7 @@ export function CalendarView({
             }}
           >
             <Share2 size={16} strokeWidth={2.5} /> Share
+            {gated && <Diamond />}
           </button>
         )}
         {shared && (
