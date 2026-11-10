@@ -218,10 +218,7 @@ function FoundingNote({ price, busy, first, onBack }: { price: string; busy: str
           <button className="btn" style={{ "--fill": "var(--pink)" } as React.CSSProperties} disabled={!!busy} onClick={onBack}>
             <Heart size={16} strokeWidth={2.75} aria-hidden /> {busy === "founding" ? "Opening…" : `Back todone · ${price} once`}
           </button>
-          <small>
-            One payment gives you three years of Plus, and nothing renews. Every rupee goes towards the app-store accounts
-            and the first hardware prototypes.
-          </small>
+          <span className={s.foundChip}>3 years of Plus</span>
         </div>
       </div>
     </div>

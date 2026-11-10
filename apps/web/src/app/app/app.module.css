@@ -5254,11 +5254,14 @@ body[data-drag="task"] .listGoal {
   align-items: center;
   gap: 0.5rem 1rem;
 }
-.foundAct small {
-  max-width: 22rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #4a4540;
+.foundChip {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--black);
+  background: var(--lime);
+  border: 2.5px solid var(--black);
+  rotate: -3deg;
 }
 /* The diamond on things that need a plan. */
 .diamond {
