@@ -1225,7 +1225,7 @@ function ListView({
                     });
                   }}
                 >
-                  <BrushCleaning size={14} strokeWidth={2.5} aria-hidden /> Clear done
+                  <BrushCleaning size={17} strokeWidth={2.5} aria-hidden /> Clear done
                   ({list.tasks.filter((t) => t.done).length})
                 </button>
               )}
