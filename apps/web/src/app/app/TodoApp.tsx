@@ -406,8 +406,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       />
     );
 
+  // The tour points at the sidebar, so it shows in full while the tour runs (the saved choice is untouched).
+  const folded = slim && !touring;
   return (
-    <div className={s.shell} data-slim={slim || undefined}>
+    <div className={s.shell} data-slim={folded || undefined}>
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <header className={s.top}>
@@ -549,10 +551,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <button
           className={s.foldIn}
           onClick={toggleSlim}
-          aria-label={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
-          data-tip={slim ? "Show the sidebar" : "Fold the sidebar to icons"}
+          aria-label={folded ? "Show the sidebar" : "Fold the sidebar to icons"}
+          data-tip={folded ? "Show the sidebar" : "Fold the sidebar to icons"}
         >
-          {slim ? (
+          {folded ? (
             <PanelLeftOpen size={18} strokeWidth={2.5} aria-hidden />
           ) : (
             <PanelLeftClose size={18} strokeWidth={2.5} aria-hidden />
