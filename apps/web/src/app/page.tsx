@@ -88,7 +88,7 @@ export default function Home() {
             Sealed on your device. Our server only knows when, never what.
             <RemindDemo />
           </Chapter>
-          <Chapter n={7} tag="Calendars" title="Your calendar, in step." fill="var(--butter)" wide>
+          <Chapter n={7} tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
             Google, Apple and Outlook from one private link. Add it once.
             <ToolsDemo />
           </Chapter>
@@ -454,7 +454,7 @@ export default function Home() {
   );
 }
 
-// One feature per screen: a numbered tag, a big headline, one line, then the thing itself on a coloured stage.
+// One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
 function Chapter({
   n,
   tag,
@@ -472,10 +472,7 @@ function Chapter({
 }) {
   const [line, demo] = children;
   return (
-    <article className={s.chapter} data-reveal style={{ "--fill": fill } as React.CSSProperties}>
-      <span className={s.chapterTag}>
-        {String(n).padStart(2, "0")} · {tag}
-      </span>
+    <article className={s.chapter} data-reveal style={{ "--fill": fill } as React.CSSProperties} aria-label={tag}>
       <h2 className="display">{title}</h2>
       <p>{line}</p>
       <div className={s.stage} data-wide={wide || undefined}>

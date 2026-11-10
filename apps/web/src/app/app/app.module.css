@@ -4993,18 +4993,26 @@ body[data-drag="task"] .listGoal {
   color: var(--ink);
   border: 2.5px solid var(--hair);
 }
+.termPick button {
+  position: relative;
+}
+/* The launch price as a little pink tag pinned to the option, like the "Launch deal" sticker on the plans. */
 .termPick button small {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--ink-2);
+  justify-self: center;
+  margin-top: 0.3rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--pink);
+  border: 2px solid var(--black);
+  rotate: -3deg;
 }
 .termPick button[aria-checked="true"] {
   color: var(--ground);
   background: var(--ink);
   border-color: var(--ink);
-}
-.termPick button[aria-checked="true"] small {
-  color: inherit;
 }
 .seats {
   display: flex;
@@ -5120,19 +5128,6 @@ body[data-drag="task"] .listGoal {
   color: var(--black);
   background: #fff8ef;
   border: 2.5px solid var(--black);
-}
-.paywallKicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  justify-self: start;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #fff8ef;
-  background: var(--black);
-  rotate: -1.5deg;
 }
 .payCards {
   display: grid;

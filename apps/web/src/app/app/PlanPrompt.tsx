@@ -106,9 +106,6 @@ export function PlanPrompt() {
           </div>
         ) : (
           <>
-            <p className={s.paywallKicker}>
-              <Gem size={14} strokeWidth={2.75} aria-hidden /> {ask.reason ? "That needs a plan" : "Plans"}
-            </p>
             <h2 id="plans-h" className="display">
               {ask.reason ?? (founding ? "Back todone for the long run." : "Pick what fits.")}
             </h2>

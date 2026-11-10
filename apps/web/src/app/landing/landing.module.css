@@ -309,38 +309,30 @@ button.box:hover {
   justify-items: center;
   align-content: center;
   gap: 1.1rem;
-  min-height: 92svh;
-  padding: clamp(4rem, 10vh, 7rem) var(--gutter);
+  padding: clamp(5rem, 13vh, 9rem) var(--gutter);
   text-align: center;
-}
-.chapterTag {
-  padding: 0.25rem 0.7rem;
-  font-size: 0.85rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--black);
-  background: var(--fill);
-  border: 2.5px solid var(--black);
-  rotate: -2deg;
 }
 .chapter h2 {
   max-width: 16ch;
-  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-size: clamp(3rem, 7vw, 6rem);
   line-height: 0.9;
+  text-wrap: balance;
 }
 .chapter > p {
   max-width: 34rem;
   font-size: clamp(1.1rem, 1.6vw, 1.35rem);
   color: var(--ink-2);
+  text-wrap: balance;
 }
+/* The stage hugs its demo (with room around it); the calendar gets the width it needs. */
 .stage {
   display: grid;
   place-items: center;
-  width: min(100%, 44rem);
-  min-height: 22rem;
+  width: fit-content;
+  min-width: min(100%, 30rem);
+  max-width: min(100%, 44rem);
   margin-top: clamp(1.25rem, 3vh, 2.5rem);
-  padding: clamp(1.5rem, 4vw, 3.5rem);
+  padding: clamp(1.25rem, 4vw, 3rem);
   text-align: left;
   color: var(--black);
   background: var(--fill);
@@ -359,12 +351,27 @@ button.box:hover {
 }
 .stage[data-wide] {
   width: min(100%, 72rem);
+  max-width: none;
 }
 .stage > * {
   max-width: 100%;
 }
 .stage[data-wide] > * {
   width: 100%;
+}
+@media (max-width: 640px) {
+  .stage .block {
+    padding: 0.2rem;
+    font-size: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .stage {
+    min-width: 0;
+    width: 100%;
+  }
+  .stage[data-wide] {
+    padding: 0.75rem;
+  }
 }
 /* The fade-up, once JS has said it will reveal them (Reveal.tsx). */
 :global(html[data-reveals]) .chapter > * {
@@ -1195,6 +1202,8 @@ button.box:hover {
   overflow: hidden;
   padding: 0.3rem 0.4rem;
   font: 700 0.78rem/1.2 var(--sans);
+  overflow-wrap: anywhere;
+  hyphens: auto;
   text-align: left;
   color: var(--black);
   /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
