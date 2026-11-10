@@ -1471,112 +1471,135 @@ button.box:hover {
   font-size: 0.72rem;
 }
 
-/* Hardware: tabs by where it lives. */
-.hwDemo {
+/* Hardware: a studio. The scene big on the left (drag to turn), the three places as sticker tabs on the right, and
+   the picked one's pitch and funding goal under them. No scroll-jacking: the tabs are always there. */
+.hwStudio {
   display: grid;
-  gap: 1.5rem;
-}
-/* Scroll-driven: the section is three screens tall and the stage stays pinned while you scroll through it. */
-.hwTrack[data-pinned] {
-  height: 300vh;
-}
-.hwTrack[data-pinned] .hwDemo {
-  position: sticky;
-  top: 6rem;
-}
-/* The copy beside the scene follows the same scroll (--p, 0–1 through this device's part): the heading slides in as
-   the device spins in, the line after it, and the goal pops in as the device lands. */
-.placeCopy[data-synced] > * {
-  --in: clamp(0, calc((var(--p, 1) - var(--from)) * 6), 1);
-  opacity: var(--in);
-  translate: 0 calc((1 - var(--in)) * 18px);
-}
-.placeCopy[data-synced] > :nth-child(1) {
-  --from: 0.02;
-}
-.placeCopy[data-synced] > :nth-child(2) {
-  --from: 0.16;
-}
-.placeCopy[data-synced] > :nth-child(3) {
-  --from: 0.4;
-  scale: calc(0.85 + var(--in) * 0.15);
-}
-.places {
-  display: none; /* scrolling steps through the devices; the tabs are only for reduced motion, where it doesn't */
-  gap: 0.8rem;
-}
-@media (prefers-reduced-motion: reduce) {
-  .places {
-    display: flex;
-  }
-}
-.places button {
-  padding: 0.55rem 1.1rem;
-  font: 800 1rem var(--sans);
-  color: #fff8ef;
-  border: 2.5px solid #fff8ef;
-  cursor: pointer;
-  transition: transform 0.2s var(--ease);
-}
-.places button:hover {
-  transform: translateY(-2px);
-}
-.places button[aria-selected="true"] {
-  color: var(--black);
-  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
-  --ink: var(--black);
-  --ink-2: #4a4540;
-  --hair: rgb(11 11 11 / 0.22);
-  --ground: #fff8ef;
-  --raise: #f3eadb;
-  background: var(--lime);
-  border-color: var(--lime);
-}
-.place {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 2rem 3rem;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 2.5rem 3.5rem;
   align-items: center;
 }
-.place .shot {
-  border: 2.5px solid #2c2c2c;
-  max-height: 34rem;
-}
-/* The 3D hardware scene sits straight on the dark section (no frame), at a size that fits next to the copy.
-   Drag sideways turns it; vertical swipes still scroll. */
-.stage {
+.hwStage {
   position: relative;
   margin: 0;
 }
-.stage :global(.device3d) {
+.hwStage :global(.device3d) {
   width: 100%;
-  aspect-ratio: 16 / 11;
-  max-height: 26rem;
+  aspect-ratio: 4 / 3;
+  max-height: 36rem;
   cursor: grab;
   touch-action: pan-y;
 }
-.stage :global(.device3d):active {
+.hwStage :global(.device3d):active {
   cursor: grabbing;
 }
-.stage :global(.device3d) canvas {
+.hwStage :global(.device3d) canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
-.place h3 {
-  font-size: clamp(2.2rem, 4vw, 3.4rem);
+.hwStage .conceptTag {
+  top: 0.5rem;
+  left: 0;
 }
-.place p {
-  margin-top: 0.8rem;
+.hwSide {
+  display: grid;
+  gap: 2rem;
+}
+.places {
+  display: grid;
+  gap: 0.7rem;
+}
+.places button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  text-align: left;
+  color: #fff8ef;
+  border: 2.5px solid #4a4540;
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--ease),
+    background 0.2s,
+    border-color 0.2s;
+}
+.places button b {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+.places button small {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c9c2b8;
+}
+.places button:hover {
+  border-color: #fff8ef;
+}
+.places button[aria-selected="true"] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--black);
+  box-shadow: 6px 6px 0 #fff8ef;
+  rotate: -1deg;
+}
+.places button[aria-selected="true"] small {
+  color: #4a4540;
+}
+.placeCopy {
+  display: grid;
+  gap: 0.7rem;
+  animation: placeIn 0.45s var(--ease);
+}
+@keyframes placeIn {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+.placeCopy h3 {
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  line-height: 0.95;
+}
+.placeCopy p {
   max-width: 30rem;
   color: #c9c2b8;
 }
+.placeCopy small {
+  font-size: 0.85rem;
+  color: #c9c2b8;
+}
 .goalTag {
-  display: inline-block;
+  justify-self: start;
   padding: 0.3rem 0.7rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--black) !important;
   background: var(--butter);
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 #fff8ef;
+  rotate: -1.5deg;
+}
+@media (max-width: 900px) {
+  .hwStudio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .places {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .places button {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.7rem;
+  }
+  .places button small {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .placeCopy {
+    animation: none;
+  }
 }
 @media (max-width: 560px) {
   .goalHead b {
@@ -1598,8 +1621,7 @@ button.box:hover {
 }
 /* Phone layouts for the hands-on pieces (after their base rules, so they win). */
 @media (max-width: 900px) {
-  .goals,
-  .place {
+  .goals {
     grid-template-columns: minmax(0, 1fr);
   }
   .calc {
