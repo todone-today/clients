@@ -61,6 +61,7 @@ export function NotificationBell({
         style={{ "--fill": "var(--pink)" } as React.CSSProperties}
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        data-tour="bell"
         aria-label={count ? `Notifications, ${count} new` : "Notifications"}
         data-tip={open ? undefined : "Notifications"}
       >

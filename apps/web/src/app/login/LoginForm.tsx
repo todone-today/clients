@@ -9,6 +9,7 @@ import { adopt, derive, newAccount, setupLegacy, unlockWith } from "@/lib/vault"
 import { encryptPlainLists } from "@/app/app/actions";
 import { RecoveryKey } from "@/components/RecoveryKey";
 import s from "./login.module.css";
+import { PasswordInput } from "@/components/PasswordInput";
 
 // Only same-site paths, so the login page can't be used to bounce people elsewhere.
 const safeNext = () => {
@@ -116,9 +117,8 @@ export function LoginForm({
         {mode !== "reset" && (
           <label>
             <span>Password</span>
-            <input
+            <PasswordInput
               name="password"
-              type="password"
               required
               minLength={8}
               autoComplete={mode === "in" ? "current-password" : "new-password"}

@@ -24,8 +24,8 @@ const STEPS: Step[] = [
   {
     target: "stickers",
     panel: null,
-    title: "Stickers set when, how long, priority, repeat",
-    body: "Drag a task onto “Tomorrow” or “1 hr”, or a sticker onto a task. Ctrl/⌘-click tasks to do several at once.",
+    title: "Stickers set when, how long, how big",
+    body: "Date, time, length, effort (XS to XL), priority and repeat. Drag a task onto a sticker or a sticker onto a task. Ctrl/⌘-click tasks to do several at once; Ctrl/⌘+A takes them all.",
   },
   {
     target: "filters",
@@ -49,7 +49,7 @@ const STEPS: Step[] = [
     target: "ideas",
     panel: "ideas",
     title: "Brainstorm",
-    body: "Dump loose ideas here. When one is ready, drag it onto a list and it becomes a task.",
+    body: "Dump loose ideas here. When one is ready, drag it onto a list and it becomes a task. Not yet? Drag a task back here.",
   },
   {
     target: "calendar",
@@ -58,16 +58,34 @@ const STEPS: Step[] = [
     body: "Day, week, month or year. Drag tasks from “To plan” onto a time, and stretch a block to set how long.",
   },
   {
+    target: "goals",
+    panel: "goals",
+    title: "Goals for each list",
+    body: "A Gym list can aim for 68 kg, 5 visits a week or 120 g of protein a day. Log progress here, and drop a task on a goal to make it a milestone.",
+  },
+  {
+    target: "rewards",
+    panel: "rewards",
+    title: "Earn XP, treat yourself",
+    body: "Finishing tasks earns XP: more for bigger effort, high priority and being on time. Spend it on rewards you pick, like a cheat meal.",
+  },
+  {
     target: "ai",
     panel: null,
     title: "Import with AI",
     body: "Copy our prompt into any AI, describe your plans, paste the answer back: tasks with dates and times.",
   },
   {
+    target: "bell",
+    panel: null,
+    title: "Reminders, even with todone closed",
+    body: "Turn them on here: a nudge before a task's time, what's due each morning, and new comments on tasks you've shared.",
+  },
+  {
     target: "integrations",
     panel: null,
-    title: "Notifications and more",
-    body: "Turn on reminders on this device, and connect Google Calendar, Notion, Obsidian or Discord.",
+    title: "Your calendar and more",
+    body: "See your tasks in Apple, Google or Outlook Calendar, and connect Notion, Obsidian or Discord.",
   },
   { target: "tour", panel: null, title: "That's it", body: "Click the i up here to see this again. Have fun." },
 ];

@@ -22,6 +22,8 @@ import {
   PanelLeftOpen,
   Plus,
   Trash2,
+  ChevronDown,
+  BrushCleaning,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
@@ -433,14 +435,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Logo size={26} />
           </Link>
         ) : (
-          // Signed in, the logo is the app's home: back to your lists, not the marketing page.
-          <button
-            className={s.mark}
-            onClick={() => setPanel(null)}
-            aria-label="Your lists"
-          >
+          // Signed in, the logo is just the brand; the Lists tab is the way home.
+          <span className={s.mark}>
             <Logo size={26} />
-          </button>
+          </span>
         )}
         <nav className={s.tabs} aria-label="Views">
           {(
@@ -1167,7 +1165,7 @@ function ListView({
               {show === "done" && list.tasks.some((t) => t.done) && (
                 // Finished tasks (and their steps) go to the Bin for 7 days; the undo bar can put them back.
                 <button
-                  className={s.ghost}
+                  className={s.clearDone}
                   onClick={() => {
                     const before = list.tasks;
                     const gone = before.filter((t) => t.done);
@@ -1180,7 +1178,7 @@ function ListView({
                     });
                   }}
                 >
-                  <Trash2 size={14} strokeWidth={2.5} aria-hidden /> Clear done
+                  <BrushCleaning size={14} strokeWidth={2.5} aria-hidden /> Clear done
                   ({list.tasks.filter((t) => t.done).length})
                 </button>
               )}
@@ -1336,6 +1334,7 @@ function TaskRow({
   const me = authClient.useSession().data?.user.id;
   const open = selected === task.id;
   const [renaming, setRenaming] = useState(false);
+  const [folded, setFolded] = useFolded(task.id);
   const edit = (f: (t: Task) => Task | null) =>
     setTasks((ts) => mapTask(ts, task.id, f));
   const late = lateBy(task, today, nowMin);
@@ -1434,6 +1433,18 @@ function TaskRow({
         )}
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
+          {task.sub.length > 0 && (
+            <button
+              className={`${s.chip} ${s.fold}`}
+              onClick={() => setFolded(!folded)}
+              aria-expanded={!folded}
+              aria-label={`${folded ? "Show" : "Hide"} ${task.sub.length} step${task.sub.length === 1 ? "" : "s"}`}
+              title={folded ? "Show steps" : "Fold steps"}
+            >
+              <ChevronDown size={12} strokeWidth={3} aria-hidden />
+              {task.sub.filter((x) => x.done).length}/{task.sub.length}
+            </button>
+          )}
           {task.rep ? (
             <button
               className={s.chip}
@@ -1511,7 +1522,7 @@ function TaskRow({
         </span>
       </div>
 
-      {task.sub.length > 0 && (
+      {task.sub.length > 0 && !folded && (
         <ul className={s.subs}>
           {task.sub.map((x) => (
             <TaskRow key={x.id} task={x} {...row} />
@@ -1520,6 +1531,28 @@ function TaskRow({
       )}
     </li>
   );
+}
+
+// Which tasks have their steps folded away, remembered on this device (a view choice, not part of the list).
+const FOLD_KEY = "todone:folded";
+function useFolded(id: string) {
+  const [on, set] = useState(() => {
+    try {
+      return (JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]).includes(id);
+    } catch {
+      return false;
+    }
+  });
+  const save = (v: boolean) => {
+    set(v);
+    try {
+      const all = new Set(JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]);
+      if (v) all.add(id);
+      else all.delete(id);
+      localStorage.setItem(FOLD_KEY, JSON.stringify([...all].slice(-500)));
+    } catch {}
+  };
+  return [on, save] as const;
 }
 
 // A shared task's chip, with a badge for new anonymous comments (1, 2 … 9+) until its panel is opened.

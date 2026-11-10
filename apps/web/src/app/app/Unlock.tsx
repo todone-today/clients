@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { forget } from "@/lib/store";
 import { unlockWithPassword } from "@/lib/vault";
 import s from "@/app/login/login.module.css";
+import { PasswordInput } from "@/components/PasswordInput";
 
 // Signed in, but this browser doesn't hold your keys (site data cleared, or a new browser that kept the session).
 // The password opens them again; it never leaves this page.
@@ -40,7 +41,7 @@ export function Unlock({ userId, email, onDone }: { userId: string; email: strin
         </p>
         <label>
           <span>Password</span>
-          <input name="password" type="password" required autoComplete="current-password" autoFocus />
+          <PasswordInput name="password" required autoComplete="current-password" autoFocus />
         </label>
         {err && (
           <p className={s.err} role="alert">

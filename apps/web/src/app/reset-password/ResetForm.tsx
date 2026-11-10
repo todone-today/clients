@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo";
 import { RecoveryKey } from "@/components/RecoveryKey";
 import { recover, resetAccount } from "@/lib/vault";
 import s from "../login/login.module.css";
+import { PasswordInput } from "@/components/PasswordInput";
 
 // Where the reset email's link lands (?token=…, or ?error=INVALID_TOKEN when it's used or expired). Lists are
 // end-to-end encrypted, so a new password keeps them only with the recovery key; without it, a fresh start.
@@ -80,11 +81,11 @@ export function ResetForm() {
             )}
             <label>
               <span>New password</span>
-              <input name="password" type="password" required minLength={8} autoComplete="new-password" />
+              <PasswordInput name="password" required minLength={8} autoComplete="new-password" />
             </label>
             <label>
               <span>Again</span>
-              <input name="again" type="password" required minLength={8} autoComplete="new-password" />
+              <PasswordInput name="again" required minLength={8} autoComplete="new-password" />
             </label>
             {err && (
               <p className={s.err} role="alert">

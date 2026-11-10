@@ -46,7 +46,7 @@ import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
-import { EFFORT_XP, type Goal } from "@todone/sdk/goals";
+import { type Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
 
 const REPEATS = [
@@ -261,7 +261,7 @@ export function TaskPanel({
                 { value: "", label: "None" },
                 ...EFFORTS.map((e) => ({
                   value: e,
-                  label: `${e.toUpperCase()} · +${EFFORT_XP[e]} XP`,
+                  label: e.toUpperCase(),
                 })),
               ]}
               onChange={(v) =>

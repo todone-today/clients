@@ -4497,3 +4497,39 @@ body[data-drag="task"] .listGoal {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--ink);
 }
+/* Clear done: the same ink outline and size as the filter tabs beside it. */
+.clearDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 2px solid var(--ink);
+  transition: background 0.15s var(--ease);
+}
+.clearDone:hover {
+  background: var(--pink);
+  color: var(--black);
+}
+/* Fold a task's steps away; the chevron turns when folded. */
+.fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.fold svg {
+  transition: rotate 0.15s var(--ease);
+}
+.fold[aria-expanded="false"] svg {
+  rotate: -90deg;
+}
+.chips .fold:hover::after,
+.chips .fold:focus-visible::after {
+  content: "";
+}
+.chips .fold:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+}
