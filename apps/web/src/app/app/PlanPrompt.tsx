@@ -207,7 +207,7 @@ function FoundingNote({ price, busy, first, onBack }: { price: string; busy: str
         K
       </span>
       <div>
-        <p className={s.foundHi}>Know Kartikey? Like where todone is going?</p>
+        <p className={s.foundHi}>Know Kartikey personally? Like where todone is going?</p>
         <p>
           I&apos;m building todone in the open: private lists, no ads, no selling your data, then phones and a calm e-ink
           screen. If that&apos;s the kind of thing you want to exist, back it once and you&apos;re part of it from the
@@ -218,7 +218,10 @@ function FoundingNote({ price, busy, first, onBack }: { price: string; busy: str
           <button className="btn" style={{ "--fill": "var(--pink)" } as React.CSSProperties} disabled={!!busy} onClick={onBack}>
             <Heart size={16} strokeWidth={2.75} aria-hidden /> {busy === "founding" ? "Opening…" : `Back todone · ${price} once`}
           </button>
-          <small>Three years of Plus, no renewals. It all goes to the app-store accounts and hardware prototypes.</small>
+          <small>
+            One payment gives you three years of Plus, and nothing renews. Every rupee goes towards the app-store accounts
+            and the first hardware prototypes.
+          </small>
         </div>
       </div>
     </div>

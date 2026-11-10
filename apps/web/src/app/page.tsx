@@ -333,7 +333,7 @@ export default function Home() {
             </span>
             <div>
               <h3 className="display">
-                Know Kartikey? Like where todone is going?
+                Know Kartikey personally? Like where todone is going?
               </h3>
               <p>
                 I&apos;m building todone in the open: private lists, no ads, no
@@ -344,10 +344,13 @@ export default function Home() {
               <p className={s.foundingSign}>— Kartikey, who makes todone</p>
               <p className={s.foundingPrice}>
                 <b className="display">{FOUNDING.inr}</b> / {FOUNDING.usd}{" "}
-                <small>
-                  once for three years of Plus (instead of {FOUNDING.yearly}),
-                  no renewals
-                </small>
+                <small>paid once</small>
+              </p>
+              <p>
+                That gives you three years of Plus, and nothing renews (paying
+                yearly would come to {FOUNDING.yearly}). Every rupee goes
+                towards the app-store accounts and the first hardware
+                prototypes.
               </p>
             </div>
             <Pay plan="founding" fill="var(--pink)">
