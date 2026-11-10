@@ -234,6 +234,7 @@ function Idea({
     <li
       className={s.idea}
       data-id={idea.id}
+      data-card
       data-dragged={dragged || undefined}
       {...drop}
       style={{ "--fill": color } as React.CSSProperties}

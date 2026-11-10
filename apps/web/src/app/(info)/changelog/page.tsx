@@ -10,6 +10,16 @@ export const metadata: Metadata = {
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
     date: "10 November 2026",
+    title: "Dragging, smoothed out",
+    items: [
+      "You now carry the card itself, tilted in the air where you grabbed it, instead of a small label. Several picked show a count.",
+      "Notes move by default and the gap no longer flickers; making a step takes a short hold over a note's middle, and it says so.",
+      "The page scrolls when you drag near its edge, Esc puts the card back, and a dropped card glides into place.",
+      "On phones, the card lifts with a little buzz when it comes loose. With a keyboard, Alt + arrows move a note.",
+    ],
+  },
+  {
+    date: "10 November 2026",
     title: "Focus mode",
     items: [
       "Open a task and press Focus: just that task, filling the tab (not your whole screen), with a clock (and a soft tick-tock you can turn off).",

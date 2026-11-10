@@ -92,11 +92,19 @@ export default function Docs() {
       <h2 id="board">Moving things around</h2>
       <ul>
         <li>
-          Drag a note onto another note&apos;s left or right edge to reorder;
-          the others slide aside to show where it lands.
+          Pick a note up and move it: a gap opens where it will land and the
+          others slide aside. Let go anywhere near, even between notes.
         </li>
         <li>
-          Drop a note in the middle of another to make it a step of that task.
+          To make it a step, hold it over the middle of another note for a
+          moment until that note says <b>+ Make it a step</b>.
+        </li>
+        <li>
+          Esc while dragging puts it back. Near the top or bottom of the window
+          the page scrolls for you.
+        </li>
+        <li>
+          With the keyboard, Alt + arrow keys move the focused note.
         </li>
         <li>
           Drag notes onto a list in the sidebar to move them there; drag lists

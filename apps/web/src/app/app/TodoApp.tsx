@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Target,
   ListChecks,
@@ -778,6 +778,8 @@ function Privacy({ list, update }: { list: List; update: Update }) {
   );
 }
 
+// Only read in drag handlers (never while rendering), for how long a drag has rested on one note.
+const clockNow = () => performance.now();
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
 function ListView({
@@ -854,22 +856,49 @@ function ListView({
         ),
       );
   };
-  // Dropping a task: on a note's left or right edge puts it before or after; in the middle nests it.
-  // Among subtasks, the top or bottom half puts it above or below.
-  // While sorted, the screen isn't your order, so edges nest too instead of reordering.
-  const place = (arg: string, at: At) =>
-    !isTop(arg)
-      ? placeOn(at, "y", false)
-      : sort === "mine"
-        ? placeOn(at, "x")
-        : ("inside" as const);
-  // While a note is dragged over another's left or right edge, an empty slot opens there and the
-  // neighbours shift aside; the slot is a drop target too, so the gap holds while the pointer is in it.
+  // Dropping a task moves it by default: onto a note's left or right half (or the gap beside it) puts it there.
+  // Holding it over a note's middle for a moment makes it a step of that note instead, and the note says so.
+  // Among steps, the top or bottom half puts it above or below. While sorted, the screen isn't your order, so
+  // dropping on a note nests (after the same pause) and there's nothing to reorder.
+  const NEST_AFTER = 450;
+  type Aim = "before" | "after" | "inside" | "hold"; // hold: resting on a note's middle, not yet a step
+  const dwell = useRef<{ arg: string; since: number } | null>(null);
+  const aim = useRef<{ arg: string; where: Aim; side: "before" | "after" } | null>(null);
+  const place = (arg: string, at: At): Aim => {
+    if (!isTop(arg)) return placeOn(at, "y", false);
+    const r = at.el.getBoundingClientRect();
+    const f = (at.x - r.left) / r.width;
+    if (sort === "mine" && (f <= 0.3 || f >= 0.7)) {
+      dwell.current = null;
+      return f < 0.5 ? "before" : "after";
+    }
+    // The middle never moves the layout (that's what made notes flicker): it waits, then offers to nest.
+    if (dwell.current?.arg !== arg) dwell.current = { arg, since: clockNow() };
+    return clockNow() - dwell.current.since >= NEST_AFTER ? "inside" : "hold";
+  };
+  // Over the board's empty space or the gutters: the nearest note, and its nearer side.
+  const nearest = (ids: string[], at: At) => {
+    let best: { id: string; d: number; side: "before" | "after" } | null = null;
+    for (const el of at.el.querySelectorAll<HTMLElement>(":scope > [data-id]")) {
+      const id = el.dataset.id!;
+      if (ids.includes(id)) continue;
+      const r = el.getBoundingClientRect();
+      const dx = Math.max(r.left - at.x, 0, at.x - r.right);
+      const dy = Math.max(r.top - at.y, 0, at.y - r.bottom);
+      const d = dy * 3 + dx; // same row first
+      if (!best || d < best.d) best = { id, d, side: at.x < r.left + r.width / 2 ? "before" : "after" };
+    }
+    return best;
+  };
+  // While a note is dragged, an empty slot opens where it would land and the neighbours shift aside; the slot is
+  // a drop target too, so the gap holds while the pointer is in it.
   const [gap, setGap] = useState<{
     target: string;
     place: "before" | "after";
     ids: string[];
   } | null>(null);
+  const openGap = (slot: typeof gap) =>
+    setGap((g) => (g?.target === slot?.target && g?.place === slot?.place ? g : slot));
   // Notes glide to their new spots when the slot opens or moves, or a drop lands.
   const boardRef = useGlide<HTMLUListElement>();
   const drop = useDrop(`list-${list.id}`, {
@@ -882,36 +911,52 @@ function ListView({
           (arg === "gap"
             ? !!gap
             : arg === "unnest"
-              ? p.ids.some((id) => !isTop(id))
+              ? p.ids.some((id) => !isTop(id)) || sort === "mine"
               : !!findTask(list.tasks, arg)),
     where: (p, arg, at) => {
-      if (p.kind !== "task" || arg === "unnest") return "inside";
+      if (p.kind !== "task") return "inside";
       if (arg === "gap") return "inside";
+      if (arg === "unnest") {
+        dwell.current = null;
+        const n = sort === "mine" && p.ids.every(isTop) ? nearest(p.ids, at) : null;
+        openGap(n ? { target: n.id, place: n.side, ids: p.ids } : null);
+        aim.current = null;
+        return "inside";
+      }
       const where = place(arg, at);
-      const slot =
-        isTop(arg) && where !== "inside"
-          ? { target: arg, place: where, ids: p.ids }
-          : null;
-      setGap((g) =>
-        g?.target === slot?.target && g?.place === slot?.place ? g : slot,
-      );
+      const r = at.el.getBoundingClientRect();
+      aim.current = { arg, where, side: at.x < r.left + r.width / 2 ? "before" : "after" };
+      if (where === "before" || where === "after")
+        openGap(isTop(arg) ? { target: arg, place: where, ids: p.ids } : null);
       return where;
     },
-    leave: () => setGap(null),
+    leave: () => {
+      setGap(null);
+      dwell.current = null;
+    },
     drop: (p, arg, at) => {
       setGap(null);
+      dwell.current = null;
       if (p.kind === "sticker")
         applySticker(p.key, picked.has(arg) ? [...picked] : [arg]);
       else if (p.kind === "task") {
+        // What the screen showed is what happens: the last answer for this target, not a fresh guess.
+        const last = aim.current?.arg === arg ? aim.current : null;
+        const where = last?.where ?? place(arg, at);
         setTasks((ts) =>
-          arg === "gap" && gap
-            ? moveTasks(ts, p.ids, gap.target, gap.place)
+          (arg === "gap" || arg === "unnest" || where === "hold") && gap
+            ? moveTasks(ts, p.ids, gap.target, gap.place) // into the open slot
             : arg === "unnest"
               ? p.ids.reduce((acc, id) => unnest(acc, id), ts)
-              : moveTasks(ts, p.ids, arg, place(arg, at)),
+              : where === "hold"
+                ? sort === "mine"
+                  ? moveTasks(ts, p.ids, arg, last?.side ?? "after")
+                  : moveTasks(ts, p.ids, arg, "inside")
+                : moveTasks(ts, p.ids, arg, where),
         );
         setPicked(new Set());
       }
+      aim.current = null;
     },
   });
   // The bin takes tasks, or a date sticker: then every task due that day goes. Either way, undo puts the list back.
@@ -1360,6 +1405,7 @@ function TaskRow({
     <li
       className={top ? s.note : s.taskItem}
       data-id={top ? task.id : undefined}
+      data-card={top || undefined}
       data-open={open || undefined}
       data-dragged={dragged || undefined}
       style={
@@ -1426,7 +1472,22 @@ function TaskRow({
             className={s.taskTitle}
             onClick={() => onSelect(open ? null : task.id)}
             onDoubleClick={() => setRenaming(true)}
-            onKeyDown={(e) => e.key === "Escape" && open && onSelect(null)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && open) onSelect(null);
+              // Alt + arrows move a note among its neighbours, for keyboards (and anyone who'd rather not drag).
+              const back = e.key === "ArrowLeft" || e.key === "ArrowUp";
+              if (!top || !e.altKey || !(back || e.key === "ArrowRight" || e.key === "ArrowDown")) return;
+              e.preventDefault();
+              let el = e.currentTarget.closest("li")?.[back ? "previousElementSibling" : "nextElementSibling"];
+              while (el && !(el as HTMLElement).dataset.id) el = el[back ? "previousElementSibling" : "nextElementSibling"];
+              const to = (el as HTMLElement | null)?.dataset.id;
+              if (!to) return;
+              setTasks((ts) => moveTasks(ts, [task.id], to, back ? "before" : "after"));
+              const id = task.id;
+              requestAnimationFrame(() =>
+                document.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"] [aria-pressed]`)?.focus(),
+              );
+            }}
             aria-pressed={open}
             title="Click to pick, double-click to rename"
           >

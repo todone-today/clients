@@ -19,7 +19,7 @@ const STEPS: Step[] = [
     target: "board",
     panel: null,
     title: "Tasks are sticky notes",
-    body: "Drag a note onto another to make it a step. Drop it on a note's left or right edge to reorder. Click a name to edit it.",
+    body: "Pick one up and drop it where the gap opens to reorder. Hold it over another note's middle to make it a step. Click a name to edit it.",
   },
   {
     target: "stickers",

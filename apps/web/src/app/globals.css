@@ -221,6 +221,55 @@ img {
   box-shadow: var(--lift-sm);
   rotate: -2deg;
 }
+/* The card itself, lifted while it's dragged (src/lib/drag.ts): a little bigger, tilted, with a deeper shadow. */
+.drag-card {
+  position: fixed !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transition: none !important;
+  rotate: 2.5deg;
+  scale: 1.04;
+  box-shadow: 10px 12px 0 rgb(11 11 11 / 0.35) !important;
+  will-change: transform;
+}
+.drag-card[data-bare] {
+  color: var(--ink);
+  background: var(--ground) !important;
+  border: 2.5px solid var(--ink) !important;
+}
+.drag-card[data-settling] {
+  box-shadow: none !important;
+}
+/* Several picked: a count sticker on the corner. */
+.drag-card[data-count]::before {
+  content: attr(data-count);
+  position: absolute;
+  top: -0.7rem;
+  right: -0.7rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.3rem;
+  font: 800 0.8rem var(--sans);
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  rotate: -6deg;
+}
+[data-dragging] {
+  opacity: 0.3;
+  filter: grayscale(0.6);
+}
+[data-lifting] {
+  scale: 1.04;
+  transition: scale 0.15s var(--ease);
+}
 body.is-dragging,
 body.is-dragging * {
   cursor: grabbing !important;

@@ -4640,3 +4640,35 @@ body[data-drag="task"] .listGoal {
   color: var(--ink);
   border: 2px solid var(--ink);
 }
+
+/* Dragging a note over another: the gap shows where it'll go, so the edges need no outline. Held over the
+   middle, the note offers to take it as a step. */
+.note > .row[data-over="before"],
+.note > .row[data-over="after"] {
+  outline: none;
+}
+:global(body[data-drag="task"]) .note > .row[data-over="inside"] {
+  position: relative;
+  outline: 3px solid var(--black);
+  outline-offset: 4px;
+}
+:global(body[data-drag="task"]) .note > .row[data-over="inside"]::after {
+  content: "+ Make it a step";
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 5;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  rotate: -2deg;
+}
+/* While a note offers to take a step, the open slot steps back: only one outcome on screen. */
+.tasks:has(> .note > .row[data-over="inside"]) > .slot {
+  opacity: 0.2;
+}
