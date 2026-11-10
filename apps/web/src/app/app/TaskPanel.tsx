@@ -468,7 +468,7 @@ export function TaskPanel({
               className={`btn ${s.panelShare} ${s.panelFocus}`}
               style={{ "--fill": "var(--lime)" } as React.CSSProperties}
               onClick={() => setFocusing(true)}
-              title="Full screen, with a timer. The time goes on the task."
+              title="Just this task across the tab, with a timer. The time goes on the task."
             >
               <Timer size={16} strokeWidth={2.5} aria-hidden /> Focus
             </button>

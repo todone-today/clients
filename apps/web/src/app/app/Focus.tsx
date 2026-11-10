@@ -8,7 +8,7 @@ import { Confetti } from "@/components/Confetti";
 import { authClient } from "@/lib/auth-client";
 import s from "./app.module.css";
 
-// Focus: one task, full screen, with a running clock (and a soft tick-tock, if you like). The minutes go onto the
+// Focus: one task across the whole tab, with a running clock (and a soft tick-tock, if you like). The minutes go onto the
 // task's "spent" time (⏳ on its card) when you finish or step out, so you learn how long things really take.
 const SOUND = "todone:focus-sound";
 const clock = (ms: number) => {
@@ -61,7 +61,6 @@ export function Focus({
   onExit: () => void;
 }) {
   const me = authClient.useSession().data?.user.id;
-  const box = useRef<HTMLDivElement>(null);
   // Elapsed time is banked time plus the current run, so a throttled background tab still counts right.
   const [banked, setBanked] = useState(0);
   const [since, setSince] = useState<number | null>(() => Date.now());
@@ -92,15 +91,12 @@ export function Focus({
     if (sound && second > 0) tickSound(second % 2 === 1);
   }, [second, since, sound, finished]);
 
-  // Full screen where the browser allows it, the screen kept awake, and the clock in the tab's title.
+  // It fills the tab only (other tabs and windows stay free); the screen is kept awake, and the clock is in the title.
   useEffect(() => {
-    const el = box.current;
-    el?.requestFullscreen?.().catch(() => {});
     let lock: WakeLockSentinel | undefined;
     navigator.wakeLock?.request("screen").then((l) => (lock = l), () => {});
     const title = document.title;
     return () => {
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       lock?.release().catch(() => {});
       document.title = title;
     };
@@ -158,7 +154,7 @@ export function Focus({
   const step = (id: string) => edit((t) => tick([t], id, todayISO(), me)[0] ?? t);
 
   return createPortal(
-    <div ref={box} className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`}>
+    <div className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`}>
       {finished !== null && <Confetti />}
       <div className={s.focusCard} style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}>
         <p className={s.focusKicker}>{finished !== null ? "Done" : since === null ? "Paused" : "Focusing on"}</p>

@@ -110,7 +110,7 @@ export default function Docs() {
 
       <h2 id="focus">Focus mode</h2>
       <p>
-        Open a task and press <b>Focus</b>: just that task, full screen, with a
+        Open a task and press <b>Focus</b>: just that task, filling the tab (other tabs and windows stay free), with a
         clock running and a soft tick-tock (the speaker turns it off). Tick its
         steps as you go. If the task has a length, a bar shows what&apos;s left;
         going over is fine. <b>Done</b> ticks it off; stepping out with the ×
