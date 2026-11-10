@@ -299,51 +299,93 @@ button.box:hover {
 }
 
 /* ---------- Features: each one shown as the note it makes ---------- */
+/* ---------- Features: one at a time ---------- */
+/* Each chapter has the screen to itself: a numbered tag, a big headline, one line, then the real thing on a stage. */
 .features {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: clamp(1.5rem, 3vw, 2.5rem);
-  padding: 2rem var(--gutter) 6rem;
 }
-.feat {
-  grid-column: span 5;
+.chapter {
   display: grid;
-  align-content: start;
-  gap: 1rem;
-  /* Plain blocks line up with their hairline and the page edge; cards (.dark) pad their insides. */
-  padding: clamp(1.5rem, 3vw, 2.25rem) 0;
-  border-top: 2px solid var(--hair);
+  justify-items: center;
+  align-content: center;
+  gap: 1.1rem;
+  min-height: 92svh;
+  padding: clamp(4rem, 10vh, 7rem) var(--gutter);
+  text-align: center;
 }
-.wide {
-  grid-column: span 7;
-}
-.half {
-  grid-column: span 6;
-}
-.full {
-  grid-column: 1 / -1;
-}
-.feat h2 {
-  font-size: clamp(2.2rem, 4vw, 3.4rem);
-}
-.feat > p {
-  max-width: 36rem;
-  color: var(--ink-2);
-  font-size: 1.05rem;
-}
-.dark {
-  padding: clamp(1.5rem, 3vw, 2.25rem);
+.chapterTag {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--black);
-  background: var(--card, var(--orange));
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  rotate: -2deg;
+}
+.chapter h2 {
+  max-width: 16ch;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  line-height: 0.9;
+}
+.chapter > p {
+  max-width: 34rem;
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  color: var(--ink-2);
+}
+.stage {
+  display: grid;
+  place-items: center;
+  width: min(100%, 44rem);
+  min-height: 22rem;
+  margin-top: clamp(1.25rem, 3vh, 2.5rem);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  text-align: left;
+  color: var(--black);
+  background: var(--fill);
   border: var(--key);
   box-shadow: var(--lift);
-  rotate: var(--tilt, 0.6deg);
+  rotate: -0.5deg;
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
 }
-.dark > p {
-  color: var(--black);
+.chapter:nth-child(even) .stage {
+  rotate: 0.5deg;
 }
-.dark {
-  align-self: start;
+.stage[data-wide] {
+  width: min(100%, 72rem);
+}
+.stage > * {
+  max-width: 100%;
+}
+.stage[data-wide] > * {
+  width: 100%;
+}
+/* The fade-up, once JS has said it will reveal them (Reveal.tsx). */
+:global(html[data-reveals]) .chapter > * {
+  opacity: 0;
+  translate: 0 2.5rem;
+  transition:
+    opacity 0.7s var(--ease),
+    translate 0.9s var(--ease);
+}
+:global(html[data-reveals]) .chapter[data-in] > * {
+  opacity: 1;
+  translate: 0 0;
+}
+:global(html[data-reveals]) .chapter[data-in] > :nth-child(2) {
+  transition-delay: 0.08s;
+}
+:global(html[data-reveals]) .chapter[data-in] > :nth-child(3) {
+  transition-delay: 0.16s;
+}
+:global(html[data-reveals]) .chapter[data-in] > :nth-child(4) {
+  transition-delay: 0.26s;
 }
 .dark .stepNote,
 .shared {
@@ -983,11 +1025,6 @@ button.box:hover {
 @media (max-width: 1100px) {
   .links {
     display: none;
-  }
-  .feat,
-  .wide,
-  .half {
-    grid-column: span 12;
   }
   .ways {
     grid-template-columns: repeat(2, minmax(0, 1fr));

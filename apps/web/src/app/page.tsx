@@ -28,6 +28,7 @@ import {
   WeekDemo,
 } from "./landing/Demos";
 import { HeroBoard } from "./landing/HeroBoard";
+import { Reveal } from "./landing/Reveal";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
 
@@ -61,90 +62,36 @@ export default function Home() {
       <main>
         <HeroBoard />
 
-        {/* What it does today: every feature is something you can try right here. */}
-        <section
-          id="features"
-          className={s.features}
-          aria-label="What todone does"
-        >
-          <article className={s.feat}>
-            <h2 className="display">Big task, small steps.</h2>
-            <p>
-              Drop one note onto another and it becomes a step. Steps travel
-              with their task, and fold away when you don&apos;t need them.
-            </p>
+        {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
+        <section id="features" className={s.features} aria-label="What todone does">
+          <Chapter n={1} tag="Steps" title="Big task, small steps." fill="var(--butter)">
+            Drop one note on another and it becomes a step. Fold them away when you&apos;re done looking.
             <StepsDemo />
-          </article>
-
-          <article className={`${s.feat} ${s.wide}`}>
-            <h2 className="display">Plan the week by dragging it there.</h2>
-            <p>
-              Day, week, month or year. Drag tasks onto a time and stretch a
-              block to set how long it takes. Share one view with a private
-              link.
-            </p>
-            {SHOTS.calendar.src ? (
-              <Shot
-                shot={SHOTS.calendar}
-                sizes="(max-width: 1100px) 100vw, 58vw"
-              />
-            ) : (
-              <WeekDemo />
-            )}
-          </article>
-
-          <article className={`${s.feat} ${s.half}`}>
-            <h2 className="display">One list, the whole house.</h2>
-            <p>
-              Make a team, invite people, and plan together. Changes show up on
-              everyone&apos;s screens within seconds. Or share one task by link
-              with anyone, no account needed, and talk it through there.
-            </p>
+          </Chapter>
+          <Chapter n={2} tag="Calendar" title="Plan the week by dragging it there." fill="var(--cyan)" wide>
+            Drag a task onto a time; stretch the block to say how long.
+            {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />}
+          </Chapter>
+          <Chapter n={3} tag="Together" title="One list, the whole house." fill="var(--pink)">
+            Plan with a team, or share one task by link with anyone. No account needed.
             <SharedDemo />
-          </article>
-
-          <article className={`${s.feat} ${s.half} ${s.dark}`}>
-            <h2 className="display">No signal? Keep going.</h2>
-            <p>
-              todone opens without a connection, shows your lists as last saved,
-              and saves what you change once you&apos;re back. Try it:
-            </p>
+          </Chapter>
+          <Chapter n={4} tag="Offline" title="No signal? Keep going." fill="var(--orange)">
+            It opens without a connection and saves what you change once you&apos;re back. Try it.
             <OfflineDemo />
-          </article>
-
-          <article className={`${s.feat} ${s.half}`}>
-            <h2 className="display">Goals you can feel.</h2>
-            <p>
-              Give a list its goals: a number to reach, a habit, a daily amount,
-              or milestones. Log in a tap and earn XP; bigger tasks (XS to XL)
-              earn more. Spend it on rewards you set yourself. No streak to
-              break.
-            </p>
+          </Chapter>
+          <Chapter n={5} tag="Goals" title="Goals you can feel." fill="var(--lime)">
+            Log in a tap, earn XP, spend it on rewards you choose. No streak to break.
             <GoalsDemo />
-          </article>
-
-          <article
-            className={`${s.feat} ${s.half} ${s.dark}`}
-            style={{ "--card": "var(--peri)", "--tilt": "-0.6deg" } as React.CSSProperties}
-          >
-            <h2 className="display">Reminders that can&apos;t read you.</h2>
-            <p>
-              A nudge before a task&apos;s time and a summary at 8, even with
-              todone closed. Each one is sealed on your device for your browser;
-              our server only knows when to send it.
-            </p>
+          </Chapter>
+          <Chapter n={6} tag="Reminders" title="Reminders that can't read you." fill="var(--peri)">
+            Sealed on your device. Our server only knows when, never what.
             <RemindDemo />
-          </article>
-
-          <article className={`${s.feat} ${s.full}`}>
-            <h2 className="display">Your calendar, in step.</h2>
-            <p>
-              Google Calendar, Apple Calendar and Outlook, from one private
-              link: add it once and your dated tasks show up in your calendar.
-              More once these are rock solid.
-            </p>
+          </Chapter>
+          <Chapter n={7} tag="Calendars" title="Your calendar, in step." fill="var(--butter)" wide>
+            Google, Apple and Outlook from one private link. Add it once.
             <ToolsDemo />
-          </article>
+          </Chapter>
         </section>
 
         {/* Why it's different, said once, plainly, beside the real thing. */}
@@ -478,6 +425,7 @@ export default function Home() {
             Start a list <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
           </Link>
         </section>
+        <Reveal />
       </main>
 
       <footer className={s.foot}>
@@ -500,5 +448,36 @@ export default function Home() {
         </a>
       </footer>
     </>
+  );
+}
+
+// One feature per screen: a numbered tag, a big headline, one line, then the thing itself on a coloured stage.
+function Chapter({
+  n,
+  tag,
+  title,
+  fill,
+  wide,
+  children,
+}: {
+  n: number;
+  tag: string;
+  title: string;
+  fill: string;
+  wide?: boolean;
+  children: [React.ReactNode, React.ReactNode];
+}) {
+  const [line, demo] = children;
+  return (
+    <article className={s.chapter} data-reveal style={{ "--fill": fill } as React.CSSProperties}>
+      <span className={s.chapterTag}>
+        {String(n).padStart(2, "0")} · {tag}
+      </span>
+      <h2 className="display">{title}</h2>
+      <p>{line}</p>
+      <div className={s.stage} data-wide={wide || undefined}>
+        {demo}
+      </div>
+    </article>
   );
 }
