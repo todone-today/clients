@@ -1617,14 +1617,140 @@ button.box:hover {
   padding: 6rem var(--gutter);
 }
 .zk h2 {
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
-  text-wrap: balance;
+  font-size: clamp(3.2rem, 8vw, 6rem);
+  line-height: 0.88;
 }
-.zk .way {
-  cursor: default;
+/* The same task twice: readable on a cream sticker, scrambled on the server's black one. */
+.zkPair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  margin: 3rem 0 4rem;
 }
-.zk .way:hover {
-  transform: none;
+.zkPair figure {
+  display: grid;
+  gap: 0.6rem;
+  align-content: center;
+  min-height: 11rem;
+  padding: 1.5rem 1.75rem;
+  border: var(--key);
+}
+.zkPair figcaption {
+  justify-self: start;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.zkYou {
+  color: var(--black);
+  background: #fff8ef;
+  box-shadow: var(--lift);
+  rotate: -1deg;
+}
+.zkYou figcaption {
+  color: #fff8ef;
+  background: var(--black);
+}
+.zkYou p {
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  line-height: 0.95;
+}
+.zkUs {
+  color: var(--lime);
+  background: var(--black);
+  border-color: #fff8ef !important;
+  box-shadow: 6px 6px 0 #fff8ef;
+  rotate: 0.8deg;
+}
+.zkUs figcaption {
+  color: var(--black);
+  background: var(--lime);
+}
+.zkUs p {
+  font: 600 clamp(1rem, 1.6vw, 1.3rem) / 1.4 var(--mono);
+  overflow-wrap: anywhere;
+}
+.zkArrow {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  border-radius: 50%;
+}
+/* The promises, said big: a display line with its key words on a sticker, and one plain line under it. */
+.zkLines {
+  display: grid;
+  list-style: none;
+}
+.zkLines li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.6rem 3rem;
+  align-items: end;
+  padding: 1.75rem 0;
+  border-top: 2px solid var(--hair);
+}
+.zkBig {
+  font-size: clamp(2.4rem, 5.4vw, 4.6rem);
+  line-height: 0.92;
+}
+.zkLines mark {
+  padding: 0 0.15em;
+  color: var(--black);
+  background: var(--fill);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.zkLines li:nth-child(odd) mark {
+  rotate: -1deg;
+}
+.zkLines span {
+  max-width: 28rem;
+  padding-bottom: 0.4rem;
+  font-size: 1.05rem;
+  color: var(--ink-2);
+}
+.zkSee {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 46rem;
+  margin-top: 3rem;
+  padding: 1.5rem 1.75rem;
+  border: 2.5px dashed var(--ink-2);
+}
+.zkSee h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+.zkSee ul {
+  display: grid;
+  gap: 0.45rem;
+  padding-left: 1.2rem;
+  color: var(--ink-2);
+}
+.zkSee li::marker {
+  color: var(--lime);
+}
+@media (max-width: 820px) {
+  .zkPair {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+  .zkArrow {
+    justify-self: center;
+  }
+  .zkLines li {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Goals demo: two of a list's goals as sticky notes, logged with a click. */
@@ -2012,4 +2138,109 @@ button.box:hover {
 }
 .stepNote ul[hidden] {
   display: none;
+}
+
+/* Focus demo: the task on a dark sheet with a big clock; Done leaves the card with its ⏳ chip. */
+.focusDemo {
+  display: grid;
+  justify-items: center;
+  width: min(100%, 28rem);
+}
+.focusSheet {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 1.6rem 1.4rem 1.4rem;
+  text-align: center;
+  color: #fff8ef;
+  background: var(--black);
+  border: 2.5px solid var(--black);
+  box-shadow: 6px 6px 0 #fff8ef;
+  /* The sheet is dark on the hot stage: its own tokens. */
+  --ink: #fff8ef;
+  --ink-2: #c9c2b8;
+}
+.focusSheet small {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #c9c2b8;
+}
+.focusSheet > b {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  line-height: 0.95;
+}
+.focusClockDemo {
+  font-size: clamp(3.6rem, 10vw, 5.2rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--lime);
+}
+.focusSheet:not([data-on]) .focusClockDemo {
+  color: #fff8ef;
+  opacity: 0.7;
+}
+.focusBarDemo {
+  width: 100%;
+  height: 0.55rem;
+  background: #2c2c2c;
+  border: 2px solid #fff8ef;
+}
+.focusBarDemo i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  transform-origin: left;
+  transition: transform 0.6s var(--ease);
+}
+.focusButtons {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.focusAfter {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  text-align: center;
+}
+.focusAfter p {
+  max-width: 22rem;
+  font-weight: 700;
+}
+.focusCardDone {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  color: var(--black);
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: 5px 5px 0 var(--black);
+  rotate: -1.5deg;
+}
+.focusCardDone b {
+  text-decoration: line-through;
+}
+.focusTick {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #fff8ef;
+  background: var(--black);
+}
+.focusChip {
+  padding: 0.05rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+@media (prefers-reduced-motion: reduce) {
+  .focusBarDemo i {
+    transition: none;
+  }
 }

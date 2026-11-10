@@ -10,6 +10,8 @@ import {
   CloudOff,
   ChevronDown,
   Lock,
+  Pause,
+  Play,
   Popcorn,
   Target,
   Wifi,
@@ -453,6 +455,74 @@ export function GoalsDemo() {
           {claimed ? "Again" : `Claim · ${MOVIE} XP`}
         </button>
       </div>
+    </div>
+  );
+}
+
+// Focus mode, small: one task, a clock that runs (fast-forwarded so the demo moves), and Done puts the time on the
+// task's card, the ⏳ chip the app shows.
+const clockOf = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+export function FocusDemo() {
+  const [secs, setSecs] = useState(0);
+  const [on, setOn] = useState(false);
+  const [done, setDone] = useState<number | null>(null);
+  useEffect(() => {
+    if (!on) return;
+    // A minute every second, so a short visit still shows the clock doing its job.
+    const id = setInterval(() => setSecs((x) => x + 60), 1000);
+    return () => clearInterval(id);
+  }, [on]);
+  const goal = 25 * 60;
+  const finish = () => {
+    setOn(false);
+    setDone(Math.max(1, Math.round(secs / 60)));
+  };
+  return (
+    <div className={s.focusDemo}>
+      {done === null ? (
+        <div className={s.focusSheet} data-on={on || undefined}>
+          <small>{on ? "Focusing on" : secs ? "Paused" : "Focus"}</small>
+          <b className="display">Write the launch post</b>
+          <p className={`display ${s.focusClockDemo}`} role="timer">
+            {clockOf(secs)}
+          </p>
+          <span className={s.focusBarDemo} aria-hidden>
+            <i style={{ transform: `scaleX(${Math.min(1, secs / goal)})` }} />
+          </span>
+          <small>{secs < goal ? `${clockOf(goal - secs)} left of 25m` : "Past the 25m you planned. That's fine."}</small>
+          <div className={s.focusButtons}>
+            <button type="button" className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties} onClick={() => setOn((x) => !x)}>
+              {on ? <Pause size={16} strokeWidth={2.75} aria-hidden /> : <Play size={16} strokeWidth={2.75} aria-hidden />}
+              {on ? "Pause" : secs ? "Resume" : "Start"}
+            </button>
+            <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!secs} onClick={finish}>
+              <Check size={16} strokeWidth={3} aria-hidden /> Done
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={s.focusAfter}>
+          <Confetti />
+          <div className={s.focusCardDone}>
+            <span className={s.focusTick} aria-hidden>
+              <Check size={14} strokeWidth={3.5} />
+            </span>
+            <b>Write the launch post</b>
+            <span className={s.focusChip}>⏳ {done}m</span>
+          </div>
+          <p>Ticked off, and the time is on the card. Next time you&apos;ll know how long it really takes.</p>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setDone(null);
+              setSecs(0);
+            }}
+          >
+            Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }

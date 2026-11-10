@@ -244,7 +244,6 @@
   align-items: center;
   gap: 1rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 .bar {
   flex: 0 1 14rem;
@@ -338,7 +337,6 @@
   gap: 0.4rem;
   font-size: 0.78rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 .chips span {
   padding: 0.12rem 0.45rem;
@@ -4324,7 +4322,6 @@ input.stick[data-custom][aria-invalid="true"] {
   flex: none;
   font-size: 0.75rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 .bellPanel li small {
   flex: none;
@@ -5372,4 +5369,10 @@ body[data-drag="task"] .listGoal {
     grid-column: 2;
     grid-row: 2;
   }
+}
+
+/* Account: the email under your name wraps on a phone instead of running off the edge. */
+.me .progress {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

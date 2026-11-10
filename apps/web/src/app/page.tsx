@@ -5,7 +5,6 @@ import {
   Bug,
   EyeOff,
   GitPullRequest,
-  KeyRound,
   Lightbulb,
   Lock,
 } from "lucide-react";
@@ -21,6 +20,7 @@ import {
   OfflineDemo,
   Pay,
   Pricing,
+  FocusDemo,
   RemindDemo,
   SharedDemo,
   StepsDemo,
@@ -64,31 +64,35 @@ export default function Home() {
 
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
         <section id="features" className={s.features} aria-label="What todone does">
-          <Chapter n={1} tag="Steps" title="Big task, small steps." fill="var(--butter)">
+          <Chapter tag="Steps" title="Big task, small steps." fill="var(--butter)">
             Drop one note on another and it becomes a step. Fold them away when you&apos;re done looking.
             <StepsDemo />
           </Chapter>
-          <Chapter n={2} tag="Calendar" title="Plan the week by dragging it there." fill="var(--cyan)" wide>
+          <Chapter tag="Calendar" title="Plan the week by dragging it there." fill="var(--cyan)" wide>
             Drag a task onto a time; stretch the block to say how long.
             {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />}
           </Chapter>
-          <Chapter n={3} tag="Together" title="One list, the whole house." fill="var(--pink)">
+          <Chapter tag="Focus" title="One task. The whole tab." fill="var(--lime)">
+            A clock, a quiet tick-tock, nothing else. The minutes go on the task when you&apos;re done.
+            <FocusDemo />
+          </Chapter>
+          <Chapter tag="Together" title="One list, the whole house." fill="var(--pink)">
             Plan with a team, or share one task by link with anyone. No account needed.
             <SharedDemo />
           </Chapter>
-          <Chapter n={4} tag="Offline" title="No signal? Keep going." fill="var(--orange)">
+          <Chapter tag="Offline" title="No signal? Keep going." fill="var(--orange)">
             It opens without a connection and saves what you change once you&apos;re back. Try it.
             <OfflineDemo />
           </Chapter>
-          <Chapter n={5} tag="Goals" title="Goals you can feel." fill="var(--lime)">
+          <Chapter tag="Goals" title="Goals you can feel." fill="var(--peri)">
             Log in a tap, earn XP, spend it on rewards you choose. No streak to break.
             <GoalsDemo />
           </Chapter>
-          <Chapter n={6} tag="Reminders" title="Reminders that can't read you." fill="var(--peri)">
+          <Chapter tag="Reminders" title="Reminders that can't read you." fill="var(--cyan)">
             Sealed on your device. Our server only knows when, never what.
             <RemindDemo />
           </Chapter>
-          <Chapter n={7} tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
+          <Chapter tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
             Google, Apple and Outlook from one private link. Add it once.
             <ToolsDemo />
           </Chapter>
@@ -137,66 +141,86 @@ export default function Home() {
             For your eyes only.
           </h2>
           <p className={s.sub}>
-            todone is end-to-end encrypted. Your lists are locked on your device
-            before they&apos;re saved, so our servers only ever hold scrambled
-            data. We can&apos;t read your plans, and neither can anyone who
-            breaks in.
+            Your lists are locked on your device before they&apos;re saved. Our
+            servers only ever hold scrambled data: we can&apos;t read your
+            plans, and neither can anyone who breaks in.
           </p>
-          <div className={s.ways}>
-            <div
-              className={s.way}
-              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            >
-              <Lock size={22} strokeWidth={2.5} aria-hidden />
-              <b>Encrypted on your device</b>
+
+          {/* The same task, as you see it and as our server stores it. */}
+          <div className={s.zkPair} aria-label="What you see and what our server stores">
+            <figure className={s.zkYou}>
+              <figcaption>You see</figcaption>
+              <p className="display">Buy a cake for Maa&apos;s birthday</p>
+            </figure>
+            <span className={s.zkArrow} aria-hidden>
+              <Lock size={22} strokeWidth={2.75} />
+            </span>
+            <figure className={s.zkUs}>
+              <figcaption>Our server stores</figcaption>
+              <p>v1.q9Xf2Lr0aKz7…Hc4mPw8eT1yBn6Ud3sJ0vRk=</p>
+            </figure>
+          </div>
+
+          <ul className={s.zkLines}>
+            <li style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+              <p className={`display ${s.zkBig}`}>
+                Locked on <mark>your device.</mark>
+              </p>
               <span>
                 List names, tasks, steps, notes, ideas, goals and rewards, with
                 AES-256. Teams share a key only members hold.
               </span>
-            </div>
-            <div
-              className={s.way}
-              style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
-            >
-              <EyeOff size={22} strokeWidth={2.5} aria-hidden />
-              <b>We never see your password</b>
+            </li>
+            <li style={{ "--fill": "var(--cyan)" } as React.CSSProperties}>
+              <p className={`display ${s.zkBig}`}>
+                We never see <mark>your password.</mark>
+              </p>
               <span>
                 It unlocks your key in the browser; the server only gets a
                 one-way hash of it.
               </span>
-            </div>
-            <div
-              className={s.way}
-              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
-            >
-              <KeyRound size={22} strokeWidth={2.5} aria-hidden />
-              <b>A recovery key, just for you</b>
+            </li>
+            <li style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
+              <p className={`display ${s.zkBig}`}>
+                A recovery key <mark>just for you.</mark>
+              </p>
               <span>
                 Forget your password and it gets you back in. Nobody else can,
                 us included.
               </span>
-            </div>
-            <div
-              className={s.way}
-              style={{ "--fill": "var(--pink)" } as React.CSSProperties}
-            >
-              <GitPullRequest size={22} strokeWidth={2.5} aria-hidden />
-              <b>Open source, checkable</b>
+            </li>
+            <li style={{ "--fill": "var(--pink)" } as React.CSSProperties}>
+              <p className={`display ${s.zkBig}`}>
+                Open source. <mark>Check it.</mark>
+              </p>
               <span>
                 The encryption is in our public code for anyone to read.
               </span>
-            </div>
+            </li>
+          </ul>
+
+          <div className={s.zkSee}>
+            <h3>
+              <EyeOff size={18} strokeWidth={2.5} aria-hidden /> What we can
+              still see
+            </h3>
+            <ul>
+              <li>Your email and name, and which teams you&apos;re in.</li>
+              <li>
+                How many lists you have, roughly how big they are, and when
+                they change.
+              </li>
+              <li>
+                Lists you put in your calendar link, so Google, Apple or
+                Outlook can fetch them. Each list says which it is.
+              </li>
+              <li>
+                A task you share by link, with its comments and files, until
+                you stop sharing.
+              </li>
+              <li>When a reminder is due. Never what it says.</li>
+            </ul>
           </div>
-          <p className={s.provisional}>
-            What we can still see: your email and name, which teams you&apos;re
-            in, how many lists you have, roughly how big they are and when they
-            change. Lists you choose to put in your calendar link (for Google
-            Calendar, Apple Calendar and Outlook) are stored readable so the
-            calendar can fetch them; each list says which it is. Share a single
-            task by link and that task, its comments and its files are readable
-            too, until you stop sharing. Reminders reach us sealed: we see when
-            each is due, never what it says.
-          </p>
         </section>
 
         {/* The roadmap: three lists on the same board, in order. */}
@@ -456,14 +480,12 @@ export default function Home() {
 
 // One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
 function Chapter({
-  n,
   tag,
   title,
   fill,
   wide,
   children,
 }: {
-  n: number;
   tag: string;
   title: string;
   fill: string;
