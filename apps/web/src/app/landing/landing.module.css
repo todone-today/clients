@@ -186,9 +186,15 @@ button.box:hover {
 .chips i {
   padding: 0.15rem 0.5rem;
   font: normal 700 0.8rem var(--sans);
+  color: var(--black);
   background: #fff8ef;
   border: 2px solid var(--black);
 }
+/* Same colours as the app's chips: priority by level, a due date in butter. */
+.chips i[data-pri="1"] { font-weight: 800; background: var(--hot); }
+.chips i[data-pri="2"] { font-weight: 800; background: var(--orange); }
+.chips i[data-pri="3"] { font-weight: 800; background: var(--peri); }
+.chips i[data-due] { background: var(--butter); }
 .note[data-landed] {
   animation: land 0.6s var(--ease);
 }
@@ -310,10 +316,10 @@ button.box:hover {
 .dark {
   padding: clamp(1.5rem, 3vw, 2.25rem);
   color: var(--black);
-  background: var(--orange);
+  background: var(--card, var(--orange));
   border: var(--key);
   box-shadow: var(--lift);
-  rotate: 0.6deg;
+  rotate: var(--tilt, 0.6deg);
 }
 .dark > p {
   color: var(--black);

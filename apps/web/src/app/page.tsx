@@ -123,7 +123,10 @@ export default function Home() {
             <GoalsDemo />
           </article>
 
-          <article className={`${s.feat} ${s.half} ${s.dark}`}>
+          <article
+            className={`${s.feat} ${s.half} ${s.dark}`}
+            style={{ "--card": "var(--peri)", "--tilt": "-0.6deg" } as React.CSSProperties}
+          >
             <h2 className="display">Reminders that can&apos;t read you.</h2>
             <p>
               A nudge before a task&apos;s time and a summary at 8, even with

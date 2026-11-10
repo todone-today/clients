@@ -31,13 +31,14 @@ const STICKERS = [
 
 const PRI = { 1: "High", 2: "Medium", 3: "Low" } as const;
 
+// The chips a note shows, coloured the way the app colours them.
 function chips(t: Partial<Task>, today: string) {
   return [
-    t.pri ? PRI[t.pri as 1 | 2 | 3] : null,
-    t.due ? relDue(t.due, today) : null,
-    t.est ? fmtMinutes(t.est) : null,
-    t.rep ? repeatLabel(t.rep) : null,
-  ].filter((c): c is string => !!c);
+    t.pri ? { text: PRI[t.pri as 1 | 2 | 3], pri: t.pri } : null,
+    t.due ? { text: relDue(t.due, today), due: true } : null,
+    t.est ? { text: fmtMinutes(t.est) } : null,
+    t.rep ? { text: repeatLabel(t.rep) } : null,
+  ].filter((c) => !!c);
 }
 
 export function HeroBoard() {
@@ -152,7 +153,9 @@ export function HeroBoard() {
                 <b>{n.title}</b>
                 <span className={s.chips}>
                   {chips(n.task, today).map((c) => (
-                    <i key={c}>{c}</i>
+                    <i key={c.text} data-pri={c.pri} data-due={c.due || undefined}>
+                      {c.text}
+                    </i>
                   ))}
                 </span>
               </div>
