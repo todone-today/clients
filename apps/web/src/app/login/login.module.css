@@ -124,9 +124,9 @@
 }
 .dialogBody {
   position: relative;
-  /* The card stays centred even when something long (the recovery key) makes the dialog wider than it. */
-  display: grid;
-  justify-items: center;
+  /* Exactly the card's width (26rem) plus this padding, so the × sits on the card's corner; never wider than the
+     screen. */
+  width: min(27.5rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   padding: 1rem 1.2rem 0.9rem 0.3rem; /* room for the × on the corner and the card's hard shadow */
