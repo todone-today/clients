@@ -64,11 +64,7 @@ export function CalendarView({
   const [view, setView] = useState<View>(() =>
     VIEWS.includes(start?.view as View)
       ? (start!.view as View)
-      : // A phone is too narrow for seven columns of hours: it opens on the day.
-        typeof matchMedia !== "undefined" &&
-          matchMedia("(max-width: 560px)").matches
-        ? "day"
-        : "week",
+      : "month", // on a phone the month reads as an agenda of the days that have tasks
   );
   const [at, setAt] = useState(() =>
     /^\d{4}-\d{2}-\d{2}$/.test(start?.at ?? "") ? start!.at! : today,
