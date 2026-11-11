@@ -1111,11 +1111,17 @@ export function GoalDialog({
 
 // Rewards you set for yourself, bought with the XP your finished tasks earn. In a team, each person has their own XP.
 // Starting points for a first reward, priced in "tasks like yours".
+// Treats to start from: a name, its size in tasks like yours, and a sticker colour.
 const IDEAS = [
-  ["Cheat meal", 10],
-  ["20 min of Instagram", 3],
-  ["Movie night", 10],
-  ["A new book", 30],
+  ["20 min of Instagram", 3, "var(--cyan)"],
+  ["Dessert after dinner", 4, "#c9b3ff"],
+  ["Coffee out", 5, "var(--peri)"],
+  ["An hour of gaming", 6, "var(--orange)"],
+  ["A lazy morning", 8, "#8fe3b0"],
+  ["Cheat meal", 10, "var(--pink)"],
+  ["Movie night", 10, "var(--lime)"],
+  ["A new book", 30, "var(--butter)"],
+  ["A weekend away", 100, "var(--cyan)"],
 ] as const;
 
 export function Rewards() {
@@ -1273,26 +1279,45 @@ export function Rewards() {
       <div className={s.rewardsPage}>
         <div>
           {!rewards.length && (
-            <div className={s.rewardStart}>
-              <p>
-                <b>What would feel like a treat?</b> Pick one to start, then
-                finish tasks to earn it.
-              </p>
-              <div className={s.priceChips}>
-                {IDEAS.map(([idea, n]) => (
-                  <button
-                    key={idea}
-                    type="button"
-                    onClick={() => {
-                      setTitle(idea);
-                      setCost(String(perTask * n));
-                    }}
-                  >
-                    {idea}
-                  </button>
+            // Like the Goals page's starters: pick one and it's yours, priced in tasks like yours.
+            <section className={s.goalStart}>
+              <h2 className="display">Pick a treat.</h2>
+              <ul className={s.starters}>
+                {IDEAS.map(([idea, n, fill]) => (
+                  <li key={idea}>
+                    <button
+                      type="button"
+                      style={{ "--fill": fill } as React.CSSProperties}
+                      onClick={() =>
+                        changeGoals(lists, (xs) => [
+                          ...xs,
+                          { t: "reward", id: uid() + uid(), title: idea, cost: perTask * n },
+                        ])
+                      }
+                    >
+                      <b>{idea}</b>
+                      <small>
+                        About {n} tasks · {perTask * n} XP
+                      </small>
+                      <span className={s.starterGo}>
+                        <Plus size={14} strokeWidth={3} aria-hidden /> Make it mine
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
+              <ol className={s.goalHow}>
+                <li>
+                  <b>Pick a treat.</b> Something you&apos;d genuinely look forward to, big or small.
+                </li>
+                <li>
+                  <b>Finish tasks.</b> Each one earns XP; bigger and on-time tasks earn more.
+                </li>
+                <li>
+                  <b>Claim it, guilt-free.</b> You earned it. Then pick the next one.
+                </li>
+              </ol>
+            </section>
           )}
           {ready.length > 0 && (
             <>

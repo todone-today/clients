@@ -141,7 +141,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  const W = step.video ? Math.min(720, innerWidth - 32) : 340;
+  const W = step.video ? Math.min(1120, innerWidth - 32) : 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;

@@ -84,7 +84,7 @@ function LiveApp({ pre, steps, typing, after, onReady }: { pre: readonly EditNam
   return <TodoApp />;
 }
 
-// The app as it is (1600×900, a laptop screen), scaled to fill the frame.
+// The app as it is on a laptop screen (1600×900), scaled to fill the frame.
 export const SCALE = 0.8;
 // `after`: anything to set up once the steps so far are replayed (e.g. scroll to what the scene is showing).
 export function LiveScene({ pre = [], steps, caption, dur, after }: { pre?: readonly EditName[]; steps: Step[]; caption: string; dur: number; after?: () => void }) {
