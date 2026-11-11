@@ -181,8 +181,8 @@ export const PLANS: Plan[] = [
     points: [
       "Unlimited lists",
       "Share with up to 6 people",
-      "Restorable daily backups (planned)",
-      "Early access to the mobile apps (planned)",
+      "Restorable daily backups",
+      "Early access to the mobile apps",
     ],
     lead: true,
   },
@@ -195,8 +195,8 @@ export const PLANS: Plan[] = [
     points: [
       "Everything in Plus",
       "Unlimited people and teams",
-      "Roles and admin controls (planned)",
-      "Priority help (planned)",
+      "Roles and admin controls",
+      "Priority help",
     ],
   },
 ];
