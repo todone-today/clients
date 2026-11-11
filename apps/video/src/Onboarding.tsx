@@ -1,12 +1,14 @@
 // todone's onboarding video: the whole signed-in app (src/live.tsx) on a sample account (src/seed.ts), one feature
-// per scene, timed by frame. Sound cues and the music are in <Sounds /> at the bottom.
+// per scene, timed by frame. Each scene starts from what the ones before it did. Sound and music are in <Sounds />.
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { Logo } from "@/components/Logo";
+import app from "@/app/app/app.module.css";
 import { setTeam } from "./mocks/auth-client";
+import { setReplies } from "./mocks/actions";
 import { setTheme } from "./setup";
-import { FLIGHT, TYPED, day } from "./seed";
+import { type EditName, FLIGHT, IDEA, TYPED, day } from "./seed";
 import { Fade, Sfx, inStage, usePop } from "./kit";
-import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab, tickBox, xpTile } from "./live";
+import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab } from "./live";
 
 // ---- Where things are that need more than a selector ------------------------------------------------------------
 const theToggle: Finder = () => inStage("button[aria-label^='Switch to']")[0];
@@ -21,94 +23,162 @@ const tomorrowAt10: Finder = () => {
   const h = hour.getBoundingClientRect();
   return { getBoundingClientRect: () => new DOMRect(c.x, h.y, c.width, 24), outerHTML: "" } as unknown as Element;
 };
+const inCard = (label: string, card: string): Finder => () =>
+  inStage("button").find((b) => b.textContent?.trim() === label && b.closest("li")?.textContent?.includes(card));
+const goalKind = (name: string): Finder => () => inStage("button[role='radio']").find((b) => b.textContent?.startsWith(name));
+// The task panel scrolled down to its conversation (where the replies come in).
+const toConversation = () => {
+  for (const el of inStage(`.${app.panel}, .${app.panel} *`))
+    if (el.scrollHeight > el.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(el).overflowY)) el.scrollTop = el.scrollHeight;
+};
+const taskTitle = (id: string): Finder => () => inStage(`[data-id='${id}'] .${app.taskTitle}`)[0];
+
 // ---- The scenes: what each one does (frames at 30fps, from the scene's start) ------------------------------------
-type Scene = { dur: number; caption: string; steps: Step[]; pre?: Parameters<typeof LiveScene>[0]["pre"] };
-const DONE = ["added", "today", "high", "weekly", "step", "planned"] as const;
+type Scene = { dur: number; caption: string; makes: EditName[]; steps: Step[]; after?: () => void };
 const SCENES = {
   create: {
-    dur: 80,
+    dur: 75,
     caption: "Add a task: type it, press Enter",
-    steps: [{ at: 14, into: field("#new-task"), type: TYPED, dur: 34, then: "added", sfx: "pop" }],
+    makes: ["added"],
+    steps: [{ at: 12, into: field("#new-task"), type: TYPED, dur: 32, then: "added", sfx: "pop" }],
   },
   stickers: {
-    dur: 115,
+    dur: 105,
     caption: "Drop stickers on it: when, priority, repeat",
-    pre: DONE.slice(0, 1),
+    makes: ["today", "high", "weekly"],
     steps: [
-      { at: 34, drag: sticker("Today"), to: note(FLIGHT), edit: "today", sfx: "pop" },
-      { at: 68, drag: sticker("High"), to: note(FLIGHT), edit: "high", sfx: "pop" },
-      { at: 102, drag: sticker("Weekly"), to: note("t-water-the-plants"), edit: "weekly", sfx: "pop" },
+      { at: 30, drag: sticker("Today"), to: note(FLIGHT), edit: "today", sfx: "pop" },
+      { at: 62, drag: sticker("High"), to: note(FLIGHT), edit: "high", sfx: "pop" },
+      { at: 94, drag: sticker("Weekly"), to: note("t-water-the-plants"), edit: "weekly", sfx: "pop" },
     ],
   },
   steps: {
-    dur: 70,
+    dur: 65,
     caption: "Drop one note on another: it becomes a step",
-    pre: DONE.slice(0, 4),
-    steps: [{ at: 46, drag: note("t-pack-the-chargers"), to: note(FLIGHT), edit: "step", lift: 30, sfx: "thud" }],
-  },
-  calendar: {
-    dur: 105,
-    caption: "Plan the week: drag tasks onto a time",
-    pre: DONE.slice(0, 5),
-    steps: [
-      { at: 16, click: tab("Calendar"), sfx: "click" },
-      { at: 84, drag: trayItem, to: tomorrowAt10, edit: "planned", lift: 34, sfx: "thud" },
-    ],
+    makes: ["step"],
+    steps: [{ at: 44, drag: note("t-pack-the-chargers"), to: note(FLIGHT), edit: "step", lift: 30, sfx: "thud" }],
   },
   lists: {
-    dur: 75,
-    caption: "Every list in the sidebar, one click away",
-    pre: [...DONE],
+    dur: 95,
+    caption: "Make as many lists as you like",
+    makes: ["newList"],
     steps: [
-      { at: 20, click: sideList("Trip to Goa"), sfx: "click" },
-      { at: 50, click: sideList("Brainstorm"), sfx: "click" },
+      { at: 10, into: field("input[placeholder='New list']"), type: "Reading", dur: 20, enter: true, sfx: "pop" },
+      { at: 62, click: sideList("Trip to Goa"), sfx: "click" },
+      { at: 84, click: sideList("Groceries"), sfx: "click" },
     ],
   },
-  goals: {
-    dur: 60,
-    caption: "Goals: small steps, every one counted",
-    pre: [...DONE],
-    steps: [{ at: 18, click: tab("Goals"), sfx: "click" }],
+  brainstorm: {
+    dur: 90,
+    caption: "Brainstorm freely, then drop an idea into a list",
+    makes: ["idea"],
+    steps: [
+      { at: 14, click: sideList("Brainstorm"), sfx: "click" },
+      { at: 74, drag: note(IDEA), to: sideList("This week"), edit: "idea", lift: 32, sfx: "thud" },
+    ],
+  },
+  calendar: {
+    dur: 100,
+    caption: "Plan the week: drag tasks onto a time",
+    makes: ["planned"],
+    steps: [
+      { at: 14, click: tab("Calendar"), sfx: "click" },
+      { at: 80, drag: trayItem, to: tomorrowAt10, edit: "planned", lift: 34, sfx: "thud" },
+    ],
+  },
+  goal: {
+    dur: 140,
+    caption: "Set a goal: what, why, and the first steps",
+    makes: ["goal"],
+    steps: [
+      { at: 8, click: tab("Goals"), sfx: "click" },
+      { at: 22, click: button("New goal"), sfx: "click" },
+      { at: 30, into: field("input[placeholder^='Run a 5K']"), type: "Read 12 books", dur: 20 },
+      { at: 58, click: goalKind("Get somewhere"), sfx: "click" },
+      { at: 66, click: button("Next"), sfx: "click" },
+      { at: 72, into: field("[placeholder^='So I have energy']"), type: "So I read more than I scroll", dur: 22 },
+      { at: 102, click: button("Next"), sfx: "click" },
+      { at: 110, click: button("Next"), sfx: "click" },
+      { at: 122, click: button("Save goal"), sfx: "pop" },
+    ],
+  },
+  reach: {
+    dur: 90,
+    caption: "Reach a goal: mark it achieved",
+    makes: ["achieved"],
+    steps: [
+      { at: 8, click: tab("Goals"), sfx: "click" },
+      { at: 24, click: inCard("Achieved", "Plan the Goa trip"), sfx: "chime" },
+      { at: 34, into: field("dialog[open] textarea"), type: "Booking early helped.", dur: 22 },
+      { at: 68, click: button("Mark achieved"), sfx: "ding" },
+    ],
   },
   rewards: {
-    dur: 110,
-    caption: "Tick tasks, earn XP, spend it on a treat",
-    pre: [...DONE],
+    dur: 125,
+    caption: "Done tasks earn XP: set a reward, then claim it",
+    makes: ["reward", "claimed"],
     steps: [
-      { at: 22, click: tickBox("Call the landlord"), sfx: "ding" },
-      { at: 54, click: xpTile, sfx: "click" },
-      { at: 86, click: claim("Movie night"), sfx: "chime" },
+      { at: 8, click: tab("Rewards"), sfx: "click" },
+      { at: 22, into: field("input[placeholder^='Cheat meal']"), type: "Pizza night", dur: 22 },
+      { at: 54, click: button("Add reward"), sfx: "pop" },
+      { at: 92, click: claim("Pizza night"), sfx: "chime" },
+    ],
+  },
+  share: {
+    dur: 190,
+    after: toConversation,
+    caption: "Share a task by link: they reply, no account needed",
+    makes: ["shared", "finished"],
+    steps: [
+      { at: 8, click: sideList("This week"), sfx: "click" },
+      { at: 22, click: taskTitle(FLIGHT), sfx: "click" },
+      { at: 38, click: button("Share"), sfx: "click" },
+      { at: 52, click: button("I Understand"), sfx: "pop" },
+      { at: 78, wait: true, sfx: "ding" },
+      { at: 110, wait: true, sfx: "ding" },
+      { at: 142, wait: true, sfx: "ding" },
+      { at: 166, click: field("button[aria-label='Done']"), sfx: "chime" },
     ],
   },
   team: {
-    dur: 110,
+    dur: 100,
     caption: "Plan together: invite people to a team",
-    pre: [...DONE],
+    makes: [],
     steps: [
-      { at: 16, click: button("Team settings"), sfx: "click" },
-      { at: 34, into: field("#invite-email"), type: "meera@todone.today", dur: 36 },
-      { at: 84, click: button("Invite"), sfx: "ding", fake: true },
+      { at: 14, click: button("Team settings"), sfx: "click" },
+      { at: 30, into: field("#invite-email"), type: "meera@todone.today", dur: 34 },
+      { at: 76, click: button("Invite"), sfx: "ding", fake: true },
     ],
   },
   theme: {
-    dur: 50,
+    dur: 60,
     caption: "Day or night: one tap",
-    pre: [...DONE],
-    steps: [{ at: 22, click: theToggle, sfx: "click", fake: true }],
+    makes: [],
+    steps: [
+      { at: 8, click: sideList("This week"), sfx: "click" },
+      { at: 30, click: theToggle, sfx: "click", fake: true },
+    ],
   },
 } satisfies Record<string, Scene>;
 
 // ---- Timeline ---------------------------------------------------------------------------------------------------
 const INTRO = 60;
-const OUTRO = 80;
-const ORDER = ["create", "stickers", "steps", "calendar", "lists", "goals", "rewards", "team", "theme"] as const;
-const FROM = {} as Record<(typeof ORDER)[number], number>;
-ORDER.reduce((t, k) => ((FROM[k] = t), t + SCENES[k].dur), INTRO);
+const OUTRO = 70;
+const ORDER = ["create", "stickers", "steps", "lists", "brainstorm", "calendar", "goal", "reach", "rewards", "share", "team", "theme"] as const;
+type Name = (typeof ORDER)[number];
+const FROM = {} as Record<Name, number>;
+const PRE = {} as Record<Name, EditName[]>; // each scene starts from what the ones before it made
+ORDER.reduce(
+  (acc, k) => ((FROM[k] = acc.t), (PRE[k] = acc.made), { t: acc.t + SCENES[k].dur, made: [...acc.made, ...(SCENES[k] as Scene).makes] }),
+  { t: INTRO, made: [] as EditName[] },
+);
 const END = FROM.theme + SCENES.theme.dur;
 export const DURATION = END + OUTRO;
-// Night until the toggle is tapped; the team scene is in a team workspace (Home), with Meera invited once Invite is.
-const NIGHT_UNTIL = FROM.theme + SCENES.theme.steps[0].at;
+// Night until the toggle is tapped; the team scene is in a team workspace (Home), with Meera invited once Invite is;
+// the shared task's replies arrive at the share scene's waits.
+const NIGHT_UNTIL = FROM.theme + SCENES.theme.steps[1].at;
 const INVITED_AT = FROM.team + SCENES.team.steps[2].at;
+const REPLY_AT = (SCENES.share.steps as Step[]).filter((s) => "wait" in s).map((s) => FROM.share + s.at);
 
 // ---- Intro and end card -----------------------------------------------------------------------------------------
 const TAGLINE = "todo, done right.";
@@ -141,7 +211,6 @@ const End = () => {
         {TAGLINE}
       </p>
       <p style={{ font: "800 28px var(--sans)", opacity: more }}>todone.today</p>
-      <p style={{ font: "700 22px var(--sans)", opacity: more }}>Free · Open source · Encrypted</p>
     </AbsoluteFill>
   );
 };
@@ -152,6 +221,7 @@ const Sounds = () => (
   <>
     <Audio
       src={staticFile("music.wav")}
+      loop
       volume={(f) => 0.22 * interpolate(f, [0, 20, DURATION - 40, DURATION], [0, 1, 1, 0], { extrapolateRight: "clamp" })}
     />
     <Sfx at={0} name="whoosh" />
@@ -170,6 +240,7 @@ export const Onboarding = () => {
   setTheme(frame < NIGHT_UNTIL ? "night" : "day");
   const inTeam = frame >= FROM.team && frame < FROM.team + SCENES.team.dur;
   setTeam(inTeam ? { members: 2, invited: frame >= INVITED_AT ? ["meera@todone.today"] : [] } : null);
+  setReplies(REPLY_AT.filter((at) => frame >= at).length);
   return (
     <AbsoluteFill style={{ background: "var(--ground)" }}>
       <Sequence durationInFrames={INTRO}>
@@ -179,7 +250,7 @@ export const Onboarding = () => {
         const sc: Scene = SCENES[k];
         return (
           <Sequence key={k} from={FROM[k]} durationInFrames={sc.dur}>
-            <LiveScene pre={sc.pre} steps={sc.steps} caption={sc.caption} dur={sc.dur} />
+            <LiveScene pre={PRE[k]} steps={sc.steps} caption={sc.caption} dur={sc.dur} after={sc.after} />
           </Sequence>
         );
       })}

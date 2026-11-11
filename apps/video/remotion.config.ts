@@ -3,6 +3,7 @@
 // only exist inside Next.js or need a signed-in server for small stand-ins (src/mocks). One React for everything.
 import path from "node:path";
 import { Config } from "@remotion/cli/config";
+import { webpack } from "@remotion/bundler";
 
 // Remotion compiles this file elsewhere, so paths start from the folder the npm scripts run in (apps/video).
 const root = process.cwd();
@@ -11,8 +12,16 @@ const here = (p: string) => path.resolve(root, p);
 
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
+const appDir = path.join(web, "src", "app", "app");
 Config.overrideWebpackConfig((config) => ({
   ...config,
+  plugins: [
+    ...(config.plugins ?? []),
+    // The app's own files import their server actions as "./actions": those go to the stand-in too.
+    new webpack.NormalModuleReplacementPlugin(/^\.\/actions$/, (r: { context: string; request: string }) => {
+      if (r.context === appDir) r.request = here("src/mocks/actions.ts");
+    }),
+  ],
   resolve: {
     ...config.resolve,
     modules: [here("node_modules"), path.join(web, "node_modules"), "node_modules"],

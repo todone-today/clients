@@ -25,3 +25,24 @@ export function setTheme(t: "day" | "night") {
   document.documentElement.dataset.theme = t;
   dispatchEvent(new Event("themechange"));
 }
+
+// Repeatable "random": ids the app makes (a new list, goal or reward) and confetti come out the same each time a
+// scene is replayed, so a frame looks the same however it's reached. reseed() starts the sequence over.
+let state = 1;
+export const reseed = (n = 1) => void (state = n);
+Math.random = () => {
+  state = (state + 0x6d2b79f5) | 0;
+  let t = Math.imul(state ^ (state >>> 15), 1 | state);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+crypto.randomUUID = () => {
+  const h = () => Math.floor(Math.random() * 0x10000).toString(16).padStart(4, "0");
+  return `${h()}${h()}-${h()}-4${h().slice(1)}-a${h().slice(1)}-${h()}${h()}${h()}` as `${string}-${string}-${string}-${string}-${string}`;
+};
+
+// The app's dialogs open as modals, which the browser draws above everything on the page, the video's cursor and
+// captions included. In the video they open in place instead (live.tsx centres them over the app and dims the rest).
+HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+  this.show();
+};

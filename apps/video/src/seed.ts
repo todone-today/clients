@@ -31,7 +31,8 @@ export const TYPED = "Book flights to Goa";
 const DAY = 86_400_000;
 const ago = (d: number) => Date.now() - d * DAY;
 
-export function seed(): List[] {
+// The account before any scene; seed(edits) is the account with those scenes' edits already made.
+function base(): List[] {
   const week = list("This week", "- [ ] Call the landlord\n- [ ] Pack the chargers\n- [ ] Water the plants\n- [ ] Read 20 pages\n");
   week.tasks = week.tasks.map((t) => (t.title === "Read 20 pages" ? goal("g-read")(t) : t));
   const goa = list("Trip to Goa", "- [x] Pick the dates\n- [x] Book a stay near Anjuna\n- [ ] Rent a scooter\n- [ ] Pack sunscreen\n- [ ] Try the fish thali\n");
@@ -61,18 +62,41 @@ export function seed(): List[] {
   ].map((l, i) => ({ ...l, position: i + 1 }));
 }
 
-// ---- What the scenes do to "This week", in order (each scene starts from all the ones before it) -----------------
-type Edit = (l: List) => List;
-const onTask = (id: string, patch: Partial<Task>): Edit => (l) => ({ ...l, tasks: l.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) });
+// ---- What the scenes do, in order (each scene starts from all the ones before it) -----------------------------
+type Edit = (ls: List[]) => List[];
+const onList = (id: string, f: (l: List) => List): Edit => (ls) => ls.map((l) => (l.id === id ? f(l) : l));
+const onTask = (id: string, patch: Partial<Task>): Edit =>
+  onList(WEEK, (l) => ({ ...l, tasks: l.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
+const goalsOf = (ls: List[]) => ls.find((l) => l.kind === "goals")!.tasks as unknown as GoalItem[];
+const onGoals = (f: (xs: GoalItem[]) => GoalItem[]): Edit => (ls) =>
+  ls.map((l) => (l.kind === "goals" ? { ...l, tasks: f(goalsOf(ls)) as unknown as Task[] } : l));
+export const IDEA = "t-learn-to-make-pasta";
+export const SHARE = "sh-flight";
 export const EDITS = {
-  added: ((l) => ({ ...l, tasks: [...l.tasks, { id: FLIGHT, title: TYPED, done: false, sub: [] }] })) as Edit,
+  added: onList(WEEK, (l) => ({ ...l, tasks: [...l.tasks, { id: FLIGHT, title: TYPED, done: false, sub: [] }] })),
   today: onTask(FLIGHT, { due: today }),
   high: onTask(FLIGHT, { pri: 1 }),
   weekly: onTask("t-water-the-plants", { rep: "every week" }),
-  step: ((l) => {
+  step: onList(WEEK, (l) => {
     const step = l.tasks.find((t) => t.id === "t-pack-the-chargers")!;
     return { ...l, tasks: l.tasks.filter((t) => t !== step).map((t) => (t.id === FLIGHT ? { ...t, sub: [...t.sub, step] } : t)) };
-  }) as Edit,
+  }),
+  // Made in its scene with the sidebar's "New list"; later scenes start with it.
+  newList: ((ls) => [...ls, list("Reading", "")]) as Edit, // no position: a new list sits at the top, as in the app
+  // A Brainstorm idea dropped on "This week" becomes a task there.
+  idea: (ls) => {
+    const idea = ls.find((l) => l.kind === "ideas")!.tasks.find((t) => t.id === IDEA)!;
+    return onList(WEEK, (l) => ({ ...l, tasks: [...l.tasks, { ...idea, sub: [] }] }))(
+      ls.map((l) => (l.kind === "ideas" ? { ...l, tasks: l.tasks.filter((t) => t.id !== IDEA) } : l)),
+    );
+  },
   planned: onTask(FLIGHT, { due: day(1), at: "10:00", est: 90 }),
-};
+  goal: onGoals((xs) => [...xs, { t: "goal", id: "g-books", title: "Read 12 books", kind: "outcome", list: "list-reading", created: Date.now() }]),
+  achieved: onGoals((xs) => xs.map((g) => (g.id === "g-goa" ? { ...g, done: Date.now() } : g))),
+  reward: onGoals((xs) => [...xs, { t: "reward", id: "r-pizza", title: "Pizza night", cost: 100 }]),
+  claimed: onGoals((xs) => [...xs, { t: "win", id: "w-pizza", title: "Pizza night", at: Date.now(), xp: -100, spend: true, by: ME.id }]),
+  shared: onTask(FLIGHT, { share: SHARE }),
+  finished: onTask(FLIGHT, { done: true }),
+} satisfies Record<string, Edit>;
 export type EditName = keyof typeof EDITS;
+export const seed = (edits: readonly EditName[] = []) => edits.reduce((ls, e) => EDITS[e](ls), base());
