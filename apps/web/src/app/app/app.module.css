@@ -2643,35 +2643,55 @@
 }
 
 /* Under a list's name: end-to-end encrypted (the default), or switched off for integrations. */
+/* The list's privacy, as a sticker beside its icon tile: same height, keyline and lift. Encrypted is cream with a
+   lime lock; switching off asks first (hot); a readable list is butter. */
 .privacy {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   justify-self: start;
-  padding: 0.15rem 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--ink-2);
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 800;
   text-align: left;
-}
-.privacy:hover {
-  color: var(--ink);
-}
-.privacy[data-armed] {
-  color: var(--hot);
-}
-.privacy[data-plain] {
-  color: var(--ink);
-  padding: 0.15rem 0.45rem;
-  background: var(--butter);
-  border: 2px solid var(--black);
   color: var(--black);
-  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift-sm);
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+  /* A light sticker reads like Day in both themes. */
   --ink: var(--black);
   --ink-2: #4a4540;
-  --hair: rgb(11 11 11 / 0.22);
-  --ground: #fff8ef;
-  --raise: #f3eadb;
+}
+.privacy svg {
+  padding: 2px;
+  color: var(--black);
+  background: var(--lime);
+  border: 1.5px solid var(--black);
+  box-sizing: content-box;
+}
+.privacy:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.privacy:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow);
+}
+.privacy[data-armed] {
+  height: auto;
+  min-height: 2.5rem;
+  padding-block: 0.3rem;
+  background: var(--hot);
+}
+.privacy[data-plain] {
+  background: var(--butter);
+}
+.privacy[data-plain] svg {
+  background: #fff8ef;
 }
 
 /* The picked task, at the top of the sidebar: a small card with its name, list, steps and delete. */
