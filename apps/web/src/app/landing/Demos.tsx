@@ -151,11 +151,25 @@ const BLOCKS = [
   },
 ];
 
+const ROWS = 4; // hour rows in each day (landing.module.css .week > div)
 export function WeekDemo() {
   const [blocks, setBlocks] = useState(BLOCKS);
   const [held, setHeld] = useState<string | null>(null);
+  // A block lands in the first free slot of the day (shrinking to an hour if it must); a full day says no. Two
+  // blocks on the same rows would otherwise spill into a second grid column and over the next day.
   const move = (id: string, day: number) => {
-    setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, day } : b)));
+    setBlocks((bs) => {
+      const b = bs.find((x) => x.id === id)!;
+      if (b.day === day) return bs;
+      const taken = new Set(bs.filter((x) => x.day === day).flatMap((x) => Array.from({ length: x.h }, (_, i) => x.top + i)));
+      const fits = (top: number, h: number) => top + h <= ROWS && Array.from({ length: h }, (_, i) => top + i).every((r) => !taken.has(r));
+      for (const h of [b.h, 1]) {
+        const order = [b.top, ...Array.from({ length: ROWS }, (_, i) => i)];
+        const top = order.find((t) => fits(t, h));
+        if (top !== undefined) return bs.map((x) => (x.id === id ? { ...x, day, top, h } : x));
+      }
+      return bs;
+    });
     setHeld(null);
   };
   const drop = useDrop("week", {
@@ -184,6 +198,7 @@ export function WeekDemo() {
                     {
                       "--fill": b.fill,
                       gridRow: `${b.top + 2} / span ${b.h}`,
+                      gridColumn: 1,
                     } as React.CSSProperties
                   }
                   aria-pressed={held === b.id}

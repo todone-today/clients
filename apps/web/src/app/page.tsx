@@ -74,8 +74,8 @@ export default function Home() {
             Drag a task onto a time; stretch the block to say how long.
             {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />}
           </Chapter>
-          <Chapter tag="Focus" title="One task. The whole tab." fill="var(--lime)">
-            A clock, a quiet tick-tock, nothing else. The minutes go on the task when you&apos;re done.
+          <Chapter tag="Focus" title="Focus mode. Just you and one task." fill="var(--lime)">
+            Everything else disappears: one task, a timer and a soft tick-tock. Finish, and the time you spent is saved on it.
             <FocusDemo />
           </Chapter>
           <Chapter tag="Together" title="One list, the whole house." fill="var(--pink)">
@@ -99,7 +99,8 @@ export default function Home() {
             <ToolsDemo />
           </Chapter>
           <Chapter tag="Phone" title="In your pocket, too." fill="var(--pink)">
-            No app store needed: add it to your home screen and it opens like an app, works offline and reminds you.
+            No app store needed. Add todone to your home screen and it works like a real app: full screen, offline, and
+            notifications that remind you of tasks even when it&apos;s closed.
             <PhoneDemo />
           </Chapter>
         </section>
