@@ -11,7 +11,7 @@ import s from "./app.module.css";
 
 const org = authClient.organization;
 const NEW = "__new";
-export type Panel = "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | null;
+export type Panel = "all" | "calendar" | "goals" | "rewards" | "ideas" | "bin" | "members" | "integrations" | "account" | null;
 
 // Personal lists or a team's; switching changes which lists the server returns.
 export function Workspaces({

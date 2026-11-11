@@ -25,6 +25,7 @@ import {
   Trash2,
   ChevronDown,
   BrushCleaning,
+  LayoutGrid,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
@@ -62,6 +63,7 @@ import { InstallPrompt } from "./InstallPrompt";
 import { fileFeedback } from "./feedback-inbox";
 import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
+import { AllLists } from "./AllLists";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Feedback } from "./Feedback";
@@ -434,6 +436,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               ? "Brainstorm"
               : panel === "bin"
                 ? "Bin"
+                : panel === "all"
+                  ? "All lists"
                 : panel === "integrations"
                   ? "Integrations"
                   : panel === "account"
@@ -633,6 +637,20 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             full={plan.gated && (lists?.filter((l) => !l.kind).length ?? 0) >= plan.listLimit}
           />
           <button
+            className={`${s.listBtn} ${s.ideasBtn} ${s.allBtn}`}
+            aria-current={panel === "all"}
+            onClick={() => show("all")}
+            data-tip="All lists"
+          >
+            <span>
+              <LayoutGrid size={16} strokeWidth={2.5} aria-hidden />{" "}
+              <span className={s.label}>All lists</span>
+            </span>
+            <span className={s.open}>
+              {sorted.reduce((n, l) => n + count(l.tasks).open, 0) || ""}
+            </span>
+          </button>
+          <button
             className={`${s.listBtn} ${s.ideasBtn} ${s.binBtn}`}
             aria-current={panel === "bin"}
             onClick={() => show("bin")}
@@ -688,6 +706,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           lists && <Rewards />
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} />
+        ) : panel === "all" ? (
+          lists && <AllLists lists={sorted} update={update} onOpen={open} />
         ) : panel === "bin" ? (
           <BinView fallback={list?.id ?? null} />
         ) : panel === "members" && orgId ? (
