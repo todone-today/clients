@@ -97,15 +97,22 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
   const [rect, setRect] = useState<DOMRect | null>(null);
   const card = useRef<HTMLDivElement>(null);
   const film = useRef<HTMLVideoElement>(null);
+  const askedFull = useRef(false); // full screen is asked for once (a second ask, without the click, spoils the first)
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
 
   useEffect(() => onPanel(step.panel), [step.panel, onPanel]);
   useEffect(() => card.current?.focus(), [i]);
-  // The walkthrough plays with its music when the browser allows it (the Tour button was a click); otherwise muted.
+  // The walkthrough opens full screen and plays with its music. Browsers allow both only just after a click (the
+  // Tour button, or signing up): otherwise it plays muted in the card, and its own button goes full screen.
   useEffect(() => {
-    const v = film.current;
+    const v = film.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
     if (!v) return;
+    if (!askedFull.current) {
+      askedFull.current = true;
+      if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+      else v.webkitEnterFullscreen?.(); // iPhone
+    }
     v.play().catch(() => {
       v.muted = true;
       v.play().catch(() => {});
@@ -141,7 +148,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  const W = 340;
+  const W = step.video ? Math.min(1120, innerWidth - 32) : 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;
@@ -169,9 +176,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
       <div
         ref={card}
         className={s.tourCard}
-        // The walkthrough fills the window (the card around it, edge to edge); other steps are a small card.
-        data-full={step.video || undefined}
-        style={step.video ? undefined : { ...pos, width: W }}
+        style={{ ...pos, width: W }}
         role="dialog"
         aria-label={`Tour, step ${i + 1} of ${STEPS.length}: ${step.title}`}
         tabIndex={-1}
@@ -189,6 +194,8 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
             controls
             playsInline
             preload="auto"
+            // At the end, back from full screen to the card, where "Take the tour" is.
+            onEnded={() => document.fullscreenElement && document.exitFullscreen().catch(() => {})}
             aria-label="todone in a minute: a walkthrough of adding tasks, stickers, lists, the calendar, goals, rewards and sharing"
           />
         )}
