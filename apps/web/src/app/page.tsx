@@ -204,8 +204,8 @@ export default function Home() {
             Built for the long haul.
           </h2>
           <p className={s.sub}>
-            The web app today, your phone next, then the places you actually
-            look: your desk, your fridge, your bag.
+            Today on the web and your phone&apos;s home screen, native apps next,
+            then the places you actually look: your desk, your fridge, your bag.
           </p>
 
           <div className={s.lanes}>
@@ -214,7 +214,7 @@ export default function Home() {
               style={{ "--fill": "var(--lime)" } as React.CSSProperties}
             >
               <h3 className="display">Now</h3>
-              <p className={s.laneSub}>Web app, live</p>
+              <p className={s.laneSub}>Web and phone, live</p>
               <ul>
                 {[
                   "End-to-end encrypted",
@@ -225,6 +225,7 @@ export default function Home() {
                   "Goals, XP and rewards",
                   "Reminders, even when closed",
                   "Works offline",
+                  "Installs on iPhone and Android",
                   "Google, Apple & Outlook calendars",
                   "Open source, self-hostable",
                 ].map((t) => (
@@ -240,14 +241,14 @@ export default function Home() {
               style={{ "--fill": "var(--butter)" } as React.CSSProperties}
             >
               <h3 className="display">Next</h3>
-              <p className={s.laneSub}>Android, then iPhone</p>
+              <p className={s.laneSub}>Native apps: Android, then iPhone</p>
               <ul>
                 {[
-                  "Quick capture, phone first",
-                  "Lock-screen reminders",
-                  "Sync across devices",
-                  "Widgets and quick actions",
-                  "Share sheet and OS integrations",
+                  "On the Play Store and App Store",
+                  "Home-screen widgets",
+                  "Add from the share sheet",
+                  "Siri and Google Assistant",
+                  "Deeper OS integrations",
                 ].map((t) => (
                   <li key={t}>{t}</li>
                 ))}

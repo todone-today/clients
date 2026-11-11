@@ -784,7 +784,7 @@ export function Goals() {
                 .join(", ")}
             </b>
           ) : (
-            "not yet the Android app"
+            "not yet the native Android app"
           )}
           {ifReached === GOALS.length ? ". Everything." : "."}
         </p>

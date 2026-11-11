@@ -98,17 +98,17 @@ export type Goal = { key: string; name: string; inr: number; what: string; fill:
 export const GOALS: Goal[] = [
   {
     key: "android",
-    name: "Android app",
+    name: "Native Android app",
     inr: 2200,
-    what: "Google Play Console: $25, once. Puts todone on the Play Store.",
+    what: "Google Play Console: $25, once. A native app on the Play Store, beyond the home-screen version you can use today.",
     fill: "var(--lime)",
     kind: "fee",
   },
   {
     key: "iphone",
-    name: "iPhone app",
+    name: "Native iPhone app",
     inr: 8800,
-    what: "Apple Developer Program: $99 a year. Puts todone on the App Store.",
+    what: "Apple Developer Program: $99 a year. A native app on the App Store, beyond the home-screen version you can use today.",
     fill: "var(--cyan)",
     kind: "fee",
   },
