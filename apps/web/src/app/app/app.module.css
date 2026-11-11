@@ -2681,11 +2681,44 @@
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--shadow);
 }
-.privacy[data-armed] {
-  height: auto;
-  min-height: 2.5rem;
-  padding-block: 0.3rem;
-  background: var(--hot);
+.privacyBox {
+  position: relative;
+}
+/* What the sticker means, and the switch: a small card under it. */
+.privacyCard {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 0;
+  z-index: 40;
+  display: grid;
+  gap: 0.7rem;
+  width: min(20rem, 80vw);
+  padding: 0.9rem 1rem;
+  font-size: 0.85rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: 5px 5px 0 var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  animation: planIn 0.2s var(--ease);
+}
+.privacyCard :global(.btn) {
+  justify-self: start;
+  padding: 0.5em 0.9em;
+}
+.privacyCard .link {
+  justify-self: start;
+  font-size: 0.82rem;
+}
+.privacyWarn {
+  font-weight: 800;
+  color: #b0002f;
+}
+.privacyRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .privacy[data-plain] {
   background: var(--butter);

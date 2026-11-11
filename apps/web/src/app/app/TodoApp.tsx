@@ -766,36 +766,81 @@ type Update = (id: string, f: (l: List) => List | null) => void;
 // Each list is end-to-end encrypted unless its owner switches that off, so integrations, the calendar feed and
 // shared links can use it. Switching off asks twice: the server can then read the list.
 function Privacy({ list, update }: { list: List; update: Update }) {
-  const [armed, setArmed] = useState(false);
-  if (list.plain)
-    return (
+  // A short sticker; what it means, and the switch, open in a small card on click (switching off asks twice).
+  const [open, setOpen] = useState(false);
+  const [sure, setSure] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && (setOpen(false), setSure(false));
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && (setOpen(false), setSure(false));
+    addEventListener("pointerdown", away);
+    addEventListener("keydown", esc);
+    return () => {
+      removeEventListener("pointerdown", away);
+      removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  const plain = !!list.plain;
+  return (
+    <div className={s.privacyBox} ref={box}>
       <button
         className={s.privacy}
-        data-plain
-        onClick={() => update(list.id, (l) => ({ ...l, plain: false }))}
-        title="Encrypt this list again; integrations and shared links stop seeing it"
+        data-plain={plain || undefined}
+        aria-expanded={open}
+        onClick={() => (setOpen(!open), setSure(false))}
+        data-tip={open ? undefined : plain ? "Integrations can read this list" : "Only you can read this list"}
       >
-        <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Not encrypted:
-        integrations can read it · <u>Encrypt</u>
+        {plain ? <LockOpen size={14} strokeWidth={2.5} aria-hidden /> : <Lock size={14} strokeWidth={2.5} aria-hidden />}
+        {plain ? "Not encrypted" : "Encrypted"}
       </button>
-    );
-  return (
-    <button
-      className={s.privacy}
-      data-armed={armed || undefined}
-      onClick={() => {
-        if (!armed) return setArmed(true);
-        update(list.id, (l) => ({ ...l, plain: true }));
-        setArmed(false);
-      }}
-      onBlur={() => setArmed(false)}
-      title="Only you (and your team) can read this list"
-    >
-      <Lock size={14} strokeWidth={2.5} aria-hidden />{" "}
-      {armed
-        ? "Switch off encryption so integrations can use it? Our server could read this list. Click again"
-        : "End-to-end encrypted"}
-    </button>
+      {open && (
+        <div className={s.privacyCard} role="dialog" aria-label="Encryption">
+          {plain ? (
+            <>
+              <p>
+                <b>Not encrypted.</b> Our server can read this list, so integrations and calendar links can use it.
+              </p>
+              <button
+                className="btn"
+                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+                onClick={() => (update(list.id, (l) => ({ ...l, plain: false })), setOpen(false))}
+              >
+                <Lock size={15} strokeWidth={2.75} aria-hidden /> Encrypt it
+              </button>
+            </>
+          ) : (
+            <>
+              <p>
+                <b>End-to-end encrypted.</b> It&apos;s locked on your device; nobody else can read it, not even us.
+                Integrations and calendar links can&apos;t see it.
+              </p>
+              {sure ? (
+                <>
+                  <p className={s.privacyWarn}>Our server could read this list. Switch off anyway?</p>
+                  <div className={s.privacyRow}>
+                    <button
+                      className="btn"
+                      style={{ "--fill": "var(--hot)" } as React.CSSProperties}
+                      onClick={() => (update(list.id, (l) => ({ ...l, plain: true })), setOpen(false), setSure(false))}
+                    >
+                      Switch off
+                    </button>
+                    <button className={s.link} onClick={() => setSure(false)}>
+                      Keep it
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button className={s.link} onClick={() => setSure(true)}>
+                  Switch off for integrations…
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -803,7 +848,7 @@ function Privacy({ list, update }: { list: List; update: Update }) {
 const clockNow = () => performance.now();
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
-function ListView({
+export function ListView({
   list,
   lists,
   update,
