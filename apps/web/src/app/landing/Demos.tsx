@@ -721,7 +721,7 @@ export function Goals() {
   );
   return (
     <div className={s.goals}>
-      <ol className={s.ladder}>
+      <ol className={`${s.ladder} ${s.lands}`} data-reveal="stack">
         {GOALS.map((g, i) => {
           return (
             <li
@@ -871,7 +871,7 @@ export function Pricing() {
           </button>
         ))}
       </div>
-      <div className={s.plans}>
+      <div className={`${s.plans} ${s.lands}`} data-reveal="stack">
         {PLANS.map((p) => {
           const intro = p.intro?.[billing];
           const [rs, usd] =

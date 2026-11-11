@@ -51,10 +51,17 @@ export default function Home() {
           <Link href="/install">Get the app</Link>
         </nav>
         <div className={s.end}>
-          <a href={REPO} className={s.navGh} aria-label="todone on GitHub">
-            <GithubMark /> <span>GitHub</span>
+          {/* The same sticker tiles as the app's top bar. */}
+          <a
+            href={REPO}
+            className={s.tile}
+            style={{ "--fill": "#fff8ef" } as React.CSSProperties}
+            aria-label="todone on GitHub"
+            data-tip="GitHub"
+          >
+            <GithubMark />
           </a>
-          <ThemeToggle />
+          <ThemeToggle tile={s.tile} />
           <Link href="/app" className="btn">
             Open the app
           </Link>
@@ -114,7 +121,7 @@ export default function Home() {
             Every feature leans on something that helps people actually follow
             through, not just write things down.
           </p>
-          <ul className={s.mindNote}>
+          <ul className={s.mindNote} data-reveal="note">
             {MIND.map(([idea, line, feature]) => (
               <li key={idea}>
                 <span className={s.mindTick} aria-hidden>
@@ -178,7 +185,7 @@ export default function Home() {
           </p>
 
           {/* The same task, as you see it and as our server stores it. */}
-          <div className={s.zkPair} aria-label="What you see and what our server stores">
+          <div className={`${s.zkPair} ${s.lands}`} data-reveal="stack" aria-label="What you see and what our server stores">
             <figure className={s.zkYou}>
               <figcaption>You see</figcaption>
               <p className="display">Buy a cake for Maa&apos;s birthday</p>
@@ -208,7 +215,7 @@ export default function Home() {
             then the places you actually look: your desk, your fridge, your bag.
           </p>
 
-          <div className={s.lanes}>
+          <div className={`${s.lanes} ${s.lands}`} data-reveal="stack">
             <div
               className={s.lane}
               style={{ "--fill": "var(--lime)" } as React.CSSProperties}
@@ -372,7 +379,7 @@ export default function Home() {
           <h2 id="comm-h" className="display">
             Build it with us.
           </h2>
-          <div className={s.ways}>
+          <div className={`${s.ways} ${s.lands}`} data-reveal="stack">
             <a
               href={REPO}
               className={s.way}
