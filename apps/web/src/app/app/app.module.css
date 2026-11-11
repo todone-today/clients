@@ -647,7 +647,7 @@
 .day {
   display: grid;
   align-content: start;
-  gap: 0.3rem;
+  gap: 0.45rem;
   min-height: 6.5rem;
   padding: 0.4rem;
   border-right: 2px solid var(--hair);
@@ -683,9 +683,46 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: 0.35rem;
-  /* Its list's colour, as a tab down the side (the whole chip coloured is too loud in a month of them). */
-  padding-left: 0.3rem;
-  border-left: 4px solid var(--fill, transparent);
+  /* A sticker in its list's colour, like the tray's and the board's notes. */
+  padding: 0.3rem 0.4rem;
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  background: var(--fill, var(--butter));
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+  rotate: -0.6deg;
+  cursor: grab;
+  transition: rotate 0.15s var(--ease);
+}
+.calTask:nth-of-type(even) {
+  rotate: 0.5deg;
+}
+.calTask:hover {
+  rotate: 0deg;
+}
+.calTask[data-done="true"] {
+  background: var(--raise);
+  box-shadow: none;
+  opacity: 0.75;
+}
+/* Late: the sticker keeps its colour and gets a hot edge and a tag, so it's still readable. */
+.calTask[data-late="true"] {
+  box-shadow: 3px 3px 0 var(--hot);
+}
+.calTask[data-late="true"] .calTitle span:first-child::after {
+  content: "late";
+  margin-left: 0.3rem;
+  padding: 0 0.25rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+  color: #fff;
+  background: var(--hot);
 }
 .calTask .check {
   width: 1.1rem;
@@ -719,9 +756,6 @@
 .block[data-done="true"] b {
   text-decoration: line-through 2px;
   color: var(--ink-2);
-}
-.calTask[data-late="true"] .calTitle {
-  color: var(--hot);
 }
 
 /* Day and week: a time grid, with the "To plan" tray beside it */
@@ -798,7 +832,7 @@
 .allDay {
   display: grid;
   align-content: start;
-  gap: 0.25rem;
+  gap: 0.4rem;
   min-height: 2.2rem;
   padding: 0.25rem;
   border-left: 2px solid var(--hair);
@@ -852,8 +886,13 @@
   /* Its list's colour, like the list's notes and its sidebar icon. */
   background: var(--fill, var(--peri));
   border: 2px solid var(--black);
-  box-shadow: 2px 2px 0 var(--black);
+  box-shadow: var(--lift-sm);
+  rotate: -0.4deg;
   cursor: grab;
+}
+.block:hover {
+  z-index: 1;
+  rotate: 0deg;
 }
 .block span {
   font-size: 0.68rem;
