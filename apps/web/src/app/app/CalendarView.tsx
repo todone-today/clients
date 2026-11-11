@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Select } from "@/components/Select";
 import {
@@ -478,8 +478,21 @@ function TimeGrid({
     return () => clearInterval(t);
   }, []);
 
+  // Opening a day or week lands on now (today's red line, centred) instead of midnight; other weeks start at 08:00.
+  // Once per view, so scrolling around isn't fought; the header stays pinned above.
+  const grid = useRef<HTMLDivElement>(null);
+  const shownToday = days.includes(today);
+  const placed = now !== null;
+  const first = days[0];
+  useEffect(() => {
+    if (!placed) return;
+    const el = grid.current?.querySelector<HTMLElement>(shownToday ? `.${s.now}` : "[data-hour='8']");
+    el?.scrollIntoView({ block: shownToday ? "center" : "start", behavior: "instant" });
+  }, [placed, shownToday, first]);
+
   return (
     <div
+      ref={grid}
       className={s.tg}
       style={{ "--days": days.length } as React.CSSProperties}
     >
@@ -530,7 +543,7 @@ function TimeGrid({
       <div className={s.tgRow} style={{ height: 24 * HOUR }}>
         <div className={s.hours}>
           {Array.from({ length: 23 }, (_, h) => (
-            <span key={h} style={{ top: (h + 1) * HOUR }}>
+            <span key={h} data-hour={h + 1} style={{ top: (h + 1) * HOUR }}>
               {toClock((h + 1) * 60)}
             </span>
           ))}
