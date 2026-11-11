@@ -789,8 +789,7 @@ export function Goals() {
           {ifReached === GOALS.length ? ". Everything." : "."}
         </p>
         <p className={s.meterNote}>
-          Every Plus, Team or Founding purchase counts, goals fill in order, and
-          this section goes once they&apos;re all met. Before fees and taxes.
+          Goals fill in order.
         </p>
         <Pay>Back todone with Plus</Pay>
       </div>
@@ -945,21 +944,21 @@ const PLACES = [
     "Desk",
     SHOTS.desk,
     "On your desk",
-    "The day at a glance next to your laptop. Tick things off with a tap; no phone, no notifications.",
+    "Your day, next to your laptop.",
   ],
   [
     "fridge",
     "Fridge",
     SHOTS.fridge,
     "On the fridge",
-    "The household's lists where everyone walks past: groceries, bills, who's doing what. Anyone can tick things off.",
+    "The family's lists, where everyone sees them.",
   ],
   [
     "bag",
     "Bag",
     SHOTS.bag,
     "On your bag",
-    "Clipped to a strap: your next three tasks on the way out the door, for days on one charge.",
+    "Your next three tasks, on your way out.",
   ],
 ] as const;
 
@@ -988,8 +987,7 @@ export function Hardware() {
           <p className={s.goalTag}>
             Prototype: goal {GOALS.indexOf(goal) + 1} · {inr(goal.inr)}
           </p>
-          <small>Sold on its own, after the phone apps.</small>
-        </div>
+                  </div>
       </div>
     </div>
   );

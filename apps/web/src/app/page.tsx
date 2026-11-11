@@ -74,40 +74,39 @@ export default function Home() {
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
         <section id="features" className={s.features} aria-label="What todone does">
           <Chapter tag="Steps" title="Big task, small steps." fill="var(--butter)">
-            Drop one note on another and it becomes a step. Fold them away when you&apos;re done looking.
+            Drop a note on another to make it a step.
             <StepsDemo />
           </Chapter>
           <Chapter tag="Calendar" title="Plan the week by dragging it there." fill="var(--cyan)" wide>
-            Drag a task onto a time; stretch the block to say how long.
+            Drag tasks onto your week.
             {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />}
           </Chapter>
           <Chapter tag="Focus" title="Focus mode. Just you and one task." fill="var(--lime)">
-            Everything else disappears: one task, a timer and a soft tick-tock. Finish, and the time you spent is saved on it.
+            One task, a timer, nothing else.
             <FocusDemo />
           </Chapter>
           <Chapter tag="Together" title="One list, the whole house." fill="var(--pink)">
-            Plan with a team, or share one task by link with anyone. No account needed.
+            Share lists with family or your team.
             <SharedDemo />
           </Chapter>
           <Chapter tag="Offline" title="No signal? Keep going." fill="var(--orange)">
-            It opens without a connection and saves what you change once you&apos;re back. Try it.
+            Works without internet. Syncs when you&apos;re back.
             <OfflineDemo />
           </Chapter>
           <Chapter tag="Goals" title="Goals you can feel." fill="var(--peri)">
-            Log in a tap, earn XP, spend it on rewards you choose. No streak to break.
+            Finish tasks, earn points, treat yourself.
             <GoalsDemo />
           </Chapter>
           <Chapter tag="Reminders" title="Reminders that can't read you." fill="var(--cyan)">
-            Sealed on your device. Our server only knows when, never what.
+            Get nudged on time. Only you can read them.
             <RemindDemo />
           </Chapter>
           <Chapter tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
-            Google, Apple and Outlook from one private link. Add it once.
+            Your tasks show up in Google, Apple or Outlook.
             <ToolsDemo />
           </Chapter>
           <Chapter tag="Phone" title="In your pocket, too." fill="var(--pink)">
-            No app store needed. Add todone to your home screen and it works like a real app: full screen, offline, and
-            notifications that remind you of tasks even when it&apos;s closed.
+            Add it to your home screen. It works like an app, with notifications.
             <PhoneDemo />
           </Chapter>
         </section>
@@ -118,8 +117,7 @@ export default function Home() {
             Built to get you doing.
           </h2>
           <p className={s.sub}>
-            Every feature leans on something that helps people actually follow
-            through, not just write things down.
+            Small tricks that help you actually finish.
           </p>
           <ul className={s.mindNote} data-reveal="note">
             {MIND.map(([idea, line, feature]) => (
@@ -144,16 +142,13 @@ export default function Home() {
             </h2>
             <ul>
               <li>
-                <b>You move things, you don&apos;t fill in forms.</b> Dates,
-                lengths, priorities and repeats are stickers you drop on.
+                <b>Drag, don&apos;t type.</b> Dates and priorities are stickers.
               </li>
               <li>
-                <b>Your lists are yours.</b> End-to-end encrypted, open source
-                under GPL-3.0, export any time, or run it on your own server.
+                <b>Yours alone.</b> Encrypted, open source, export any time.
               </li>
               <li>
-                <b>Calm by design.</b> No streaks to break, no feed. Goals and
-                rewards you set yourself, if you want them.
+                <b>Calm.</b> No streaks, no feed, no noise.
               </li>
             </ul>
             <Link
@@ -179,9 +174,7 @@ export default function Home() {
             For your eyes only.
           </h2>
           <p className={s.sub}>
-            Everything you write is scrambled on your phone or computer before
-            it&apos;s saved. Only you can unscramble it. Not us, not a hacker,
-            nobody.
+            Your lists are locked on your device. Only you can read them.
           </p>
 
           {/* The same task, as you see it and as our server stores it. */}
@@ -211,8 +204,7 @@ export default function Home() {
             Built for the long haul.
           </h2>
           <p className={s.sub}>
-            Today on the web and your phone&apos;s home screen, native apps next,
-            then the places you actually look: your desk, your fridge, your bag.
+            Web and phone today. Native apps next. Then screens for your home.
           </p>
 
           <div className={`${s.lanes} ${s.lands}`} data-reveal="stack">
@@ -295,9 +287,7 @@ export default function Home() {
               Your tasks, off your phone.
             </h2>
             <p>
-              Calm e-ink screens that show your day without asking for your
-              attention. Concepts for now: members fund the prototypes, one
-              goal at a time.
+              Calm screens for your desk, fridge and bag. Ideas for now.
             </p>
           </div>
           <Hardware />
@@ -310,10 +300,7 @@ export default function Home() {
               Unlock what&apos;s next.
             </h2>
             <p className={s.sub}>
-              Every Plus, Team or Founding purchase goes toward the next goal:
-              first the app-store accounts, then hardware prototypes. App-store
-              amounts are what Google and Apple charge; hardware amounts are our
-              estimates for R&amp;D, not manufacturing.
+              Every plan you buy funds what we build next, in this order.
             </p>
             <Goals />
           </section>
@@ -325,10 +312,7 @@ export default function Home() {
             Free to use. Fair to keep running.
           </h2>
           <p className={s.sub}>
-            todone is free and open source, and self-hosting is free forever.
-            The hosted cloud is free for everyday use; paid plans are for heavy
-            use and teams, pay for the servers, and fund the goals above.
-            Checkout is through Razorpay: UPI, cards and netbanking.
+            Free for everyday use. Pay for more lists and sharing.
           </p>
           <Pricing />
           <div className={s.founding}>
@@ -341,10 +325,8 @@ export default function Home() {
                 Know Kartikey personally? Like where todone is going?
               </h3>
               <p>
-                I&apos;m building todone in the open: private lists, no ads, no
-                selling your data, then phones and a calm e-ink screen. If
-                that&apos;s something you want to exist, back it once and
-                you&apos;re part of it from the start.
+                I&apos;m building todone in the open, with no ads and no selling
+                your data. Back it once and be part of it from the start.
               </p>
               <p className={s.foundingSign}>— Kartikey, who makes todone</p>
               <p className={s.foundingPrice}>
@@ -352,10 +334,7 @@ export default function Home() {
                 <small>paid once</small>
               </p>
               <p>
-                That gives you three years of Plus, and nothing renews (paying
-                yearly would come to {FOUNDING.yearly}). Every rupee goes
-                towards the app-store accounts and the first hardware
-                prototypes.
+                Three years of Plus. Nothing renews.
               </p>
             </div>
             <Pay plan="founding" fill="var(--pink)">
@@ -364,13 +343,11 @@ export default function Home() {
           </div>
           <p className={s.selfhost}>
             Rather run it yourself?{" "}
-            <a href={`${REPO}/server`}>Self-host todone</a> with Docker Compose:
-            every feature, no limits, no licence key.
+            <a href={`${REPO}/server`}>Self-host todone</a> for free.
           </p>
           <p className={s.selfhost}>
-            Want todone run for your company? Email{" "}
-            <a href="mailto:hello@todone.today">hello@todone.today</a> and tell
-            us what you need.
+            For companies:{" "}
+            <a href="mailto:hello@todone.today">hello@todone.today</a>.
           </p>
         </section>
 
@@ -462,13 +439,13 @@ export default function Home() {
 
 // The ideas behind the features, said plainly, each with where it lives in todone.
 const MIND = [
-  ["Start tiny.", "A big task is daunting; its first five-minute step isn't. Break it down and begin.", "Steps"],
-  ["Decide when, not just what.", "A task with a time on the calendar gets done far more often than one on a list.", "Calendar"],
-  ["Plan for the hard day.", "\"If I'm too tired, then I'll walk ten minutes.\" Deciding ahead beats willpower later.", "If-then plans"],
-  ["One thing at a time.", "Switching costs focus. Give one task the whole screen and a clock.", "Focus mode"],
-  ["Reward the effort.", "Bigger tasks earn more XP, and you spend it on treats you pick yourself.", "XP & rewards"],
-  ["Miss a day, keep the habit.", "No streak to lose. A quiet week starts fresh, and one small win counts.", "Goals"],
-  ["Know how long things take.", "Focus time goes on the task, so your next plan is honest.", "⏳ on cards"],
+  ["Start tiny.", "Break a big task into small steps.", "Steps"],
+  ["Pick a time.", "Tasks with a time get done.", "Calendar"],
+  ["Plan for bad days.", "Decide now what you'll do when it's hard.", "If-then plans"],
+  ["One thing at a time.", "Shut out the rest while you work.", "Focus mode"],
+  ["Reward yourself.", "Earn points, spend them on treats.", "Rewards"],
+  ["Miss a day, keep going.", "No streaks to break.", "Goals"],
+  ["Know your time.", "See how long tasks really take.", "Timer"],
 ] as const;
 
 // One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
