@@ -848,7 +848,7 @@ function Privacy({ list, update }: { list: List; update: Update }) {
 const clockNow = () => performance.now();
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
-export function ListView({
+function ListView({
   list,
   lists,
   update,

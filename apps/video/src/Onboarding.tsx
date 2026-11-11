@@ -1,384 +1,166 @@
-// todone's onboarding video: eight scenes, each a frame range of the real app's components driven by sample data.
-// Scenes are timed by frame (Sequence from/duration); everything inside reads the current frame, so any frame renders
-// on its own. Sound cues are all in <Sounds /> at the bottom.
-import { useEffect, useLayoutEffect } from "react";
-import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
-import { type List, type Task } from "@todone/sdk/tasks";
-import { ListView } from "@/app/app/TodoApp";
-import { CalendarView } from "@/app/app/CalendarView";
-import { Members } from "@/app/app/Workspaces";
-import { ThemeToggle } from "@/components/ThemeToggle";
+// todone's onboarding video: the whole signed-in app (src/live.tsx) on a sample account (src/seed.ts), one feature
+// per scene, timed by frame. Sound cues and the music are in <Sounds /> at the bottom.
+import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { Logo } from "@/components/Logo";
-import app from "@/app/app/app.module.css";
 import { setTeam } from "./mocks/auth-client";
 import { setTheme } from "./setup";
-import { day, list, tasks, today } from "./data";
-import { AppScene, type Click, claim, sideList, tab, xpTile } from "./AppScenes";
-import { Caption, Carried, Cursor, Fade, Ring, type Key, Sfx, Stage, cursorAt as interpolateKeys, inStage, mid, usePop, useTargets } from "./kit";
+import { FLIGHT, TYPED, day } from "./seed";
+import { Fade, Sfx, inStage, usePop } from "./kit";
+import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab, tickBox, xpTile } from "./live";
 
-// ---- Timeline (frames at 30fps) ----------------------------------------------------------------------------------
-export const S = {
-  intro: { from: 0, dur: 90 },
-  create: { from: 90, dur: 150 },
-  stickers: { from: 240, dur: 240 },
-  steps: { from: 480, dur: 150 },
-  calendar: { from: 630, dur: 180 },
-  lists: { from: 810, dur: 150 },
-  goals: { from: 960, dur: 150 },
-  rewards: { from: 1110, dur: 170 },
-  team: { from: 1280, dur: 165 },
-  theme: { from: 1445, dur: 120 },
-  end: { from: 1565, dur: 120 },
+// ---- Where things are that need more than a selector ------------------------------------------------------------
+const theToggle: Finder = () => inStage("button[aria-label^='Switch to']")[0];
+const trayItem: Finder = () => inStage("button, li, div").reverse().find((el) => el.textContent?.trim().startsWith(TYPED) && el.getBoundingClientRect().width < 400);
+// Tomorrow at 10:00 in the week grid: that day's column, at the 10:00 row.
+const tomorrowAt10: Finder = () => {
+  const n = +day(1).slice(8);
+  const col = inStage("button").find((b) => b.textContent?.replace(/\s+/g, " ").trim().endsWith(` ${n}`));
+  const hour = inStage("span[data-hour='10']")[0];
+  if (!col || !hour) return null;
+  const c = col.getBoundingClientRect();
+  const h = hour.getBoundingClientRect();
+  return { getBoundingClientRect: () => new DOMRect(c.x, h.y, c.width, 24), outerHTML: "" } as unknown as Element;
 };
-export const DURATION = S.end.from + S.end.dur; // 1685 frames, about 56 s
+// ---- The scenes: what each one does (frames at 30fps, from the scene's start) ------------------------------------
+type Scene = { dur: number; caption: string; steps: Step[]; pre?: Parameters<typeof LiveScene>[0]["pre"] };
+const DONE = ["added", "today", "high", "weekly", "step", "planned"] as const;
+const SCENES = {
+  create: {
+    dur: 80,
+    caption: "Add a task: type it, press Enter",
+    steps: [{ at: 14, into: field("#new-task"), type: TYPED, dur: 34, then: "added", sfx: "pop" }],
+  },
+  stickers: {
+    dur: 115,
+    caption: "Drop stickers on it: when, priority, repeat",
+    pre: DONE.slice(0, 1),
+    steps: [
+      { at: 34, drag: sticker("Today"), to: note(FLIGHT), edit: "today", sfx: "pop" },
+      { at: 68, drag: sticker("High"), to: note(FLIGHT), edit: "high", sfx: "pop" },
+      { at: 102, drag: sticker("Weekly"), to: note("t-water-the-plants"), edit: "weekly", sfx: "pop" },
+    ],
+  },
+  steps: {
+    dur: 70,
+    caption: "Drop one note on another: it becomes a step",
+    pre: DONE.slice(0, 4),
+    steps: [{ at: 46, drag: note("t-pack-the-chargers"), to: note(FLIGHT), edit: "step", lift: 30, sfx: "thud" }],
+  },
+  calendar: {
+    dur: 105,
+    caption: "Plan the week: drag tasks onto a time",
+    pre: DONE.slice(0, 5),
+    steps: [
+      { at: 16, click: tab("Calendar"), sfx: "click" },
+      { at: 84, drag: trayItem, to: tomorrowAt10, edit: "planned", lift: 34, sfx: "thud" },
+    ],
+  },
+  lists: {
+    dur: 75,
+    caption: "Every list in the sidebar, one click away",
+    pre: [...DONE],
+    steps: [
+      { at: 20, click: sideList("Trip to Goa"), sfx: "click" },
+      { at: 50, click: sideList("Brainstorm"), sfx: "click" },
+    ],
+  },
+  goals: {
+    dur: 60,
+    caption: "Goals: small steps, every one counted",
+    pre: [...DONE],
+    steps: [{ at: 18, click: tab("Goals"), sfx: "click" }],
+  },
+  rewards: {
+    dur: 110,
+    caption: "Tick tasks, earn XP, spend it on a treat",
+    pre: [...DONE],
+    steps: [
+      { at: 22, click: tickBox("Call the landlord"), sfx: "ding" },
+      { at: 54, click: xpTile, sfx: "click" },
+      { at: 86, click: claim("Movie night"), sfx: "chime" },
+    ],
+  },
+  team: {
+    dur: 110,
+    caption: "Plan together: invite people to a team",
+    pre: [...DONE],
+    steps: [
+      { at: 16, click: button("Team settings"), sfx: "click" },
+      { at: 34, into: field("#invite-email"), type: "meera@todone.today", dur: 36 },
+      { at: 84, click: button("Invite"), sfx: "ding", fake: true },
+    ],
+  },
+  theme: {
+    dur: 50,
+    caption: "Day or night: one tap",
+    pre: [...DONE],
+    steps: [{ at: 22, click: theToggle, sfx: "click", fake: true }],
+  },
+} satisfies Record<string, Scene>;
 
-// Moments inside scenes (relative to the scene's start), shared by the scene and its sound cues.
-const T = {
-  createEnter: 96, // the typed task is added
-  stickerDrops: [70, 130, 190], // Today, High, Weekly land
-  stepDrop: 92,
-  calPick: 40,
-  calDrop: 104,
-  invite: 112,
-  themeClick: 54,
-};
+// ---- Timeline ---------------------------------------------------------------------------------------------------
+const INTRO = 60;
+const OUTRO = 80;
+const ORDER = ["create", "stickers", "steps", "calendar", "lists", "goals", "rewards", "team", "theme"] as const;
+const FROM = {} as Record<(typeof ORDER)[number], number>;
+ORDER.reduce((t, k) => ((FROM[k] = t), t + SCENES[k].dur), INTRO);
+const END = FROM.theme + SCENES.theme.dur;
+export const DURATION = END + OUTRO;
+// Night until the toggle is tapped; the team scene is in a team workspace (Home), with Meera invited once Invite is.
+const NIGHT_UNTIL = FROM.theme + SCENES.theme.steps[0].at;
+const INVITED_AT = FROM.team + SCENES.team.steps[2].at;
 
-// The whole-app scenes, as clicks on the real app (AppScenes.tsx).
-const LISTS: Click[] = [
-  { at: 50, find: sideList("Trip to Goa"), sfx: "click" },
-  { at: 105, find: sideList("Brainstorm"), sfx: "click" },
-];
-const GOALS: Click[] = [{ at: 45, find: tab("Goals"), sfx: "click" }];
-const REWARDS: Click[] = [
-  { at: 50, find: xpTile, sfx: "click" },
-  { at: 115, find: claim("Movie night"), sfx: "chime" },
-];
-
-const NIGHT_UNTIL = S.theme.from + T.themeClick; // the toggle in scene 7 switches to Day
-
-// ---- Sample data ------------------------------------------------------------------------------------------------
-const START = "- [ ] Call the landlord\n- [ ] Pack the chargers\n- [ ] Water the plants\n";
-const typed = "Book flights to Goa";
-const base = (more = "") => list("This week", START + more, "week");
-const withNew = (patch: Partial<Task> = {}): List => {
-  const l = base();
-  const t = tasks(`- [ ] ${typed}\n`)[0];
-  return { ...l, tasks: [...l.tasks, { ...t, id: "t-new", ...patch }] };
-};
-// Weekly goes on a chore that repeats, not the flight booking.
-const weekly = (l: List): List => ({ ...l, tasks: l.tasks.map((t) => (t.title === "Water the plants" ? { ...t, rep: "every week" } : t)) });
-const planned = () => weekly(withNew({ due: today, pri: 1 }));
-const noop = () => {};
-
-// ---- Scenes -----------------------------------------------------------------------------------------------------
+// ---- Intro and end card -----------------------------------------------------------------------------------------
+const TAGLINE = "todo, done right.";
 const Intro = () => {
   const f = useCurrentFrame();
   const logo = usePop(0, 10);
-  const line = usePop(18, 14);
+  const line = usePop(12, 14);
   return (
     <AbsoluteFill style={{ background: "var(--ground)", color: "var(--ink)", alignItems: "center", justifyContent: "center", gap: 28 }}>
       <div style={{ transform: `scale(${logo * 2.2}) rotate(${(1 - logo) * -12}deg)` }}>
         <Logo size={44} />
       </div>
-      <p
-        className="display"
-        style={{
-          fontSize: 76,
-          lineHeight: 0.9,
-          marginTop: 40,
-          opacity: line,
-          transform: `translateY(${(1 - line) * 30}px)`,
-        }}
-      >
-        Plan your day, calmly.
+      <p className="display" style={{ fontSize: 84, lineHeight: 0.9, marginTop: 40, opacity: line, transform: `translateY(${(1 - line) * 30}px)` }}>
+        {TAGLINE}
       </p>
-      <Fade f={f} dur={S.intro.dur} />
+      <Fade f={f} dur={INTRO} />
     </AbsoluteFill>
   );
 };
-
-// Types into a real input the component owns (its own state stays empty; only the DOM shows the letters).
-function useTyping(selector: string, text: string, from: number, to: number) {
-  const f = useCurrentFrame();
-  const n = Math.round(interpolate(f, [from, to], [0, text.length], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
-  useLayoutEffect(() => {
-    const el = document.querySelector<HTMLInputElement>(selector);
-    if (el) el.value = f < from ? "" : text.slice(0, n);
-  });
-}
-
-const Create = () => {
-  const f = useCurrentFrame();
-  const added = f >= T.createEnter;
-  useTyping("input[placeholder^='Add a task']", added ? "" : typed, 30, 80);
-  const { ref, at } = useTargets({ input: "input[placeholder^='Add a task']", note: "[data-id='t-new']" });
-  const pop = usePop(T.createEnter, 9);
-  const L = added ? withNew() : base();
-  const i = mid(at.input);
-  const keys: Key[] = [
-    { f: 0, x: 900, y: 600 },
-    { f: 24, x: i.x - 120, y: i.y },
-    { f: 28, x: i.x - 120, y: i.y, down: true },
-    { f: 32, x: i.x - 120, y: i.y },
-  ];
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <PopNote id="t-new" scale={added ? 0.6 + pop * 0.4 : 1} />
-        <ListView list={L} lists={[L]} update={noop} />
-      </Stage>
-      <Caption text="Add a task: type it, press Enter" duration={S.create.dur} />
-      <Cursor keys={keys} />
-      {added && at.note && <Ring x={mid(at.note).x} y={mid(at.note).y} f={f - T.createEnter} />}
-      <Fade f={f} dur={S.create.dur} />
-    </AbsoluteFill>
-  );
-};
-
-// The new note pops: a style tag scales it from 60% as it lands.
-const PopNote = ({ id, scale }: { id: string; scale: number }) => (
-  <style>{`[data-id='${id}'] { transform: scale(${scale}); transform-origin: 50% 60%; }`}</style>
-);
-
-const stickerBy = (label: string) => () =>
-  inStage(`button.${app.stick}, span.${app.stick}`).find((b) => b.textContent?.trim() === label);
-
-const Stickers = () => {
-  const f = useCurrentFrame();
-  const [d1, d2, d3] = T.stickerDrops;
-  const L0 = withNew({
-    ...(f >= d1 ? { due: today } : {}),
-    ...(f >= d2 ? { pri: 1 as const } : {}),
-  });
-  const L = f >= d3 ? weekly(L0) : L0;
-  const { ref, at } = useTargets({
-    note: "[data-id='t-new']",
-    plants: "[data-id='t-water-the-plants']",
-    when: stickerBy("Today"),
-    high: stickerBy("High"),
-    weekly: stickerBy("Weekly"),
-  });
-  const drags = [
-    { s: at.when, drop: d1, on: mid(at.note) },
-    { s: at.high, drop: d2, on: mid(at.note) },
-    { s: at.weekly, drop: d3, on: mid(at.plants) },
-  ];
-  // Each sticker: reach it, pick it up, carry it onto the note, drop.
-  const keys: Key[] = [{ f: 0, x: 700, y: 600 }];
-  for (const { s, drop, on: n } of drags) {
-    const p = mid(s);
-    keys.push({ f: drop - 42, x: p.x, y: p.y }, { f: drop - 36, x: p.x, y: p.y, down: true }, { f: drop, x: n.x + 20, y: n.y, down: true }, { f: drop + 4, x: n.x + 20, y: n.y });
-  }
-  const carrying = drags.find(({ drop }) => f >= drop - 36 && f < drop);
-  const c = keys.length ? interpolateKeys(keys, f) : { x: 0, y: 0 };
-  const landed = drags.filter(({ drop }) => f >= drop).at(-1);
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <ListView list={L} lists={[L]} update={noop} />
-      </Stage>
-      <Caption text="Drop stickers on it: when, priority, repeat" duration={S.stickers.dur} />
-      {carrying && <Carried item={carrying.s} x={c.x} y={c.y} />}
-      {landed && <Ring x={landed.on.x} y={landed.on.y} f={f - landed.drop} />}
-      <Cursor keys={keys} />
-      <Fade f={f} dur={S.stickers.dur} />
-    </AbsoluteFill>
-  );
-};
-
-
-// "Pack the chargers" dropped onto the new note, as its step.
-const withStep = (L: List): List => ({
-  ...L,
-  tasks: L.tasks
-    .filter((t) => t.title !== "Pack the chargers")
-    .map((t) => (t.id === "t-new" ? { ...t, sub: [...t.sub, L.tasks.find((x) => x.title === "Pack the chargers")!] } : t)),
-});
-
-const Steps = () => {
-  const f = useCurrentFrame();
-  const drop = T.stepDrop;
-  const before = planned();
-  const L: List =
-    f < drop
-      ? before
-      : withStep(before);
-  const chargers = () =>
-    inStage("[data-id]").find((el) => el.textContent?.includes("Pack the chargers") && !el.textContent.includes(typed));
-  const { ref, at } = useTargets({ note: "[data-id='t-new']", step: chargers });
-  const from = mid(at.step);
-  const to = mid(at.note);
-  const keys: Key[] = [
-    { f: 0, x: 900, y: 620 },
-    { f: 22, x: from.x, y: from.y },
-    { f: 28, x: from.x, y: from.y, down: true },
-    { f: drop - 14, x: to.x, y: to.y, down: true },
-    { f: drop, x: to.x, y: to.y, down: true },
-    { f: drop + 4, x: to.x, y: to.y },
-  ];
-  const c = interpolateKeys(keys, f);
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <ListView list={L} lists={[L]} update={noop} />
-      </Stage>
-      <Caption text="Drop one note on another: it becomes a step" duration={S.steps.dur} />
-      {f >= 28 && f < drop && <Carried item={at.step} x={c.x} y={c.y} />}
-      {f >= drop && <Ring x={to.x} y={to.y} f={f - drop} />}
-      <Cursor keys={keys} />
-      <Fade f={f} dur={S.steps.dur} />
-    </AbsoluteFill>
-  );
-};
-
-const Calendar = () => {
-  const f = useCurrentFrame();
-  const target = day(1);
-  const plan = list(
-    "This week",
-    `- [ ] Stand-up 📅 ${today} ⏰ 09:30 ⏱ 30m\n- [ ] Dentist 📅 ${day(2)} ⏰ 11:00 ⏱ 1h\n- [ ] Gym 📅 ${day(-1)} ⏰ 07:00 ⏱ 1h\n- [ ] ${typed}\n- [ ] Water the plants\n`,
-    "week",
-  );
-  const L: List =
-    f < T.calDrop
-      ? plan
-      : { ...plan, tasks: plan.tasks.map((t) => (t.title === typed ? { ...t, due: target, at: "10:00", est: 90 } : t)) };
-  const tray = () => inStage("button, li, div").reverse().find((el) => el.textContent?.trim().startsWith(typed) && el.getBoundingClientRect().width < 400);
-  const { ref, at } = useTargets({
-    item: tray,
-    hour: "span[data-hour='10']",
-    col: () => inStage("button").find((b) => b.textContent?.replace(/\s+/g, " ").trim().endsWith(` ${+target.slice(8)}`)),
-  });
-  // Show the morning (the app itself opens on the current time, which depends on when this renders).
-  useEffect(() => {
-    const h = inStage("span[data-hour='7']")[0];
-    // The week grid scrolls inside its own box: move whichever ancestor actually scrolls.
-    let box = h?.parentElement;
-    while (box && box.scrollHeight <= box.clientHeight) box = box.parentElement;
-    if (h && box) box.scrollTop += h.getBoundingClientRect().top - box.getBoundingClientRect().top - 130;
-  });
-  const p = mid(at.item);
-  const dropAt = { x: mid(at.col).x, y: at.hour ? at.hour.y + 10 : 400 };
-  const keys: Key[] = [
-    { f: 0, x: 600, y: 600 },
-    { f: T.calPick - 6, x: p.x, y: p.y },
-    { f: T.calPick, x: p.x, y: p.y, down: true },
-    { f: T.calDrop, x: dropAt.x, y: dropAt.y, down: true },
-    { f: T.calDrop + 4, x: dropAt.x, y: dropAt.y },
-  ];
-  const c = interpolateKeys(keys, f);
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <CalendarView lists={[L]} update={noop} />
-      </Stage>
-      <Caption text="Plan the week: drag tasks onto a time" duration={S.calendar.dur} />
-      {f >= T.calPick && f < T.calDrop && <Carried item={at.item} x={c.x} y={c.y} />}
-      {f >= T.calDrop && <Ring x={dropAt.x} y={dropAt.y} f={f - T.calDrop} />}
-      <Cursor keys={keys} />
-      <Fade f={f} dur={S.calendar.dur} />
-    </AbsoluteFill>
-  );
-};
-
-const Team = () => {
-  const f = useCurrentFrame();
-  const invited = f >= T.invite;
-  setTeam({ members: 2, invited: invited ? ["meera@todone.today"] : [] });
-  useTyping("#invite-email", invited ? "" : "meera@todone.today", 40, 95);
-  const { ref, at } = useTargets({
-    email: "#invite-email",
-    invite: () => inStage("button").find((b) => b.textContent?.trim() === "Invite"),
-  });
-  const e = mid(at.email);
-  const b = mid(at.invite);
-  const keys: Key[] = [
-    { f: 0, x: 900, y: 600 },
-    { f: 30, x: e.x - 80, y: e.y },
-    { f: 34, x: e.x - 80, y: e.y, down: true },
-    { f: 38, x: e.x - 80, y: e.y },
-    { f: T.invite - 6, x: b.x, y: b.y },
-    { f: T.invite - 2, x: b.x, y: b.y, down: true },
-    { f: T.invite + 2, x: b.x, y: b.y },
-  ];
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <Members />
-      </Stage>
-      <Caption text="Plan together: make a team, invite people" duration={S.team.dur} />
-      <Cursor keys={keys} />
-      <Fade f={f} dur={S.team.dur} />
-    </AbsoluteFill>
-  );
-};
-
-const Theme = () => {
-  const f = useCurrentFrame();
-  const L = withStep(planned());
-  const { ref, at } = useTargets({ toggle: `button.${app.tile}` });
-  const t = mid(at.toggle);
-  const keys: Key[] = [
-    { f: 0, x: 700, y: 500 },
-    { f: T.themeClick - 6, x: t.x, y: t.y },
-    { f: T.themeClick - 2, x: t.x, y: t.y, down: true },
-    { f: T.themeClick + 2, x: t.x, y: t.y },
-  ];
-  return (
-    <AbsoluteFill ref={ref}>
-      <Stage>
-        <div style={{ position: "absolute", top: 18, right: 240, zIndex: 5 }}>
-          <ThemeToggle tile={app.tile} />
-        </div>
-        <ListView list={L} lists={[L]} update={noop} />
-      </Stage>
-      <Caption text="Day or night: one tap" duration={S.theme.dur} />
-      {f >= T.themeClick && <Ring x={t.x} y={t.y} f={f - T.themeClick} />}
-      <Cursor keys={keys} />
-      <Fade f={f} dur={S.theme.dur} />
-    </AbsoluteFill>
-  );
-};
-
 const End = () => {
   const logo = usePop(0, 10);
-  const line = usePop(14, 14);
+  const line = usePop(10, 14);
+  const more = usePop(20, 14);
   return (
-    <AbsoluteFill style={{ background: "var(--lime)", color: "var(--black)", alignItems: "center", justifyContent: "center", gap: 30 }}>
+    <AbsoluteFill style={{ background: "var(--lime)", color: "var(--black)", alignItems: "center", justifyContent: "center", gap: 22 }}>
       <div style={{ transform: `scale(${logo * 2})` }}>
         <Logo size={44} />
       </div>
-      <p className="display" style={{ fontSize: 64, marginTop: 30, opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
-        todone.today
+      <p className="display" style={{ fontSize: 72, marginTop: 26, opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
+        {TAGLINE}
       </p>
-      <p style={{ font: "800 26px var(--sans)", opacity: line }}>Free · Open source · Encrypted</p>
+      <p style={{ font: "800 28px var(--sans)", opacity: more }}>todone.today</p>
+      <p style={{ font: "700 22px var(--sans)", opacity: more }}>Free · Open source · Encrypted</p>
     </AbsoluteFill>
   );
 };
 
-// ---- Sound cues (all of them, in one place) -------------------------------------------------------------------
+// ---- Sound ------------------------------------------------------------------------------------------------------
+// The music is a placeholder made by make_sfx.py; drop a licensed track into public/ as music.wav to replace it.
 const Sounds = () => (
   <>
-    <Sfx at={S.intro.from} name="whoosh" />
-    <Sfx at={S.intro.from + 22} name="chime" />
-    <Sfx at={S.create.from + 28} name="click" volume={0.4} />
-    <Sfx at={S.create.from + T.createEnter} name="pop" />
-    {T.stickerDrops.map((d) => (
-      <Sfx key={d} at={S.stickers.from + d} name="pop" />
-    ))}
-    <Sfx at={S.steps.from + T.stepDrop} name="pop" />
-    <Sfx at={S.steps.from + T.stepDrop + 3} name="thud" volume={0.4} />
-    <Sfx at={S.calendar.from + T.calPick} name="whoosh" volume={0.45} />
-    <Sfx at={S.calendar.from + T.calDrop} name="thud" />
-    {([[S.lists, LISTS], [S.goals, GOALS], [S.rewards, REWARDS]] as const).flatMap(([sc, cs]) =>
-      cs.map((c) => <Sfx key={sc.from + c.at} at={sc.from + c.at} name={c.sfx ?? "click"} />),
+    <Audio
+      src={staticFile("music.wav")}
+      volume={(f) => 0.22 * interpolate(f, [0, 20, DURATION - 40, DURATION], [0, 1, 1, 0], { extrapolateRight: "clamp" })}
+    />
+    <Sfx at={0} name="whoosh" />
+    <Sfx at={14} name="chime" />
+    {ORDER.flatMap((k) =>
+      (SCENES[k].steps as Step[]).filter((s) => s.sfx).map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + end(s)} name={s.sfx!} />),
     )}
-    <Sfx at={S.team.from + T.invite} name="ding" />
-    <Sfx at={S.theme.from + T.themeClick} name="click" />
-    <Sfx at={S.end.from} name="whoosh" />
-    <Sfx at={S.end.from + 16} name="chime" />
-    {/* Background music: drop a track into public/ and uncomment.
-    <Audio src={staticFile("music.mp3")} volume={0.15} /> */}
+    <Sfx at={END} name="whoosh" />
+    <Sfx at={END + 12} name="chime" />
   </>
 );
 
@@ -386,39 +168,22 @@ const Sounds = () => (
 export const Onboarding = () => {
   const frame = useCurrentFrame();
   setTheme(frame < NIGHT_UNTIL ? "night" : "day");
+  const inTeam = frame >= FROM.team && frame < FROM.team + SCENES.team.dur;
+  setTeam(inTeam ? { members: 2, invited: frame >= INVITED_AT ? ["meera@todone.today"] : [] } : null);
   return (
     <AbsoluteFill style={{ background: "var(--ground)" }}>
-      <Sequence from={S.intro.from} durationInFrames={S.intro.dur}>
+      <Sequence durationInFrames={INTRO}>
         <Intro />
       </Sequence>
-      <Sequence from={S.create.from} durationInFrames={S.create.dur}>
-        <Create />
-      </Sequence>
-      <Sequence from={S.stickers.from} durationInFrames={S.stickers.dur}>
-        <Stickers />
-      </Sequence>
-      <Sequence from={S.steps.from} durationInFrames={S.steps.dur}>
-        <Steps />
-      </Sequence>
-      <Sequence from={S.calendar.from} durationInFrames={S.calendar.dur}>
-        <Calendar />
-      </Sequence>
-      <Sequence from={S.lists.from} durationInFrames={S.lists.dur}>
-        <AppScene clicks={LISTS} caption="Every list in the sidebar, one click away" dur={S.lists.dur} />
-      </Sequence>
-      <Sequence from={S.goals.from} durationInFrames={S.goals.dur}>
-        <AppScene clicks={GOALS} caption="Goals: small steps, every one counted" dur={S.goals.dur} />
-      </Sequence>
-      <Sequence from={S.rewards.from} durationInFrames={S.rewards.dur}>
-        <AppScene clicks={REWARDS} caption="Done tasks earn XP: spend it on a treat" dur={S.rewards.dur} />
-      </Sequence>
-      <Sequence from={S.team.from} durationInFrames={S.team.dur}>
-        <Team />
-      </Sequence>
-      <Sequence from={S.theme.from} durationInFrames={S.theme.dur}>
-        <Theme />
-      </Sequence>
-      <Sequence from={S.end.from} durationInFrames={S.end.dur}>
+      {ORDER.map((k) => {
+        const sc: Scene = SCENES[k];
+        return (
+          <Sequence key={k} from={FROM[k]} durationInFrames={sc.dur}>
+            <LiveScene pre={sc.pre} steps={sc.steps} caption={sc.caption} dur={sc.dur} />
+          </Sequence>
+        );
+      })}
+      <Sequence from={END} durationInFrames={OUTRO}>
         <End />
       </Sequence>
       <Sounds />

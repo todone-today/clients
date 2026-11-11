@@ -26,7 +26,7 @@ export const Sfx = ({ at, name, volume = 0.6 }: { at: number; name: SfxName; vol
 );
 
 // ---- Caption -----------------------------------------------------------------------------------------------------
-// The scene's caption, a small sticker at the top, popping in and fading out with the scene.
+// The scene's caption, a small sticker at the bottom (the app's own header is at the top), popping in and fading out with the scene.
 export const Caption = ({ text, duration }: { text: string; duration: number }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -37,7 +37,7 @@ export const Caption = ({ text, duration }: { text: string; duration: number }) 
       className="sticker"
       style={{
         position: "absolute",
-        top: 18,
+        bottom: 22,
         left: "50%",
         zIndex: 50,
         padding: "8px 18px",
@@ -45,7 +45,7 @@ export const Caption = ({ text, duration }: { text: string; duration: number }) 
         whiteSpace: "nowrap",
         ["--fill" as string]: "var(--lime)",
         opacity: out,
-        transform: `translateX(-50%) translateY(${(1 - pop) * -24}px) scale(${0.9 + pop * 0.1}) rotate(-1deg)`,
+        transform: `translateX(-50%) translateY(${(1 - pop) * 24}px) scale(${0.9 + pop * 0.1}) rotate(-1deg)`,
       }}
     >
       {text}

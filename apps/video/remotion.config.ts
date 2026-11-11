@@ -20,6 +20,8 @@ Config.overrideWebpackConfig((config) => ({
       ...(config.resolve?.alias ?? {}),
       // Order matters: the exact mocks before the "@" folder alias.
       "@/lib/auth-client": here("src/mocks/auth-client.ts"),
+      "@/lib/vault": here("src/mocks/vault.ts"),
+      "@/app/app/actions": here("src/mocks/actions.ts"),
       "next/link": here("src/mocks/next-link.tsx"),
       "next/navigation": here("src/mocks/next-navigation.ts"),
       "next/dynamic": here("src/mocks/next-dynamic.tsx"),

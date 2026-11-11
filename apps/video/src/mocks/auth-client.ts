@@ -1,6 +1,6 @@
 // The auth client, without a server: one signed-in person and, for the team scene, one team. Scenes switch the team
 // on with setTeam() (it's read on each render, so a frame shows whatever was set for it).
-export const ME = { id: "u_asha", name: "Asha", email: "asha@todone.today", image: null };
+export const ME = { id: "u_asha", name: "Asha", email: "asha@todone.today", image: null, emailVerified: true, createdAt: new Date("2026-01-05") };
 const MEMBERS = [
   { id: "m1", role: "owner", userId: ME.id, user: { ...ME } },
   { id: "m2", role: "member", userId: "u_kabir", user: { id: "u_kabir", name: "Kabir", email: "kabir@todone.today", image: null } },
