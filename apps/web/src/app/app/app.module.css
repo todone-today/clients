@@ -1907,6 +1907,15 @@
   font-size: 1.6rem;
   line-height: 1;
 }
+/* The welcome card's walkthrough video. */
+.tourVideo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 58vh;
+  background: var(--black);
+  border: var(--key);
+}
 .tourCount {
   font-size: 0.72rem;
   font-weight: 800;

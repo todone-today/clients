@@ -35,7 +35,7 @@ const taskTitle = (id: string): Finder => () => inStage(`[data-id='${id}'] .${ap
 
 // ---- The scenes: what each one does (frames at 30fps, from the scene's start) ------------------------------------
 type Scene = { dur: number; caption: string; makes: EditName[]; steps: Step[]; after?: () => void };
-const SCENES = {
+const RAW = {
   create: {
     dur: 75,
     caption: "Add a task: type it, press Enter",
@@ -160,6 +160,23 @@ const SCENES = {
     ],
   },
 } satisfies Record<string, Scene>;
+
+// The pace: every scene a third slower than the frames above, and the busier ones (a goal's steps, reaching one,
+// sharing while replies come in) slower still, so each step can be followed.
+const PACE: Partial<Record<keyof typeof RAW, number>> = { goal: 1.6, reach: 1.5, share: 1.6 };
+const slower = (sc: Scene, k: number): Scene => ({
+  ...sc,
+  dur: Math.round(sc.dur * k),
+  steps: sc.steps.map((st) => ({
+    ...st,
+    at: Math.round(st.at * k),
+    ...("dur" in st ? { dur: Math.round(st.dur * k) } : {}),
+    ...("drag" in st ? { lift: Math.round((st.lift ?? 26) * k) } : {}),
+  })),
+});
+const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slower(sc, PACE[n as keyof typeof RAW] ?? 1.3)])) as unknown as {
+  [K in keyof typeof RAW]: Omit<(typeof RAW)[K], "dur" | "steps"> & { dur: number; steps: Step[] };
+};
 
 // ---- Timeline ---------------------------------------------------------------------------------------------------
 const INTRO = 60;

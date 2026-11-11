@@ -6,13 +6,15 @@ import s from "./app.module.css";
 
 // A guided tour for new people: a spotlight on one part of the app at a time, with a card saying what
 // it does and what to try. The page stays usable underneath, so people can try each thing as it's shown.
-type Step = { target?: string; panel: Panel; title: string; body: string };
+// `video`: the welcome card plays the minute-long walkthrough (public/onboarding.mp4, made in apps/video).
+type Step = { target?: string; panel: Panel; title: string; body: string; video?: true };
 
 const STEPS: Step[] = [
   {
     panel: null,
     title: "Welcome to todone",
-    body: "Here's a quick tour. We made you a couple of lists to play with; change or delete anything.",
+    body: "Here's todone in a minute, then a quick tour of each part. We made you a couple of lists to play with; change or delete anything.",
+    video: true,
   },
   { target: "add", panel: null, title: "Add a task", body: "Type it and press Enter. Just the name; the rest comes later." },
   {
@@ -94,11 +96,21 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const card = useRef<HTMLDivElement>(null);
+  const film = useRef<HTMLVideoElement>(null);
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
 
   useEffect(() => onPanel(step.panel), [step.panel, onPanel]);
   useEffect(() => card.current?.focus(), [i]);
+  // The walkthrough plays with its music when the browser allows it (the Tour button was a click); otherwise muted.
+  useEffect(() => {
+    const v = film.current;
+    if (!v) return;
+    v.play().catch(() => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+  }, [i]);
 
   // Follow the target as the page lays out, scrolls or resizes.
   useLayoutEffect(() => {
@@ -129,7 +141,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  const W = 340;
+  const W = step.video ? Math.min(720, innerWidth - 32) : 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;
@@ -166,6 +178,18 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
           {i + 1} / {STEPS.length}
         </p>
         <h2 className="display">{step.title}</h2>
+        {step.video && (
+          <video
+            ref={film}
+            className={s.tourVideo}
+            src="/onboarding.mp4"
+            poster="/onboarding.jpg"
+            controls
+            playsInline
+            preload="auto"
+            aria-label="todone in a minute: a walkthrough of adding tasks, stickers, lists, the calendar, goals, rewards and sharing"
+          />
+        )}
         <p>{step.body}</p>
         <div className={s.tourNav}>
           {!last && (
@@ -183,7 +207,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
             onClick={() => (last ? onEnd() : setI(i + 1))}
           >
-            {last ? "Start" : "Next"}
+            {last ? "Start" : step.video ? "Take the tour" : "Next"}
           </button>
         </div>
       </div>

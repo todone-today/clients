@@ -6,7 +6,8 @@
   "scripts": {
     "video:studio": "remotion studio src/index.ts",
     "video:render": "remotion render src/index.ts Onboarding out/onboarding.mp4",
-    "video:sfx": "python3 make_sfx.py"
+    "video:sfx": "python3 make_sfx.py",
+    "video:web": "ffmpeg -y -i out/onboarding.mp4 -c:v libx264 -crf 26 -preset slow -pix_fmt yuv420p -c:a aac -b:a 96k -movflags +faststart ../web/public/onboarding.mp4 && ffmpeg -y -ss 9 -i out/onboarding.mp4 -frames:v 1 -q:v 4 ../web/public/onboarding.jpg"
   },
   "dependencies": {
     "@remotion/cli": "4.0.539",
