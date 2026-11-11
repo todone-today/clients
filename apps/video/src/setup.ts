@@ -13,7 +13,11 @@ const fonts = {
 };
 for (const [k, v] of Object.entries(fonts)) document.documentElement.style.setProperty(k, `"${v}"`);
 
-window.fetch = async () => new Response(JSON.stringify({ error: "offline in the video" }), { status: 503 });
+// The demo's own sample lists (/api/demo) never arrive: the video seeds its own with startDemo (AppScenes.tsx).
+window.fetch = (url) =>
+  String(url).includes("/api/demo")
+    ? new Promise<Response>(() => {})
+    : Promise.resolve(new Response(JSON.stringify({ error: "offline in the video" }), { status: 503 }));
 
 // The app's two themes are set on <html data-theme>; ThemeToggle listens for "themechange".
 export function setTheme(t: "day" | "night") {

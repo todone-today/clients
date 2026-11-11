@@ -189,3 +189,33 @@ export const Carried = ({ item, x, y, scale = 0.8 }: { item?: Rect; x: number; y
 
 // Every element in the app window matching a selector (finders use this, so they never pick the carried copy).
 export const inStage = (sel: string) => [...(document.querySelector("[data-stage]")?.querySelectorAll<HTMLElement>(sel) ?? [])];
+
+// ---- Scene touches ----------------------------------------------------------------------------------------------
+// A short fade to the ground colour at a scene's end, so cuts feel soft.
+export const Fade = ({ f, dur }: { f: number; dur: number }) => (
+  <AbsoluteFill
+    style={{ background: "var(--ground)", opacity: interpolate(f, [dur - 8, dur], [0, 1], { extrapolateLeft: "clamp" }), pointerEvents: "none", zIndex: 70 }}
+  />
+);
+
+// A lime ring that spreads from where something landed.
+export const Ring = ({ x, y, f }: { x: number; y: number; f: number }) => {
+  if (f > 18) return null;
+  const r = 20 + f * 6;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x - r,
+        top: y - r,
+        width: r * 2,
+        height: r * 2,
+        border: "4px solid var(--lime)",
+        borderRadius: "50%",
+        opacity: 1 - f / 18,
+        zIndex: 58,
+        pointerEvents: "none",
+      }}
+    />
+  );
+};

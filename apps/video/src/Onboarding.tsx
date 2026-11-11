@@ -13,7 +13,8 @@ import app from "@/app/app/app.module.css";
 import { setTeam } from "./mocks/auth-client";
 import { setTheme } from "./setup";
 import { day, list, tasks, today } from "./data";
-import { Caption, Carried, Cursor, type Key, Sfx, Stage, cursorAt as interpolateKeys, inStage, mid, usePop, useTargets } from "./kit";
+import { AppScene, type Click, claim, sideList, tab, xpTile } from "./AppScenes";
+import { Caption, Carried, Cursor, Fade, Ring, type Key, Sfx, Stage, cursorAt as interpolateKeys, inStage, mid, usePop, useTargets } from "./kit";
 
 // ---- Timeline (frames at 30fps) ----------------------------------------------------------------------------------
 export const S = {
@@ -22,11 +23,14 @@ export const S = {
   stickers: { from: 240, dur: 240 },
   steps: { from: 480, dur: 150 },
   calendar: { from: 630, dur: 180 },
-  team: { from: 810, dur: 165 },
-  theme: { from: 975, dur: 120 },
-  end: { from: 1095, dur: 120 },
+  lists: { from: 810, dur: 150 },
+  goals: { from: 960, dur: 150 },
+  rewards: { from: 1110, dur: 170 },
+  team: { from: 1280, dur: 165 },
+  theme: { from: 1445, dur: 120 },
+  end: { from: 1565, dur: 120 },
 };
-export const DURATION = S.end.from + S.end.dur; // 1215 frames, 40.5 s
+export const DURATION = S.end.from + S.end.dur; // 1685 frames, about 56 s
 
 // Moments inside scenes (relative to the scene's start), shared by the scene and its sound cues.
 const T = {
@@ -39,6 +43,17 @@ const T = {
   themeClick: 54,
 };
 
+// The whole-app scenes, as clicks on the real app (AppScenes.tsx).
+const LISTS: Click[] = [
+  { at: 50, find: sideList("Trip to Goa"), sfx: "click" },
+  { at: 105, find: sideList("Brainstorm"), sfx: "click" },
+];
+const GOALS: Click[] = [{ at: 45, find: tab("Goals"), sfx: "click" }];
+const REWARDS: Click[] = [
+  { at: 50, find: xpTile, sfx: "click" },
+  { at: 115, find: claim("Movie night"), sfx: "chime" },
+];
+
 const NIGHT_UNTIL = S.theme.from + T.themeClick; // the toggle in scene 7 switches to Day
 
 // ---- Sample data ------------------------------------------------------------------------------------------------
@@ -50,6 +65,9 @@ const withNew = (patch: Partial<Task> = {}): List => {
   const t = tasks(`- [ ] ${typed}\n`)[0];
   return { ...l, tasks: [...l.tasks, { ...t, id: "t-new", ...patch }] };
 };
+// Weekly goes on a chore that repeats, not the flight booking.
+const weekly = (l: List): List => ({ ...l, tasks: l.tasks.map((t) => (t.title === "Water the plants" ? { ...t, rep: "every week" } : t)) });
+const planned = () => weekly(withNew({ due: today, pri: 1 }));
 const noop = () => {};
 
 // ---- Scenes -----------------------------------------------------------------------------------------------------
@@ -78,13 +96,6 @@ const Intro = () => {
     </AbsoluteFill>
   );
 };
-
-// A short fade to the ground colour at a scene's end, so cuts feel soft.
-const Fade = ({ f, dur }: { f: number; dur: number }) => (
-  <AbsoluteFill
-    style={{ background: "var(--ground)", opacity: interpolate(f, [dur - 8, dur], [0, 1], { extrapolateLeft: "clamp" }), pointerEvents: "none", zIndex: 70 }}
-  />
-);
 
 // Types into a real input the component owns (its own state stays empty; only the DOM shows the letters).
 function useTyping(selector: string, text: string, from: number, to: number) {
@@ -128,27 +139,6 @@ const Create = () => {
 const PopNote = ({ id, scale }: { id: string; scale: number }) => (
   <style>{`[data-id='${id}'] { transform: scale(${scale}); transform-origin: 50% 60%; }`}</style>
 );
-// A lime ring that spreads from where something landed.
-const Ring = ({ x, y, f }: { x: number; y: number; f: number }) => {
-  if (f > 18) return null;
-  const r = 20 + f * 6;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: x - r,
-        top: y - r,
-        width: r * 2,
-        height: r * 2,
-        border: "4px solid var(--lime)",
-        borderRadius: "50%",
-        opacity: 1 - f / 18,
-        zIndex: 58,
-        pointerEvents: "none",
-      }}
-    />
-  );
-};
 
 const stickerBy = (label: string) => () =>
   inStage(`button.${app.stick}, span.${app.stick}`).find((b) => b.textContent?.trim() === label);
@@ -156,26 +146,26 @@ const stickerBy = (label: string) => () =>
 const Stickers = () => {
   const f = useCurrentFrame();
   const [d1, d2, d3] = T.stickerDrops;
-  const L = withNew({
+  const L0 = withNew({
     ...(f >= d1 ? { due: today } : {}),
     ...(f >= d2 ? { pri: 1 as const } : {}),
-    ...(f >= d3 ? { rep: "every week" } : {}),
   });
+  const L = f >= d3 ? weekly(L0) : L0;
   const { ref, at } = useTargets({
     note: "[data-id='t-new']",
+    plants: "[data-id='t-water-the-plants']",
     when: stickerBy("Today"),
     high: stickerBy("High"),
     weekly: stickerBy("Weekly"),
   });
-  const n = mid(at.note);
   const drags = [
-    { s: at.when, drop: d1 },
-    { s: at.high, drop: d2 },
-    { s: at.weekly, drop: d3 },
+    { s: at.when, drop: d1, on: mid(at.note) },
+    { s: at.high, drop: d2, on: mid(at.note) },
+    { s: at.weekly, drop: d3, on: mid(at.plants) },
   ];
   // Each sticker: reach it, pick it up, carry it onto the note, drop.
   const keys: Key[] = [{ f: 0, x: 700, y: 600 }];
-  for (const { s, drop } of drags) {
+  for (const { s, drop, on: n } of drags) {
     const p = mid(s);
     keys.push({ f: drop - 42, x: p.x, y: p.y }, { f: drop - 36, x: p.x, y: p.y, down: true }, { f: drop, x: n.x + 20, y: n.y, down: true }, { f: drop + 4, x: n.x + 20, y: n.y });
   }
@@ -189,7 +179,7 @@ const Stickers = () => {
       </Stage>
       <Caption text="Drop stickers on it: when, priority, repeat" duration={S.stickers.dur} />
       {carrying && <Carried item={carrying.s} x={c.x} y={c.y} />}
-      {landed && <Ring x={n.x} y={n.y} f={f - landed.drop} />}
+      {landed && <Ring x={landed.on.x} y={landed.on.y} f={f - landed.drop} />}
       <Cursor keys={keys} />
       <Fade f={f} dur={S.stickers.dur} />
     </AbsoluteFill>
@@ -208,7 +198,7 @@ const withStep = (L: List): List => ({
 const Steps = () => {
   const f = useCurrentFrame();
   const drop = T.stepDrop;
-  const before = withNew({ due: today, pri: 1, rep: "every week" });
+  const before = planned();
   const L: List =
     f < drop
       ? before
@@ -325,7 +315,7 @@ const Team = () => {
 
 const Theme = () => {
   const f = useCurrentFrame();
-  const L = withStep(withNew({ due: today, pri: 1, rep: "every week" }));
+  const L = withStep(planned());
   const { ref, at } = useTargets({ toggle: `button.${app.tile}` });
   const t = mid(at.toggle);
   const keys: Key[] = [
@@ -380,6 +370,9 @@ const Sounds = () => (
     <Sfx at={S.steps.from + T.stepDrop + 3} name="thud" volume={0.4} />
     <Sfx at={S.calendar.from + T.calPick} name="whoosh" volume={0.45} />
     <Sfx at={S.calendar.from + T.calDrop} name="thud" />
+    {([[S.lists, LISTS], [S.goals, GOALS], [S.rewards, REWARDS]] as const).flatMap(([sc, cs]) =>
+      cs.map((c) => <Sfx key={sc.from + c.at} at={sc.from + c.at} name={c.sfx ?? "click"} />),
+    )}
     <Sfx at={S.team.from + T.invite} name="ding" />
     <Sfx at={S.theme.from + T.themeClick} name="click" />
     <Sfx at={S.end.from} name="whoosh" />
@@ -409,6 +402,15 @@ export const Onboarding = () => {
       </Sequence>
       <Sequence from={S.calendar.from} durationInFrames={S.calendar.dur}>
         <Calendar />
+      </Sequence>
+      <Sequence from={S.lists.from} durationInFrames={S.lists.dur}>
+        <AppScene clicks={LISTS} caption="Every list in the sidebar, one click away" dur={S.lists.dur} />
+      </Sequence>
+      <Sequence from={S.goals.from} durationInFrames={S.goals.dur}>
+        <AppScene clicks={GOALS} caption="Goals: small steps, every one counted" dur={S.goals.dur} />
+      </Sequence>
+      <Sequence from={S.rewards.from} durationInFrames={S.rewards.dur}>
+        <AppScene clicks={REWARDS} caption="Done tasks earn XP: spend it on a treat" dur={S.rewards.dur} />
       </Sequence>
       <Sequence from={S.team.from} durationInFrames={S.team.dur}>
         <Team />
