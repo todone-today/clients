@@ -7,7 +7,8 @@ import * as C from "@todone/sdk/crypto";
 import { api } from "./api";
 
 type Stored = { accountKey: CryptoKey; privateKey: CryptoKey; userId: string };
-type ServerKeys = C.AccountKeys & { teamKeys: Record<string, string> };
+// Fields are null for an account that has no keys yet (keyState).
+type ServerKeys = C.AccountKeys & { hasPassword?: boolean; teamKeys: Record<string, string> };
 
 let held: Stored | null = null;
 let teams = new Map<string, CryptoKey>();
@@ -84,6 +85,39 @@ export async function unlockWithPassword(userId: string, email: string, password
   const d = await derive(email, password);
   if (d.legacy) throw new Error("Sign out and sign in again to finish setting up encryption.");
   await unlockWith(userId, d.wrapKey);
+}
+
+// Accounts that signed in with Google, GitHub or Discord have no password: an unlock passphrase they choose wraps
+// their keys instead, exactly as a password would (it never leaves this device either).
+export type KeyState = "setup" | "legacy" | "passphrase" | "password";
+export async function keyState(): Promise<KeyState> {
+  const k = await api<ServerKeys>("GET", "/keys");
+  if (!k.kdfSalt) return k.hasPassword ? "legacy" : "setup";
+  return k.hasPassword ? "password" : "passphrase";
+}
+// First time signed in with Google, GitHub or Discord: keys made here from the chosen passphrase. Returns the
+// recovery key to show once.
+export async function setupWithPassphrase(userId: string, passphrase: string) {
+  const a = await C.newAccount(passphrase);
+  await api("POST", "/keys/init", a.keys);
+  await keep(userId, a.accountKey, a.keys);
+  return a.recoveryKey;
+}
+// Unlock with the password or passphrase, using this account's own salt.
+export async function unlockWithSecret(userId: string, secret: string) {
+  const k = await api<ServerKeys>("GET", "/keys");
+  const { wrapKey } = await C.deriveLogin(secret, k.kdfSalt, k.kdfIter);
+  await unlockWith(userId, wrapKey);
+}
+// Forgot the passphrase: the recovery key opens the account key, and a new passphrase wraps it again.
+export async function recoverPassphrase(userId: string, recoveryKey: string, passphrase: string) {
+  const k = await api<ServerKeys>("GET", "/keys");
+  const accountKey = await C.unwrapSymmetric(await C.recoveryWrapKey(recoveryKey), k.recoveryWrappedKey, true).catch(() => {
+    throw new Error("That recovery key doesn't match this account.");
+  });
+  const { kdfSalt, kdfIter, wrappedKey } = await C.rewrap(accountKey, passphrase);
+  await api("POST", "/keys/passphrase", { kdfSalt, kdfIter, wrappedKey });
+  await keep(userId, accountKey, k);
 }
 
 // A new account: keys made here; the caller signs up with `authHash` and `keys`, then calls `adopt`.

@@ -10,6 +10,19 @@ import { encryptPlainLists } from "@/app/app/actions";
 import { RecoveryKey } from "@/components/RecoveryKey";
 import s from "./login.module.css";
 import { PasswordInput } from "@/components/PasswordInput";
+import { GithubMark } from "@/components/GithubMark";
+import { siDiscord, siGoogle } from "simple-icons";
+
+const PROVIDER = { google: "Google", github: "GitHub", discord: "Discord" } as const;
+function ProviderMark({ p }: { p: keyof typeof PROVIDER }) {
+  if (p === "github") return <GithubMark />;
+  const icon = p === "google" ? siGoogle : siDiscord;
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill={`#${icon.hex}`}>
+      <path d={icon.path} />
+    </svg>
+  );
+}
 
 // Only same-site paths, so the login page can't be used to bounce people elsewhere.
 const safeNext = () => {
@@ -22,8 +35,10 @@ const safeNext = () => {
 export function LoginForm({
   canReset,
   haiku,
+  social = [],
 }: {
   canReset: boolean; // the server sends email, so "Forgot password?" can work
+  social?: ("google" | "github" | "discord")[]; // the sign-ins this server offers
   haiku: [string, string, string];
 }) {
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
@@ -103,6 +118,36 @@ export function LoginForm({
         }}
       >
         <h1 className="display">{mode === "in" ? "Welcome back" : mode === "up" ? "Make an account" : "Reset password"}</h1>
+        {mode !== "reset" && social.length > 0 && (
+          <>
+            {/* Signing in this way only proves who you are; the app then asks for (or, the first time, sets up) an
+                unlock passphrase that opens your encrypted lists (app/Unlock.tsx). */}
+            <div className={s.social}>
+              {social.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className="btn"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    setErr("");
+                    const r = await authClient.signIn.social({ provider: p, callbackURL: safeNext() });
+                    if (r?.error) {
+                      setErr(r.error.message ?? "That didn't work. Try again.");
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  <ProviderMark p={p} /> Continue with {PROVIDER[p]}
+                </button>
+              ))}
+            </div>
+            <p className={s.or}>
+              <span>or with email</span>
+            </p>
+          </>
+        )}
         {mode === "reset" && (
           <p className={s.fine}>
             {sent

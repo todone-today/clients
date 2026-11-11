@@ -9,6 +9,16 @@ export const metadata: Metadata = {
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "12 November 2026",
+    title: "Sign in with Google, GitHub or Discord",
+    items: [
+      "Continue with Google, GitHub or Discord instead of a password.",
+      "The first time, you choose an unlock passphrase: it locks your lists on your device, so they stay end-to-end encrypted. Each device asks for it once.",
+      "Forgot it? Your recovery key opens your lists and lets you pick a new one.",
+      "Already have an account with that email? Signing in with Google or GitHub joins it.",
+    ],
+  },
+  {
     date: "11 November 2026",
     title: "todone on your phone",
     items: [

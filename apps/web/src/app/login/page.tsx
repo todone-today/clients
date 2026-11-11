@@ -24,9 +24,10 @@ export default function LoginPage() {
 // Asks the server which sign-ins it offers, at request time, so it picks up GitHub keys without a rebuild.
 async function Login() {
   await connection();
-  const config: Config = await fetch(`${server()}/api/config`, { cache: "no-store", headers: proxyHeaders() })
+  const config: Config & { discord?: boolean } = await fetch(`${server()}/api/config`, { cache: "no-store", headers: proxyHeaders() })
     .then((r) => r.json())
     .catch(() => ({ github: false, google: false, verifiesEmail: false }));
   // A fresh haiku per visit, picked here so server and browser agree on it.
-  return <LoginForm canReset={!!config.verifiesEmail} haiku={pickHaiku()} />;
+  const social = (["google", "github", "discord"] as const).filter((p) => config[p]);
+  return <LoginForm canReset={!!config.verifiesEmail} haiku={pickHaiku()} social={social} />;
 }
