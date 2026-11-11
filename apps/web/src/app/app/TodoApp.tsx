@@ -58,6 +58,7 @@ import { useUnread } from "./unread";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallPrompt } from "./InstallPrompt";
+import { fileFeedback } from "./feedback-inbox";
 import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
@@ -274,6 +275,15 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       setDrawer(false);
     });
   }, [wanted, lists, vault]);
+
+  // Feedback for the maintainer: new tickets are filed into its lists once per visit, in the personal space
+  // (everyone else's request comes back empty).
+  const filed = useRef(false);
+  useEffect(() => {
+    if (demo || orgId || vault !== "open" || !lists || filed.current) return;
+    filed.current = true;
+    fileFeedback(lists);
+  }, [demo, orgId, vault, lists]);
 
   // XP: whenever lists change, finished tasks earn a win in the goals list and unticked ones lose it. One place,
   // so it covers every way a task gets ticked (card, panel, calendar). Idempotent: an unchanged log isn't saved.
