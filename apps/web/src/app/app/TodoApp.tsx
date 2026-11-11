@@ -1157,7 +1157,7 @@ function ListView({
         <div className={s.undo} role="status">
           {binned.text}
           {binned.ids?.length ? (
-            <small>In the Bin (sidebar) for 7 days.</small>
+            <small>In the Bin for 7 days.</small>
           ) : null}
           {binned.before !== list.tasks && (
             <button
