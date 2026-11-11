@@ -89,6 +89,8 @@ export function LoginForm({
                 email,
                 password: a.authHash,
                 name: String(f.get("name")).trim() || email.split("@")[0],
+                // The confirmation email's link lands in the app (on the server's own address, BETTER_AUTH_URL).
+                callbackURL: "/app",
                 ...a.keys,
               } as Parameters<typeof authClient.signUp.email>[0]);
               if (r.error) throw new Error(r.error.message ?? "That didn't work. Try again.");

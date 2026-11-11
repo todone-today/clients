@@ -1950,6 +1950,27 @@
   line-height: 1;
 }
 /* The welcome card's walkthrough video. */
+/* The welcome step: the whole window, dark like a cinema, everything centred in one column as wide as the video
+   can be at 16:9 with the title above and the buttons below. */
+.tourCard[data-theater] {
+  inset: 0;
+  max-width: none;
+  place-content: center;
+  justify-items: center;
+  padding: 1.25rem;
+  color: #fff8ef;
+  --ink: #fff8ef;
+  --ink-2: #cfc6b8;
+  background: rgb(11 11 11 / 0.94);
+  border: 0;
+  box-shadow: none;
+}
+.tourCard[data-theater] > * {
+  width: min(100%, calc((100dvh - 12rem) * 16 / 9));
+}
+.tourCard[data-theater] .tourNav .link {
+  color: #fff8ef;
+}
 .tourFilm {
   position: relative;
 }
@@ -1996,6 +2017,9 @@
     bottom: 1rem;
     width: auto !important;
     translate: none !important;
+  }
+  .tourCard[data-theater] {
+    inset: 0 !important;
   }
 }
 

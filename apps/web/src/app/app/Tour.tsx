@@ -120,17 +120,28 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
   useEffect(() => card.current?.focus(), [i]);
   // The walkthrough starts playing. Just after a click (e.g. right after signing up) it goes full screen too; with
   // no click to go on, it plays muted in the card, with a "Watch full screen" button over it.
+  // After signing in, a greeting may be open on top: the video waits for it to close (its "Let's go" is a click,
+  // so that's when full screen is allowed), then starts from the beginning.
   useEffect(() => {
     const v = film.current;
     if (!v) return;
-    if (navigator.userActivation?.isActive) watchFullScreen();
-    v.play().catch(() => {
-      v.muted = true;
-      v.play().catch(() => {});
-    });
+    let wait = 0;
+    const start = () => {
+      if (document.querySelector("dialog[open]")) return void (wait = window.setTimeout(start, 250));
+      if (navigator.userActivation?.isActive) watchFullScreen();
+      v.currentTime = 0;
+      v.play().catch(() => {
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    };
+    start();
     const on = () => setFull(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", on);
-    return () => document.removeEventListener("fullscreenchange", on);
+    return () => {
+      clearTimeout(wait);
+      document.removeEventListener("fullscreenchange", on);
+    };
   }, [i]);
 
   // Follow the target as the page lays out, scrolls or resizes.
@@ -162,8 +173,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  // The welcome card: wide enough to see the video, never taller than the window (the video is 16:9).
-  const W = step.video ? Math.min(720, innerWidth - 32, ((innerHeight - 260) * 16) / 9 + 42) : 340;
+  const W = 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;
@@ -191,7 +201,10 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
       <div
         ref={card}
         className={s.tourCard}
-        style={{ ...pos, width: W }}
+        // The welcome step is the whole window, dark, with the video as large as fits (a full-screen view that
+        // needs no permission, so it shows after signing up too); other steps are a small card by their target.
+        data-theater={step.video || undefined}
+        style={step.video ? undefined : { ...pos, width: W }}
         role="dialog"
         aria-label={`Tour, step ${i + 1} of ${STEPS.length}: ${step.title}`}
         tabIndex={-1}
