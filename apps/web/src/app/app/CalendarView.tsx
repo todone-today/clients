@@ -25,6 +25,7 @@ import {
   waiting,
 } from "@todone/sdk/tasks";
 import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
+import { listColor } from "./listIcon";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -163,6 +164,37 @@ export function CalendarView({
     month: () => label(at, { month: "long", year: "numeric" }),
     year: () => at.slice(0, 4),
   }[view]();
+  // The page's heading, short enough to sit large (the year only when it isn't this one), and a line on how the
+  // period looks: planned, done, late, and what's still waiting in the tray.
+  const year = (d: string) => (d.slice(0, 4) === today.slice(0, 4) ? {} : { year: "numeric" as const });
+  const big = {
+    day: () => label(at, { weekday: "short", month: "short", day: "numeric", ...year(at) }),
+    week: () =>
+      week[0].slice(0, 7) === week[6].slice(0, 7)
+        ? `${label(week[0], { month: "short", day: "numeric" })} – ${+week[6].slice(8)}${week[6].slice(0, 4) === today.slice(0, 4) ? "" : `, ${week[6].slice(0, 4)}`}`
+        : `${label(week[0], { month: "short", day: "numeric" })} – ${label(week[6], { month: "short", day: "numeric", ...year(week[6]) })}`,
+    month: () => label(at, { month: "long", ...year(at) }),
+    year: () => at.slice(0, 4),
+  }[view]();
+  const inView = {
+    day: (d: string) => d === at,
+    week: (d: string) => week.includes(d),
+    month: (d: string) => d.slice(0, 7) === at.slice(0, 7),
+    year: (d: string) => d.slice(0, 4) === at.slice(0, 4),
+  }[view];
+  const dated = all.filter((it) => it.task.due && inView(it.task.due));
+  const open = dated.filter((it) => !it.task.done);
+  const late = open.filter((it) => it.task.due! < today).length;
+  const now = inView(today) ? ` ${view === "day" ? "today" : `this ${view}`}` : "";
+  const toPlan = all.filter((it) => !it.task.done && (timed ? !it.task.at : !it.task.due));
+  const summary = [
+    `${open.length} planned${now}`,
+    dated.length - open.length ? `${dated.length - open.length} done` : "",
+    late ? `${late} late` : "",
+    update && toPlan.length ? `${toPlan.length} to plan` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const openDay = (d: string) => {
     setAt(d);
     setView("day");
@@ -173,6 +205,7 @@ export function CalendarView({
     <div
       key={it.task.id}
       className={s.calTask}
+      style={{ "--fill": listColor(it.list.id) } as React.CSSProperties}
       data-done={it.task.done}
       data-late={!it.task.done && it.task.due! < today}
       {...drag(it)}
@@ -215,6 +248,10 @@ export function CalendarView({
 
   return (
     <div className={s.calendar}>
+      <div className={s.listHead}>
+        <h1 className={`display ${s.title} ${s.calHeading}`}>{big}</h1>
+        <p className={s.progress}>{summary}</p>
+      </div>
       <div className={s.calBar}>
         {!locked && (
           <>
@@ -237,7 +274,6 @@ export function CalendarView({
             </button>
           </>
         )}
-        <h2 className="display">{title}</h2>
         {!locked && (
           <div className={s.seg} role="group" aria-label="Calendar view">
             {VIEWS.map((v) => (
@@ -380,18 +416,23 @@ export function CalendarView({
             aria-label="To plan"
             {...drop(timed ? "tray" : "tray-date")}
           >
-            <h3>To plan</h3>
+            <h3>
+              To plan {toPlan.length > 0 && <span className={s.trayCount}>{toPlan.length}</span>}
+            </h3>
             <p>
-              {timed
-                ? "Drag onto a time. Drop a block back here to take its time off."
-                : "Drag onto a day. Drop a task back here to take its date off."}
+              {!toPlan.length
+                ? "All planned. Nice."
+                : timed
+                  ? "Drag onto a time. Drop a block back here to take its time off."
+                  : "Drag onto a day. Drop a task back here to take its date off."}
             </p>
-            {all
-              .filter(
-                (it) => !it.task.done && (timed ? !it.task.at : !it.task.due),
-              )
-              .map((it) => (
-                <div key={it.task.id} className={s.trayItem} {...drag(it)}>
+            {toPlan.map((it) => (
+                <div
+                  key={it.task.id}
+                  className={s.trayItem}
+                  style={{ "--fill": listColor(it.list.id) } as React.CSSProperties}
+                  {...drag(it)}
+                >
                   {it.task.title}
                   <span>
                     {it.list.name}
@@ -587,7 +628,8 @@ function TimeGrid({
                   height: Math.max(((end - start) / 60) * HOUR - 2, 18),
                   left: `${(lane / n) * 100}%`,
                   width: `calc(${100 / n}% - 4px)`,
-                }}
+                  "--fill": listColor(it.list.id),
+                } as React.CSSProperties}
                 onClick={() => onOpen?.(it.list.id)}
                 title={`${it.task.at}–${toClock(end)} ${it.task.title} · ${it.list.name}`}
                 {...drag(it)}

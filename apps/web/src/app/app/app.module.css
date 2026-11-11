@@ -584,9 +584,25 @@
   align-items: center;
   gap: 0.5rem;
 }
-.calBar h2 {
-  margin: 0 auto 0 0.5rem;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+/* The calendar's heading sits large like a list's; its controls follow on one row, views to the right. */
+.calHeading {
+  padding-right: 0;
+}
+.calendar .listHead {
+  margin-bottom: 0.25rem;
+}
+.calBar .seg {
+  margin-left: auto;
+}
+@media (max-width: 560px) {
+  /* A phone: the views take their own full row, evenly. */
+  .calBar .seg {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+  .calBar .seg button {
+    flex: 1;
+  }
 }
 .seg {
   display: flex;
@@ -667,6 +683,9 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: 0.35rem;
+  /* Its list's colour, as a tab down the side (the whole chip coloured is too loud in a month of them). */
+  padding-left: 0.3rem;
+  border-left: 4px solid var(--fill, transparent);
 }
 .calTask .check {
   width: 1.1rem;
@@ -830,8 +849,10 @@
   --hair: rgb(11 11 11 / 0.22);
   --ground: #fff8ef;
   --raise: #f3eadb;
-  background: var(--peri);
+  /* Its list's colour, like the list's notes and its sidebar icon. */
+  background: var(--fill, var(--peri));
   border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
   cursor: grab;
 }
 .block span {
@@ -872,10 +893,31 @@
   --hair: rgb(11 11 11 / 0.22);
   --ground: #fff8ef;
   --raise: #f3eadb;
-  background: var(--butter);
+  background: var(--fill, var(--butter));
   border: 2px solid var(--black);
   box-shadow: var(--lift-sm);
   cursor: grab;
+}
+/* Waiting to be planned: little sticky notes, each a touch askew like the board's. */
+.trayItem:nth-of-type(odd) {
+  rotate: -0.7deg;
+}
+.trayItem:nth-of-type(even) {
+  rotate: 0.5deg;
+}
+.trayItem:hover {
+  rotate: 0deg;
+}
+.trayCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4rem;
+  margin-left: 0.3rem;
+  padding: 0 0.3rem;
+  font-size: 0.72rem;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
 }
 .trayItem span {
   font-size: 0.7rem;
