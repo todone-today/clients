@@ -52,7 +52,7 @@ import { Goals, ListGoals, Rewards, XpTile } from "./Goals";
 import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { fold, reconcile, type Goal } from "@todone/sdk/goals";
-import { IconPick, ListIcon } from "./listIcon";
+import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
@@ -98,25 +98,6 @@ import s from "./app.module.css";
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.
 // Sticky colours. Each note's colour comes from its own id, so adding, deleting or moving notes doesn't recolour
 // the list; a note that would match one just before it takes the next colour instead.
-const NOTES = [
-  "var(--butter)",
-  "var(--pink)",
-  "var(--cyan)",
-  "var(--lime)",
-  "var(--peri)",
-  "var(--orange)",
-  "#c9b3ff", // lavender
-  "#8fe3b0", // mint
-];
-// A list's own colour, from its id: picked once when it's made, the same on every device and after a rename.
-const listColor = (id: string) => NOTES[noteColor(id)];
-const noteColor = (id: string) => {
-  let h = 2166136261; // FNV-1a, then a final mix so short ids spread evenly over the colours
-  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
-  h ^= h >>> 16;
-  return (h >>> 0) % NOTES.length;
-};
 // A note that would match one of the two before it takes the next free colour.
 const noteColors = (tasks: Task[]) => {
   const out = new Map<string, string>();

@@ -62,6 +62,8 @@ async function pay(o: Opened): Promise<Status | null> {
       ...(o.subscription ? { subscription_id: o.subscription } : { order_id: o.order, amount: o.amount, currency: "INR" }),
       name: "todone",
       description: o.what,
+      // Checkout shows a plain letter without it; it needs a full https address (so it shows on todone.today, not localhost).
+      image: `${location.origin}/icon-512.png`,
       prefill: { name: o.name, email: o.email },
       theme: { color: "#d4f04a" },
       handler: (res: Record<string, string>) =>

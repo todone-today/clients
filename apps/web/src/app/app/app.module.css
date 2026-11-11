@@ -2833,8 +2833,13 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 
 @media (min-width: 761px) {
+  /* The sidebar stays put while the board scrolls; if it's taller than the window, it scrolls on its own. */
   .side {
-    position: relative;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100dvh;
+    overflow-y: auto;
   }
   /* The demo has no Workspace heading for the fold button to sit beside, so it gets its own row. */
   .side[data-demo] {
@@ -4482,18 +4487,24 @@ input.stick[data-custom][aria-invalid="true"] {
 .goalGroup + .goalGroup {
   margin-top: 0.5rem;
 }
-.goalGroup .sideHead {
-  margin: 1.5rem 0 0.8rem;
+.goalGroupTitle {
+  margin: 1.5rem 0 0.9rem;
 }
+.goalGroupTitle .sideHead {
+  display: block;
+}
+/* Which list these goals are in: the list as a sticker, its own colour and icon. */
 .goalGroupHead {
-  font: inherit;
-  color: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  font: 800 1.05rem/1.1 var(--sans);
+  color: var(--black);
+  rotate: -1deg;
 }
 .goalGroupHead:hover {
-  color: var(--ink);
-  text-decoration: underline;
+  rotate: 0deg;
 }
 .logBox {
   display: flex;

@@ -27,6 +27,7 @@ import { authClient } from "@/lib/auth-client";
 import { useLists } from "@/lib/store";
 import { changeGoals, moveGoalItem, useGoalItems } from "./goalStore";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
+import { ListIcon, listColor } from "./listIcon";
 import s from "./app.module.css";
 
 const FILLS = [
@@ -243,13 +244,19 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
       {groups.map(({ id, name, goals }) => (
         <section key={id} className={s.goalGroup}>
           {groups.length > 1 && (
-            <h2 className={s.sideHead}>
+            <h2 className={s.goalGroupTitle}>
               {id ? (
-                <button className={s.goalGroupHead} onClick={() => onOpen(id)}>
-                  {name}
+                // The list, as a sticker in its own colour and icon (like the sidebar): click to open it.
+                <button
+                  className={`sticker ${s.goalGroupHead}`}
+                  style={{ "--fill": listColor(id) } as React.CSSProperties}
+                  onClick={() => onOpen(id)}
+                  data-tip={`Open ${name}`}
+                >
+                  <ListIcon id={id} name={name} icon={all.find((l) => l.id === id)?.icon} /> {name}
                 </button>
               ) : (
-                name
+                <span className={s.sideHead}>{name}</span>
               )}
             </h2>
           )}
