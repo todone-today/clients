@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   Target,
   ListChecks,
@@ -63,7 +64,7 @@ import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
-import { Tour } from "./Tour";
+import { Tour, watchFullScreen } from "./Tour";
 import { VerifyBanner } from "./VerifyBanner";
 import {
   encryptPlainLists,
@@ -471,7 +472,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
           onClick={() => {
             setPanel(null);
-            setTouring(true);
+            // Drawn now, so the walkthrough can go full screen within this click.
+            flushSync(() => setTouring(true));
+            watchFullScreen();
           }}
           data-tour="tour"
           aria-label="Tour"
@@ -648,7 +651,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             onClick={() => {
               setDrawer(false);
               setPanel(null);
-              setTouring(true);
+              flushSync(() => setTouring(true));
+              watchFullScreen();
             }}
           >
             <Info size={16} strokeWidth={2.5} aria-hidden /> Take the tour

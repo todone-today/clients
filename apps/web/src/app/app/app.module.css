@@ -1950,13 +1950,24 @@
   line-height: 1;
 }
 /* The welcome card's walkthrough video. */
+.tourFilm {
+  position: relative;
+}
 .tourVideo {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: 66vh;
   background: var(--black);
   border: var(--key);
+}
+/* Over the video until it's full screen: one click to watch it big, with sound. */
+.tourWatch {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
 }
 .tourCount {
   font-size: 0.72rem;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Maximize } from "lucide-react";
 import type { Panel } from "./Workspaces";
 import s from "./app.module.css";
 
@@ -92,31 +93,44 @@ const STEPS: Step[] = [
   { target: "tour", panel: null, title: "That's it", body: "Click the i up here to see this again. Have fun." },
 ];
 
+// The walkthrough, full screen with its sound. Browsers allow full screen only straight after a click, so the Tour
+// buttons call this inside their click (the tour is drawn first, see TodoApp), and the welcome card's own "Watch
+// full screen" button does too. Asked once per video: a second ask without the click spoils the first.
+type Film = HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+export function watchFullScreen() {
+  const v = document.querySelector<Film>("video[data-walkthrough]");
+  if (!v || v.dataset.asked) return;
+  v.dataset.asked = "1";
+  v.muted = false;
+  if (v.requestFullscreen) v.requestFullscreen().catch(() => delete v.dataset.asked);
+  else v.webkitEnterFullscreen?.(); // iPhone
+  v.play().catch(() => {});
+}
+
 export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: () => void }) {
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const card = useRef<HTMLDivElement>(null);
   const film = useRef<HTMLVideoElement>(null);
-  const askedFull = useRef(false); // full screen is asked for once (a second ask, without the click, spoils the first)
+  const [full, setFull] = useState(false);
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
 
   useEffect(() => onPanel(step.panel), [step.panel, onPanel]);
   useEffect(() => card.current?.focus(), [i]);
-  // The walkthrough opens full screen and plays with its music. Browsers allow both only just after a click (the
-  // Tour button, or signing up): otherwise it plays muted in the card, and its own button goes full screen.
+  // The walkthrough starts playing. Just after a click (e.g. right after signing up) it goes full screen too; with
+  // no click to go on, it plays muted in the card, with a "Watch full screen" button over it.
   useEffect(() => {
-    const v = film.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    const v = film.current;
     if (!v) return;
-    if (!askedFull.current) {
-      askedFull.current = true;
-      if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
-      else v.webkitEnterFullscreen?.(); // iPhone
-    }
+    if (navigator.userActivation?.isActive) watchFullScreen();
     v.play().catch(() => {
       v.muted = true;
       v.play().catch(() => {});
     });
+    const on = () => setFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", on);
+    return () => document.removeEventListener("fullscreenchange", on);
   }, [i]);
 
   // Follow the target as the page lays out, scrolls or resizes.
@@ -148,7 +162,8 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  const W = step.video ? Math.min(1120, innerWidth - 32) : 340;
+  // The welcome card: wide enough to see the video, never taller than the window (the video is 16:9).
+  const W = step.video ? Math.min(720, innerWidth - 32, ((innerHeight - 260) * 16) / 9 + 42) : 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;
@@ -186,8 +201,10 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
         </p>
         <h2 className="display">{step.title}</h2>
         {step.video && (
+          <div className={s.tourFilm}>
           <video
             ref={film}
+            data-walkthrough
             className={s.tourVideo}
             src="/onboarding.mp4"
             poster="/onboarding.jpg"
@@ -198,6 +215,23 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
             onEnded={() => document.fullscreenElement && document.exitFullscreen().catch(() => {})}
             aria-label="todone in a minute: a walkthrough of adding tasks, stickers, lists, the calendar, goals, rewards and sharing"
           />
+          {!full && (
+            <button
+              className={`btn ${s.tourWatch}`}
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+              onClick={() => {
+                const v = film.current;
+                if (v) {
+                  delete v.dataset.asked;
+                  v.currentTime = 0;
+                }
+                watchFullScreen();
+              }}
+            >
+              <Maximize size={16} strokeWidth={2.75} aria-hidden /> Watch full screen
+            </button>
+          )}
+          </div>
         )}
         <p>{step.body}</p>
         <div className={s.tourNav}>
