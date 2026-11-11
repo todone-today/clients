@@ -962,6 +962,33 @@
   font-size: 0.7rem;
   font-weight: 600;
 }
+/* A parent waiting with its steps: the steps hang under it, indented, and fold away. */
+.trayGroup {
+  display: grid;
+  gap: 0.4rem;
+}
+.traySteps {
+  display: grid;
+  gap: 0.4rem;
+  margin-left: 0.9rem;
+  padding-left: 0.5rem;
+  border-left: 2px dashed var(--hair);
+}
+.traySteps .trayItem {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
+}
+.trayItem .trayFold {
+  display: flex;
+  width: fit-content;
+  margin-top: 0.3rem;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--ground);
+  border: 2px solid var(--black);
+}
 
 /* Year */
 .year {

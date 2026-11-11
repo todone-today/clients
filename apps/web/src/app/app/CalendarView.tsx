@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Check, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Select } from "@/components/Select";
 import {
   addDays,
@@ -26,6 +26,7 @@ import {
 } from "@todone/sdk/tasks";
 import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import { listColor } from "./listIcon";
+import { useFolded } from "./folded";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -426,26 +427,67 @@ export function CalendarView({
                   ? "Drag onto a time. Drop a block back here to take its time off."
                   : "Drag onto a day. Drop a task back here to take its date off."}
             </p>
-            {toPlan.map((it) => (
-                <div
+            {/* A step waits under its parent's sticker when the parent is waiting too; it folds like the list's. */}
+            {toPlan
+              .filter((it) => !toPlan.some((p) => p.list === it.list && p.task.sub.includes(it.task)))
+              .map((it) => (
+                <TrayItem
                   key={it.task.id}
-                  className={s.trayItem}
-                  style={{ "--fill": listColor(it.list.id) } as React.CSSProperties}
-                  {...drag(it)}
-                >
-                  {it.task.title}
-                  <span>
-                    {it.list.name}
-                    {it.task.est ? ` · ${fmtMinutes(it.task.est)}` : ""}
-                    {it.task.due
-                      ? ` · ${label(it.task.due, { month: "short", day: "numeric" })}`
-                      : ""}
-                  </span>
-                </div>
+                  it={it}
+                  steps={toPlan.filter((x) => x.list === it.list && it.task.sub.includes(x.task))}
+                  drag={drag}
+                />
               ))}
           </aside>
         )}
       </div>
+    </div>
+  );
+}
+
+function TrayItem({
+  it,
+  steps,
+  drag,
+}: {
+  it: Item;
+  steps: Item[];
+  drag: (it: Item) => object | undefined;
+}) {
+  const [folded, setFolded] = useFolded(it.task.id);
+  const sticker = (x: Item, fold?: React.ReactNode) => (
+    <div
+      key={x.task.id}
+      className={s.trayItem}
+      style={{ "--fill": listColor(x.list.id) } as React.CSSProperties}
+      {...drag(x)}
+    >
+      {x.task.title}
+      <span>
+        {x.list.name}
+        {x.task.est ? ` · ${fmtMinutes(x.task.est)}` : ""}
+        {x.task.due ? ` · ${label(x.task.due, { month: "short", day: "numeric" })}` : ""}
+        {fold}
+      </span>
+    </div>
+  );
+  if (!steps.length) return sticker(it);
+  return (
+    <div className={s.trayGroup}>
+      {sticker(
+        it,
+        <button
+          className={`${s.trayFold} ${s.fold}`}
+          onClick={() => setFolded(!folded)}
+          aria-expanded={!folded}
+          aria-label={`${folded ? "Show" : "Hide"} ${steps.length} step${steps.length === 1 ? "" : "s"}`}
+          title={folded ? "Show steps" : "Fold steps"}
+        >
+          <ChevronDown size={12} strokeWidth={3} aria-hidden />
+          {steps.length} step{steps.length === 1 ? "" : "s"}
+        </button>,
+      )}
+      {!folded && <div className={s.traySteps}>{steps.map((x) => sticker(x))}</div>}
     </div>
   );
 }

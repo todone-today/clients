@@ -55,6 +55,7 @@ import { changeGoals, useGoalItems } from "./goalStore";
 import { fold, reconcile, type Goal } from "@todone/sdk/goals";
 import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
+import { useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallPrompt } from "./InstallPrompt";
@@ -1655,28 +1656,6 @@ function TaskRow({
       )}
     </li>
   );
-}
-
-// Which tasks have their steps folded away, remembered on this device (a view choice, not part of the list).
-const FOLD_KEY = "todone:folded";
-function useFolded(id: string) {
-  const [on, set] = useState(() => {
-    try {
-      return (JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]).includes(id);
-    } catch {
-      return false;
-    }
-  });
-  const save = (v: boolean) => {
-    set(v);
-    try {
-      const all = new Set(JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]);
-      if (v) all.add(id);
-      else all.delete(id);
-      localStorage.setItem(FOLD_KEY, JSON.stringify([...all].slice(-500)));
-    } catch {}
-  };
-  return [on, save] as const;
 }
 
 // A shared task's chip, with a badge for new anonymous comments (1, 2 … 9+) until its panel is opened.
