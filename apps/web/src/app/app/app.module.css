@@ -1907,12 +1907,18 @@
   font-size: 1.6rem;
   line-height: 1;
 }
-/* The welcome card's walkthrough video. */
+/* The welcome step: the walkthrough video fills the window, title above and the buttons below. */
+.tourCard[data-full] {
+  inset: 0.75rem;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  max-width: none;
+}
 .tourVideo {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 66vh;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
   background: var(--black);
   border: var(--key);
 }
@@ -1943,6 +1949,16 @@
     bottom: 1rem;
     width: auto !important;
     translate: none !important;
+  }
+  /* A phone held upright: the video keeps its shape, the card's contents centred. */
+  .tourCard[data-full] {
+    inset: 0.75rem !important;
+    grid-template-rows: none;
+    align-content: center;
+  }
+  .tourCard[data-full] .tourVideo {
+    height: auto;
+    aspect-ratio: 16 / 9;
   }
 }
 

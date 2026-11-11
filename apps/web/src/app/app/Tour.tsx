@@ -141,7 +141,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
 
   // The card sits beside the target where there's room, else in the middle of the screen.
   const pad = 8;
-  const W = step.video ? Math.min(1120, innerWidth - 32) : 340;
+  const W = 340;
   let pos: React.CSSProperties = { left: "50%", top: "50%", translate: "-50% -50%" };
   if (rect) {
     const below = innerHeight - rect.bottom > 220;
@@ -169,7 +169,9 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
       <div
         ref={card}
         className={s.tourCard}
-        style={{ ...pos, width: W }}
+        // The walkthrough fills the window (the card around it, edge to edge); other steps are a small card.
+        data-full={step.video || undefined}
+        style={step.video ? undefined : { ...pos, width: W }}
         role="dialog"
         aria-label={`Tour, step ${i + 1} of ${STEPS.length}: ${step.title}`}
         tabIndex={-1}
