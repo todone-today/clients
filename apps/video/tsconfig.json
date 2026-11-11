@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "../web/src/*"
+      ],
+      "@todone/sdk/*": [
+        "../web/node_modules/@todone/sdk/dist/*"
+      ],
+      "lucide-react": [
+        "../web/node_modules/lucide-react"
+      ],
+      "simple-icons": [
+        "../web/node_modules/simple-icons"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "remotion.config.ts"
+  ]
+}

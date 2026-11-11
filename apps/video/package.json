@@ -1,0 +1,25 @@
+{
+  "name": "video",
+  "version": "0.1.0",
+  "private": true,
+  "description": "todone's onboarding video, made with Remotion from the web app's real components (../web/src).",
+  "scripts": {
+    "video:studio": "remotion studio src/index.ts",
+    "video:render": "remotion render src/index.ts Onboarding out/onboarding.mp4",
+    "video:sfx": "python3 make_sfx.py"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.539",
+    "@remotion/google-fonts": "4.0.539",
+    "remotion": "4.0.539",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}
