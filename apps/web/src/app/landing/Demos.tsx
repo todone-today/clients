@@ -18,6 +18,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { Confetti } from "@/components/Confetti";
+import { type Launch, LaunchSpots } from "@/components/LaunchSpots";
 import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
 import {
@@ -786,9 +787,9 @@ const off = (intro: [string, string], normal: [string, string]) =>
   Math.floor((1 - amount(intro[0]) / amount(normal[0])) * 100);
 
 // Saving on the first term against paying monthly for as long, rounded down so it never overstates.
-function saving(b: Billing) {
+function saving(b: Billing, launchOver: boolean) {
   const plus = PLANS.find((p) => p.lead)!;
-  const first = plus.intro?.[b] ?? plus.price![b];
+  const first = (launchOver ? undefined : plus.intro?.[b]) ?? plus.price![b];
   return Math.floor(
     (1 - amount(first[0]) / (amount(plus.price!.month[0]) * MONTHS[b])) * 100,
   );
@@ -796,6 +797,15 @@ function saving(b: Billing) {
 
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>("year");
+  // The launch price is for the first 100 paid purchases: how many are left, live from the server.
+  const [launch, setLaunch] = useState<Launch | null>(null);
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((c) => c.launch && setLaunch(c.launch))
+      .catch(() => {});
+  }, []);
+  const over = launch?.left === 0;
   return (
     <>
       <div className={s.billing} role="radiogroup" aria-label="Billing">
@@ -808,13 +818,14 @@ export function Pricing() {
             onClick={() => setBilling(k)}
           >
             {label}
-            {k !== "month" && <small>save {saving(k)}%</small>}
+            {k !== "month" && <small>save {saving(k, over)}%</small>}
           </button>
         ))}
       </div>
+      {launch && billing !== "month" && <LaunchSpots launch={launch} className={s.launch} />}
       <div className={`${s.plans} ${s.lands}`} data-reveal="stack">
         {PLANS.map((p) => {
-          const intro = p.intro?.[billing];
+          const intro = over ? undefined : p.intro?.[billing];
           const [rs, usd] =
             intro ?? (p.price ? p.price[billing] : ["₹0", "$0"]);
           const per = p.price

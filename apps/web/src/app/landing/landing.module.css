@@ -2690,3 +2690,9 @@ button.box:hover {
     animation: none;
   }
 }
+
+/* Launch-price spots left, between the billing switch and the cards. */
+.launch {
+  margin: 0.25rem auto 2.25rem;
+  font-size: 1.05rem;
+}

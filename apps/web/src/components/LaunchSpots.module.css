@@ -1,0 +1,33 @@
+.spots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.spots b {
+  font-weight: 900;
+}
+.bar {
+  flex: 0 1 10rem;
+  height: 0.6rem;
+  border: 2px solid currentColor;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+}
+.spots[data-low] b {
+  color: var(--hot);
+}
+.spots[data-low] .bar i {
+  background: var(--hot);
+}
+.spots[data-gone] {
+  opacity: 0.75;
+}

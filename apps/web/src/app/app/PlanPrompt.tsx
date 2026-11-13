@@ -7,6 +7,7 @@ import { PLAN_EVENT, api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { PLANS } from "@/lib/landing";
 import { Confetti } from "@/components/Confetti";
+import { LaunchSpots } from "@/components/LaunchSpots";
 import { NAME, PAID_EVENT, type PaidPlan, type PlansAsk, type Quote, type Status, TERMS, type Term, buyFounding, buyPlan, day, every, rupees } from "./checkout";
 import s from "./app.module.css";
 
@@ -120,6 +121,7 @@ export function PlanPrompt() {
                 </button>
               ))}
             </div>
+            {st?.intro && st.launch && term !== "month" && <LaunchSpots launch={st.launch} />}
             {!st ? (
               <p className={s.fine}>{err || "Loading the plans…"}</p>
             ) : (

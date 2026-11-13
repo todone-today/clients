@@ -14,6 +14,7 @@ export type Status = {
   plan: { plan: PaidPlan; term: Term | "founding"; seats: number; until: string; renews: boolean } | null;
   next: { plan: PaidPlan; term: Term; seats: number; from: string } | null;
   intro: boolean;
+  launch?: { left: number; total: number }; // launch-price spots left (the first 100 paid purchases)
   usage: { lists: number; listLimit: number | null; people: number; peopleLimit: number | null };
   prices: { price: Record<PaidPlan, Record<Term, number>>; intro: Record<PaidPlan, Partial<Record<Term, number>>>; founding: number };
   payments: { id: string; amount: number; refunded: number; what: string; invoice_no: string; created_at: string }[];
