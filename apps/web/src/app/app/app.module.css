@@ -3126,8 +3126,10 @@
 }
 
 .idea[data-picked] {
-  outline: 3px dashed var(--ink);
-  outline-offset: 3px;
+  /* Lime, like a picked task: the idea's own ink is black, which vanishes on the dark page. */
+  outline: 3px dashed var(--lime);
+  outline-offset: 4px;
+  translate: -2px -2px;
 }
 
 /* An open task's title is its name field, in place. */
