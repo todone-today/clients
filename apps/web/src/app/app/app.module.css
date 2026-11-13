@@ -1622,6 +1622,109 @@
   background-color: var(--raise);
   border: 2px solid var(--hair);
 }
+/* Ask todone: type or speak, then check what it found. */
+.aiTabs {
+  width: fit-content;
+  margin-bottom: 1.1rem;
+}
+.aiAsk {
+  display: grid;
+  gap: 0.8rem;
+}
+.aiAsk textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  font: 1rem/1.5 inherit;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+  resize: vertical;
+}
+.aiAsk textarea:focus-visible {
+  outline: none;
+  border-color: var(--lime);
+}
+.aiMeter {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.aiStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.3rem;
+  font-weight: 800;
+}
+.recDot {
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--hot);
+  border-radius: 50%;
+  animation: recPulse 1s ease-in-out infinite alternate;
+}
+@keyframes recPulse {
+  to {
+    opacity: 0.3;
+  }
+}
+.aiPrivacy {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+.aiHeard summary {
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.aiHeard p {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--raise);
+  border-left: 3px solid var(--lime);
+}
+.aiReview {
+  display: grid;
+  gap: 0.9rem;
+  width: 100%;
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+.aiReview fieldset {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.8rem 0.75rem;
+  border: 2px solid var(--hair);
+}
+.aiReview legend {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.3rem;
+  font-size: 0.85rem;
+}
+.aiReview label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.aiReview input[type="checkbox"] {
+  accent-color: var(--lime);
+  translate: 0 0.12rem;
+}
+.aiReview small {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .recDot {
+    animation: none;
+  }
+}
 .aiFile {
   margin-top: 1.25rem;
   font-size: 0.85rem;

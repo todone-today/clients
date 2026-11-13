@@ -244,6 +244,14 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       }
     },
   });
+  // Ask todone answers itself only where the server has an AI set up, and never in the demo.
+  const [askAi, setAskAi] = useState(false);
+  useEffect(() => {
+    if (demo) return;
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((x) => setAskAi(!!x?.ai), () => {});
+  }, [demo]);
   // A task to open in the list once it shows (the bell); a new object each time, so the same task opens again.
   const [focus, setFocus] = useState<{ id: string } | null>(null);
   const open = (id: string, task?: string) => {
@@ -667,6 +675,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </button>
           <AiImport
             lists={sorted}
+            ai={askAi}
             current={list?.id ?? null}
             onAdd={(name, tasks) => open(add(name, tasks))}
             onAppend={(id, tasks) => {

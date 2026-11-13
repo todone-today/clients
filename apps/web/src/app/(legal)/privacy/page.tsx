@@ -144,6 +144,34 @@ export default function Privacy() {
         </li>
         <li>A task you share by link, with its comments and files, until you stop sharing it.</li>
         <li>When a reminder is due. Never what it says.</li>
+        <li>
+          What you type or say to Ask todone, while it&apos;s being turned into suggestions (below). Not your lists.
+        </li>
+      </ul>
+
+      <h2 id="ai">Ask todone (AI)</h2>
+      <p>
+        Ask todone is optional. When you use it, what you type, or your recording, is sent to be understood, along with
+        the names of your lists, goals and rewards (so suggestions land in the right place) and today&apos;s date. Nothing
+        else from your lists goes with it.
+      </p>
+      <ul>
+        <li>
+          A recording goes to todone&apos;s own transcriber, a computer we run, which turns it into words. The recording is
+          deleted as soon as that&apos;s done.
+        </li>
+        <li>
+          The words go to Google&apos;s Gemini API (paid tier, which Google doesn&apos;t use to improve its products), and
+          the suggestions come back to your browser.
+        </li>
+        <li>
+          Your browser shows them to you first. Only what you choose is added, encrypted on your device like everything
+          else.
+        </li>
+        <li>
+          The words and suggestions are deleted within an hour, reviewed or not. We count how many requests you make a
+          month, for the plan limits.
+        </li>
       </ul>
 
       <h2>Who else handles it</h2>
@@ -183,6 +211,10 @@ export default function Privacy() {
           Google, GitHub or Discord, if you sign in with them: they confirm who you are and share your name, email and
           picture. They never see your lists, which stay locked with your unlock passphrase. Google again if you connect
           Google Calendar.
+        </li>
+        <li>
+          Google (the Gemini API), if you use Ask todone: what you typed or said, and your list, goal and reward names.
+          See <a href="#ai">Ask todone</a>.
         </li>
         <li>Notion and Discord, if you connect them.</li>
       </ul>
