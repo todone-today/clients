@@ -402,7 +402,7 @@ export function AiImport({
                   </button>
                   {usage?.limit != null && (
                     <span className={s.aiMeter}>
-                      {Math.max(0, usage.limit - usage.used)} of {usage.limit} left this month
+                      {Math.max(0, usage.limit - usage.used).toLocaleString("en-IN")} of {usage.limit.toLocaleString("en-IN")} AI credits left this month
                     </span>
                   )}
                 </div>
@@ -420,13 +420,6 @@ export function AiImport({
             )}
             {questions}
             {board}
-            {!found && (
-              <p className={s.aiPrivacy}>
-                What you type or say goes to Google&apos;s Gemini to be understood (your voice to todone&apos;s own
-                transcriber first), then is deleted. Only list, goal and reward names go with it; your lists stay
-                encrypted.
-              </p>
-            )}
           </div>
         ) : (
           <ol className={s.aiSteps}>

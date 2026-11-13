@@ -169,8 +169,8 @@ export default function Privacy() {
           else.
         </li>
         <li>
-          The words and suggestions are deleted within an hour, reviewed or not. We count how many requests you make a
-          month, for the plan limits.
+          The words and suggestions are deleted within an hour, reviewed or not. We count your requests and the tokens
+          they use each month, for your plan&apos;s AI credits.
         </li>
       </ul>
 

@@ -169,7 +169,7 @@ export const PLANS: Plan[] = [
       "Up to 10 lists",
       "Personal use: no teams or sharing",
       "Calendar, Brainstorm, integrations",
-      "Ask todone: 20 AI requests a month",
+      "Ask todone: 150 AI credits a month (about 15–20 asks)",
       "Offline, export any time",
     ],
   },
@@ -181,7 +181,7 @@ export const PLANS: Plan[] = [
     fill: "var(--lime)",
     points: [
       "Unlimited lists",
-      "Ask todone: 300 AI requests a month",
+      "Ask todone: 2,000 AI credits a month (about 200–300 asks)",
       "Share with up to 6 people",
       "Restorable daily backups",
       "Early access to the mobile apps",
