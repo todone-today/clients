@@ -2468,3 +2468,11 @@ button.box:hover {
 .lands {
   /* a group whose stickers land one after another */
 }
+/* How Plus helps: plain points, each led by what it does. */
+.helps {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.4rem 0 1rem;
+  padding-left: 1.1rem;
+  line-height: 1.45;
+}

@@ -121,11 +121,9 @@ const PRI_NAME = { 1: "High", 2: "Medium", 3: "Low" } as const;
 const findTask = (ts: Task[], id: string | null) =>
   ts.flatMap((t) => [t, ...t.sub]).find((t) => t.id === id);
 
-// Repeats waiting for their day aren't counted until it comes.
+// Tasks only (steps are part of their task), and repeats waiting for their day aren't counted until it comes.
 const count = (ts: Task[], today = todayISO()) => {
-  const all = ts
-    .flatMap((t) => [t, ...t.sub])
-    .filter((t) => !waiting(t, today));
+  const all = ts.filter((t) => !waiting(t, today));
   return {
     open: all.filter((t) => !t.done).length,
     done: all.filter((t) => t.done).length,

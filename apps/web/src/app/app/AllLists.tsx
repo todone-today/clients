@@ -20,7 +20,7 @@ export function AllLists({
   const today = todayISO();
   const me = authClient.useSession().data?.user.id;
   // Counted like the sidebar: steps too, repeats waiting for their day not yet.
-  const left = (l: List) => l.tasks.flatMap((t) => [t, ...t.sub]).filter((t) => !t.done && !waiting(t, today)).length;
+  const left = (l: List) => l.tasks.filter((t) => !t.done && !waiting(t, today)).length; // tasks, not steps
   const open = lists.reduce((n, l) => n + left(l), 0);
   return (
     <div className={s.allLists}>

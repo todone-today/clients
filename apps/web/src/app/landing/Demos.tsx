@@ -22,10 +22,8 @@ import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
 import {
   BILLING,
-  FUNDING,
   GOALS,
   PLANS,
-  PLUS_YEAR_INR,
   SHOTS,
   type Billing,
 } from "@/lib/landing";
@@ -39,7 +37,6 @@ const Device3D = dynamic(() => import("./Device3D"), {
   loading: () => <div className="device3d" />,
 });
 
-const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
 function Box({ on }: { on: boolean }) {
   return <span className={s.tick} data-on={on || undefined} aria-hidden />;
@@ -703,94 +700,39 @@ export function ToolsDemo() {
 // The goal ladder: each goal fills from members' purchases, in order. The calculator shows what N yearly Plus
 // members would fund; it's a what-if, not a count.
 export function Goals() {
-  const [members, setMembers] = useState(25);
-  const raised = FUNDING.raisedInr;
-  const total = GOALS.reduce((a, g) => a + g.inr, 0);
-  // Goals fill in order: each takes what's left after the ones before it.
-  const before = (i: number) =>
-    GOALS.slice(0, i).reduce((a, g) => a + g.inr, 0);
-  const got = GOALS.map((g, i) =>
-    Math.max(0, Math.min(raised - before(i), g.inr)),
-  );
-  const ifReached = GOALS.filter(
-    (_, i) => members * PLUS_YEAR_INR >= before(i + 1),
-  ).length;
-  // How much of each goal the slider's amount covers: a goal colours in as it fills, grey until then.
-  const covered = GOALS.map((g, i) =>
-    Math.max(0, Math.min((members * PLUS_YEAR_INR - before(i)) / g.inr, 1)),
-  );
   return (
     <div className={s.goals}>
       <ol className={`${s.ladder} ${s.lands}`} data-reveal="stack">
-        {GOALS.map((g, i) => {
-          return (
-            <li
-              key={g.key}
-              style={
-                {
-                  "--fill": g.fill,
-                  "--grey": 1 - covered[i],
-                } as React.CSSProperties
-              }
-              data-hit={i < ifReached || undefined}
-            >
-              <div className={s.goalHead}>
-                <b className="display">{g.name}</b>
-                <span>{inr(g.inr)}</span>
-              </div>
-              <p>{g.what}</p>
-              <div
-                className={s.bar}
-                role="progressbar"
-                aria-label={`${g.name}: raised`}
-                aria-valuemin={0}
-                aria-valuemax={g.inr}
-                aria-valuenow={got[i]}
-              >
-                <i style={{ width: `${(got[i] / g.inr) * 100}%` }} />
-              </div>
-              <small>
-                {inr(got[i])} raised ·{" "}
-                {g.kind === "fee"
-                  ? "app-store fee"
-                  : "prototype R&D, estimated"}
-              </small>
-            </li>
-          );
-        })}
+        {GOALS.map((g, i) => (
+          <li key={g.key} style={{ "--fill": g.fill, "--grey": 0 } as React.CSSProperties}>
+            <div className={s.goalHead}>
+              <b className="display">{g.name}</b>
+              <span>{i === 0 ? "Next" : `Then ${i + 1}`}</span>
+            </div>
+            <p>{g.what}</p>
+            <small>{g.kind === "fee" ? "An app-store listing" : "Prototype parts, to try it for real"}</small>
+          </li>
+        ))}
       </ol>
 
       <div className={s.calc}>
-        <p className="display">
-          {inr(raised)} <span>of {inr(total)} raised</span>
-        </p>
-        <label htmlFor="members">
-          What if <b>{members}</b> people chose Plus for a year?
-        </label>
-        <input
-          id="members"
-          type="range"
-          min={0}
-          max={200}
-          value={members}
-          onChange={(e) => setMembers(Number(e.target.value))}
-        />
-        <p className={s.calcOut} role="status">
-          {inr(members * PLUS_YEAR_INR)}: that&apos;s{" "}
-          {ifReached ? (
-            <b>
-              {GOALS.slice(0, ifReached)
-                .map((g) => g.name)
-                .join(", ")}
-            </b>
-          ) : (
-            "not yet the native Android app"
-          )}
-          {ifReached === GOALS.length ? ". Everything." : "."}
-        </p>
-        <p className={s.meterNote}>
-          Goals fill in order.
-        </p>
+        <p className="display">How Plus helps</p>
+        <ul className={s.helps}>
+          <li>
+            <b>Keeps todone running</b> without ads and without selling anyone&apos;s data: the servers, backups and
+            the AI.
+          </li>
+          <li>
+            <b>Builds what&apos;s next,</b> in this order: the phone apps first, then the screens for your desk, fridge
+            and bag.
+          </li>
+          <li>
+            <b>Gives you a say.</b> Members&apos; feedback decides what gets built and fixed first.
+          </li>
+          <li>
+            <b>And you get more:</b> as many lists as you need, sharing, teams and more Ask todone each month.
+          </li>
+        </ul>
         <Pay>Back todone with Plus</Pay>
       </div>
     </div>
@@ -985,7 +927,7 @@ export function Hardware() {
           <h3 className="display">{title}</h3>
           <p>{line}</p>
           <p className={s.goalTag}>
-            Prototype: goal {GOALS.indexOf(goal) + 1} · {inr(goal.inr)}
+            Prototype: step {GOALS.indexOf(goal) + 1} of the plan
           </p>
                   </div>
       </div>
