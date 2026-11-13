@@ -448,14 +448,10 @@ export function AiImport({
                   >
                     <Sparkles size={16} strokeWidth={2.5} /> Make my lists
                   </button>
-                  {usage?.limit != null && (
-                    <span className={s.aiMeter}>
-                      {Math.max(0, usage.limit - usage.used).toLocaleString("en-IN")} of {usage.limit.toLocaleString("en-IN")} AI credits left this month
-                    </span>
-                  )}
                 </div>
               </>
             )}
+            {usage?.limit != null && <Credits used={usage.used} limit={usage.limit} />}
             <p className={s.aiStatus} role="status">
               {phase === "recording" && <i className={s.recDot} aria-hidden />}
               {SAYS[phase]}
@@ -600,5 +596,20 @@ function Consent({ names, count, onOk, onCancel }: { names: string[]; count: num
         </button>
       </div>
     </dialog>
+  );
+}
+
+// This month's AI credits: what's left, as the same bar a list's progress uses; it turns hot when nearly gone.
+function Credits({ used, limit }: { used: number; limit: number }) {
+  const left = Math.max(0, limit - used);
+  return (
+    <p className={`${s.progress} ${s.aiCredits}`} data-low={left / limit < 0.15 || undefined}>
+      <span>
+        {left.toLocaleString("en-IN")} of {limit.toLocaleString("en-IN")} AI credits left this month
+      </span>
+      <span className={s.bar} role="meter" aria-label="AI credits left" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={left}>
+        <i style={{ transform: `scaleX(${left / limit})` }} />
+      </span>
+    </p>
   );
 }
