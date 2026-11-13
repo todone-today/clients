@@ -740,7 +740,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
           <Brainstorm lists={lists} add={add} update={update} />
         )}
-        {askAi && lists && (panel ? panel !== "account" : !list) && <AskBar />}
       </main>
     </div>
   );
