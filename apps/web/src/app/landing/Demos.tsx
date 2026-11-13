@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import {
   Bell,
@@ -16,6 +17,7 @@ import {
   Target,
   Wifi,
   WifiOff,
+  X,
 } from "lucide-react";
 import { Confetti } from "@/components/Confetti";
 import { type Launch, LaunchSpots } from "@/components/LaunchSpots";
@@ -500,44 +502,93 @@ export function PhoneDemo() {
 // Focus mode, small: one task, a clock that runs (fast-forwarded so the demo moves), and Done puts the time on the
 // task's card, the ⏳ chip the app shows.
 const clockOf = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+// Focus, as in the app: Start takes over the whole tab (not the screen), one task and a clock, with the time in the
+// tab's title. × or Esc steps out (the time stays, paused), Space pauses, Enter finishes. The clock runs a minute a
+// second here, so a short visit still sees it move.
 export function FocusDemo() {
   const [secs, setSecs] = useState(0);
   const [on, setOn] = useState(false);
+  const [full, setFull] = useState(false);
   const [done, setDone] = useState<number | null>(null);
   useEffect(() => {
     if (!on) return;
-    // A minute every second, so a short visit still shows the clock doing its job.
     const id = setInterval(() => setSecs((x) => x + 60), 1000);
     return () => clearInterval(id);
   }, [on]);
   const goal = 25 * 60;
   const finish = () => {
     setOn(false);
+    setFull(false);
     setDone(Math.max(1, Math.round(secs / 60)));
   };
+  const leave = () => {
+    setOn(false);
+    setFull(false);
+  };
+  // While it fills the tab: the page behind doesn't scroll, the clock is in the title, and the keys work.
+  const keys = useRef({ leave, finish, toggle: () => setOn((x) => !x) });
+  useEffect(() => {
+    keys.current = { leave, finish, toggle: () => setOn((x) => !x) };
+  });
+  useEffect(() => {
+    if (!full) return;
+    const title = document.title;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") keys.current.leave();
+      else if (e.key === " ") keys.current.toggle();
+      else if (e.key === "Enter") keys.current.finish();
+      else return;
+      e.preventDefault();
+    };
+    addEventListener("keydown", key);
+    return () => {
+      document.title = title;
+      document.body.style.overflow = overflow;
+      removeEventListener("keydown", key);
+    };
+  }, [full]);
+  useEffect(() => {
+    if (full) document.title = `${clockOf(secs)} · Write the launch post`;
+  }, [full, secs]);
+
+  const sheet = (big: boolean) => (
+    <div className={s.focusSheet} data-on={on || undefined} data-big={big || undefined}>
+      <small>{on ? "Focusing on" : secs ? "Paused" : "Focus"}</small>
+      <b className="display">Write the launch post</b>
+      <p className={`display ${s.focusClockDemo}`} role="timer">
+        {clockOf(secs)}
+      </p>
+      <span className={s.focusBarDemo} aria-hidden>
+        <i style={{ transform: `scaleX(${Math.min(1, secs / goal)})` }} />
+      </span>
+      <small>{secs < goal ? `${clockOf(goal - secs)} left of 25m` : "Past the 25m you planned. That's fine."}</small>
+      <div className={s.focusButtons}>
+        <button
+          type="button"
+          className="btn"
+          style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+          onClick={() => {
+            if (!big) setFull(true); // Start (or Resume) from the page opens it across the tab
+            setOn((x) => (big ? !x : true));
+          }}
+        >
+          {on ? <Pause size={16} strokeWidth={2.75} aria-hidden /> : <Play size={16} strokeWidth={2.75} aria-hidden />}
+          {on ? "Pause" : secs ? "Resume" : "Start"}
+        </button>
+        <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!secs} onClick={finish}>
+          <Check size={16} strokeWidth={3} aria-hidden /> Done
+        </button>
+      </div>
+      {big && <p className={s.focusKeys}>Space pauses · Enter finishes · Esc steps out, the time kept</p>}
+    </div>
+  );
+
   return (
     <div className={s.focusDemo}>
       {done === null ? (
-        <div className={s.focusSheet} data-on={on || undefined}>
-          <small>{on ? "Focusing on" : secs ? "Paused" : "Focus"}</small>
-          <b className="display">Write the launch post</b>
-          <p className={`display ${s.focusClockDemo}`} role="timer">
-            {clockOf(secs)}
-          </p>
-          <span className={s.focusBarDemo} aria-hidden>
-            <i style={{ transform: `scaleX(${Math.min(1, secs / goal)})` }} />
-          </span>
-          <small>{secs < goal ? `${clockOf(goal - secs)} left of 25m` : "Past the 25m you planned. That's fine."}</small>
-          <div className={s.focusButtons}>
-            <button type="button" className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties} onClick={() => setOn((x) => !x)}>
-              {on ? <Pause size={16} strokeWidth={2.75} aria-hidden /> : <Play size={16} strokeWidth={2.75} aria-hidden />}
-              {on ? "Pause" : secs ? "Resume" : "Start"}
-            </button>
-            <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!secs} onClick={finish}>
-              <Check size={16} strokeWidth={3} aria-hidden /> Done
-            </button>
-          </div>
-        </div>
+        sheet(false)
       ) : (
         <div className={s.focusAfter}>
           <Confetti />
@@ -561,6 +612,16 @@ export function FocusDemo() {
           </button>
         </div>
       )}
+      {full &&
+        createPortal(
+          <div className={s.focusFull} role="dialog" aria-modal="true" aria-label="Focus: Write the launch post">
+            {sheet(true)}
+            <button type="button" className={s.focusOut} onClick={leave} aria-label="Step out (keeps the time)">
+              <X size={22} strokeWidth={2.75} aria-hidden /> <span>Step out</span>
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

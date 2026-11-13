@@ -5,6 +5,7 @@ import {
   Bug,
   Check,
   GitPullRequest,
+  Heart,
   Lightbulb,
   Lock,
 } from "lucide-react";
@@ -81,24 +82,9 @@ export default function Home() {
             Just tell it your day.
           </h2>
           <p className={s.sub}>
-            Type it or say it, in Hindi, English or both. todone works out what you actually need to do and fills in the
-            rest. You check it before anything is added.
+            Type it or say it in Hindi, German, French, English, or a mix. todone works out what you actually need to do and writes the to-dos in English, with the details filled in. You check it before anything is added.
           </p>
           <AskDemo />
-          <ul className={s.askPoints}>
-            <li>
-              <b>Thinks it through.</b> Real next steps, not your words copied, each with a reason.
-            </li>
-            <li>
-              <b>Fills in the details.</b> Priority, time, effort and dates, plus goals and rewards.
-            </li>
-            <li>
-              <b>Asks when it should.</b> A question back when your plan is missing something.
-            </li>
-            <li>
-              <b>Yours to approve.</b> Nothing is added, and no list is read, until you say so.
-            </li>
-          </ul>
           <Link href="/app?new=1" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
             Try it free
           </Link>
@@ -354,21 +340,21 @@ export default function Home() {
                 Know Kartikey personally? Like where todone is going?
               </h3>
               <p>
-                I&apos;m building todone in the open, with no ads and no selling
-                your data. Back it once and be part of it from the start.
+                I&apos;m building todone in the open: private lists, no ads, no selling your data, then phones and a
+                calm e-ink screen. If that&apos;s the kind of thing you want to exist, back it once and you&apos;re part
+                of it from the start.
               </p>
               <p className={s.foundingSign}>— Kartikey, who makes todone</p>
               <p className={s.foundingPrice}>
-                <b className="display">{FOUNDING.inr}</b> / {FOUNDING.usd}{" "}
-                <small>paid once</small>
+                <b className="display">{FOUNDING.inr}</b> <small>/ {FOUNDING.usd} paid once</small>{" "}
+                <span className={`sticker ${s.foundingChip}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+                  3 years of Plus
+                </span>
               </p>
-              <p>
-                Three years of Plus. Nothing renews.
-              </p>
+              <Pay plan="founding" fill="var(--pink)">
+                <Heart size={18} strokeWidth={2.75} aria-hidden /> Become a founding member
+              </Pay>
             </div>
-            <Pay plan="founding" fill="var(--pink)">
-              Become a founding member
-            </Pay>
           </div>
           <p className={s.selfhost}>
             Rather run it yourself?{" "}

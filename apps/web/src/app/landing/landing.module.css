@@ -341,25 +341,22 @@ button.box:hover {
 }
 /* The stage hugs its demo (with room around it); the calendar gets the width it needs. */
 .stage {
+  /* The same panel as Ask todone's: the app's own dark (or day) surface, a cream edge and a lime shadow; the demo's
+     colour is on the stickers inside it (--fill), not the panel. */
   display: grid;
   place-items: center;
   width: fit-content;
   min-width: min(100%, 30rem);
   max-width: min(100%, 44rem);
   margin-top: clamp(1.25rem, 3vh, 2.5rem);
-  padding: clamp(1.25rem, 4vw, 3rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
   text-align: left;
-  color: var(--black);
-  background: var(--fill);
-  border: var(--key);
-  box-shadow: var(--lift);
-  rotate: -0.5deg;
-  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
-  --ink: var(--black);
-  --ink-2: #4a4540;
-  --hair: rgb(11 11 11 / 0.22);
-  --ground: #fff8ef;
-  --raise: #f3eadb;
+  color: var(--ink);
+  background:
+    radial-gradient(30rem 14rem at 50% 0%, color-mix(in srgb, var(--fill) 14%, transparent), transparent 70%),
+    var(--raise);
+  border: 2.5px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--lime);
 }
 .chapter:nth-child(even) .stage {
   rotate: 0.5deg;
@@ -2691,8 +2688,143 @@ button.box:hover {
   }
 }
 
-/* Launch-price spots left, between the billing switch and the cards. */
+/* Launch-price spots left, between the billing switch and the cards: a hot sticker, hard to miss. */
 .launch {
-  margin: 0.25rem auto 2.25rem;
-  font-size: 1.05rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.5rem auto 2.5rem;
+  padding: 0.75rem 1.2rem;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  color: var(--black);
+  background: var(--lime);
+  border: 2.5px solid var(--black);
+  box-shadow: 6px 6px 0 var(--pink);
+  rotate: -1deg;
+}
+.launch b {
+  font-family: var(--display, inherit);
+  font-size: 1.5em;
+}
+
+/* Focus, started: it takes the whole tab, like the app's focus mode. A dark room, one big card, a way out. */
+.focusFull {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: #0b0b0b;
+  animation: focusIn 0.35s var(--ease) both;
+}
+@keyframes focusIn {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+.focusSheet[data-big] {
+  width: min(100%, 44rem);
+  gap: 0.9rem;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 3rem);
+  border-color: #fff8ef;
+  box-shadow: 10px 10px 0 var(--lime);
+}
+.focusSheet[data-big] > b {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+}
+.focusSheet[data-big] .focusClockDemo {
+  font-size: clamp(5rem, 16vw, 10rem);
+}
+.focusKeys {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #c9c2b8;
+}
+.focusOut {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.8rem;
+  font-weight: 800;
+  color: #fff8ef;
+  border: 2px solid #fff8ef;
+}
+.focusOut:hover {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--lime);
+}
+@media (prefers-reduced-motion: reduce) {
+  .focusFull {
+    animation: none;
+  }
+}
+.launch span i {
+  background: var(--black);
+}
+
+/* Demos drawn straight onto the stage get a sticker of their own in the chapter's colour, like Ask todone's notes. */
+.stage > :is(.stepNote, .offlineDemo, .toolsDemo, .phoneDemo) {
+  padding: clamp(1rem, 3vw, 1.6rem);
+  color: var(--black);
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+  rotate: -0.6deg;
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+}
+
+/* Founding member, like the in-app card: a cream note on the butter sticker, price with its chip, the button under it. */
+.founding > div {
+  padding: clamp(1rem, 3vw, 1.6rem);
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+}
+.founding > div > a,
+.founding > div > button {
+  margin-top: 0.6rem;
+}
+.foundingPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.foundingChip {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  rotate: -2deg;
+}
+.founding {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+.founding > div {
+  grid-column: 2 / -1;
+  flex: none;
+  max-width: none;
+}
+.founding > div > :is(a, button) {
+  justify-self: start;
+  width: fit-content;
+}
+@media (max-width: 700px) {
+  .founding {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .founding > div {
+    grid-column: 1 / -1;
+  }
 }

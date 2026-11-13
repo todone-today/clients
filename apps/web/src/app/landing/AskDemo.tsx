@@ -28,6 +28,22 @@ const EXAMPLES: Example[] = [
     ],
   },
   {
+    tag: "Auf Deutsch",
+    said: "Morgen muss ich die Steuererklärung abgeben und Oma zum Geburtstag anrufen.",
+    lanes: [
+      { name: "Admin", fill: "var(--butter)", notes: [{ title: "Submit the tax return", meta: ["High", "tomorrow", "1h", "Effort M"], why: "Due tomorrow." }] },
+      { name: "Family", fill: "var(--pink)", notes: [{ title: "Call Grandma for her birthday", meta: ["Medium", "tomorrow", "15m"], why: "It's her birthday." }] },
+    ],
+  },
+  {
+    tag: "En français",
+    said: "Je dois réserver le dentiste cette semaine et courir trois fois par semaine.",
+    lanes: [
+      { name: "Health", fill: "var(--cyan)", notes: [{ title: "Book a dentist appointment", meta: ["Medium", "this week", "15m"], why: "You wanted it this week." }] },
+      { name: "Goals", fill: "var(--lime)", notes: [{ title: "Go for a run", meta: ["3× a week"], kind: "goal" }] },
+    ],
+  },
+  {
     tag: "A plan, with a question back",
     said: "Plan a Goa trip in December with 3 friends, budget 20k each.",
     lanes: [
@@ -116,14 +132,14 @@ export function AskDemo() {
         </span>
       </div>
       <p className={s.askStatus} role="status">
-        {thinking ? "Thinking it through…" : shown ? (i === 2 ? "You let it read Groceries. Check each change, then Apply." : "Sorted for you. Move anything, then Add.") : " "}
+        {thinking ? "Thinking it through…" : shown ? (EXAMPLES[i].tag.startsWith("Inside") ? "You let it read Groceries. Check each change, then Apply." : "Sorted for you. Move anything, then Add.") : " "}
       </p>
       <div className={s.askLanes} data-shown={shown || undefined} aria-live="polite">
         {shown &&
           ex.lanes.map((lane) => (
             <section key={lane.name} className={s.askLane} style={{ "--fill": lane.fill } as React.CSSProperties}>
               <h3>
-                {i === 2 && <Lock size={13} strokeWidth={2.75} aria-hidden />} {lane.name}
+                {ex.tag.startsWith("Inside") && <Lock size={13} strokeWidth={2.75} aria-hidden />} {lane.name}
               </h3>
               {lane.notes.map((note) => (
                 <div
