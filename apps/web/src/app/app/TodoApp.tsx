@@ -64,6 +64,7 @@ import { fileFeedback } from "./feedback-inbox";
 import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
 import { AllLists } from "./AllLists";
+import { AskBar } from "./AskBar";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Feedback } from "./Feedback";
@@ -738,6 +739,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
           <Brainstorm lists={lists} add={add} update={update} />
         )}
+        {askAi && lists && panel !== "account" && <AskBar />}
       </main>
     </div>
   );

@@ -1622,6 +1622,94 @@
   background-color: var(--raise);
   border: 2px solid var(--hair);
 }
+/* Ask todone's bar: pinned to the bottom of the page, over whatever view is open, like a note stuck on. */
+.askBar {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(100%, 46rem);
+  margin: 2.5rem 0 0; /* lines up with the list, on the left */
+  padding: 0.45rem 0.45rem 0.45rem 0.85rem;
+  color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  background: var(--ground);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.askBar:focus-within {
+  box-shadow: 6px 6px 0 var(--lime), var(--lift);
+}
+.askSpark {
+  flex: none;
+}
+.askBar input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.2rem;
+  font: 600 1rem/1.3 inherit;
+  color: var(--black);
+  background: transparent;
+  border: 0;
+}
+.askBar input:focus-visible {
+  outline: none;
+}
+.askBar input::placeholder {
+  color: var(--ink-2);
+}
+.askMic,
+.askGo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--black);
+  border: 2px solid var(--black);
+}
+.askMic {
+  background: var(--raise);
+}
+.askGo {
+  background: var(--lime);
+}
+.askGo:disabled {
+  opacity: 0.45;
+}
+.askMic:hover,
+.askGo:not(:disabled):hover {
+  translate: -1px -1px;
+  box-shadow: 2px 2px 0 var(--black);
+}
+/* The undo and selection bars float above it. */
+.shell:has(.askBar) .undo,
+.shell:has(.askBar) .pickBar {
+  bottom: 5.5rem;
+}
+.shell:has(.askBar) .pickBar + .undo,
+.shell:has(.askBar) .undo:has(+ .pickBar) {
+  bottom: 9.25rem;
+}
+@media (max-width: 760px) {
+  /* Above the tab bar, in thumb reach. */
+  .askBar {
+    bottom: calc(4.4rem + env(safe-area-inset-bottom));
+    margin-top: 1.5rem;
+  }
+  .shell:has(.askBar) .undo,
+  .shell:has(.askBar) .pickBar {
+    bottom: calc(9rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* Ask todone: type or speak, then check what it found. */
 .aiTabs {
   width: fit-content;

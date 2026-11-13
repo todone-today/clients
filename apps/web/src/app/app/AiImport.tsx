@@ -9,6 +9,7 @@ import { type GoalItem } from "@todone/sdk/goals";
 import { parsePlan, planPrompt, type PlanGoal } from "@todone/sdk/plan";
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
+import { ASK_EVENT, type Ask } from "./AskBar";
 import s from "./app.module.css";
 
 const newId = () => uid() + uid();
@@ -168,12 +169,12 @@ export function AiImport({
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
   };
-  const askText = async () => {
-    if (!words.trim()) return;
+  const askText = async (text = words) => {
+    if (!text.trim()) return;
     setErr("");
     setPhase("thinking");
     try {
-      answered(await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text: words, context: context() }));
+      answered(await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context() }));
     } catch (e) {
       failed(e);
     }
@@ -313,19 +314,34 @@ export function AiImport({
     </div>
   );
 
+  const open = () => {
+    setInto(current ?? "new");
+    setToday(todayISO());
+    if (!ai) setTab("paste");
+    if (!dialog.current?.open) dialog.current?.showModal();
+    if (ai) api<{ used: number; limit: number | null }>("GET", "/ai/usage").then(setUsage, () => {});
+  };
+  // The bar at the bottom of the page (AskBar) asks here: words to answer straight away, or the mic.
+  const fromBar = useRef<(a: Ask) => void>(() => {});
+  fromBar.current = (a: Ask) => {
+    if (!ai) return;
+    reset();
+    setTab("ask");
+    open();
+    if ("text" in a) {
+      setWords(a.text);
+      askText(a.text);
+    } else record();
+  };
+  useEffect(() => {
+    const on = (e: Event) => fromBar.current((e as CustomEvent<Ask>).detail);
+    addEventListener(ASK_EVENT, on);
+    return () => removeEventListener(ASK_EVENT, on);
+  }, []);
+
   return (
     <div className={s.import}>
-      <button
-        className={s.ghost}
-        data-tour="ai"
-        onClick={() => {
-          setInto(current ?? "new");
-          setToday(todayISO());
-          if (!ai) setTab("paste");
-          dialog.current?.showModal();
-          if (ai) api<{ used: number; limit: number | null }>("GET", "/ai/usage").then(setUsage, () => {});
-        }}
-      >
+      <button className={s.ghost} data-tour="ai" onClick={open}>
         <Sparkles size={16} strokeWidth={2.5} /> {ai ? "Ask todone" : "Import with AI"}
       </button>
 
@@ -388,7 +404,7 @@ export function AiImport({
                   <button
                     className="btn"
                     style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-                    onClick={askText}
+                    onClick={() => askText()}
                     disabled={busy || !words.trim()}
                   >
                     <Sparkles size={16} strokeWidth={2.5} /> Make my lists
