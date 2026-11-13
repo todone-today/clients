@@ -1479,6 +1479,19 @@
     color 0.15s,
     border-color 0.15s;
 }
+/* On the calendar the bin follows you while a task is dragged: pinned bottom right, wherever the page is scrolled. */
+:global(body[data-drag="task"]) .calendar .bin {
+  position: fixed;
+  top: auto;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 70;
+  box-shadow: var(--lift);
+}
+:global(body[data-drag="task"]) .calendar .bin:not([data-over]) {
+  background: var(--ground);
+  border-color: var(--ink);
+}
 .bin:hover {
   color: var(--ink);
   border-color: var(--ink);
@@ -2248,11 +2261,6 @@
   pointer-events: none;
   background: color-mix(in srgb, var(--lime) 14%, transparent);
   border: 2px dashed var(--lime);
-}
-.calendar > .pickBar {
-  position: sticky;
-  top: 0.75rem;
-  z-index: 20;
 }
 .pickBar .ghost + .ghost {
   margin-left: 0;

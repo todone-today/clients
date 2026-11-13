@@ -137,12 +137,15 @@ export function CalendarView({
     addEventListener("keydown", key);
     return () => removeEventListener("keydown", key);
   }, []);
-  const drag = (it: Item) =>
-    update &&
-    draggable(
-      { kind: "task", listId: it.list.id, id: it.task.id, ids: [it.task.id] },
-      it.task.title,
+  // Grabbing a picked task carries all the picked ones (the lifted card shows how many).
+  const drag = (it: Item) => {
+    if (!update) return undefined;
+    const its = picked.has(`${it.list.id}:${it.task.id}`) ? all.filter((x) => picked.has(`${x.list.id}:${x.task.id}`)) : [it];
+    return draggable(
+      { kind: "task", listId: it.list.id, id: it.task.id, ids: its.map((x) => x.task.id) },
+      its.length > 1 ? `${its.length} tasks` : it.task.title,
     );
+  };
   // Drop spots: "day:<date>" keeps the time, "all:<date>" clears it, "col:<date>" sets it from where it lands,
   // "tray" unschedules. Read-only calendars (the shared page) take no drops.
   // While a task is dragged over the hour grid, a ghost block shows where it lands and for how long.
@@ -193,7 +196,13 @@ export function CalendarView({
                   ? { due: d, at: toClock(minuteAt(at)) }
                   : null;
       if (arg === "bin") binIt(its);
-      else if (patch) for (const x of its) move(x, patch);
+      // One save per list: two saves to the same list in a row would each start from the old tasks.
+      else if (patch)
+        for (const list of new Set(its.map((x) => x.list)))
+          update?.(list.id, (l) => ({
+            ...l,
+            tasks: its.filter((x) => x.list === list).reduce((ts, x) => mapTask(ts, x.task.id, (t) => ({ ...t, ...patch })), l.tasks),
+          }));
     },
   });
   const drop: Drop = (arg) => (update ? dropAt(arg) : {});
