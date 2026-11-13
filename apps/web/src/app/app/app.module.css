@@ -1630,8 +1630,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: min(100%, 46rem);
-  margin: 2.5rem 0 0; /* lines up with the list, on the left */
+  width: 100%; /* as wide as the tasks (beside a list's stickers) or the page */
+  margin: 2.5rem 0 0;
   padding: 0.45rem 0.45rem 0.45rem 0.85rem;
   color: var(--black);
   /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */

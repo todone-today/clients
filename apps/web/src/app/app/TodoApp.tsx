@@ -734,12 +734,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             lists={sorted}
             update={update}
             focus={focus}
+            bar={askAi && <AskBar />}
           />
         ) : (
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
           <Brainstorm lists={lists} add={add} update={update} />
         )}
-        {askAi && lists && panel !== "account" && <AskBar />}
+        {askAi && lists && (panel ? panel !== "account" : !list) && <AskBar />}
       </main>
     </div>
   );
@@ -880,11 +881,13 @@ function ListView({
   lists,
   update,
   focus,
+  bar,
 }: {
   list: List;
   lists: { id: string; name: string }[];
   update: Update;
   focus?: { id: string } | null;
+  bar?: React.ReactNode; // Ask todone's bar, as wide as the tasks
 }) {
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
@@ -1392,6 +1395,7 @@ function ListView({
               <p>Add the first task above. Enjoy the quiet while it lasts.</p>
             </div>
           )}
+          {bar}
         </div>
         <Stickers
           active={!!selected || picked.size > 0}
