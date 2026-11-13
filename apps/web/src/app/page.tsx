@@ -22,13 +22,13 @@ import {
   Pricing,
   FocusDemo,
   PhoneDemo,
-  RemindDemo,
   SharedDemo,
   StepsDemo,
   ToolsDemo,
   WeekDemo,
 } from "./landing/Demos";
 import { HeroBoard } from "./landing/HeroBoard";
+import { AskDemo } from "./landing/AskDemo";
 import { Reveal } from "./landing/Reveal";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
@@ -43,6 +43,7 @@ export default function Home() {
           <Logo size={30} />
         </Link>
         <nav className={s.links} aria-label="Sections">
+          <a href="#ask">Ask todone</a>
           <a href="#features">What it does</a>
           <a href="#privacy">Privacy</a>
           <a href="#roadmap">Roadmap</a>
@@ -71,6 +72,38 @@ export default function Home() {
       <main>
         <HeroBoard />
 
+        {/* Ask todone, up front: say your day and it becomes the to-dos, shown playing. */}
+        <section id="ask" className={s.askSection} aria-labelledby="ask-h">
+          <span className={`sticker ${s.askTag}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            New · Ask todone
+          </span>
+          <h2 id="ask-h" className="display">
+            Just tell it your day.
+          </h2>
+          <p className={s.sub}>
+            Type it or say it, in Hindi, English or both. todone works out what you actually need to do and fills in the
+            rest. You check it before anything is added.
+          </p>
+          <AskDemo />
+          <ul className={s.askPoints}>
+            <li>
+              <b>Thinks it through.</b> Real next steps, not your words copied, each with a reason.
+            </li>
+            <li>
+              <b>Fills in the details.</b> Priority, time, effort and dates, plus goals and rewards.
+            </li>
+            <li>
+              <b>Asks when it should.</b> A question back when your plan is missing something.
+            </li>
+            <li>
+              <b>Yours to approve.</b> Nothing is added, and no list is read, until you say so.
+            </li>
+          </ul>
+          <Link href="/app?new=1" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+            Try it free
+          </Link>
+        </section>
+
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
         <section id="features" className={s.features} aria-label="What todone does">
           <Chapter tag="Steps" title="Big task, small steps." fill="var(--butter)">
@@ -96,10 +129,6 @@ export default function Home() {
           <Chapter tag="Goals" title="Goals you can feel." fill="var(--peri)">
             Finish tasks, earn points, treat yourself.
             <GoalsDemo />
-          </Chapter>
-          <Chapter tag="Reminders" title="Reminders that can't read you." fill="var(--cyan)">
-            Get nudged on time. Only you can read them.
-            <RemindDemo />
           </Chapter>
           <Chapter tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
             Your tasks show up in Google, Apple or Outlook.

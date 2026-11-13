@@ -2476,3 +2476,217 @@ button.box:hover {
   padding-left: 1.1rem;
   line-height: 1.45;
 }
+
+/* Ask todone, up front: a lime-edged band with the demo playing in the middle. */
+.askSection {
+  display: grid;
+  justify-items: center;
+  gap: 1.2rem;
+  padding: clamp(4.5rem, 11vh, 8rem) var(--gutter);
+  text-align: center;
+  background:
+    radial-gradient(60rem 26rem at 50% 0%, color-mix(in srgb, var(--lime) 16%, transparent), transparent 70%),
+    var(--ground);
+  border-block: 3px solid var(--lime);
+}
+.askSection h2 {
+  font-size: clamp(3.2rem, 8vw, 7rem);
+  line-height: 0.9;
+}
+.askSection > .sub {
+  max-width: 40rem;
+}
+.askTag {
+  padding: 0.35rem 0.8rem;
+  font-weight: 800;
+  color: var(--black);
+  rotate: -2deg;
+}
+.ask {
+  display: grid;
+  gap: 0.9rem;
+  width: min(100%, 60rem);
+  margin-top: 0.5rem;
+  text-align: left;
+}
+.askTabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.askTabs button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  border: 2px solid var(--hair);
+}
+.askTabs button[aria-pressed="true"] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--black);
+}
+.askBar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 4rem;
+  padding: 0.55rem 0.55rem 0.55rem 1rem;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 600;
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--lime);
+}
+.askBar svg[data-spin] {
+  animation: askSpin 0.9s linear infinite;
+}
+@keyframes askSpin {
+  to {
+    rotate: 360deg;
+  }
+}
+.askSaid {
+  flex: 1;
+  min-width: 0;
+}
+.askCaret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--lime);
+  animation: askBlink 1s steps(1) infinite;
+}
+@keyframes askBlink {
+  50% {
+    opacity: 0;
+  }
+}
+.askKey {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 2px solid var(--ink);
+}
+.askKey[data-go] {
+  color: var(--black);
+  background: var(--lime);
+  border-color: var(--black);
+}
+.askStatus {
+  min-height: 1.4em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: center;
+}
+.askLanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 21rem));
+  justify-content: center;
+  gap: 1rem;
+  align-items: start;
+  min-height: 15rem;
+}
+.askLane {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  color: var(--black);
+  background: color-mix(in srgb, var(--fill) 30%, var(--ground));
+  border: 2px solid var(--black);
+  animation: askLand 0.45s var(--ease) both;
+}
+.askLane h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.askNote {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--black);
+  background: var(--fill);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  rotate: -0.6deg;
+  animation: askLand 0.45s var(--ease) both;
+}
+.askNote:nth-child(even) {
+  rotate: 0.5deg;
+}
+.askNote[data-kind="change"],
+.askNote[data-kind="question"] {
+  border-style: dashed;
+  box-shadow: none;
+}
+.askNote b {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.askNote span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.askNote i {
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 700;
+  background: #fff8ef;
+  border: 1.5px solid var(--black);
+}
+.askNote[data-kind="change"] i:first-child {
+  color: #fff;
+  background: var(--black);
+}
+.askNote small {
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.75;
+}
+@keyframes askLand {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.92) rotate(-4deg);
+  }
+}
+.askPoints {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  width: min(100%, 60rem);
+  margin: 1rem 0 0.5rem;
+  list-style: none;
+  text-align: left;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.askPoints b {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .askLane,
+  .askNote,
+  .askCaret,
+  .askBar svg[data-spin] {
+    animation: none;
+  }
+}
