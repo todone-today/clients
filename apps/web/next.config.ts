@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // The todone server answers /api. Forwarding it keeps one address for the browser: the session cookie,
   // OAuth callbacks, calendar and Markdown links all live on this site.
   // Browser hardening for every page: no framing (clickjacking), no MIME sniffing, HTTPS only, a tight referrer,
-  // and no camera, microphone or location.
+  // no camera or location, and the microphone only for todone's own pages (Ask todone's voice), never embedded sites.
   async headers() {
     return [
       {
@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
         ],
       },
     ];
