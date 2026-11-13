@@ -14,6 +14,8 @@ export type Payload =
   // Goals and rewards, reordered by dragging.
   | { kind: "goal"; id: string }
   | { kind: "reward"; id: string }
+  // A suggestion on Ask todone's results board, before it's added.
+  | { kind: "draft"; id: string }
   // The landing page's demo pieces (e.g. a block on the week strip).
   | { kind: "demo"; id: string };
 export type At = { x: number; y: number; el: HTMLElement };

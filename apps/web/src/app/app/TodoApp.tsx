@@ -876,6 +876,10 @@ function Privacy({ list, update }: { list: List; update: Update }) {
 const clockNow = () => performance.now();
 const flatten = (ts: Task[]) => ts.flatMap((t) => [t, ...t.sub]);
 
+// Tasks already on the board when a list opened. Anything else that shows up later (just added, from Ask todone,
+// moved in from another list) pops in like a sticker being stuck on; filters and re-renders don't replay it.
+const known = new Set<string>();
+
 function ListView({
   list,
   lists,
@@ -889,6 +893,11 @@ function ListView({
   focus?: { id: string } | null;
   bar?: React.ReactNode; // Ask todone's bar, as wide as the tasks
 }) {
+  // A list opened: what it has is "known" (no pop), however long ago it was made.
+  useState(() => {
+    known.clear();
+    for (const t of list.tasks) for (const x of [t, ...t.sub]) known.add(x.id);
+  });
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -1477,6 +1486,8 @@ function TaskRow({
 }) {
   const me = authClient.useSession().data?.user.id;
   const open = selected === task.id;
+  const [pop] = useState(() => !known.has(task.id));
+  useEffect(() => void known.add(task.id), [task.id]);
   const [renaming, setRenaming] = useState(false);
   const [folded, setFolded] = useFolded(task.id);
   const edit = (f: (t: Task) => Task | null) =>
@@ -1503,6 +1514,7 @@ function TaskRow({
       className={top ? s.note : s.taskItem}
       data-id={top ? task.id : undefined}
       data-card={top || undefined}
+      data-pop={pop || undefined}
       data-open={open || undefined}
       data-dragged={dragged || undefined}
       style={
