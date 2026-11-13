@@ -14,10 +14,16 @@ const STEPS: Step[] = [
   {
     panel: null,
     title: "Welcome to todone",
-    body: "Here's todone in a minute, then a quick tour of each part. We made you a couple of lists to play with; change or delete anything.",
+    body: "Here's todone in two minutes, then a short tour of each part. We made you a couple of lists to play with; change or delete anything.",
     video: true,
   },
-  { target: "add", panel: null, title: "Add a task", body: "Type it and press Enter. Just the name; the rest comes later." },
+  {
+    target: "ask",
+    panel: null,
+    title: "Just tell todone",
+    body: "Type or say your day here, in Hindi, English or both. Ask todone turns it into tasks with priority, time and effort, plus goals and rewards, and shows you first. Nothing is added until you say so.",
+  },
+  { target: "add", panel: null, title: "Or add a task yourself", body: "Type it and press Enter. Just the name; the rest comes later." },
   {
     target: "board",
     panel: null,
@@ -63,20 +69,14 @@ const STEPS: Step[] = [
   {
     target: "goals",
     panel: "goals",
-    title: "Goals for each list",
-    body: "A Gym list can aim for 68 kg, 5 visits a week or 120 g of protein a day. Log progress here, and drop a task on a goal to make it a milestone.",
+    title: "Goals that pull you forward",
+    body: "One clear target, tiny steps you log, and progress you can see: that's what keeps people going. A Gym list can aim for 68 kg or 5 visits a week. Drop a task on a goal to make it a milestone.",
   },
   {
     target: "rewards",
     panel: "rewards",
     title: "Earn XP, treat yourself",
-    body: "Finishing tasks earns XP: more for bigger effort, high priority and being on time. Spend it on rewards you pick, like a cheat meal.",
-  },
-  {
-    target: "ai",
-    panel: null,
-    title: "Import with AI",
-    body: "Copy our prompt into any AI, describe your plans, paste the answer back: tasks with dates and times.",
+    body: "Every task you finish earns XP: more for bigger, high-priority and on-time ones. You pick the rewards, like a cheat meal or a movie night, so finishing feels worth it today, not someday.",
   },
   {
     target: "bell",
@@ -226,7 +226,7 @@ export function Tour({ onPanel, onEnd }: { onPanel: (p: Panel) => void; onEnd: (
             preload="auto"
             // At the end, back from full screen to the card, where "Take the tour" is.
             onEnded={() => document.fullscreenElement && document.exitFullscreen().catch(() => {})}
-            aria-label="todone in a minute: a walkthrough of adding tasks, stickers, lists, the calendar, goals, rewards and sharing"
+            aria-label="todone in two minutes: a walkthrough of Ask todone, adding tasks, stickers, lists, the calendar, goals, rewards and sharing"
           />
           {!full && (
             <button

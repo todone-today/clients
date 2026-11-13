@@ -13,7 +13,7 @@ const ask = (detail: Ask) => dispatchEvent(new CustomEvent<Ask>(ASK_EVENT, { det
 export function AskBar() {
   const [text, setText] = useState("");
   return (
-    <form
+    <form data-tour="ask"
       className={s.askBar}
       onSubmit={(e) => {
         e.preventDefault();

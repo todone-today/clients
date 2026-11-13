@@ -9,6 +9,8 @@ import { setTheme } from "./setup";
 import { type EditName, FLIGHT, IDEA, TYPED, day } from "./seed";
 import { Fade, Sfx, inStage, usePop } from "./kit";
 import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab } from "./live";
+import { AskScene, BOARD_AT } from "./scenes/Ask";
+import { WhyGoals, WhyRewards } from "./scenes/Why";
 
 // ---- Where things are that need more than a selector ------------------------------------------------------------
 const theToggle: Finder = () => inStage("button[aria-label^='Switch to']")[0];
@@ -161,9 +163,9 @@ const RAW = {
   },
 } satisfies Record<string, Scene>;
 
-// The pace: every scene a third slower than the frames above, and the busier ones (a goal's steps, reaching one,
-// sharing while replies come in) slower still, so each step can be followed.
-const PACE: Partial<Record<keyof typeof RAW, number>> = { goal: 1.6, reach: 1.5, share: 1.6 };
+// The pace: every scene well over half again as slow as the frames above (people said it went by too fast to read),
+// and the busier ones (a goal's steps, reaching one, sharing while replies come in) slower still.
+const PACE: Partial<Record<keyof typeof RAW, number>> = { goal: 2, reach: 1.9, share: 2 };
 const slower = (sc: Scene, k: number): Scene => ({
   ...sc,
   dur: Math.round(sc.dur * k),
@@ -174,19 +176,31 @@ const slower = (sc: Scene, k: number): Scene => ({
     ...("drag" in st ? { lift: Math.round((st.lift ?? 26) * k) } : {}),
   })),
 });
-const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slower(sc, PACE[n as keyof typeof RAW] ?? 1.3)])) as unknown as {
+const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slower(sc, PACE[n as keyof typeof RAW] ?? 1.7)])) as unknown as {
   [K in keyof typeof RAW]: Omit<(typeof RAW)[K], "dur" | "steps"> & { dur: number; steps: Step[] };
 };
 
 // ---- Timeline ---------------------------------------------------------------------------------------------------
 const INTRO = 60;
 const OUTRO = 70;
-const ORDER = ["create", "stickers", "steps", "lists", "brainstorm", "calendar", "goal", "reach", "rewards", "share", "team", "theme"] as const;
+// Scenes drawn for the video rather than played in the live app: Ask todone first, and why goals and rewards work.
+const CUSTOM = {
+  ask: { dur: BOARD_AT + 140, El: AskScene, sfx: [{ at: 0, name: "whoosh" }, { at: BOARD_AT, name: "pop" }, { at: BOARD_AT + 38, name: "pop" }, { at: BOARD_AT + 66, name: "chime" }] },
+  whyGoals: { dur: 185, El: WhyGoals, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "pop" }] },
+  whyRewards: { dur: 185, El: WhyRewards, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "chime" }] },
+} as const;
+const ORDER = ["ask", "create", "stickers", "steps", "lists", "brainstorm", "calendar", "whyGoals", "goal", "reach", "whyRewards", "rewards", "share", "team", "theme"] as const;
 type Name = (typeof ORDER)[number];
+const custom = (k: Name): k is keyof typeof CUSTOM => k in CUSTOM;
+const durOf = (k: Name) => (custom(k) ? CUSTOM[k].dur : SCENES[k].dur);
 const FROM = {} as Record<Name, number>;
 const PRE = {} as Record<Name, EditName[]>; // each scene starts from what the ones before it made
 ORDER.reduce(
-  (acc, k) => ((FROM[k] = acc.t), (PRE[k] = acc.made), { t: acc.t + SCENES[k].dur, made: [...acc.made, ...(SCENES[k] as Scene).makes] }),
+  (acc, k) => (
+    (FROM[k] = acc.t),
+    (PRE[k] = acc.made),
+    { t: acc.t + durOf(k), made: [...acc.made, ...(custom(k) ? [] : (SCENES[k] as Scene).makes)] }
+  ),
   { t: INTRO, made: [] as EditName[] },
 );
 const END = FROM.theme + SCENES.theme.dur;
@@ -244,7 +258,9 @@ const Sounds = () => (
     <Sfx at={0} name="whoosh" />
     <Sfx at={14} name="chime" />
     {ORDER.flatMap((k) =>
-      (SCENES[k].steps as Step[]).filter((s) => s.sfx).map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + end(s)} name={s.sfx!} />),
+      custom(k)
+        ? CUSTOM[k].sfx.map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + s.at} name={s.name} />)
+        : (SCENES[k].steps as Step[]).filter((s) => s.sfx).map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + end(s)} name={s.sfx!} />),
     )}
     <Sfx at={END} name="whoosh" />
     <Sfx at={END + 12} name="chime" />
@@ -264,6 +280,14 @@ export const Onboarding = () => {
         <Intro />
       </Sequence>
       {ORDER.map((k) => {
+        if (custom(k)) {
+          const { El, dur } = CUSTOM[k];
+          return (
+            <Sequence key={k} from={FROM[k]} durationInFrames={dur}>
+              <El dur={dur} />
+            </Sequence>
+          );
+        }
         const sc: Scene = SCENES[k];
         return (
           <Sequence key={k} from={FROM[k]} durationInFrames={sc.dur}>
