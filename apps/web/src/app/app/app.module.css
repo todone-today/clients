@@ -1838,6 +1838,21 @@
 .askNote[data-pri="1"] {
   box-shadow: var(--lift-sm), inset 5px 0 0 var(--hot);
 }
+.askFold {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  width: 100%;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.askFold svg {
+  transition: rotate 0.15s var(--ease);
+}
+.askFold[aria-expanded="true"] svg {
+  rotate: 90deg;
+}
 .askSteps {
   display: grid;
   gap: 0.1rem;

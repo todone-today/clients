@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Gift, Plus, Target, Trash2, X } from "lucide-react";
+import { ChevronRight, Gift, Plus, Target, Trash2, X } from "lucide-react";
 import { draggable, useDrop } from "@/lib/drag";
 import { BIN, GOALS, REWARDS, type Draft, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
 import { type List, relDue } from "@todone/sdk/tasks";
@@ -59,6 +59,7 @@ export function AskBoard({
   const [picked, setPicked] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [naming, setNaming] = useState("");
+  const [unfolded, setUnfolded] = useState<string[]>([]); // steps start folded
   const put = (id: string, place: string) => {
     onChange(drop(drafts, id, place === NONE ? null : place));
     setPicked(null);
@@ -142,6 +143,19 @@ export function AskBoard({
           </span>
         )}
         {steps.length > 0 && (
+          <button
+            type="button"
+            className={s.askFold}
+            aria-expanded={unfolded.includes(d.id)}
+            onClick={(e) => {
+              e.stopPropagation(); // not a pick
+              setUnfolded((u) => (u.includes(d.id) ? u.filter((x) => x !== d.id) : [...u, d.id]));
+            }}
+          >
+            <ChevronRight size={12} strokeWidth={3} aria-hidden /> {steps.length} {steps.length === 1 ? "step" : "steps"}
+          </button>
+        )}
+        {steps.length > 0 && unfolded.includes(d.id) && (
           <ul className={s.askSteps} aria-label="Steps">
             {steps.map((t) => (
               <li key={t.id}>
