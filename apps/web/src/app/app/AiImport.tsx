@@ -359,8 +359,8 @@ export function AiImport({
 
   return (
     <div className={s.import}>
-      <button className={s.ghost} data-tour="ai" onClick={open}>
-        <Sparkles size={16} strokeWidth={2.5} /> {ai ? "Ask todone" : "Import with AI"}
+      <button className={s.ghost} data-tour="ai" onClick={open} data-tip={ai ? "Ask todone" : "Import with AI"}>
+        <Sparkles size={16} strokeWidth={2.5} aria-hidden /> <span className={s.label}>{ai ? "Ask todone" : "Import with AI"}</span>
       </button>
 
       <dialog ref={dialog} className={s.aiDialog} data-board={found || undefined} aria-labelledby="ai-title" onClose={close}>

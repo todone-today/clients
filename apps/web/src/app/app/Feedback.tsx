@@ -22,8 +22,8 @@ export function Feedback() {
 
   return (
     <>
-      <button className={s.feedbackLink} onClick={() => dialog.current?.showModal()}>
-        <MessageSquare size={14} strokeWidth={2.5} aria-hidden /> Send feedback
+      <button className={s.feedbackLink} onClick={() => dialog.current?.showModal()} data-tip="Send feedback">
+        <MessageSquare size={14} strokeWidth={2.5} aria-hidden /> <span className={s.label}>Send feedback</span>
       </button>
       <dialog ref={dialog} className={s.aiDialog} aria-labelledby="fb-title" onClose={close}>
         <div className={s.aiHead}>

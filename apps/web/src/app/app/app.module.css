@@ -2234,6 +2234,29 @@
 .taskItem .row[data-picked] {
   outline-color: var(--lime);
 }
+/* Picked on the calendar (Cmd/Ctrl-click or a box): the same lime dashes, lifted a little. */
+.calTask[data-picked],
+.calendar .block[data-picked],
+.trayItem[data-picked] {
+  outline: 2.5px dashed var(--lime);
+  outline-offset: 3px;
+  translate: -1px -1px;
+}
+.marquee {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--lime) 14%, transparent);
+  border: 2px dashed var(--lime);
+}
+.calendar > .pickBar {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 20;
+}
+.pickBar .ghost + .ghost {
+  margin-left: 0;
+}
 .pickBar {
   display: flex;
   flex-wrap: wrap;
@@ -3516,7 +3539,7 @@ input.stick[data-custom][aria-invalid="true"] {
     overflow-x: hidden;
   }
   .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools),
-  .shell[data-slim] .sideTools > :not(.binBtn),
+  .shell[data-slim] .sideTools > :not(.binBtn, .allBtn, .import, .feedbackLink),
   .shell[data-slim] .side .label,
   .shell[data-slim] .side .open {
     display: none;
@@ -3535,8 +3558,21 @@ input.stick[data-custom][aria-invalid="true"] {
     flex-direction: column;
     align-items: center;
   }
-  .shell[data-slim] .binBtn {
+  .shell[data-slim] .binBtn,
+  .shell[data-slim] .allBtn + .binBtn {
     margin-top: 0;
+  }
+  /* Ask todone and feedback as square icons, like the lists above them. */
+  .shell[data-slim] .sideTools {
+    gap: 0.4rem;
+  }
+  .shell[data-slim] .import > button,
+  .shell[data-slim] .feedbackLink {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
   }
   .shell[data-slim] .listBtn {
     justify-content: center;
@@ -4959,7 +4995,7 @@ input.stick[data-custom][aria-invalid="true"] {
   left: calc(100% + 0.6rem);
   translate: 0 -50%;
 }
-.shell:not([data-slim]) .side .listBtn[data-tip]::after {
+.shell:not([data-slim]) .side :is(.listBtn, .import > button, .feedbackLink)[data-tip]::after {
   content: none !important;
 }
 .tile {

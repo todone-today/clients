@@ -92,18 +92,51 @@ export function CalendarView({
       tasks: mapTask(l.tasks, it.task.id, (t) => ({ ...t, ...patch })),
     }));
   // The bin, as on a list: a task dropped on it goes (steps with it) to the workspace's Bin for 7 days, with undo.
-  const [binned, setBinned] = useState<{ listId: string; before: Task[]; ids: string[]; text: string } | null>(null);
+  const [binned, setBinned] = useState<{ before: { listId: string; tasks: Task[] }[]; ids: string[]; text: string } | null>(
+    null,
+  );
   useEffect(() => {
     if (!binned) return;
     const t = setTimeout(() => setBinned(null), 10_000);
     return () => clearTimeout(t);
   }, [binned]);
-  const binIt = (it: Item) => {
-    update?.(it.list.id, (l) => ({ ...l, tasks: mapTask(l.tasks, it.task.id, () => null) }));
-    toBin([it.task], it.list);
+  const binIt = (its: Item[]) => {
+    const lists = [...new Set(its.map((it) => it.list))];
+    for (const list of lists) {
+      const mine = its.filter((it) => it.list === list).map((it) => it.task);
+      // A step whose parent goes too travels inside it.
+      const top = mine.filter((t) => !mine.some((p) => p.sub.includes(t)));
+      update?.(list.id, (l) => ({ ...l, tasks: top.reduce((ts, t) => mapTask(ts, t.id, () => null), l.tasks) }));
+      toBin(top, list);
+    }
     binSound();
-    setBinned({ listId: it.list.id, before: it.list.tasks, ids: [it.task.id], text: `Deleted “${it.task.title}”.` });
+    setPicked(new Set());
+    setBinned({
+      before: lists.map((l) => ({ listId: l.id, tasks: l.tasks })),
+      ids: its.map((it) => it.task.id),
+      text: its.length > 1 ? `Deleted ${its.length} tasks.` : `Deleted “${its[0].task.title}”.`,
+    });
   };
+  // Picked tasks (Cmd/Ctrl-click, or drag a box across empty space) move and go to the bin together.
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [box, setBox] = useState<{ left: number; top: number; right: number; bottom: number } | null>(null);
+  const keyOf = (it: Item) => `${it.list.id}:${it.task.id}`;
+  const pick = (it: Item) =>
+    setPicked((p) => {
+      const n = new Set(p);
+      if (!n.delete(keyOf(it))) n.add(keyOf(it));
+      return n;
+    });
+  // What a drag carries: the picked tasks when the dragged one is among them, otherwise just it.
+  const withPicked = (it: Item) => (picked.has(keyOf(it)) ? all.filter((x) => picked.has(keyOf(x))) : [it]);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return;
+      if (e.key === "Escape") setPicked(new Set());
+    };
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, []);
   const drag = (it: Item) =>
     update &&
     draggable(
@@ -145,13 +178,22 @@ export function CalendarView({
         p.kind === "task" &&
         all.find((x) => x.list.id === p.listId && x.task.id === p.id);
       if (!it) return;
+      const its = withPicked(it);
       const [spot, d] = arg.split(":");
-      if (arg === "bin") binIt(it);
-      else if (arg === "tray") move(it, { at: undefined });
-      else if (arg === "tray-date") move(it, { due: undefined, at: undefined });
-      else if (spot === "day") move(it, { due: d });
-      else if (spot === "all") move(it, { due: d, at: undefined });
-      else if (spot === "col") move(it, { due: d, at: toClock(minuteAt(at)) });
+      const patch =
+        arg === "tray"
+          ? { at: undefined }
+          : arg === "tray-date"
+            ? { due: undefined, at: undefined }
+            : spot === "day"
+              ? { due: d }
+              : spot === "all"
+                ? { due: d, at: undefined }
+                : spot === "col"
+                  ? { due: d, at: toClock(minuteAt(at)) }
+                  : null;
+      if (arg === "bin") binIt(its);
+      else if (patch) for (const x of its) move(x, patch);
     },
   });
   const drop: Drop = (arg) => (update ? dropAt(arg) : {});
@@ -215,7 +257,12 @@ export function CalendarView({
   const me = authClient.useSession().data?.user.id;
   // Clicking a task opens it right here, the way a list does; a read-only calendar opens its list instead.
   const [opened, setOpened] = useState<{ listId: string; id: string } | null>(null);
-  const openTask = (it: Item) => (update ? setOpened({ listId: it.list.id, id: it.task.id }) : onOpen?.(it.list.id));
+  const openTask = (it: Item, e?: React.MouseEvent) =>
+    update && (e?.metaKey || e?.ctrlKey || e?.shiftKey)
+      ? pick(it)
+      : update
+        ? setOpened({ listId: it.list.id, id: it.task.id })
+        : onOpen?.(it.list.id);
   const openList = opened && lists.find((l) => l.id === opened.listId);
   const openItem = openList && openList.tasks.flatMap((t) => [t, ...t.sub]).find((t) => t.id === opened.id);
 
@@ -223,6 +270,8 @@ export function CalendarView({
     <div
       key={it.task.id}
       className={s.calTask}
+      data-key={keyOf(it)}
+      data-picked={picked.has(keyOf(it)) || undefined}
       style={{ "--fill": listColor(it.list.id) } as React.CSSProperties}
       data-done={it.task.done}
       data-late={!it.task.done && it.task.due! < today}
@@ -252,7 +301,7 @@ export function CalendarView({
       )}
       <button
         className={s.calTitle}
-        onClick={() => openTask(it)}
+        onClick={(e) => openTask(it, e)}
         title={`${it.task.title} · ${it.list.name}`}
       >
         <span>
@@ -265,7 +314,56 @@ export function CalendarView({
   );
 
   return (
-    <div className={s.calendar}>
+    <div
+      className={s.calendar}
+      onPointerDown={(e) => {
+        // A box dragged across empty space picks every task it touches (Shift or Cmd/Ctrl adds to what's picked).
+        if (!update || e.button !== 0 || e.pointerType === "touch") return;
+        if ((e.target as HTMLElement).closest("[data-key], button, input, select, a, [role=dialog], dialog, aside")) return;
+        e.preventDefault(); // no text selection while the box is drawn
+        const x0 = e.clientX, y0 = e.clientY;
+        const add = e.shiftKey || e.metaKey || e.ctrlKey;
+        let moved = false;
+        const onMove = (m: PointerEvent) => {
+          if (!moved && Math.hypot(m.clientX - x0, m.clientY - y0) < 6) return;
+          moved = true;
+          const r = { left: Math.min(x0, m.clientX), top: Math.min(y0, m.clientY), right: Math.max(x0, m.clientX), bottom: Math.max(y0, m.clientY) };
+          setBox(r);
+          const hit = new Set(add ? picked : []);
+          for (const el of document.querySelectorAll<HTMLElement>("[data-key]")) {
+            const b = el.getBoundingClientRect();
+            if (b.right > r.left && b.left < r.right && b.bottom > r.top && b.top < r.bottom) hit.add(el.dataset.key!);
+          }
+          setPicked(hit);
+        };
+        const onUp = () => {
+          removeEventListener("pointermove", onMove);
+          removeEventListener("pointerup", onUp);
+          setBox(null);
+          if (!moved && !add) setPicked(new Set()); // a plain click on empty space lets go
+        };
+        addEventListener("pointermove", onMove);
+        addEventListener("pointerup", onUp);
+      }}
+    >
+      {box && (
+        <div
+          className={s.marquee}
+          style={{ left: box.left, top: box.top, width: box.right - box.left, height: box.bottom - box.top }}
+          aria-hidden
+        />
+      )}
+      {picked.size > 0 && !binned && (
+        <div className={s.pickBar} role="status">
+          <b>{picked.size} picked.</b> Drag one onto a day, a time or the Bin and they all go.
+          <button className={s.ghost} onClick={() => binIt(all.filter((x) => picked.has(keyOf(x))))}>
+            Delete
+          </button>
+          <button className={s.ghost} onClick={() => setPicked(new Set())}>
+            Done
+          </button>
+        </div>
+      )}
       {openList && openItem && update && (
         <TaskPanel
           key={openItem.id}
@@ -275,7 +373,7 @@ export function CalendarView({
           edit={(f) => update(openList.id, (l) => ({ ...l, tasks: mapTask(l.tasks, openItem.id, f) }))}
           onTick={() => update(openList.id, (l) => ({ ...l, tasks: tick(l.tasks, openItem.id, today, me) }))}
           onDelete={() => {
-            binIt({ list: openList, task: openItem });
+            binIt([{ list: openList, task: openItem }]);
             setOpened(null);
           }}
           onClose={() => setOpened(null)}
@@ -288,7 +386,7 @@ export function CalendarView({
           <button
             className={s.ghost}
             onClick={() => {
-              update?.(binned.listId, (l) => ({ ...l, tasks: binned.before }));
+              for (const b of binned.before) update?.(b.listId, (l) => ({ ...l, tasks: b.tasks }));
               unbin(binned.ids);
               setBinned(null);
             }}
@@ -461,6 +559,7 @@ export function CalendarView({
             drop={drop}
             onDay={openDay}
             onOpen={openTask}
+            picked={picked}
             resize={update && ((it, est) => move(it, { est }))}
             ghost={ghost}
           />
@@ -491,6 +590,7 @@ export function CalendarView({
                   steps={toPlan.filter((x) => x.list === it.list && it.task.sub.includes(x.task))}
                   drag={drag}
                   onOpen={openTask}
+                  picked={picked}
                 />
               ))}
           </aside>
@@ -505,19 +605,23 @@ function TrayItem({
   steps,
   drag,
   onOpen,
+  picked,
 }: {
   it: Item;
   steps: Item[];
   drag: (it: Item) => object | undefined;
-  onOpen: (it: Item) => void;
+  onOpen: (it: Item, e?: React.MouseEvent) => void;
+  picked: Set<string>;
 }) {
   const [folded, setFolded] = useFolded(it.task.id);
   const sticker = (x: Item, fold?: React.ReactNode) => (
     <div
       key={x.task.id}
       className={s.trayItem}
+      data-key={`${x.list.id}:${x.task.id}`}
+      data-picked={picked.has(`${x.list.id}:${x.task.id}`) || undefined}
       style={{ "--fill": listColor(x.list.id) } as React.CSSProperties}
-      onClick={(e) => !(e.target as HTMLElement).closest("button") && onOpen(x)}
+      onClick={(e) => !(e.target as HTMLElement).closest("button") && onOpen(x, e)}
       title="Click to open, or drag onto a day"
       {...drag(x)}
     >
@@ -560,6 +664,7 @@ function TimeGrid({
   drop,
   onDay,
   onOpen,
+  picked,
   resize,
   ghost,
 }: {
@@ -570,7 +675,8 @@ function TimeGrid({
   drag: (it: Item) => object | undefined;
   drop: Drop;
   onDay: (d: string) => void;
-  onOpen: (it: Item) => void;
+  onOpen: (it: Item, e?: React.MouseEvent) => void;
+  picked: Set<string>;
   resize?: (it: Item, est: number) => void;
   ghost: { day: string; start: number; est: number } | null;
 }) {
@@ -724,6 +830,8 @@ function TimeGrid({
                 key={it.task.id}
                 className={s.block}
                 data-done={it.task.done}
+                data-key={`${it.list.id}:${it.task.id}`}
+                data-picked={picked.has(`${it.list.id}:${it.task.id}`) || undefined}
                 style={{
                   top: (start / 60) * HOUR,
                   height: Math.max(((end - start) / 60) * HOUR - 2, 18),
@@ -731,7 +839,7 @@ function TimeGrid({
                   width: `calc(${100 / n}% - 4px)`,
                   "--fill": listColor(it.list.id),
                 } as React.CSSProperties}
-                onClick={() => onOpen(it)}
+                onClick={(e) => onOpen(it, e)}
                 title={`${it.task.at}–${toClock(end)} ${it.task.title} · ${it.list.name}`}
                 {...drag(it)}
               >
