@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronRight, Gift, Plus, Target, X } from "lucide-react";
 import { Select } from "@/components/Select";
 import { draggable, useDrop } from "@/lib/drag";
-import { BIN, GOALS, REWARDS, type Draft, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
+import { BIN, GOALS, REWARDS, type Draft, changeLabel, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
 import { type List, relDue } from "@todone/sdk/tasks";
 import { ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import s from "./app.module.css";
@@ -75,7 +75,29 @@ export function AskBoard({
           ? listColor(d.place)
           : NOTES[noteColor(newName(d.place) ?? newName(d.ai) ?? d.id)];
 
+  // A change to a task you have: its title, what happens to it, and why. It stays in its list; × leaves it out.
+  const change = (d: Extract<Draft, { kind: "change" }>) => (
+    <div
+      key={d.id}
+      data-id={d.id}
+      className={s.askNote}
+      data-kind="change"
+      data-op={d.change.op}
+      style={{ "--fill": listColor(d.place) } as React.CSSProperties}
+    >
+      <b>{d.task.title}</b>
+      <span className={s.askMeta}>
+        <i className={s.askOp}>{changeLabel(d.change)}</i>
+      </span>
+      {d.change.why && <p className={s.askWhy}>{d.change.why}</p>}
+      <button className={s.askX} aria-label={`Don't ${changeLabel(d.change).toLowerCase()}: ${d.task.title}`} onClick={() => onChange(drop(drafts, d.id, BIN))}>
+        <X size={12} strokeWidth={3} />
+      </button>
+    </div>
+  );
+
   const sticker = (d: Draft) => {
+    if (d.kind === "change") return change(d);
     const chips = meta(d, today);
     const steps = d.kind === "task" ? d.task.sub : [];
     const why = d.kind === "task" ? d.task.note : undefined;

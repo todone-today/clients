@@ -1831,6 +1831,26 @@
   background: var(--ground);
   border: 1.5px solid var(--black);
 }
+/* A change to a task you have: dashed, with what happens as a bold tag; a deletion is struck through. */
+.askNote[data-kind="change"] {
+  cursor: default;
+  border-style: dashed;
+  box-shadow: none;
+  rotate: 0deg;
+}
+.askNote[data-op="delete"] b,
+.askNote[data-op="done"] b {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.askMeta i.askOp {
+  color: #fff;
+  background: var(--black);
+}
+.askNote[data-op="delete"] i.askOp {
+  background: var(--hot);
+  border-color: var(--hot);
+}
 /* High priority gets a hot edge, so the urgent ones stand out in a lane. */
 .askNote[data-pri="1"] {
   box-shadow: var(--lift-sm), inset 5px 0 0 var(--hot);

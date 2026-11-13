@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
-import { type Draft, commit, fromPlan, placed } from "@/lib/askBoard";
-import { useLists } from "@/lib/store";
+import { type Draft, applyChanges, commit, fromChanges, fromPlan, placed } from "@/lib/askBoard";
+import { authClient } from "@/lib/auth-client";
+import { toBin, update, useLists } from "@/lib/store";
 import { type GoalItem } from "@todone/sdk/goals";
-import { parsePlan, planPrompt, type PlanGoal } from "@todone/sdk/plan";
+import { numbered, parsePlan, planPrompt, type OpenList, type PlanGoal } from "@todone/sdk/plan";
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, type Ask } from "./AskBar";
@@ -59,6 +60,9 @@ export function AiImport({
   const [said, setSaid] = useState(""); // everything asked so far, so answers to its questions have the context
   const [qs, setQs] = useState<string[]>([]); // what the AI asked back
   const [replies, setReplies] = useState<string[]>([]);
+  const [needs, setNeeds] = useState<List[]>([]); // lists the AI asked to read, waiting for a yes
+  const [shared, setShared] = useState<{ open: OpenList[]; refs: Record<number, string> } | null>(null); // agreed to
+  const me = authClient.useSession().data?.user.id;
   const [copied, setCopied] = useState(false);
   const [today, setToday] = useState(""); // read when the dialog opens, not while the page renders
   const [err, setErr] = useState("");
@@ -66,21 +70,29 @@ export function AiImport({
   const job = useRef<string | null>(null);
   const asking = ai && tab === "ask";
 
-  const context = () => ({
+  const context = (open = shared?.open) => ({
     today: todayISO(),
     weekday: weekday(),
     lists: lists.map((l) => l.name),
     goals: items.flatMap((i) => (i.t === "goal" ? [i.title] : [])),
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
+    ...(open ? { open } : {}),
   });
   const found = drafts.length > 0 || qs.length > 0;
   const ready = placed(drafts);
-  const suggest = (md: string, add: boolean) => {
+  const suggest = (md: string, add: boolean, refs = shared?.refs) => {
     // Goals get their real "created" when added; tasks the AI left without a list go with the open list.
     const plan = parsePlan(md, newId, 0);
-    const more = fromPlan(plan, lists).map((d) =>
-      d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: current } : d,
-    );
+    // It needs to read lists first: ask (see Consent), unless they're already shared.
+    const want = lists.filter((l) => plan.needs.some((n) => n.toLowerCase() === l.name.toLowerCase()));
+    if (want.length && !shared) setNeeds(want);
+    else if (plan.needs.length && !want.length) setErr(`Couldn't find a list called “${plan.needs[0]}”.`);
+    const more = [
+      ...fromPlan(plan, lists).map((d) =>
+        d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: current } : d,
+      ),
+      ...(refs ? fromChanges(plan.changes, refs, everything ?? []) : []),
+    ];
     setDrafts((ds) => (add ? [...ds, ...more] : more));
     setQs(plan.questions);
     setReplies([]);
@@ -101,6 +113,8 @@ export function AiImport({
     setSaid("");
     setQs([]);
     setReplies([]);
+    setNeeds([]);
+    setShared(null);
     setPhase("idle");
     setErr("");
   };
@@ -112,7 +126,21 @@ export function AiImport({
   // Lists you have get their tasks added; new ones are made. Goals go with a list you already have when the AI named
   // one. Ids are fresh. Whichever list is added last is the one that opens.
   const save = () => {
-    const { groups, goals, rewards } = commit(drafts);
+    const { groups, goals, rewards, changes } = commit(drafts);
+    // Changes to tasks you have, list by list: done, edited, deleted (to the bin), moved (to a list by name).
+    for (const listId of new Set(changes.map((d) => d.place))) {
+      const list = (everything ?? []).find((l) => l.id === listId);
+      if (!list) continue;
+      const mine = changes.filter((d) => d.place === listId);
+      const r = applyChanges(list.tasks, mine.map((d) => d.change), mine.map((d) => d.task.id), todayISO(), me);
+      update(listId, (l) => ({ ...l, tasks: r.tasks }));
+      toBin(r.binned, list);
+      for (const m of r.moved) {
+        const to = lists.find((l) => l.name.toLowerCase() === m.to.toLowerCase());
+        if (to) onAppend(to.id, [m.task]);
+        else onAdd(m.to, [m.task]);
+      }
+    }
     for (const g of groups) {
       if (g.listId) onAppend(g.listId, g.tasks);
       else if (g.name) onAdd(g.name, g.tasks);
@@ -139,13 +167,17 @@ export function AiImport({
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
   };
-  const askText = async (text = words, add = true) => {
+  const askText = async (text = words, add = true, open = shared) => {
     if (!text.trim()) return;
     setErr("");
     setPhase("thinking");
     if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
-      answered(await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context() }), add);
+      const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context(open?.open) });
+      suggest(r.result, add, open?.refs);
+      setWords("");
+      setPhase("idle");
+      setUsage({ used: r.used, limit: r.limit ?? null });
     } catch (e) {
       failed(e);
     }
@@ -228,6 +260,22 @@ export function AiImport({
       false,
     );
   const busy = phase !== "idle";
+  const changeCount = drafts.filter((d) => d.kind === "change").length;
+  // They said yes: those lists go along (numbered, so the answer can point at tasks), and the ask runs again.
+  const share = () => {
+    let n = 1;
+    const refs: Record<number, string> = {};
+    const open = needs.map((l) => {
+      const r = numbered(l.tasks, n);
+      n = r.next;
+      Object.assign(refs, r.refs);
+      return { name: l.name, md: r.md || "(no tasks yet)" };
+    });
+    const sh = { open, refs };
+    setShared(sh);
+    setNeeds([]);
+    askText(said, false, sh);
+  };
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
   const questions = qs.length > 0 && (
     <form
@@ -279,7 +327,7 @@ export function AiImport({
           Clear
         </button>
         <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={save}>
-          Add {ready || ""} {ready === 1 ? "thing" : "things"}
+          {changeCount ? `Apply ${ready}` : `Add ${ready || ""} ${ready === 1 ? "thing" : "things"}`}
         </button>
       </div>
     </>
@@ -418,6 +466,12 @@ export function AiImport({
                 <p>{transcript}</p>
               </details>
             )}
+            {shared && (
+              <p className={s.aiHeard} role="status">
+                Reading {shared.open.map((l) => `“${l.name}”`).join(", ")} for this conversation. Nothing changes until you
+                apply it.
+              </p>
+            )}
             {questions}
             {board}
           </div>
@@ -499,7 +553,52 @@ export function AiImport({
           }}
         />
         {err && <p className={s.err}>{err}</p>}
+        {needs.length > 0 && (
+          <Consent
+            names={needs.map((l) => l.name)}
+            count={needs.reduce((n, l) => n + l.tasks.reduce((m, t) => m + 1 + t.sub.length, 0), 0)}
+            onCancel={() => setNeeds([])}
+            onOk={share}
+          />
+        )}
       </dialog>
     </div>
+  );
+}
+
+// Before todone reads a list for the AI, said plainly, like sharing a task: only "I Understand" goes ahead.
+function Consent({ names, count, onOk, onCancel }: { names: string[]; count: number; onOk: () => void; onCancel: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (!ref.current?.open) ref.current?.showModal();
+  }, []);
+  const which = names.map((n) => `“${n}”`).join(" and ");
+  return (
+    <dialog ref={ref} className={s.disclosure} onClose={onCancel} aria-labelledby="consent-h">
+      <h2 id="consent-h" className="display">
+        Let todone read {which}?
+      </h2>
+      <ul>
+        <li>
+          To do this, todone needs to work with what&apos;s in {which}: a readable copy of its {count}{" "}
+          {count === 1 ? "task" : "tasks"} (names, steps, dates and notes) goes through todone&apos;s server to Google&apos;s
+          Gemini.
+        </li>
+        <li>
+          It&apos;s used only to answer you. todone doesn&apos;t keep it, and Gemini&apos;s paid tier isn&apos;t used to
+          improve Google&apos;s products. A long list uses more AI credits.
+        </li>
+        <li>Nothing changes until you&apos;ve seen each suggestion and pressed Apply. Deleted tasks go to the Bin.</li>
+        <li>Your other lists stay end-to-end encrypted. This covers only this conversation.</li>
+      </ul>
+      <div className={s.tools}>
+        <button className={s.ghost} onClick={() => ref.current?.close()}>
+          Cancel
+        </button>
+        <button className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties} onClick={onOk} autoFocus>
+          I Understand
+        </button>
+      </div>
+    </dialog>
   );
 }

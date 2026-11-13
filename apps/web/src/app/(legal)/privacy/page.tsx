@@ -165,6 +165,11 @@ export default function Privacy() {
           the suggestions come back to your browser.
         </li>
         <li>
+          If you ask it to work with a list you already have (clean it up, sort it, reschedule it), todone asks you
+          first. Only if you agree does a readable copy of that list&apos;s tasks go along, for that conversation; your
+          other lists stay end-to-end encrypted.
+        </li>
+        <li>
           Your browser shows them to you first. Only what you choose is added, encrypted on your device like everything
           else.
         </li>
