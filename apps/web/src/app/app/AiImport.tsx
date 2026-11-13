@@ -74,6 +74,7 @@ export function AiImport({
     today: todayISO(),
     weekday: weekday(),
     lists: lists.map((l) => l.name),
+    here: lists.find((l) => l.id === current)?.name, // the open list: what "this list" means
     goals: items.flatMap((i) => (i.t === "goal" ? [i.title] : [])),
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
     ...(open ? { open } : {}),
@@ -91,7 +92,8 @@ export function AiImport({
       ...fromPlan(plan, lists).map((d) =>
         d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: current } : d,
       ),
-      ...(refs ? fromChanges(plan.changes, refs, everything ?? []) : []),
+      // Lists only: the goals, ideas and bin lists hold no tasks to change.
+      ...(refs ? fromChanges(plan.changes, refs, (everything ?? []).filter((l) => !l.kind)) : []),
     ];
     setDrafts((ds) => (add ? [...ds, ...more] : more));
     setQs(plan.questions);
