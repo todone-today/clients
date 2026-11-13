@@ -273,7 +273,7 @@ export function AiImport({
       />
       <div className={s.askFoot}>
         <span className={s.aiMeter}>
-          {drafts.length - ready ? `${drafts.length - ready} need a list · ` : ""}Drag or tap to move · double-click to rename
+          {drafts.length - ready ? `${drafts.length - ready} need a list · ` : ""}Move with “Move to” or drag · double-click to rename
         </span>
         <button className={s.ghost} onClick={() => setDrafts([])}>
           Clear

@@ -114,7 +114,7 @@ function lift(src: HTMLElement, count: number, x: number, y: number) {
 export function draggable(payload: Payload, label: string) {
   return {
     onPointerDown(e: React.PointerEvent<HTMLElement>) {
-      if (e.button !== 0 || (e.target as HTMLElement).closest("input, textarea, select")) return;
+      if (e.button !== 0 || (e.target as HTMLElement).closest("input, textarea, select, [data-nodrag]")) return;
       const start = { x: e.clientX, y: e.clientY };
       const src = e.currentTarget.closest<HTMLElement>("[data-card]") ?? e.currentTarget;
       const touch = e.pointerType === "touch";

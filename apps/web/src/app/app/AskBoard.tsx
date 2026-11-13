@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Gift, Plus, Target, Trash2, X } from "lucide-react";
+import { ChevronRight, Gift, Plus, Target, X } from "lucide-react";
+import { Select } from "@/components/Select";
 import { draggable, useDrop } from "@/lib/drag";
 import { BIN, GOALS, REWARDS, type Draft, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
 import { type List, relDue } from "@todone/sdk/tasks";
@@ -9,6 +10,7 @@ import { ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import s from "./app.module.css";
 
 const NONE = "none"; // tasks the AI gave no list
+const MAKE = "make"; // "New list…" in a sticker's Move to
 const PRI = ["High", "Medium", "Low"];
 const mins = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}` : `${m}m`);
 
@@ -39,8 +41,8 @@ function meta(d: Draft, today: string) {
 }
 
 // Ask todone's results, already sorted: a lane for each place something is going (your lists, new lists, Goals,
-// Rewards), each suggestion a sticker with its priority, timing, effort, steps and the AI's reason. To move one, drag
-// it to another lane or a place below, or tap it and then tap where it goes.
+// Rewards), each suggestion a sticker with its priority, timing, effort, steps and the AI's reason. To move one, pick
+// where it goes in its "Move to" (any list, a new one, Goals, Rewards), or drag it onto another lane.
 export function AskBoard({
   drafts,
   onChange,
@@ -56,23 +58,13 @@ export function AskBoard({
   onMake: (name: string) => void;
   today: string;
 }) {
-  const [picked, setPicked] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [naming, setNaming] = useState("");
+  const [naming, setNaming] = useState<string | null>(null); // the sticker getting a new list
   const [unfolded, setUnfolded] = useState<string[]>([]); // steps start folded
-  const put = (id: string, place: string) => {
-    onChange(drop(drafts, id, place === NONE ? null : place));
-    setPicked(null);
-  };
+  const put = (id: string, place: string) => onChange(drop(drafts, id, place === NONE ? null : place));
   const dropOn = useDrop("ask", {
     accept: (p) => p.kind === "draft",
     drop: (p, arg) => p.kind === "draft" && put(p.id, arg),
-  });
-  // A place is a drop target, and with a sticker picked, a tap puts it there.
-  const target = (place: string) => ({
-    ...dropOn(place),
-    onClick: () => picked && put(picked, place),
-    "data-armed": picked ? "" : undefined,
   });
   const fill = (d: Draft) =>
     d.kind === "goal"
@@ -95,24 +87,9 @@ export function AskBoard({
         className={s.askNote}
         data-kind={d.kind}
         data-pri={d.kind === "task" ? d.task.pri : undefined}
-        data-picked={picked === d.id || undefined}
         style={{ "--fill": fill(d) } as React.CSSProperties}
         {...draggable({ kind: "draft", id: d.id }, titleOf(d))}
-        onClick={(e) => {
-          e.stopPropagation(); // not a tap on the lane it sits in
-          setPicked(picked === d.id ? null : d.id);
-        }}
         onDoubleClick={() => setEditing(d.id)}
-        role="button"
-        tabIndex={0}
-        aria-pressed={picked === d.id}
-        aria-label={`${titleOf(d)}${picked === d.id ? ", picked: now choose where it goes" : ""}`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setPicked(picked === d.id ? null : d.id);
-          }
-        }}
       >
         {d.kind === "goal" && <Target size={14} strokeWidth={2.5} aria-hidden />}
         {d.kind === "reward" && <Gift size={14} strokeWidth={2.5} aria-hidden />}
@@ -147,8 +124,7 @@ export function AskBoard({
             type="button"
             className={s.askFold}
             aria-expanded={unfolded.includes(d.id)}
-            onClick={(e) => {
-              e.stopPropagation(); // not a pick
+            onClick={() => {
               setUnfolded((u) => (u.includes(d.id) ? u.filter((x) => x !== d.id) : [...u, d.id]));
             }}
           >
@@ -166,13 +142,37 @@ export function AskBoard({
           </ul>
         )}
         {why && <p className={s.askWhy}>{why}</p>}
+        <div className={s.askMove} data-nodrag>
+          {naming === d.id ? (
+            <form
+              className={s.askMake}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const n = new FormData(e.currentTarget).get("name")?.toString().trim().slice(0, 60);
+                if (!n) return;
+                onMake(n);
+                put(d.id, newPlace(n));
+                setNaming(null);
+              }}
+            >
+              <input name="name" autoFocus placeholder="New list name" aria-label="New list name" maxLength={60} onKeyDown={(e) => e.key === "Escape" && setNaming(null)} />
+              <button aria-label="Make list">
+                <Plus size={14} strokeWidth={3} />
+              </button>
+            </form>
+          ) : (
+            <Select
+              label={`Move ${titleOf(d)} to`}
+              value={d.place ?? NONE}
+              options={[...(d.place ? [] : [{ value: NONE, label: "Choose a list…" }]), ...moveTo, { value: MAKE, label: "+ New list…" }]}
+              onChange={(v) => (v === MAKE ? setNaming(d.id) : put(d.id, v))}
+            />
+          )}
+        </div>
         <button
           className={s.askX}
           aria-label={`Leave out ${titleOf(d)}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onChange(drop(drafts, d.id, BIN));
-          }}
+          onClick={() => onChange(drop(drafts, d.id, BIN))}
         >
           <X size={12} strokeWidth={3} />
         </button>
@@ -196,16 +196,21 @@ export function AskBoard({
     { id: GOALS, head: <><Target size={14} strokeWidth={2.5} aria-hidden /> Goals</>, fill: "var(--lime)" },
     { id: REWARDS, head: <><Gift size={14} strokeWidth={2.5} aria-hidden /> Rewards</>, fill: "var(--pink)" },
   ];
+  const moveTo = [
+    ...lists.map((l) => ({ value: l.id, label: l.name })),
+    ...fresh.map((n) => ({ value: newPlace(n), label: `${n} (new)` })),
+    { value: GOALS, label: "Goals" },
+    { value: REWARDS, label: "Rewards" },
+  ];
   const at = (id: string) => drafts.filter((d) => (d.place ?? NONE) === id);
   const homeless = at(NONE);
   const lanes = places.filter((p) => at(p.id).length);
-  const spots = places.filter((p) => !at(p.id).length);
 
   return (
     <div className={s.askBoard}>
       <ul className={s.askLanes}>
         {homeless.length > 0 && (
-          <li className={s.askTile} data-new {...target(NONE)}>
+          <li className={s.askTile} data-new {...dropOn(NONE)}>
             <span className={s.askTileHead}>
               Needs a list <span className={s.askCount}>{homeless.length}</span>
             </span>
@@ -218,7 +223,7 @@ export function AskBoard({
             className={s.askTile}
             data-new={p.dashed || undefined}
             style={{ "--fill": p.fill } as React.CSSProperties}
-            {...target(p.id)}
+            {...dropOn(p.id)}
           >
             <span className={s.askTileHead}>
               {p.head}
@@ -229,43 +234,6 @@ export function AskBoard({
         ))}
       </ul>
 
-      <section className={s.askElse} aria-label="Move to somewhere else">
-        <h3>{picked ? "Put it in…" : "Or move to"}</h3>
-        <ul className={s.askSpots}>
-          {spots.map((p) => (
-            <li
-              key={p.id}
-              className={s.askSpot}
-              data-new={p.dashed || undefined}
-              style={{ "--fill": p.fill } as React.CSSProperties}
-              {...target(p.id)}
-            >
-              {p.head}
-            </li>
-          ))}
-          <li>
-            <form
-              className={s.askMake}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const n = naming.trim().slice(0, 60);
-                if (!n) return;
-                onMake(n);
-                if (picked) put(picked, newPlace(n));
-                setNaming("");
-              }}
-            >
-              <input value={naming} onChange={(e) => setNaming(e.target.value)} placeholder="New list…" aria-label="New list name" maxLength={60} />
-              <button aria-label="Make list" disabled={!naming.trim()}>
-                <Plus size={14} strokeWidth={3} />
-              </button>
-            </form>
-          </li>
-          <li className={s.askBin} {...target(BIN)} aria-label="Leave out">
-            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Leave out
-          </li>
-        </ul>
-      </section>
     </div>
   );
 }

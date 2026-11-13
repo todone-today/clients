@@ -24,7 +24,7 @@ import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { Select } from "@/components/Select";
 import { Confetti } from "@/components/Confetti";
 import { authClient } from "@/lib/auth-client";
-import { useLists } from "@/lib/store";
+import { toBin, useLists } from "@/lib/store";
 import { changeGoals, moveGoalItem, useGoalItems } from "./goalStore";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { ListIcon, listColor } from "./listIcon";
@@ -372,7 +372,32 @@ function GoalCard({
   const { lists: all, update } = useLists();
   const [reflecting, setReflecting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false); // asking what happens to its tasks
   const p = goalProgress(goal, tasks, items);
+  // Its tasks (a repeating one made from it, or ones linked to it), by list.
+  const mine = (t: Task) => t.goal === goal.id;
+  const withTasks = lists.filter((l) => l.tasks.some((t) => mine(t) || t.sub.some(mine)));
+  const taskCount = withTasks.flatMap((l) => l.tasks.flatMap((t) => [t, ...t.sub])).filter(mine).length;
+  // Deletes the goal; its tasks go to the bin (`drop`), or stay, no longer linked.
+  const remove = (drop: boolean) => {
+    for (const l of withTasks) {
+      if (drop) toBin(l.tasks.filter(mine), l);
+      update(l.id, (x) => ({
+        ...x,
+        tasks: x.tasks.flatMap((t) =>
+          drop && mine(t)
+            ? []
+            : [
+                {
+                  ...(mine(t) ? { ...t, goal: undefined } : t),
+                  sub: t.sub.flatMap((u) => (!mine(u) ? [u] : drop ? [] : [{ ...u, goal: undefined }])),
+                },
+              ],
+        ),
+      }));
+    }
+    set(() => null);
+  };
   const set = (f: (g: Goal) => Goal | null) =>
     changeGoals(all, (xs) =>
       xs.flatMap((x) =>
@@ -465,13 +490,30 @@ function GoalCard({
             Not yet
           </button>
         )}
-        <button
-          className={s.rewardX}
-          onClick={() => set(() => null)}
-          aria-label={`Delete goal ${goal.title}`}
-        >
-          <Trash2 size={15} strokeWidth={2.5} aria-hidden />
-        </button>
+        {deleting ? (
+          <div className={s.goalAsk} role="group" aria-label={`Delete ${goal.title}`}>
+            <span>
+              Also delete its {taskCount === 1 ? "task" : `${taskCount} tasks`}?
+            </span>
+            <button className="btn" style={{ "--fill": "var(--hot)" } as React.CSSProperties} onClick={() => remove(true)}>
+              Delete {taskCount === 1 ? "it" : "them"} too
+            </button>
+            <button className="btn" onClick={() => remove(false)}>
+              Keep {taskCount === 1 ? "it" : "them"}
+            </button>
+            <button className={s.ghost} onClick={() => setDeleting(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            className={s.rewardX}
+            onClick={() => (taskCount ? setDeleting(true) : remove(false))}
+            aria-label={`Delete goal ${goal.title}`}
+          >
+            <Trash2 size={15} strokeWidth={2.5} aria-hidden />
+          </button>
+        )}
       </footer>
       {editing && (
         <GoalDialog

@@ -1897,41 +1897,6 @@
 .askTile > .askNote:nth-of-type(n + 3) {
   animation-delay: 80ms;
 }
-/* Everywhere else it could go, small, plus a new list and leave out. */
-.askElse h3 {
-  margin-bottom: 0.5rem;
-}
-.askSpots {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.5rem;
-  list-style: none;
-}
-.askSpot {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--black);
-  background: color-mix(in srgb, var(--fill, var(--butter)) 45%, var(--ground));
-  border: 2px solid var(--black);
-  transition: translate 0.15s var(--ease), box-shadow 0.15s var(--ease);
-}
-.askSpot[data-new] {
-  border-style: dashed;
-}
-.askSpot[data-armed] {
-  cursor: pointer;
-}
-.askSpot[data-over],
-.askSpot[data-armed]:hover {
-  translate: -2px -2px;
-  background: var(--fill, var(--butter));
-  box-shadow: 3px 3px 0 var(--black);
-}
 /* What the AI asked back, answered right here. */
 .askQs {
   display: grid;
@@ -1978,11 +1943,7 @@
   border-style: dashed;
   box-shadow: none;
 }
-.askTile[data-armed] {
-  cursor: pointer;
-}
-.askTile[data-over],
-.askTile[data-armed]:hover {
+.askTile[data-over] {
   translate: -2px -2px;
   background: var(--fill, var(--butter));
   box-shadow: 5px 5px 0 var(--black);
@@ -2005,12 +1966,24 @@
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: 0.4rem 0.5rem;
+  padding: 0.45rem 0.55rem;
   font: inherit;
   font-weight: 700;
-  color: var(--black);
+  color: var(--ink);
   background: var(--ground);
-  border: 2px solid var(--hair);
+  border: 2px solid var(--ink);
+}
+/* Where a suggestion goes, as the app's dropdown, at the foot of its sticker. */
+/* An open menu sits above the stickers and lanes after it. */
+.askTile:has([aria-expanded="true"]),
+.askNote:has([aria-expanded="true"]) {
+  position: relative;
+  z-index: 30;
+}
+.askMove {
+  width: 100%;
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
 }
 .askMake button {
   display: grid;
@@ -2022,22 +1995,6 @@
 }
 .askMake button:disabled {
   opacity: 0.45;
-}
-.askBin {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--ink-2);
-  border: 2px dashed var(--hair);
-}
-.askBin[data-over] {
-  color: #fff;
-  background: var(--hot);
-  border-color: var(--hot);
 }
 .askFoot {
   position: sticky;
@@ -6215,6 +6172,17 @@ body[data-drag="task"] .listGoal {
   text-transform: uppercase;
   color: #fff8ef;
   background: var(--black);
+}
+.goalAsk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  font-weight: 700;
+}
+.goalAsk span {
+  width: 100%;
 }
 .goalHow {
   display: grid;
