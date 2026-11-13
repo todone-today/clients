@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Share2, Trash2 } from "lucide-react";
 import { Select } from "@/components/Select";
 import {
   addDays,
@@ -14,7 +14,8 @@ import {
   weekStart,
 } from "@todone/sdk/calendar";
 import { type At, draggable, useDrop } from "@/lib/drag";
-import { mapTask } from "@/lib/store";
+import { mapTask, toBin, unbin } from "@/lib/store";
+import { binSound } from "@/lib/sound";
 import { authClient } from "@/lib/auth-client";
 import {
   type List,
@@ -27,6 +28,7 @@ import {
 import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import { listColor } from "./listIcon";
 import { useFolded } from "./folded";
+import { TaskPanel } from "./TaskPanel";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -89,6 +91,19 @@ export function CalendarView({
       ...l,
       tasks: mapTask(l.tasks, it.task.id, (t) => ({ ...t, ...patch })),
     }));
+  // The bin, as on a list: a task dropped on it goes (steps with it) to the workspace's Bin for 7 days, with undo.
+  const [binned, setBinned] = useState<{ listId: string; before: Task[]; ids: string[]; text: string } | null>(null);
+  useEffect(() => {
+    if (!binned) return;
+    const t = setTimeout(() => setBinned(null), 10_000);
+    return () => clearTimeout(t);
+  }, [binned]);
+  const binIt = (it: Item) => {
+    update?.(it.list.id, (l) => ({ ...l, tasks: mapTask(l.tasks, it.task.id, () => null) }));
+    toBin([it.task], it.list);
+    binSound();
+    setBinned({ listId: it.list.id, before: it.list.tasks, ids: [it.task.id], text: `Deleted “${it.task.title}”.` });
+  };
   const drag = (it: Item) =>
     update &&
     draggable(
@@ -131,7 +146,8 @@ export function CalendarView({
         all.find((x) => x.list.id === p.listId && x.task.id === p.id);
       if (!it) return;
       const [spot, d] = arg.split(":");
-      if (arg === "tray") move(it, { at: undefined });
+      if (arg === "bin") binIt(it);
+      else if (arg === "tray") move(it, { at: undefined });
       else if (arg === "tray-date") move(it, { due: undefined, at: undefined });
       else if (spot === "day") move(it, { due: d });
       else if (spot === "all") move(it, { due: d, at: undefined });
@@ -197,6 +213,11 @@ export function CalendarView({
     setView("day");
   };
   const me = authClient.useSession().data?.user.id;
+  // Clicking a task opens it right here, the way a list does; a read-only calendar opens its list instead.
+  const [opened, setOpened] = useState<{ listId: string; id: string } | null>(null);
+  const openTask = (it: Item) => (update ? setOpened({ listId: it.list.id, id: it.task.id }) : onOpen?.(it.list.id));
+  const openList = opened && lists.find((l) => l.id === opened.listId);
+  const openItem = openList && openList.tasks.flatMap((t) => [t, ...t.sub]).find((t) => t.id === opened.id);
 
   const chip = (it: Item, withTime: boolean) => (
     <div
@@ -231,7 +252,7 @@ export function CalendarView({
       )}
       <button
         className={s.calTitle}
-        onClick={() => onOpen?.(it.list.id)}
+        onClick={() => openTask(it)}
         title={`${it.task.title} · ${it.list.name}`}
       >
         <span>
@@ -245,7 +266,44 @@ export function CalendarView({
 
   return (
     <div className={s.calendar}>
+      {openList && openItem && update && (
+        <TaskPanel
+          key={openItem.id}
+          task={openItem}
+          top={openList.tasks.some((t) => t.id === openItem.id)}
+          fill={listColor(openList.id)}
+          edit={(f) => update(openList.id, (l) => ({ ...l, tasks: mapTask(l.tasks, openItem.id, f) }))}
+          onTick={() => update(openList.id, (l) => ({ ...l, tasks: tick(l.tasks, openItem.id, today, me) }))}
+          onDelete={() => {
+            binIt({ list: openList, task: openItem });
+            setOpened(null);
+          }}
+          onClose={() => setOpened(null)}
+        />
+      )}
+      {binned && (
+        <div className={s.undo} role="status">
+          {binned.text}
+          <small>In the Bin for 7 days.</small>
+          <button
+            className={s.ghost}
+            onClick={() => {
+              update?.(binned.listId, (l) => ({ ...l, tasks: binned.before }));
+              unbin(binned.ids);
+              setBinned(null);
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      )}
       <div className={s.listHead}>
+        {update && !locked && (
+          <div className={s.bin} {...drop("bin")} aria-label="Bin: drop a task here to delete it" title="Drop a task here to delete it">
+            <Trash2 size={28} strokeWidth={2.5} aria-hidden />
+            <span>Bin</span>
+          </div>
+        )}
         <h1 className={`display ${s.title} ${s.calHeading}`}>{big}</h1>
         <p className={s.progress}>{summary}</p>
       </div>
@@ -402,7 +460,7 @@ export function CalendarView({
             drag={drag}
             drop={drop}
             onDay={openDay}
-            onOpen={onOpen}
+            onOpen={openTask}
             resize={update && ((it, est) => move(it, { est }))}
             ghost={ghost}
           />
@@ -432,6 +490,7 @@ export function CalendarView({
                   it={it}
                   steps={toPlan.filter((x) => x.list === it.list && it.task.sub.includes(x.task))}
                   drag={drag}
+                  onOpen={openTask}
                 />
               ))}
           </aside>
@@ -445,10 +504,12 @@ function TrayItem({
   it,
   steps,
   drag,
+  onOpen,
 }: {
   it: Item;
   steps: Item[];
   drag: (it: Item) => object | undefined;
+  onOpen: (it: Item) => void;
 }) {
   const [folded, setFolded] = useFolded(it.task.id);
   const sticker = (x: Item, fold?: React.ReactNode) => (
@@ -456,6 +517,8 @@ function TrayItem({
       key={x.task.id}
       className={s.trayItem}
       style={{ "--fill": listColor(x.list.id) } as React.CSSProperties}
+      onClick={(e) => !(e.target as HTMLElement).closest("button") && onOpen(x)}
+      title="Click to open, or drag onto a day"
       {...drag(x)}
     >
       {x.task.title}
@@ -507,7 +570,7 @@ function TimeGrid({
   drag: (it: Item) => object | undefined;
   drop: Drop;
   onDay: (d: string) => void;
-  onOpen?: (listId: string) => void;
+  onOpen: (it: Item) => void;
   resize?: (it: Item, est: number) => void;
   ghost: { day: string; start: number; est: number } | null;
 }) {
@@ -668,7 +731,7 @@ function TimeGrid({
                   width: `calc(${100 / n}% - 4px)`,
                   "--fill": listColor(it.list.id),
                 } as React.CSSProperties}
-                onClick={() => onOpen?.(it.list.id)}
+                onClick={() => onOpen(it)}
                 title={`${it.task.at}–${toClock(end)} ${it.task.title} · ${it.list.name}`}
                 {...drag(it)}
               >
