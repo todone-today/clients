@@ -293,6 +293,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </ul>
         </>
       )}
+      {goals.length > 0 && <GoalStart more taken={goals.map((g) => g.title)} onPick={(p) => setMaking(p)} />}
       {making && (
         <GoalDialog
           lists={all}
@@ -316,12 +317,15 @@ const STARTERS: { goal: Partial<Goal>; note: string; fill: string }[] = [
   { goal: { title: "Save ₹50,000", kind: "target", start: 0, target: 50000, unit: "₹" }, note: "A number to reach", fill: "var(--butter)" },
   { goal: { title: "Ship my side project", kind: "outcome" }, note: "Milestones, by a date", fill: "var(--pink)" },
 ];
-function GoalStart({ onPick }: { onPick: (g: Partial<Goal>) => void }) {
+// With goals made, the same starters sit below them (minus ones you have), without the how-to.
+function GoalStart({ onPick, more = false, taken = [] }: { onPick: (g: Partial<Goal>) => void; more?: boolean; taken?: string[] }) {
+  const left = STARTERS.filter(({ goal }) => !taken.includes(goal.title!));
+  if (!left.length) return null;
   return (
     <section className={s.goalStart}>
-      <h2 className="display">Start with one.</h2>
+      {more ? <h2 className={s.sideHead}>More ideas</h2> : <h2 className="display">Start with one.</h2>}
       <ul className={s.starters}>
-        {STARTERS.map(({ goal, note, fill }) => (
+        {left.map(({ goal, note, fill }) => (
           <li key={goal.title}>
             <button type="button" onClick={() => onPick(goal)} style={{ "--fill": fill } as React.CSSProperties}>
               <b>{goal.title}</b>
@@ -333,17 +337,19 @@ function GoalStart({ onPick }: { onPick: (g: Partial<Goal>) => void }) {
           </li>
         ))}
       </ul>
-      <ol className={s.goalHow}>
-        <li>
-          <b>Pick one thing.</b> Say why it matters, and what you&apos;ll do when it gets hard.
-        </li>
-        <li>
-          <b>Log tiny wins.</b> A tap a day. A quiet week never resets anything.
-        </li>
-        <li>
-          <b>Treat yourself.</b> Every finished task earns XP; spend it on rewards you choose.
-        </li>
-      </ol>
+      {!more && (
+        <ol className={s.goalHow}>
+          <li>
+            <b>Pick one thing.</b> Say why it matters, and what you&apos;ll do when it gets hard.
+          </li>
+          <li>
+            <b>Log tiny wins.</b> A tap a day. A quiet week never resets anything.
+          </li>
+          <li>
+            <b>Treat yourself.</b> Every finished task earns XP; spend it on rewards you choose.
+          </li>
+        </ol>
+      )}
     </section>
   );
 }
@@ -1231,6 +1237,51 @@ export function Rewards() {
       </footer>
     </li>
   );
+  // Like the Goals page's starters: pick one and it's yours, priced in tasks like yours. They stay once you have
+  // rewards (below them, minus ones you have), without the how-to.
+  const ideasLeft = IDEAS.filter(([idea]) => !rewards.some((r) => r.title === idea));
+  const ideas = (
+    <section className={s.goalStart}>
+      {rewards.length ? <h2 className={s.sideHead}>More ideas</h2> : <h2 className="display">Pick a treat.</h2>}
+      <ul className={s.starters}>
+        {ideasLeft.map(([idea, n, fill]) => (
+          <li key={idea}>
+            <button
+              type="button"
+              style={{ "--fill": fill } as React.CSSProperties}
+              onClick={() =>
+                changeGoals(lists, (xs) => [
+                  ...xs,
+                  { t: "reward", id: uid() + uid(), title: idea, cost: perTask * n },
+                ])
+              }
+            >
+              <b>{idea}</b>
+              <small>
+                About {n} tasks · {perTask * n} XP
+              </small>
+              <span className={s.starterGo}>
+                <Plus size={14} strokeWidth={3} aria-hidden /> Make it mine
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {!rewards.length && (
+        <ol className={s.goalHow}>
+          <li>
+            <b>Pick a treat.</b> Something you&apos;d genuinely look forward to, big or small.
+          </li>
+          <li>
+            <b>Finish tasks.</b> Each one earns XP; bigger and on-time tasks earn more.
+          </li>
+          <li>
+            <b>Claim it, guilt-free.</b> You earned it. Then pick the next one.
+          </li>
+        </ol>
+      )}
+    </section>
+  );
   return (
     <>
       <div className={s.listHead}>
@@ -1278,47 +1329,7 @@ export function Rewards() {
       )}
       <div className={s.rewardsPage}>
         <div>
-          {!rewards.length && (
-            // Like the Goals page's starters: pick one and it's yours, priced in tasks like yours.
-            <section className={s.goalStart}>
-              <h2 className="display">Pick a treat.</h2>
-              <ul className={s.starters}>
-                {IDEAS.map(([idea, n, fill]) => (
-                  <li key={idea}>
-                    <button
-                      type="button"
-                      style={{ "--fill": fill } as React.CSSProperties}
-                      onClick={() =>
-                        changeGoals(lists, (xs) => [
-                          ...xs,
-                          { t: "reward", id: uid() + uid(), title: idea, cost: perTask * n },
-                        ])
-                      }
-                    >
-                      <b>{idea}</b>
-                      <small>
-                        About {n} tasks · {perTask * n} XP
-                      </small>
-                      <span className={s.starterGo}>
-                        <Plus size={14} strokeWidth={3} aria-hidden /> Make it mine
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <ol className={s.goalHow}>
-                <li>
-                  <b>Pick a treat.</b> Something you&apos;d genuinely look forward to, big or small.
-                </li>
-                <li>
-                  <b>Finish tasks.</b> Each one earns XP; bigger and on-time tasks earn more.
-                </li>
-                <li>
-                  <b>Claim it, guilt-free.</b> You earned it. Then pick the next one.
-                </li>
-              </ol>
-            </section>
-          )}
+          {!rewards.length && ideas}
           {ready.length > 0 && (
             <>
               <h2 className={s.sideHead}>Ready to claim</h2>
@@ -1331,6 +1342,7 @@ export function Rewards() {
               <ul className={s.rewardGrid}>{saving.map(card)}</ul>
             </>
           )}
+          {rewards.length > 0 && ideasLeft.length > 0 && ideas}
           <Claimed spends={mine.filter((w) => w.spend)} rewards={rewards} />
         </div>
         <aside className={s.rewardSide}>

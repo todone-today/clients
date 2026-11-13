@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parsePlan } from "@todone/sdk/plan";
-import { BIN, GOALS, REWARDS, REWARD_XP, commit, drop, fromPlan, newLists, newPlace, rename, setAuto, titleOf } from "./askBoard.ts";
+import { BIN, GOALS, REWARDS, REWARD_XP, commit, drop, fromPlan, newLists, newPlace, rename, titleOf } from "./askBoard.ts";
 
 let n = 0;
 const id = () => `d${String(++n).padStart(7, "0")}`;
@@ -12,10 +12,9 @@ const plan = parsePlan(
   0,
 );
 
-test("fromPlan: auto places each where the AI put it; manual starts everything in the tray", () => {
-  const auto = fromPlan(plan, lists, true);
+test("fromPlan places each where the AI put it; tasks with no list wait for one", () => {
   assert.deepEqual(
-    auto.map((d) => [titleOf(d), d.place]),
+    fromPlan(plan, lists).map((d) => [titleOf(d), d.place]),
     [
       ["Loose", null],
       ["Call Rahul", "work0001"],
@@ -24,11 +23,10 @@ test("fromPlan: auto places each where the AI put it; manual starts everything i
       ["Movie night", REWARDS],
     ],
   );
-  assert.ok(fromPlan(plan, lists, false).every((d) => d.place === null));
 });
 
 test("drop converts by place, keeps the title, and the bin removes", () => {
-  let ds = fromPlan(plan, lists, true);
+  let ds = fromPlan(plan, lists);
   const [loose, call, , gym, movie] = ds.map((d) => d.id);
   ds = drop(ds, call, GOALS, 5);
   ds = drop(ds, gym, "work0001");
@@ -40,20 +38,10 @@ test("drop converts by place, keeps the title, and the bin removes", () => {
   assert.equal(by["Gym"].kind, "task");
   assert.equal(by["Loose"].kind === "reward" && by["Loose"].reward.cost, REWARD_XP);
   assert.equal(by["Movie night"], undefined);
-  assert.ok(ds.every((d) => d.moved || titleOf(d) === "Milk"));
-});
-
-test("switching auto only moves drafts you haven't placed yourself", () => {
-  let ds = fromPlan(plan, lists, false);
-  ds = drop(ds, ds[2].id, "work0001");
-  ds = setAuto(ds, true);
-  assert.equal(ds[2].place, "work0001"); // yours stays
-  assert.equal(ds[1].place, "work0001"); // the AI's pick
-  assert.equal(setAuto(ds, false)[1].place, null);
 });
 
 test("commit groups lists (existing by id, new by name once), goals and rewards; the tray stays out", () => {
-  let ds = fromPlan(plan, lists, true);
+  let ds = fromPlan(plan, lists);
   ds = drop(ds, ds[0].id, newPlace("groceries")); // same new list, other case
   ds = rename(ds, ds[1].id, "  Call Rahul at 5  ");
   const c = commit(ds);
@@ -65,10 +53,10 @@ test("commit groups lists (existing by id, new by name once), goals and rewards;
     ],
   );
   assert.deepEqual([c.goals.length, c.rewards.length], [1, 1]);
-  assert.deepEqual(commit(fromPlan(plan, lists, false)).groups, []);
+  assert.deepEqual(commit(drop(ds, ds[1].id, null)).groups.map((g) => g.listId ?? g.name), ["groceries"]); // no list: left out
 });
 
 test("newLists: each name once, never one you already have", () => {
-  const ds = fromPlan(plan, lists, true);
+  const ds = fromPlan(plan, lists);
   assert.deepEqual(newLists(ds, ["groceries", "Trip", "WORK"], lists), ["Groceries", "Trip"]);
 });

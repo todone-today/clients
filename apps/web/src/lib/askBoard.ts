@@ -1,14 +1,14 @@
 // Ask todone's results board, as plain data: every suggested todo, goal and reward is a draft with a place —
-// a list id, "new:<name>", "goals", "rewards", or null (still in the tray). Dropping a draft somewhere else can
+// a list id, "new:<name>", "goals", "rewards", or null (no list yet: it needs one before it can be added). Dropping a draft somewhere else can
 // change what it is (a todo dropped on Goals becomes a goal). Nothing is saved until commit().
 import type { Reward } from "@todone/sdk/goals";
 import type { Plan, PlanGoal } from "@todone/sdk/plan";
 import type { Task } from "@todone/sdk/tasks";
 
 export type Draft =
-  | { id: string; kind: "task"; task: Task; place: string | null; ai: string | null; moved: boolean }
-  | { id: string; kind: "goal"; goal: PlanGoal; place: string | null; ai: string | null; moved: boolean }
-  | { id: string; kind: "reward"; reward: Reward; place: string | null; ai: string | null; moved: boolean };
+  | { id: string; kind: "task"; task: Task; place: string | null; ai: string | null }
+  | { id: string; kind: "goal"; goal: PlanGoal; place: string | null; ai: string | null }
+  | { id: string; kind: "reward"; reward: Reward; place: string | null; ai: string | null };
 
 export const GOALS = "goals";
 export const REWARDS = "rewards";
@@ -19,12 +19,11 @@ export const newPlace = (name: string) => NEW + name;
 export const newName = (place: string | null) => (place?.startsWith(NEW) ? place.slice(NEW.length) : null);
 export const titleOf = (d: Draft) => (d.kind === "task" ? d.task.title : d.kind === "goal" ? d.goal.title : d.reward.title);
 
-// The AI's answer as drafts. Auto: each where the AI put it (a list you have, a new list by name, Goals, Rewards);
-// otherwise all in the tray. Tasks the AI left without a list always start in the tray.
-export function fromPlan(plan: Plan, lists: { id: string; name: string }[], auto: boolean): Draft[] {
+// The AI's answer as drafts, each where the AI put it: a list you have, a new list by name, Goals or Rewards.
+export function fromPlan(plan: Plan, lists: { id: string; name: string }[]): Draft[] {
   const listPlace = (name: string | null) =>
     name === null ? null : (lists.find((l) => l.name.toLowerCase() === name.toLowerCase())?.id ?? newPlace(name));
-  const at = (ai: string | null) => ({ ai, place: auto ? ai : null, moved: false });
+  const at = (ai: string | null) => ({ ai, place: ai });
   return [
     ...plan.lists.flatMap((g) => g.tasks.map((task): Draft => ({ id: task.id, kind: "task", task, ...at(listPlace(g.name)) }))),
     ...plan.goals.map((goal): Draft => ({ id: goal.id, kind: "goal", goal, ...at(GOALS) })),
@@ -32,12 +31,9 @@ export function fromPlan(plan: Plan, lists: { id: string; name: string }[], auto
   ];
 }
 
-// Auto switched: drafts you haven't moved yourself follow it.
-export const setAuto = (ds: Draft[], auto: boolean) => ds.map((d) => (d.moved ? d : { ...d, place: auto ? d.ai : null }));
-
 // What a draft becomes in a place: lists hold tasks, Goals holds goals, Rewards holds rewards. The title carries over.
 function becomes(d: Draft, place: string | null, now: number): Draft {
-  const base = { id: d.id, place, ai: d.ai, moved: true };
+  const base = { id: d.id, place, ai: d.ai };
   const title = titleOf(d);
   if (place === GOALS)
     return d.kind === "goal" ? { ...d, ...base } : { ...base, kind: "goal", goal: { t: "goal", id: d.id, title: title.slice(0, 120), kind: "outcome", created: now } };
@@ -76,7 +72,7 @@ export function newLists(ds: Draft[], made: string[], lists: { name: string }[])
   return out;
 }
 
-// What Add saves: tasks grouped by list (existing by id, new by name), goals and rewards. The tray is left out.
+// What Add saves: tasks grouped by list (existing by id, new by name), goals and rewards. Ones with no list are left out.
 export function commit(ds: Draft[]) {
   const groups = new Map<string, { listId?: string; name: string | null; tasks: Task[] }>();
   const goals: PlanGoal[] = [];

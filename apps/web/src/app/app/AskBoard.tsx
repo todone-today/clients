@@ -4,14 +4,16 @@ import { useState } from "react";
 import { Gift, Plus, Target, Trash2, X } from "lucide-react";
 import { draggable, useDrop } from "@/lib/drag";
 import { BIN, GOALS, REWARDS, type Draft, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
-import type { List } from "@todone/sdk/tasks";
+import { type List, relDue } from "@todone/sdk/tasks";
 import { ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import s from "./app.module.css";
 
-const TRAY = "tray";
+const NONE = "none"; // tasks the AI gave no list
+const PRI = ["High", "Medium", "Low"];
+const mins = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}` : `${m}m`);
 
 // What a suggestion says besides its title, the way a list note shows its chips.
-function meta(d: Draft) {
+function meta(d: Draft, today: string) {
   if (d.kind === "reward") return [`${d.reward.cost} XP`];
   if (d.kind === "goal") {
     const g = d.goal;
@@ -28,36 +30,44 @@ function meta(d: Draft) {
     ];
   }
   const t = d.task;
-  return [t.due, t.at, t.est ? `${t.est}m` : "", t.sub.length ? `${t.sub.length} steps` : ""].filter(Boolean) as string[];
+  return [
+    t.pri ? `${PRI[t.pri - 1]} priority` : "",
+    t.due ? relDue(t.due, today) + (t.at ? ` ${t.at}` : "") : "",
+    t.est ? mins(t.est) : "",
+    t.effort ? `Effort ${t.effort.toUpperCase()}` : "",
+  ].filter(Boolean);
 }
 
-// Ask todone's results as stickers: a tray of what's not placed yet, and a tile for each place they can go (your
-// lists, new lists, Goals, Rewards, the Bin). Drag a sticker onto a tile, or tap it and then tap the tile.
+// Ask todone's results, already sorted: a lane for each place something is going (your lists, new lists, Goals,
+// Rewards), each suggestion a sticker with its priority, timing, effort, steps and the AI's reason. To move one, drag
+// it to another lane or a place below, or tap it and then tap where it goes.
 export function AskBoard({
   drafts,
   onChange,
   lists,
   made,
   onMake,
+  today,
 }: {
   drafts: Draft[];
   onChange: (ds: Draft[]) => void;
   lists: List[];
   made: string[];
   onMake: (name: string) => void;
+  today: string;
 }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [naming, setNaming] = useState("");
   const put = (id: string, place: string) => {
-    onChange(drop(drafts, id, place === TRAY ? null : place));
+    onChange(drop(drafts, id, place === NONE ? null : place));
     setPicked(null);
   };
   const dropOn = useDrop("ask", {
     accept: (p) => p.kind === "draft",
     drop: (p, arg) => p.kind === "draft" && put(p.id, arg),
   });
-  // A tile is a drop target, and with a sticker picked, a tap places it there.
+  // A place is a drop target, and with a sticker picked, a tap puts it there.
   const target = (place: string) => ({
     ...dropOn(place),
     onClick: () => picked && put(picked, place),
@@ -72,117 +82,154 @@ export function AskBoard({
           ? listColor(d.place)
           : NOTES[noteColor(newName(d.place) ?? newName(d.ai) ?? d.id)];
 
-  const sticker = (d: Draft, small = false) => (
-    <div
-      key={d.id}
-      data-id={d.id}
-      data-card
-      className={small ? s.askChip : s.askNote}
-      data-kind={d.kind}
-      data-picked={picked === d.id || undefined}
-      style={{ "--fill": fill(d) } as React.CSSProperties}
-      {...draggable({ kind: "draft", id: d.id }, titleOf(d))}
-      onClick={(e) => {
-        e.stopPropagation(); // not a tap on the tile it sits in
-        setPicked(picked === d.id ? null : d.id);
-      }}
-      onDoubleClick={() => setEditing(d.id)}
-      role="button"
-      tabIndex={0}
-      aria-pressed={picked === d.id}
-      aria-label={`${titleOf(d)}${picked === d.id ? ", picked: now choose where it goes" : ""}`}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          setPicked(picked === d.id ? null : d.id);
-        }
-      }}
-    >
-      {d.kind === "goal" && <Target size={14} strokeWidth={2.5} aria-hidden />}
-      {d.kind === "reward" && <Gift size={14} strokeWidth={2.5} aria-hidden />}
-      {editing === d.id ? (
-        <input
-          autoFocus
-          defaultValue={titleOf(d)}
-          aria-label="Rename"
-          onClick={(e) => e.stopPropagation()}
-          onBlur={(e) => {
-            onChange(rename(drafts, d.id, e.target.value));
-            setEditing(null);
-          }}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === "Enter") e.currentTarget.blur();
-            if (e.key === "Escape") setEditing(null);
-          }}
-        />
-      ) : (
-        <b>{titleOf(d)}</b>
-      )}
-      {!small && meta(d).length > 0 && (
-        <span className={s.askMeta}>
-          {meta(d).map((m) => (
-            <i key={m}>{m}</i>
-          ))}
-        </span>
-      )}
-      <button
-        className={s.askX}
-        aria-label={`Remove ${titleOf(d)}`}
+  const sticker = (d: Draft) => {
+    const chips = meta(d, today);
+    const steps = d.kind === "task" ? d.task.sub : [];
+    const why = d.kind === "task" ? d.task.note : undefined;
+    return (
+      <div
+        key={d.id}
+        data-id={d.id}
+        data-card
+        className={s.askNote}
+        data-kind={d.kind}
+        data-pri={d.kind === "task" ? d.task.pri : undefined}
+        data-picked={picked === d.id || undefined}
+        style={{ "--fill": fill(d) } as React.CSSProperties}
+        {...draggable({ kind: "draft", id: d.id }, titleOf(d))}
         onClick={(e) => {
-          e.stopPropagation();
-          onChange(drop(drafts, d.id, BIN));
+          e.stopPropagation(); // not a tap on the lane it sits in
+          setPicked(picked === d.id ? null : d.id);
+        }}
+        onDoubleClick={() => setEditing(d.id)}
+        role="button"
+        tabIndex={0}
+        aria-pressed={picked === d.id}
+        aria-label={`${titleOf(d)}${picked === d.id ? ", picked: now choose where it goes" : ""}`}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setPicked(picked === d.id ? null : d.id);
+          }
         }}
       >
-        <X size={12} strokeWidth={3} />
-      </button>
-    </div>
-  );
-
-  const tile = (place: string, head: React.ReactNode, style?: React.CSSProperties, dashed = false) => {
-    const here = drafts.filter((d) => d.place === place);
-    return (
-      <li key={place} className={s.askTile} data-new={dashed || undefined} style={style} {...target(place)}>
-        <span className={s.askTileHead}>
-          {head}
-          <span className={s.askCount}>{here.length || ""}</span>
-        </span>
-        {here.map((d) => sticker(d, true))}
-      </li>
+        {d.kind === "goal" && <Target size={14} strokeWidth={2.5} aria-hidden />}
+        {d.kind === "reward" && <Gift size={14} strokeWidth={2.5} aria-hidden />}
+        {editing === d.id ? (
+          <input
+            autoFocus
+            defaultValue={titleOf(d)}
+            aria-label="Rename"
+            onClick={(e) => e.stopPropagation()}
+            onBlur={(e) => {
+              onChange(rename(drafts, d.id, e.target.value));
+              setEditing(null);
+            }}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === "Enter") e.currentTarget.blur();
+              if (e.key === "Escape") setEditing(null);
+            }}
+          />
+        ) : (
+          <b>{titleOf(d)}</b>
+        )}
+        {chips.length > 0 && (
+          <span className={s.askMeta}>
+            {chips.map((m) => (
+              <i key={m}>{m}</i>
+            ))}
+          </span>
+        )}
+        {steps.length > 0 && (
+          <ul className={s.askSteps} aria-label="Steps">
+            {steps.map((t) => (
+              <li key={t.id}>
+                {t.title}
+                {t.est ? <small> · {mins(t.est)}</small> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+        {why && <p className={s.askWhy}>{why}</p>}
+        <button
+          className={s.askX}
+          aria-label={`Leave out ${titleOf(d)}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(drop(drafts, d.id, BIN));
+          }}
+        >
+          <X size={12} strokeWidth={3} />
+        </button>
+      </div>
     );
   };
-  const tray = drafts.filter((d) => d.place === null);
+
+  // Every place, and how it's shown: a lane when something is going there, a small spot below otherwise.
   const fresh = newLists(drafts, made, lists);
+  const places: { id: string; head: React.ReactNode; fill: string; dashed?: boolean }[] = [
+    ...lists.map((l) => ({
+      id: l.id,
+      head: (
+        <>
+          <ListIcon id={l.id} name={l.name} icon={l.icon} /> {l.name}
+        </>
+      ),
+      fill: listColor(l.id),
+    })),
+    ...fresh.map((n) => ({ id: newPlace(n), head: <>{n} · new list</>, fill: NOTES[noteColor(n)], dashed: true })),
+    { id: GOALS, head: <><Target size={14} strokeWidth={2.5} aria-hidden /> Goals</>, fill: "var(--lime)" },
+    { id: REWARDS, head: <><Gift size={14} strokeWidth={2.5} aria-hidden /> Rewards</>, fill: "var(--pink)" },
+  ];
+  const at = (id: string) => drafts.filter((d) => (d.place ?? NONE) === id);
+  const homeless = at(NONE);
+  const lanes = places.filter((p) => at(p.id).length);
+  const spots = places.filter((p) => !at(p.id).length);
 
   return (
     <div className={s.askBoard}>
-      <section className={s.askTray} aria-label="Suggested" {...target(TRAY)}>
-        <h3>
-          Suggested <span className={s.askCount}>{tray.length || ""}</span>
-        </h3>
-        {tray.length ? (
-          <div className={s.askNotes}>{tray.map((d) => sticker(d))}</div>
-        ) : (
-          <p>{drafts.length ? "All placed. Drag any back here to rethink it." : "Nothing yet."}</p>
+      <ul className={s.askLanes}>
+        {homeless.length > 0 && (
+          <li className={s.askTile} data-new {...target(NONE)}>
+            <span className={s.askTileHead}>
+              Needs a list <span className={s.askCount}>{homeless.length}</span>
+            </span>
+            {homeless.map(sticker)}
+          </li>
         )}
-      </section>
+        {lanes.map((p) => (
+          <li
+            key={p.id}
+            className={s.askTile}
+            data-new={p.dashed || undefined}
+            style={{ "--fill": p.fill } as React.CSSProperties}
+            {...target(p.id)}
+          >
+            <span className={s.askTileHead}>
+              {p.head}
+              <span className={s.askCount}>{at(p.id).length}</span>
+            </span>
+            {at(p.id).map(sticker)}
+          </li>
+        ))}
+      </ul>
 
-      <section aria-label="Put them in">
-        <h3>Put them in</h3>
-        <ul className={s.askTiles}>
-          {lists.map((l) =>
-            tile(
-              l.id,
-              <>
-                <ListIcon id={l.id} name={l.name} icon={l.icon} /> {l.name}
-              </>,
-              { "--fill": listColor(l.id) } as React.CSSProperties,
-            ),
-          )}
-          {fresh.map((n) =>
-            tile(newPlace(n), <>{n} · new</>, { "--fill": NOTES[noteColor(n)] } as React.CSSProperties, true),
-          )}
-          <li className={s.askTile} data-new>
+      <section className={s.askElse} aria-label="Move to somewhere else">
+        <h3>{picked ? "Put it in…" : "Or move to"}</h3>
+        <ul className={s.askSpots}>
+          {spots.map((p) => (
+            <li
+              key={p.id}
+              className={s.askSpot}
+              data-new={p.dashed || undefined}
+              style={{ "--fill": p.fill } as React.CSSProperties}
+              {...target(p.id)}
+            >
+              {p.head}
+            </li>
+          ))}
+          <li>
             <form
               className={s.askMake}
               onSubmit={(e) => {
@@ -200,21 +247,7 @@ export function AskBoard({
               </button>
             </form>
           </li>
-          {tile(
-            GOALS,
-            <>
-              <Target size={14} strokeWidth={2.5} aria-hidden /> Goals
-            </>,
-            { "--fill": "var(--lime)" } as React.CSSProperties,
-          )}
-          {tile(
-            REWARDS,
-            <>
-              <Gift size={14} strokeWidth={2.5} aria-hidden /> Rewards
-            </>,
-            { "--fill": "var(--pink)" } as React.CSSProperties,
-          )}
-          <li className={s.askBin} {...target(BIN)} aria-label="Bin: leave it out">
+          <li className={s.askBin} {...target(BIN)} aria-label="Leave out">
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Leave out
           </li>
         </ul>

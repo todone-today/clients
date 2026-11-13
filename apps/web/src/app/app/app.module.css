@@ -1753,11 +1753,10 @@
 
 .askBoard {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
-  gap: 1.25rem;
-  align-items: start;
+  gap: 1.1rem;
 }
-.askBoard h3 {
+.askBoard h3,
+.askQs h3 {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -1777,28 +1776,7 @@
   background: var(--lime);
   border: 2px solid var(--black);
 }
-/* The tray: what's still to place, dashed like the calendar's "To plan". */
-.askTray {
-  position: sticky;
-  top: 0;
-  min-height: 12rem;
-  padding: 0.8rem;
-  background: var(--raise);
-  border: 2px dashed var(--hair);
-}
-.askTray[data-over] {
-  border-color: var(--lime);
-}
-.askTray > p {
-  font-size: 0.85rem;
-  color: var(--ink-2);
-}
-.askNotes {
-  display: grid;
-  gap: 0.6rem;
-}
-.askNote,
-.askChip {
+.askNote {
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -1815,8 +1793,6 @@
   cursor: grab;
   touch-action: none;
   animation: pop 0.38s var(--ease) both;
-}
-.askNote {
   padding: 0.55rem 1.8rem 0.6rem 0.7rem;
   font-size: 0.92rem;
   box-shadow: var(--lift-sm);
@@ -1825,27 +1801,11 @@
 .askNote:nth-child(even) {
   rotate: 0.5deg;
 }
-.askNotes > .askNote:nth-child(2) {
-  animation-delay: 40ms;
-}
-.askNotes > .askNote:nth-child(3) {
-  animation-delay: 80ms;
-}
-.askNotes > .askNote:nth-child(n + 4) {
-  animation-delay: 120ms;
-}
-.askChip {
-  padding: 0.25rem 1.5rem 0.25rem 0.45rem;
-  font-size: 0.8rem;
-  box-shadow: 2px 2px 0 var(--black);
-}
-.askNote b,
-.askChip b {
+.askNote b {
   font-weight: 800;
   overflow-wrap: anywhere;
 }
-.askNote input,
-.askChip input {
+.askNote input {
   flex: 1;
   min-width: 8rem;
   padding: 0.15rem 0.3rem;
@@ -1855,8 +1815,7 @@
   background: var(--ground);
   border: 2px solid var(--black);
 }
-.askNote[data-picked],
-.askChip[data-picked] {
+.askNote[data-picked] {
   rotate: 0deg;
   translate: -2px -2px;
   box-shadow: 4px 4px 0 var(--black), 0 0 0 3px var(--lime);
@@ -1875,6 +1834,29 @@
   background: var(--ground);
   border: 1.5px solid var(--black);
 }
+/* High priority gets a hot edge, so the urgent ones stand out in a lane. */
+.askNote[data-pri="1"] {
+  box-shadow: var(--lift-sm), inset 5px 0 0 var(--hot);
+}
+.askSteps {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin: 0.1rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.askSteps small {
+  color: var(--ink-2);
+}
+.askWhy {
+  width: 100%;
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--ink-2);
+}
 .askX {
   position: absolute;
   top: 0.3rem;
@@ -1889,13 +1871,76 @@
 .askX:hover {
   opacity: 1;
 }
-/* Where they go: a sticker tile per list (in its colour), new lists dashed, Goals, Rewards, and the bin. */
-.askTiles {
+/* A lane per place something is going (a list in its colour, new lists dashed, Goals, Rewards). */
+.askLanes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.9rem;
   align-items: start;
   list-style: none;
+}
+.askTile > .askNote:nth-of-type(2) {
+  animation-delay: 40ms;
+}
+.askTile > .askNote:nth-of-type(n + 3) {
+  animation-delay: 80ms;
+}
+/* Everywhere else it could go, small, plus a new list and leave out. */
+.askElse h3 {
+  margin-bottom: 0.5rem;
+}
+.askSpots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem;
+  list-style: none;
+}
+.askSpot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--black);
+  background: color-mix(in srgb, var(--fill, var(--butter)) 45%, var(--ground));
+  border: 2px solid var(--black);
+  transition: translate 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.askSpot[data-new] {
+  border-style: dashed;
+}
+.askSpot[data-armed] {
+  cursor: pointer;
+}
+.askSpot[data-over],
+.askSpot[data-armed]:hover {
+  translate: -2px -2px;
+  background: var(--fill, var(--butter));
+  box-shadow: 3px 3px 0 var(--black);
+}
+/* What the AI asked back, answered right here. */
+.askQs {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--raise);
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+}
+.askQs label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 700;
+}
+.askQs input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--ground);
+  border: 2px solid var(--hair);
 }
 .askTile {
   display: grid;
@@ -1971,7 +2016,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  min-height: 3rem;
+  padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--ink-2);
@@ -2023,19 +2068,12 @@
   .askFoot .btn {
     margin-left: auto;
   }
-  .askBoard {
+  .askLanes {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .askTray {
-    position: static;
-  }
-  .askTiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .askNote,
-  .askChip {
+  .askNote {
     animation: none;
   }
 }

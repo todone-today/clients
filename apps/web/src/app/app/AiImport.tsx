@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
-import { type Draft, commit, fromPlan, placed, setAuto as autoPlace } from "@/lib/askBoard";
+import { type Draft, commit, fromPlan, placed } from "@/lib/askBoard";
 import { useLists } from "@/lib/store";
 import { type GoalItem } from "@todone/sdk/goals";
 import { parsePlan, planPrompt, type PlanGoal } from "@todone/sdk/plan";
@@ -16,16 +16,6 @@ import s from "./app.module.css";
 const newId = () => uid() + uid();
 const weekday = () => new Date().toLocaleDateString("en", { weekday: "long" });
 const MAX_SECONDS = 300;
-
-// Whether suggestions start where the AI put them (Auto) or in the tray; remembered on this device.
-const AUTO_KEY = "todone:ask-auto";
-const readAuto = () => {
-  try {
-    return localStorage.getItem(AUTO_KEY) !== "off";
-  } catch {
-    return true;
-  }
-};
 
 type Phase = "idle" | "recording" | "sending" | "queued" | "transcribing" | "thinking";
 const SAYS: Record<Phase, string> = {
@@ -66,7 +56,9 @@ export function AiImport({
   const [answer, setAnswer] = useState(""); // a pasted answer (Use your own AI)
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [made, setMade] = useState<string[]>([]); // new lists made by hand on the board
-  const [auto, setAuto] = useState(true);
+  const [said, setSaid] = useState(""); // everything asked so far, so answers to its questions have the context
+  const [qs, setQs] = useState<string[]>([]); // what the AI asked back
+  const [replies, setReplies] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const [today, setToday] = useState(""); // read when the dialog opens, not while the page renders
   const [err, setErr] = useState("");
@@ -81,21 +73,17 @@ export function AiImport({
     goals: items.flatMap((i) => (i.t === "goal" ? [i.title] : [])),
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
   });
-  const found = drafts.length > 0;
+  const found = drafts.length > 0 || qs.length > 0;
   const ready = placed(drafts);
   const suggest = (md: string, add: boolean) => {
     // Goals get their real "created" when added; tasks the AI left without a list go with the open list.
-    const more = fromPlan(parsePlan(md, newId, 0), lists, auto).map((d) =>
-      d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: auto ? current : null } : d,
+    const plan = parsePlan(md, newId, 0);
+    const more = fromPlan(plan, lists).map((d) =>
+      d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: current } : d,
     );
     setDrafts((ds) => (add ? [...ds, ...more] : more));
-  };
-  const toggleAuto = (on: boolean) => {
-    setAuto(on);
-    setDrafts((ds) => autoPlace(ds, on));
-    try {
-      localStorage.setItem(AUTO_KEY, on ? "on" : "off");
-    } catch {}
+    setQs(plan.questions);
+    setReplies([]);
   };
 
   const reset = () => {
@@ -110,6 +98,9 @@ export function AiImport({
     setTranscript("");
     setDrafts([]);
     setMade([]);
+    setSaid("");
+    setQs([]);
+    setReplies([]);
     setPhase("idle");
     setErr("");
   };
@@ -141,19 +132,20 @@ export function AiImport({
     setPhase("idle");
     setErr(e instanceof Error ? e.message : "Something went wrong. Try again.");
   };
-  // Each answer adds to the board, so a few asks build one plan.
-  const answered = (r: { result: string; used?: number; limit?: number | null }) => {
-    suggest(r.result, true);
+  // Each answer adds to the board, so a few asks build one plan; answering its questions makes the plan again.
+  const answered = (r: { result: string; used?: number; limit?: number | null }, add = true) => {
+    suggest(r.result, add);
     setWords("");
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
   };
-  const askText = async (text = words) => {
+  const askText = async (text = words, add = true) => {
     if (!text.trim()) return;
     setErr("");
     setPhase("thinking");
+    if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
-      answered(await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context() }));
+      answered(await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context() }), add);
     } catch (e) {
       failed(e);
     }
@@ -164,7 +156,11 @@ export function AiImport({
       if (job.current !== id) return; // closed, or started again
       const j = await api<JobView>("GET", `/ai/jobs/${id}`);
       if (j.transcript) setTranscript(j.transcript);
-      if (j.status === "ready" && j.result) return answered({ result: j.result, used: j.used, limit: j.limit });
+      if (j.status === "ready" && j.result) {
+        const heard = j.transcript ?? "";
+        setSaid((x) => (x ? `${x}\n${heard}` : heard));
+        return answered({ result: j.result, used: j.used, limit: j.limit });
+      }
       if (j.status === "failed") throw new Error(j.error ?? "That didn't work. Try again.");
       setPhase(j.status as Phase);
       await new Promise((r) => setTimeout(r, 1500));
@@ -225,22 +221,59 @@ export function AiImport({
     if (secs >= MAX_SECONDS) stop();
   }, [secs]);
 
+  // The answers go back with everything said so far, and the new plan replaces the board.
+  const answerQs = () =>
+    askText(
+      `${said}\n\nYou asked me:\n${qs.map((q, i) => `- ${q}\n  My answer: ${replies[i]?.trim() || "(no answer, use your judgement)"}`).join("\n")}`,
+      false,
+    );
   const busy = phase !== "idle";
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
-  const board = found && (
+  const questions = qs.length > 0 && (
+    <form
+      className={s.askQs}
+      onSubmit={(e) => {
+        e.preventDefault();
+        answerQs();
+      }}
+    >
+      <h3>{drafts.length ? "A few things would make this better" : "Tell me a bit more"}</h3>
+      {qs.map((q, i) => (
+        <label key={q}>
+          <span>{q}</span>
+          <input
+            value={replies[i] ?? ""}
+            disabled={busy}
+            onChange={(e) => setReplies((r) => Object.assign([...r], { [i]: e.target.value }))}
+            placeholder="Your answer"
+          />
+        </label>
+      ))}
+      <div className={s.aiInto}>
+        <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={busy || !replies.some((r) => r?.trim())}>
+          <Sparkles size={16} strokeWidth={2.5} /> Answer and update
+        </button>
+        {drafts.length > 0 && (
+          <button type="button" className={s.ghost} onClick={() => setQs([])}>
+            Skip
+          </button>
+        )}
+      </div>
+    </form>
+  );
+  const board = drafts.length > 0 && (
     <>
-      <AskBoard drafts={drafts} onChange={setDrafts} lists={lists} made={made} onMake={(n) => setMade((m) => [...m, n])} />
+      <AskBoard
+        drafts={drafts}
+        onChange={setDrafts}
+        lists={lists}
+        made={made}
+        onMake={(n) => setMade((m) => [...m, n])}
+        today={today || todayISO()}
+      />
       <div className={s.askFoot}>
-        <div className={s.seg} role="group" aria-label="Where suggestions start">
-          <button aria-pressed={auto} onClick={() => toggleAuto(true)} title="Each starts where the AI put it">
-            Auto
-          </button>
-          <button aria-pressed={!auto} onClick={() => toggleAuto(false)} title="Each starts in the tray; you place it">
-            By hand
-          </button>
-        </div>
         <span className={s.aiMeter}>
-          {ready} placed{drafts.length - ready ? ` · ${drafts.length - ready} in the tray` : ""}
+          {drafts.length - ready ? `${drafts.length - ready} need a list · ` : ""}Drag or tap to move · double-click to rename
         </span>
         <button className={s.ghost} onClick={() => setDrafts([])}>
           Clear
@@ -253,7 +286,6 @@ export function AiImport({
   );
 
   const open = () => {
-    setAuto(readAuto());
     setToday(todayISO());
     if (!ai) setTab("paste");
     if (!dialog.current?.open) dialog.current?.showModal();
@@ -386,6 +418,7 @@ export function AiImport({
                 <p>{transcript}</p>
               </details>
             )}
+            {questions}
             {board}
             {!found && (
               <p className={s.aiPrivacy}>
@@ -433,12 +466,12 @@ export function AiImport({
               <p className={s.open} role="status">
                 {answer.trim()
                   ? found
-                    ? `Found ${drafts.length}. Drag them where they go below.`
+                    ? `Found ${drafts.length}, sorted below. Move any you like.`
                     : "Nothing found yet. Tasks start with “- [ ]”."
                   : "Nothing pasted yet."}
               </p>
             </li>
-            <li>{found ? board : <p className={s.open}>What it found shows here as stickers, to place before adding.</p>}</li>
+            <li>{drafts.length ? board : <p className={s.open}>What it found shows here as stickers, to place before adding.</p>}</li>
           </ol>
         )}
 
