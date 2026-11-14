@@ -5,12 +5,13 @@ import type { Reward } from "@todone/sdk/goals";
 import type { Change, Plan, PlanGoal } from "@todone/sdk/plan";
 import { type Task, tick } from "@todone/sdk/tasks";
 
+// `off`: left out for now (unticked in Ask todone's steps); it stays in view so it can be ticked again.
 export type Draft =
-  | { id: string; kind: "task"; task: Task; place: string | null; ai: string | null }
-  | { id: string; kind: "goal"; goal: PlanGoal; place: string | null; ai: string | null }
-  | { id: string; kind: "reward"; reward: Reward; place: string | null; ai: string | null }
+  | { id: string; kind: "task"; task: Task; place: string | null; ai: string | null; off?: true }
+  | { id: string; kind: "goal"; goal: PlanGoal; place: string | null; ai: string | null; off?: true }
+  | { id: string; kind: "reward"; reward: Reward; place: string | null; ai: string | null; off?: true }
   // A change to a task you have (in list `place`), from a list you let the AI read. It stays in its list's lane.
-  | { id: string; kind: "change"; change: Change; task: Task; place: string; ai: string };
+  | { id: string; kind: "change"; change: Change; task: Task; place: string; ai: string; off?: true };
 
 export const GOALS = "goals";
 export const REWARDS = "rewards";
@@ -83,7 +84,7 @@ export function commit(ds: Draft[]) {
   const rewards: Reward[] = [];
   const changes: Extract<Draft, { kind: "change" }>[] = [];
   for (const d of ds) {
-    if (d.place === null) continue;
+    if (d.place === null || d.off) continue;
     if (d.kind === "change") changes.push(d);
     else if (d.kind === "goal") goals.push(d.goal);
     else if (d.kind === "reward") rewards.push(d.reward);
@@ -156,18 +157,26 @@ export function changeLabel(c: Change) {
     .join(" · ");
 }
 
-export const placed = (ds: Draft[]) => ds.filter((d) => d.place !== null).length;
+export const placed = (ds: Draft[]) => ds.filter((d) => d.place !== null && !d.off).length;
+// Ticks a suggestion in or out.
+export const toggle = (ds: Draft[], id: string): Draft[] =>
+  ds.map((d) => (d.id !== id ? d : d.off ? (({ off: _, ...rest }) => rest as Draft)(d) : { ...d, off: true as const }));
 
 // Ask todone's results, one kind at a time: to-dos, changes, goals, rewards (only the kinds there are), then a review.
 export const STEPS = ["task", "change", "goal", "reward"] as const;
-export type Step = (typeof STEPS)[number] | "review";
-export const stepsOf = (ds: Draft[]): Step[] => [...STEPS.filter((k) => ds.some((d) => d.kind === k)), "review"];
+export type Step = "questions" | (typeof STEPS)[number] | "review";
+// Questions it asked back come first; review only once there's something to add.
+export const stepsOf = (ds: Draft[], asks = false): Step[] => [
+  ...(asks ? (["questions"] as Step[]) : []),
+  ...STEPS.filter((k) => ds.some((d) => d.kind === k)),
+  ...(ds.length ? (["review"] as Step[]) : []),
+];
 // The step to show: the one asked for while it still has something, else the next one that does.
-export function stepAt(ds: Draft[], want: Step): Step {
-  const steps = stepsOf(ds);
+export function stepAt(ds: Draft[], want: Step, asks = false): Step {
+  const steps = stepsOf(ds, asks);
   if (steps.includes(want)) return want;
-  const order: Step[] = [...STEPS, "review"];
-  return steps.find((s) => order.indexOf(s) > order.indexOf(want)) ?? "review";
+  const order: Step[] = ["questions", ...STEPS, "review"];
+  return steps.find((s) => order.indexOf(s) > order.indexOf(want)) ?? steps[steps.length - 1] ?? "review";
 }
 // A step edits only its own stickers: put its new version back in place. A sticker moved to another kind (a to-do
 // dropped on Goals) keeps its spot and shows up in that kind's step; one left out is gone.

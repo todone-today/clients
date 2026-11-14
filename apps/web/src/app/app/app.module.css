@@ -6940,3 +6940,274 @@ body[data-drag="task"] .listGoal {
     animation: none;
   }
 }
+
+/* Ask todone's steps: a sticker dialog like New goal, its colour by step (to-dos butter, goals lime, rewards pink). */
+.askDialog {
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(48rem, calc(100dvh - 2rem));
+  padding: 0;
+  background: var(--fill);
+  overflow: hidden;
+}
+.askDialog[open] {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  animation: popIn 0.28s var(--ease) both;
+}
+.askDHead {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.3rem 1.5rem 0;
+}
+.askDHead h2 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.9rem, 4vw, 2.4rem);
+  line-height: 1;
+}
+.askDialog .askDHead .panelClose {
+  float: none;
+}
+.askDots {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0.85rem 1.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+.askDots li {
+  flex: 1;
+}
+.askDots button {
+  display: block;
+  width: 100%;
+  height: 0.6rem;
+  padding: 0;
+  background: rgb(255 255 255 / 0.55);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+.askDots button[data-done],
+.askDots button[aria-current] {
+  background: var(--black);
+}
+.askDots button:hover {
+  background: rgb(11 11 11 / 0.6);
+}
+.askDHint {
+  margin: 0.7rem 1.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.askDBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.9rem 1.5rem 1.2rem;
+}
+.askDFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.5rem 1rem;
+  border-top: var(--key);
+  background: rgb(255 255 255 / 0.45);
+}
+.askDLink {
+  padding: 0;
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--black);
+  text-decoration: underline 2px;
+  text-underline-offset: 0.2em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+/* A suggestion: a white card row. */
+.askRows {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.askRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.8rem;
+  background: #fff;
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  transition:
+    opacity 0.15s var(--ease),
+    transform 0.15s var(--ease);
+}
+.askRow[data-off] {
+  opacity: 0.5;
+  box-shadow: none;
+}
+.askRow[data-off] .askRowTitle {
+  text-decoration: line-through 2px;
+}
+.askTick {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.15rem;
+  padding: 0;
+  color: var(--lime);
+  background: var(--black);
+  border: 2.5px solid var(--black);
+  cursor: pointer;
+}
+.askRow[data-off] .askTick {
+  background: #fff;
+}
+.askRowMain {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.askRowTitle {
+  width: 100%;
+  margin: 0;
+  padding: 0.1rem 0.25rem;
+  font: 800 1.02rem/1.3 var(--sans);
+  color: var(--black);
+  background: none;
+  border: 2px solid transparent;
+}
+input.askRowTitle:hover {
+  border-color: var(--hair);
+}
+input.askRowTitle:focus-visible {
+  outline: none;
+  border-color: var(--black);
+  background: #fff8ef;
+}
+.askRow .askMeta {
+  padding-left: 0.25rem;
+}
+.askRowWhy {
+  margin: 0;
+  padding-left: 0.25rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-2);
+}
+.askRowWhere {
+  display: grid;
+  min-width: 10rem;
+}
+.askRowWhere:empty {
+  display: none;
+}
+.askNeeds > button {
+  background: var(--butter) !important;
+  outline: 2px dashed var(--hot);
+  outline-offset: 2px;
+}
+.askXp {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.askXp input {
+  width: 5rem;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: right;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.askDQs {
+  display: grid;
+  gap: 0.9rem;
+}
+.askDQs input {
+  padding: 0.6rem 0.7rem;
+  font: 700 0.95rem var(--sans);
+  text-transform: none;
+  letter-spacing: 0;
+  background: #fff;
+  border: 2.5px solid var(--black);
+}
+.askDBusy {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 800;
+}
+/* Review: a sticker per place, in its colour. */
+.askReviewD {
+  display: grid;
+  gap: 0.75rem;
+}
+.askGroup {
+  padding: 0.7rem 0.85rem 0.8rem;
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.askGroup h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font: 800 0.95rem var(--sans);
+}
+.askGroup ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.askGroup li {
+  padding: 0.25rem 0.55rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+@media (max-width: 640px) {
+  .askDialog {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .askRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .askRowWhere {
+    grid-column: 2;
+    min-width: 0;
+  }
+  .askDHead,
+  .askDBody,
+  .askDFoot {
+    padding-inline: 1rem;
+  }
+  .askDots,
+  .askDHint {
+    margin-inline: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .askDialog[open] {
+    animation: none;
+  }
+}

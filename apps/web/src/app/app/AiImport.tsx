@@ -11,7 +11,7 @@ import { numbered, parsePlan, planPrompt, type OpenList, type PlanGoal } from "@
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, type Ask } from "./AskBar";
-import { AskSteps } from "./AskBoard";
+import { AskSteps } from "./AskSteps";
 import { did } from "@/lib/start";
 import s from "./app.module.css";
 
@@ -101,7 +101,7 @@ export function AiImport({
     setRound((r) => r + 1);
     setQs(plan.questions);
     setReplies([]);
-    return more.length > 0 && !plan.questions.length && !(want.length && !shared);
+    return (more.length > 0 || plan.questions.length > 0) && !(want.length && !shared);
   };
 
   const reset = () => {
@@ -284,40 +284,9 @@ export function AiImport({
     askText(said, false, sh);
   };
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
-  const questions = qs.length > 0 && (
-    <form
-      className={s.askQs}
-      onSubmit={(e) => {
-        e.preventDefault();
-        answerQs();
-      }}
-    >
-      <h3>{drafts.length ? "A few things would make this better" : "Tell me a bit more"}</h3>
-      {qs.map((q, i) => (
-        <label key={q}>
-          <span>{q}</span>
-          <input
-            value={replies[i] ?? ""}
-            disabled={busy}
-            onChange={(e) => setReplies((r) => Object.assign([...r], { [i]: e.target.value }))}
-            placeholder="Your answer"
-          />
-        </label>
-      ))}
-      <div className={s.aiInto}>
-        <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={busy || !replies.some((r) => r?.trim())}>
-          <Sparkles size={16} strokeWidth={2.5} /> Answer and update
-        </button>
-        {drafts.length > 0 && (
-          <button type="button" className={s.ghost} onClick={() => setQs([])}>
-            Skip
-          </button>
-        )}
-      </div>
-    </form>
-  );
-  // The results open in their own dialog, a step at a time; from here, a button opens it again.
-  const board = drafts.length > 0 && (
+  // The results (and any questions it asked back) open in their own step dialog; from here, a button opens it again.
+  const pending = drafts.length + (qs.length ? 1 : 0);
+  const board = pending > 0 && (
     <>
       <button
         type="button"
@@ -325,7 +294,10 @@ export function AiImport({
         style={{ "--fill": "var(--lime)" } as React.CSSProperties}
         onClick={() => setReviewing(true)}
       >
-        Review {drafts.length} {drafts.length === 1 ? "suggestion" : "suggestions"} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+        {drafts.length
+          ? `Review ${drafts.length} ${drafts.length === 1 ? "suggestion" : "suggestions"}`
+          : `Answer ${qs.length === 1 ? "its question" : `its ${qs.length} questions`}`}{" "}
+        <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
       </button>
       {reviewing && (
         <AskSteps
@@ -334,14 +306,21 @@ export function AiImport({
           onChange={setDrafts}
           lists={lists}
           made={made}
-          onMake={(n) => setMade((m) => [...m, n])}
+          onMake={(n: string) => setMade((m) => [...m, n])}
           today={today || todayISO()}
           onAdd={save}
           onClear={() => {
             setDrafts([]);
+            setQs([]);
             setReviewing(false);
           }}
           onExit={() => setReviewing(false)}
+          questions={qs}
+          replies={replies}
+          onReply={(i, v) => setReplies((r) => Object.assign([...r], { [i]: v }))}
+          onAnswer={answerQs}
+          onSkip={() => setQs([])}
+          busy={busy}
         />
       )}
     </>
@@ -482,7 +461,6 @@ export function AiImport({
                 apply it.
               </p>
             )}
-            {questions}
             {board}
           </div>
         ) : (
