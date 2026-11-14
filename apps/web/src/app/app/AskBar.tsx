@@ -36,7 +36,7 @@ export function AskBar({ ideas }: { ideas?: boolean }) {
         onChange={(e) => setText(e.target.value)}
         placeholder={ideas ? "Brain dump, any language. Say it or type it…" : "Tell todone what you need to do…"}
         autoComplete="off"
-        maxLength={8000}
+        maxLength={50000}
       />
       <button type="button" className={s.askMic} onClick={() => ask({ voice: true, ...more })} aria-label="Speak instead">
         <Mic size={18} strokeWidth={2.5} />
