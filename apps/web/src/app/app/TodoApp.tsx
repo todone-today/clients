@@ -1305,7 +1305,7 @@ function ListView({
               const near = new Set(list.tasks.slice(0, 2).map((x) => colors.get(x.id)));
               let id = uid();
               for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
-              setTasks((ts) => [{ id, title: t, done: false, sub: [] }, ...ts]);
+              setTasks((ts) => [{ id, title: t, done: false, created: Date.now(), sub: [] }, ...ts]);
               setDraft("");
             }}
           >
@@ -1817,7 +1817,7 @@ function DeleteList({
         <span>Delete {one ? "this goal" : "these goals"} too</span>
       </label>
       <div className={s.tools}>
-        <button className={s.ghost} onClick={() => ref.current?.close()}>
+        <button className="btn" style={{ "--fill": "#fff8ef" } as React.CSSProperties} onClick={() => ref.current?.close()}>
           Cancel
         </button>
         <button
@@ -1826,7 +1826,7 @@ function DeleteList({
           onClick={() => onDelete(goalsToo)}
           autoFocus
         >
-          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete list{goalsToo ? (one ? " and goal" : " and goals") : ""}
+          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete list
         </button>
       </div>
     </dialog>

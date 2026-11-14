@@ -91,7 +91,7 @@ export function commit(ds: Draft[]) {
       const name = newName(d.place);
       const key = name ? NEW + name.toLowerCase() : d.place;
       const g = groups.get(key) ?? (name ? { name, tasks: [] } : { listId: d.place, name: "", tasks: [] });
-      g.tasks.push(d.task);
+      g.tasks.push({ ...d.task, created: d.task.created ?? Date.now() });
       groups.set(key, g);
     }
   }

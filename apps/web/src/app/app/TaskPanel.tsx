@@ -58,6 +58,7 @@ import { markSeen } from "./unread";
 import { Focus } from "./Focus";
 import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
+import { useLists } from "@/lib/store";
 import { type Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
 
@@ -963,33 +964,34 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const wrap = useRef<HTMLDivElement>(null);
-  // A shared task's conversation and attachments are on the server: fetched now, so the file has what the panel shows.
+  const { lists } = useLists();
+  // Everything the panel shows goes in: the list, a link back to the task, and for a shared task its conversation,
+  // attachments and public page (fetched now; they live on the server). The web page also carries the files.
   const download = async ([ext, , , type, make]: (typeof FORMATS)[number]) => {
     setErr("");
-    let x: Extra = {};
-    if (task.share) {
-      setBusy(ext);
-      try {
+    setBusy(ext);
+    try {
+      const x: Extra = {
+        list: lists?.find((l) => !l.kind && l.tasks.some((t) => t.id === task.id || t.sub.some((u) => u.id === task.id)))?.name,
+        open: `${location.origin}/app?task=${task.id}`,
+      };
+      if (task.share) {
         const v = await shareView(task.share);
-        x = {
-          files: v.task.files ?? task.files,
-          talk: v.comments.map((c) => ({
-            who: c.who,
-            at: c.at,
-            text: c.body,
-            ...(c.files.length ? { files: c.files } : {}),
-          })),
-        };
-      } catch {
-        setBusy("");
-        return setErr(
-          "Couldn't get the conversation. Check the connection and try again.",
-        );
+        x.page = `${location.origin}/t/${v.token}`;
+        x.files = v.task.files ?? task.files;
+        x.talk = v.comments.map((c) => ({ who: c.who, at: c.at, text: c.body, ...(c.files.length ? { files: c.files } : {}) }));
       }
-      setBusy("");
+      if (ext === "html")
+        x.data = await carry(
+          [...(x.files ?? task.files ?? []), ...[...(task.history ?? []), ...(x.talk ?? [])].flatMap((n) => n.files ?? [])],
+          task.share ? `/task-shares/${task.share}` : null,
+        );
+      save(fileName(task.title, ext), type, make(task, goal, x));
+      setOpen(false);
+    } catch {
+      setErr(task.share ? "Couldn't get the conversation. Check the connection and try again." : "That didn't work. Try again.");
     }
-    save(fileName(task.title, ext), type, make(task, goal, x));
-    setOpen(false);
+    setBusy("");
   };
   const items = () => [
     ...(wrap.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ??
@@ -1061,4 +1063,38 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
       )}
     </div>
   );
+}
+
+// The files a web page download carries inside it, as data: URLs: private ones decrypted here, shared ones fetched.
+// Up to 20 MB each and 60 MB in all; the rest are listed with where they open. One that fails is listed the same way.
+const EACH = 20e6;
+const ALL = 60e6;
+async function carry(files: FileRef[], base: string | null) {
+  const out = new Map<string, string>();
+  let total = 0;
+  const key = files.some((f) => f.enc) ? await workspaceKey() : null;
+  for (const f of files) {
+    if (out.has(f.id) || f.size > EACH || total + f.size > ALL) continue;
+    try {
+      const blob = f.enc
+        ? await openPrivate(f, key!)
+        : base
+          ? await (await fetch(await sharedUrl(base, f.id))).blob()
+          : null;
+      if (!blob) continue;
+      out.set(
+        f.id,
+        await new Promise<string>((ok, no) => {
+          const r = new FileReader();
+          r.onload = () => ok(r.result as string);
+          r.onerror = () => no(r.error);
+          r.readAsDataURL(new Blob([blob], { type: f.type }));
+        }),
+      );
+      total += f.size;
+    } catch {
+      // listed without its contents
+    }
+  }
+  return out;
 }

@@ -18,7 +18,7 @@ export function ideaToTask(lists: List[], ideaId: string, listId: string, update
   const idea = board?.tasks.find((t) => t.id === ideaId);
   if (!board || !idea) return;
   update(board.id, (l) => ({ ...l, tasks: l.tasks.filter((t) => t.id !== ideaId) }));
-  update(listId, (l) => ({ ...l, tasks: [...l.tasks, { id: uid(), title: idea.title, done: false, sub: [] }] }));
+  update(listId, (l) => ({ ...l, tasks: [...l.tasks, { id: uid(), title: idea.title, done: false, created: Date.now(), sub: [] }] }));
 }
 
 // A board for loose ideas. They live in the workspace's "ideas" list until one is turned into a task.
