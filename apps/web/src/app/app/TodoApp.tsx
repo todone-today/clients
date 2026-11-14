@@ -736,7 +736,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         ) : panel === "rewards" ? (
           lists && <Rewards />
         ) : panel === "ideas" ? (
-          lists && <Brainstorm lists={lists} add={add} update={update} />
+          lists && <Brainstorm lists={lists} add={add} update={update} ai={askAi} />
         ) : panel === "all" ? (
           lists && <AllLists lists={sorted} update={update} onOpen={open} />
         ) : panel === "bin" ? (
@@ -759,7 +759,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           />
         ) : (
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
-          <Brainstorm lists={lists} add={add} update={update} />
+          <Brainstorm lists={lists} add={add} update={update} ai={askAi} />
         )}
       </main>
     </div>

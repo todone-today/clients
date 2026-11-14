@@ -39,3 +39,10 @@ export function board(tasks: Task[], show: Show, sort: Sort, today: string, nowM
   };
   return by[sort] ? [...shown].sort(by[sort]!) : shown;
 }
+
+// Pasted lines as ideas: one per line, without list marks ("- ", "* ", "1. ", "- [ ] ").
+export const ideaLines = (text: string) =>
+  text
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*(?:[-*•]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)/, "").trim().slice(0, 500))
+    .filter(Boolean);

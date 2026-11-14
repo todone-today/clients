@@ -6916,3 +6916,27 @@ body[data-drag="task"] .listGoal {
   background: #fff8ef;
   border: 2px dashed var(--black);
 }
+
+/* Brainstorm: Ask todone above the board, a brain dump in, idea cards out. */
+.ideaAsk {
+  margin-bottom: 0.5rem;
+}
+.ideaSaid {
+  margin: 0 0 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.askSpark[data-busy] {
+  animation: sparkSpin 0.9s linear infinite;
+}
+@keyframes sparkSpin {
+  to {
+    rotate: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .askSpark[data-busy] {
+    animation: none;
+  }
+}

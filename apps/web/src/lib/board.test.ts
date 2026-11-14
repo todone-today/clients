@@ -46,3 +46,15 @@ test("Open keeps a weekly repeat a day early and a daily one done today, not a d
   const shown = board([...after, weekly, later], "open", "mine", today).map((t) => `${t.title}:${t.done}:${t.due}`);
   assert.deepEqual(shown, [`Stretch:true:${today}`, `Gym:false:${tomorrow}`]);
 });
+
+test("a pasted list becomes one idea per line, without list marks", async () => {
+  const { ideaLines } = await import("./board.ts");
+  assert.deepEqual(ideaLines("- Call Rahul\n* Buy milk\n\n1. Book flights\n- [ ] Pack\n2) Gym\n  plain line  "), [
+    "Call Rahul",
+    "Buy milk",
+    "Book flights",
+    "Pack",
+    "Gym",
+    "plain line",
+  ]);
+});

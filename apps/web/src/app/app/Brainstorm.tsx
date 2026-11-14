@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ArrowUp, Sparkles, Trash2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { ideaLines } from "@/lib/board";
+import { parsePlan } from "@todone/sdk/plan";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, moveTasks, uid } from "@todone/sdk/tasks";
+import { type List, type Task, moveTasks, todayISO, uid } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type Update = (id: string, f: (l: List) => List | null) => void;
@@ -18,24 +21,38 @@ export function ideaToTask(lists: List[], ideaId: string, listId: string, update
   const idea = board?.tasks.find((t) => t.id === ideaId);
   if (!board || !idea) return;
   update(board.id, (l) => ({ ...l, tasks: l.tasks.filter((t) => t.id !== ideaId) }));
-  update(listId, (l) => ({ ...l, tasks: [...l.tasks, { id: uid(), title: idea.title, done: false, created: Date.now(), sub: [] }] }));
+  // It keeps what it has (a time, priority, steps from Ask todone), as a fresh task.
+  const task: Task = {
+    ...idea,
+    id: uid(),
+    done: false,
+    created: Date.now(),
+    sub: idea.sub.map((x) => ({ ...x, id: uid(), done: false })),
+  };
+  update(listId, (l) => ({ ...l, tasks: [...l.tasks, task] }));
 }
 
 // A board for loose ideas. They live in the workspace's "ideas" list until one is turned into a task.
 // Cards drag onto a list (to become a task) or into the bin; double-click a card's text to edit it.
+
 export function Brainstorm({
   lists,
   add,
   update,
+  ai,
 }: {
   lists: List[];
   add: (name: string, tasks: Task[], kind: "ideas") => string;
   update: Update;
+  ai?: boolean; // Ask todone is on: a brain dump becomes idea cards
 }) {
   const board = lists.find((l) => l.kind === "ideas");
   const targets = lists.filter((l) => !l.kind);
   const ideas = board?.tasks ?? [];
   const [draft, setDraft] = useState("");
+  const [dump, setDump] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [said, setSaid] = useState("");
   const [binned, setBinned] = useState<{ before: Task[]; title: string } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   const pick = (id: string) =>
@@ -50,6 +67,41 @@ export function Brainstorm({
     return () => removeEventListener("keydown", esc);
   }, []);
   const setIdeas = (f: (ts: Task[]) => Task[]) => board && update(board.id, (l) => ({ ...l, tasks: f(l.tasks) }));
+  // New ideas go first; the board is made with the first ones.
+  const addIdeas = (more: Task[]) => {
+    if (!more.length) return;
+    if (board) setIdeas((ts) => [...more, ...ts]);
+    else add("Brainstorm", more, "ideas");
+  };
+  // Ask todone, brainstorming: whatever it would make into to-dos lands here as idea cards, to drag into lists.
+  const ask = async () => {
+    const text = dump.trim();
+    if (!text || thinking) return;
+    setThinking(true);
+    setSaid("");
+    try {
+      const r = await api<{ result: string }>("POST", "/ai/text", {
+        text,
+        context: {
+          today: todayISO(),
+          weekday: new Date().toLocaleDateString("en", { weekday: "long" }),
+          lists: targets.map((l) => l.name),
+          goals: [],
+          rewards: [],
+        },
+      });
+      const plan = parsePlan(r.result, uid, 0);
+      const found = plan.lists.flatMap((l) => l.tasks);
+      const extra = [...plan.goals.map((g) => g.title), ...plan.rewards.map((x) => x.title)];
+      addIdeas([...found, ...extra.map((title) => ({ id: uid(), title, done: false, sub: [] }))]);
+      const n = found.length + extra.length;
+      setSaid(n ? `Added ${n} ${n === 1 ? "idea" : "ideas"}. Drag them onto a list when they're ready.` : plan.questions[0] ?? "Nothing to add from that. Try it as things to do.");
+      if (n) setDump("");
+    } catch (e) {
+      setSaid(e instanceof Error ? e.message : "The AI isn't answering right now. Try again in a moment.");
+    }
+    setThinking(false);
+  };
   const [armed, setArmed] = useState(false);
   const remove = (ids: string[]) => {
     const gone = ideas.filter((t) => ids.includes(t.id));
@@ -143,15 +195,43 @@ export function Brainstorm({
           </button>
         </div>
       )}
+      {ai && (
+        <>
+          <form
+            className={`${s.askBar} ${s.ideaAsk}`}
+            data-inline
+            onSubmit={(e) => {
+              e.preventDefault();
+              ask();
+            }}
+          >
+            <Sparkles size={18} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy={thinking || undefined} />
+            <input
+              value={dump}
+              disabled={thinking}
+              onChange={(e) => setDump(e.target.value)}
+              placeholder={thinking ? "Sorting your thoughts…" : "Brain dump, in any language. todone turns it into idea cards"}
+              aria-label="Brainstorm with Ask todone"
+              maxLength={4000}
+            />
+            <button className={s.askGo} disabled={thinking || !dump.trim()} aria-label="Make ideas">
+              <ArrowUp size={18} strokeWidth={3} />
+            </button>
+          </form>
+          {said && (
+            <p className={s.ideaSaid} role="status">
+              {said}
+            </p>
+          )}
+        </>
+      )}
       <form
         className={s.add}
         onSubmit={(e) => {
           e.preventDefault();
           const t = draft.trim();
           if (!t) return;
-          const idea: Task = { id: uid(), title: t, done: false, sub: [] };
-          if (board) setIdeas((ts) => [idea, ...ts]);
-          else add("Brainstorm", [idea], "ideas");
+          addIdeas([{ id: uid(), title: t, done: false, sub: [] }]);
           setDraft("");
         }}
       >
@@ -162,7 +242,14 @@ export function Brainstorm({
           id="new-idea"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="What if…"
+          // A pasted list becomes one idea per line.
+          onPaste={(e) => {
+            const lines = ideaLines(e.clipboardData.getData("text"));
+            if (lines.length < 2) return;
+            e.preventDefault();
+            addIdeas(lines.map((title) => ({ id: uid(), title, done: false, sub: [] })));
+          }}
+          placeholder="What if… (paste a list to add many)"
           maxLength={500}
           autoComplete="off"
         />
