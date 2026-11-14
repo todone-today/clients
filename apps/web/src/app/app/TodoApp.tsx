@@ -1250,25 +1250,15 @@ function ListView({
         </div>
       </div>
       {asking && (
-        <div
-          className={s.goalAsk}
-          role="group"
-          aria-label={`Delete ${list.name}`}
-          onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setAsking(false))}
-        >
-          <span>
-            Delete “{list.name}” and {linked.length === 1 ? `its goal “${linked[0].title}”` : `its ${linked.length} goals`}?
-          </span>
-          <button autoFocus className="btn" style={{ "--fill": "var(--hot)" } as React.CSSProperties} onClick={() => removeList(true)}>
-            Delete {linked.length === 1 ? "the goal" : "the goals"} too
-          </button>
-          <button className="btn" onClick={() => removeList(false)}>
-            Keep {linked.length === 1 ? "it" : "them"}
-          </button>
-          <button className={s.ghost} onClick={() => setAsking(false)}>
-            Cancel
-          </button>
-        </div>
+        <DeleteList
+          name={list.name}
+          goals={linked.map((g) => g.title)}
+          onCancel={() => setAsking(false)}
+          onDelete={(goalsToo) => {
+            setAsking(false);
+            removeList(goalsToo);
+          }}
+        />
       )}
       <ListGoals list={list} />
 
@@ -1785,3 +1775,65 @@ const dueName = (due: string, today: string) => {
       ? `on ${d.toLocaleDateString(undefined, { weekday: "long" })}`
       : `on ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
 };
+
+// Deleting a list that has goals linked to it: a dialog, with its goals ticked to go too (untick to keep them,
+// no longer linked to a list).
+function DeleteList({
+  name,
+  goals,
+  onCancel,
+  onDelete,
+}: {
+  name: string;
+  goals: string[];
+  onCancel: () => void;
+  onDelete: (goalsToo: boolean) => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [goalsToo, setGoalsToo] = useState(true);
+  useEffect(() => {
+    if (!ref.current?.open) ref.current?.showModal();
+  }, []);
+  const one = goals.length === 1;
+  return (
+    <dialog ref={ref} className={s.disclosure} data-danger onClose={onCancel} aria-labelledby="del-list-h">
+      <h2 id="del-list-h" className="display">
+        Delete “{name}”?
+      </h2>
+      <p className={s.delNote}>
+        {one ? "A goal is linked to this list:" : `${goals.length} goals are linked to this list:`}
+      </p>
+      <ul className={s.delGoals}>
+        {goals.map((g, i) => (
+          <li key={i}>
+            <Target size={15} strokeWidth={2.5} aria-hidden /> {g}
+          </li>
+        ))}
+      </ul>
+      <label className={s.delCheck}>
+        <input type="checkbox" checked={goalsToo} onChange={(e) => setGoalsToo(e.target.checked)} />
+        <span>
+          Delete {one ? "this goal" : "these goals"} too
+          <small>
+            {goalsToo
+              ? `${one ? "It goes" : "They go"} with the list.`
+              : `${one ? "It stays" : "They stay"} in Goals, not linked to any list.`}
+          </small>
+        </span>
+      </label>
+      <div className={s.tools}>
+        <button className={s.ghost} onClick={() => ref.current?.close()}>
+          Cancel
+        </button>
+        <button
+          className="btn"
+          style={{ "--fill": "var(--hot)" } as React.CSSProperties}
+          onClick={() => onDelete(goalsToo)}
+          autoFocus
+        >
+          <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete list{goalsToo ? (one ? " and goal" : " and goals") : ""}
+        </button>
+      </div>
+    </dialog>
+  );
+}

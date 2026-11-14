@@ -6480,3 +6480,54 @@ body[data-drag="task"] .listGoal {
     animation: none;
   }
 }
+
+/* Deleting a list with goals: the goals named, and one box to keep or drop them. */
+.disclosure[data-danger] {
+  background: #fff8ef;
+  box-shadow: 8px 8px 0 var(--hot);
+}
+.delNote {
+  margin: 0.9rem 0 0.4rem;
+  font-weight: 700;
+}
+.delGoals {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.delGoals li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.3rem 0.65rem;
+  font-weight: 800;
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.delCheck {
+  display: flex;
+  gap: 0.65rem;
+  align-items: start;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  font-weight: 800;
+  background: var(--raise);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+.delCheck input {
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.1rem;
+  accent-color: var(--black);
+}
+.delCheck small {
+  display: block;
+  margin-top: 0.15rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
