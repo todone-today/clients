@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
 import { authClient } from "@/lib/auth-client";
@@ -58,6 +58,7 @@ export function AiImport({
   const [answer, setAnswer] = useState(""); // a pasted answer (Use your own AI)
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [round, setRound] = useState(0); // a new answer starts the steps again from the first
+  const [reviewing, setReviewing] = useState(false); // the results, step by step, in their own dialog
   const [made, setMade] = useState<string[]>([]); // new lists made by hand on the board
   const [said, setSaid] = useState(""); // everything asked so far, so answers to its questions have the context
   const [qs, setQs] = useState<string[]>([]); // what the AI asked back
@@ -100,6 +101,7 @@ export function AiImport({
     setRound((r) => r + 1);
     setQs(plan.questions);
     setReplies([]);
+    return more.length > 0 && !plan.questions.length && !(want.length && !shared);
   };
 
   const reset = () => {
@@ -123,6 +125,7 @@ export function AiImport({
     setErr("");
   };
   const close = () => {
+    setReviewing(false);
     dialog.current?.close();
     reset();
   };
@@ -167,7 +170,7 @@ export function AiImport({
   };
   // Each answer adds to the board, so a few asks build one plan; answering its questions makes the plan again.
   const answered = (r: { result: string; used?: number; limit?: number | null }, add = true) => {
-    suggest(r.result, add);
+    if (suggest(r.result, add)) setReviewing(true);
     setWords("");
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
@@ -179,7 +182,7 @@ export function AiImport({
     if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
       const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context(open?.open) });
-      suggest(r.result, add, open?.refs);
+      if (suggest(r.result, add, open?.refs)) setReviewing(true);
       setWords("");
       setPhase("idle");
       setUsage({ used: r.used, limit: r.limit ?? null });
@@ -313,18 +316,35 @@ export function AiImport({
       </div>
     </form>
   );
+  // The results open in their own dialog, a step at a time; from here, a button opens it again.
   const board = drafts.length > 0 && (
-    <AskSteps
-      key={round}
-      drafts={drafts}
-      onChange={setDrafts}
-      lists={lists}
-      made={made}
-      onMake={(n) => setMade((m) => [...m, n])}
-      today={today || todayISO()}
-      onAdd={save}
-      onClear={() => setDrafts([])}
-    />
+    <>
+      <button
+        type="button"
+        className={`btn ${s.reviewBtn}`}
+        style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+        onClick={() => setReviewing(true)}
+      >
+        Review {drafts.length} {drafts.length === 1 ? "suggestion" : "suggestions"} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+      </button>
+      {reviewing && (
+        <AskSteps
+          key={round}
+          drafts={drafts}
+          onChange={setDrafts}
+          lists={lists}
+          made={made}
+          onMake={(n) => setMade((m) => [...m, n])}
+          today={today || todayISO()}
+          onAdd={save}
+          onClear={() => {
+            setDrafts([]);
+            setReviewing(false);
+          }}
+          onExit={() => setReviewing(false)}
+        />
+      )}
+    </>
   );
 
   const open = () => {
