@@ -6,6 +6,7 @@ import {
   Check,
   Send,
   Copy,
+  FileDown,
   Lock,
   LockOpen,
   Paperclip,
@@ -24,6 +25,7 @@ import {
   todayISO,
 } from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
+import { fileName, save, taskMarkdown } from "@/lib/export";
 import { Note } from "@/components/Note";
 import { Select } from "@/components/Select";
 import { type Comment, Thread } from "@/components/Thread";
@@ -465,6 +467,15 @@ export function TaskPanel({
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
           {!top && <span className={s.panelHint}>A step of a task.</span>}
+          <button
+            className={`btn ${s.panelShare}`}
+            style={{ "--fill": "#fff8ef" } as React.CSSProperties}
+            onClick={() => save(fileName(task.title, "md"), "text/markdown", taskMarkdown(task, goal?.title))}
+            title="Save this task, its steps, description and notes as a Markdown file. Made on this device."
+            aria-label="Download as Markdown"
+          >
+            <FileDown size={16} strokeWidth={2.5} aria-hidden /> .md
+          </button>
           {!task.done && (
             <button
               className={`btn ${s.panelShare} ${s.panelFocus}`}

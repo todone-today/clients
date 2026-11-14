@@ -14,13 +14,13 @@ export type Place = "desk" | "fridge" | "bag";
 const C = {
   ink: 0x0b0b0b,
   body: 0x1c1c1c,
-  lime: 0xd4f04a,
-  butter: 0xf8dc85,
-  pink: 0xf2a7c6,
-  cyan: 0x45dfea,
-  peri: 0x9ba6ff,
+  lime: 0xc6ff00,
+  butter: 0xfff200,
+  pink: 0xff4fd8,
+  cyan: 0x00e5ff,
+  peri: 0xb388ff,
   cream: 0xfff8ef,
-  orange: 0xff7a3d,
+  orange: 0xff8a00,
 };
 
 // What each device's screen says. Desk and bag follow the homepage's notes once they're in (see hero-sync).
@@ -437,7 +437,7 @@ function home(place: Place) {
     pin(-0.38, 0.62, 0xe0614f);
     paper(0.24, 0.28, 0.66, 0.36, -0.1);
     pin(0.66, 0.46, 0xe0614f);
-    [0xff9a62, 0xf2a7c6, C.cyan, C.lime].forEach((c, i) =>
+    [0xff8a00, 0xff4fd8, C.cyan, C.lime].forEach((c, i) =>
       add(
         at(
           box(0.34, 0.12, 0.012 + i * 0.002, 0.015, c, 0.006),

@@ -199,14 +199,16 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   );
   const list = sorted.find((l) => l.id === picked) ?? sorted[0];
   // The sidebar's lists take ideas (they become tasks), tasks from another list (they move there),
-  // and other lists (dropped above or below to reorder). Brainstorm ("ideas") takes tasks back as ideas.
+  // other lists (dropped above or below to reorder), and goals (they're linked to that list). Brainstorm ("ideas")
+  // takes tasks back as ideas.
   const dropOnList = useDrop("sidebar", {
     accept: (p, listId) =>
       listId === "ideas"
         ? p.kind === "task"
         : p.kind === "idea" ||
           (p.kind === "task" && p.listId !== listId) ||
-          (p.kind === "list" && p.id !== listId),
+          (p.kind === "list" && p.id !== listId) ||
+          p.kind === "goal",
     where: (p, _, at) =>
       p.kind === "list" ? placeOn(at, "y", false) : "inside",
     drop: (p, listId, at) => {
@@ -230,6 +232,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         else add("Brainstorm", ideas, "ideas");
       } else if (p.kind === "idea" && lists)
         for (const id of p.ids) ideaToTask(lists, id, listId, update);
+      else if (p.kind === "goal")
+        changeGoals(lists, (xs) => xs.map((x) => (x.id === p.id && x.t === "goal" ? { ...x, list: listId } : x)));
       else if (p.kind === "task")
         moveToList(p.listId, listId, (ts) => takeTasks(ts, p.ids));
       else if (p.kind === "list") {
@@ -898,6 +902,19 @@ function ListView({
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [armed, setArmed] = useState(false);
+  // Deleting a list with goals linked to it asks whether they go too (yes by default) or stay, unlinked.
+  const [asking, setAsking] = useState(false);
+  const { lists: all } = useLists();
+  const linked = useGoalItems().items.filter((g): g is Goal => g.t === "goal" && g.list === list.id);
+  const removeList = (goalsToo: boolean) => {
+    if (linked.length)
+      changeGoals(all, (xs) =>
+        xs.flatMap((x) =>
+          x.t === "goal" && x.list === list.id ? (goalsToo ? [] : [{ ...x, list: undefined }]) : [x],
+        ),
+      );
+    update(list.id, () => null);
+  };
   const [selected, setSelected] = useState<string | null>(
     focus?.id ?? null,
   ); // the task whose editor is open
@@ -1158,7 +1175,7 @@ function ListView({
           data-bin
           data-armed={armed}
           {...binDrop("bin")}
-          onClick={() => (armed ? update(list.id, () => null) : setArmed(true))}
+          onClick={() => (!armed ? setArmed(true) : linked.length ? setAsking(true) : removeList(false))}
           onBlur={() => setArmed(false)}
           aria-label={
             armed
@@ -1232,6 +1249,27 @@ function ListView({
           <Privacy list={list} update={update} />
         </div>
       </div>
+      {asking && (
+        <div
+          className={s.goalAsk}
+          role="group"
+          aria-label={`Delete ${list.name}`}
+          onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setAsking(false))}
+        >
+          <span>
+            Delete “{list.name}” and {linked.length === 1 ? `its goal “${linked[0].title}”` : `its ${linked.length} goals`}?
+          </span>
+          <button autoFocus className="btn" style={{ "--fill": "var(--hot)" } as React.CSSProperties} onClick={() => removeList(true)}>
+            Delete {linked.length === 1 ? "the goal" : "the goals"} too
+          </button>
+          <button className="btn" onClick={() => removeList(false)}>
+            Keep {linked.length === 1 ? "it" : "them"}
+          </button>
+          <button className={s.ghost} onClick={() => setAsking(false)}>
+            Cancel
+          </button>
+        </div>
+      )}
       <ListGoals list={list} />
 
       {binned && (

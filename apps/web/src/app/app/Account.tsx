@@ -11,16 +11,8 @@ import { forget } from "@/lib/store";
 import { exportData } from "./actions";
 import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from "@/lib/vault";
 import { Billing } from "./Billing";
+import { save } from "@/lib/export";
 import s from "./app.module.css";
-
-const save = (name: string, type: string, text: string) => {
-  const a = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(new Blob([text], { type })),
-    download: name,
-  });
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
 
 export function Account() {
   const router = useRouter();

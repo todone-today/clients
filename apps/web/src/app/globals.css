@@ -8,13 +8,13 @@
   --shadow: #fff8ef;
 
   --black: #0b0b0b;
-  --lime: #d4f04a;
-  --butter: #f8dc85;
-  --pink: #f2a7c6;
-  --peri: #8fa2ff;
-  --cyan: #46e0ee;
+  --lime: #c6ff00;
+  --butter: #fff200;
+  --pink: #ff4fd8;
+  --peri: #b388ff;
+  --cyan: #00e5ff;
   --hot: #ff2e63;
-  --orange: #ff6a2b;
+  --orange: #ff8a00;
 
   --display: var(--font-display), "Arial Narrow", sans-serif;
   --sans: var(--font-sans), system-ui, sans-serif;

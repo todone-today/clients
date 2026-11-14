@@ -65,7 +65,7 @@ async function pay(o: Opened): Promise<Status | null> {
       description: o.what,
       // No `image`: Checkout uses the logo set in the Razorpay dashboard (an image from our site showed blank).
       prefill: { name: o.name, email: o.email },
-      theme: { color: "#d4f04a" },
+      theme: { color: "#c6ff00" },
       handler: (res: Record<string, string>) =>
         api<Status>("POST", "/billing/confirm", {
           payment: res.razorpay_payment_id,
