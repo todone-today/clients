@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Welcome } from "@/components/Welcome";
+import { did, readStart, writeStart } from "@/lib/start";
+import { Start } from "./Start";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -151,6 +153,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   // ?go=add or ?go=calendar: the home-screen icon's shortcuts (manifest.ts), read once like ?plan.
   const [launch] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("go")));
   const [touring, setTouring] = useState(false);
+  const [starting, setStarting] = useState(false); // the getting-started checklist
+  useEffect(() => {
+    if (userId && readStart(userId) === "on") Promise.resolve().then(() => setStarting(true));
+  }, [userId]);
   const [drawer, setDrawer] = useState(false);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
   const [slim, setSlim] = useState(false);
@@ -332,7 +338,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             position: i + 1,
           })),
         );
-        setTouring(true);
+        setStarting(true);
       });
   }, [demo]);
   // The service worker keeps the app openable offline (and shows push notifications).
@@ -382,7 +388,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
           await fetch(`/api/demo?today=${todayISO()}`).then((r) => r.json());
         reorder(demoLists.map((l) => add(l.name, l.tasks, l.kind)));
-        if (!planWant) setTouring(true);
+        writeStart(userId, "on");
+        setStarting(true);
       }
     })().catch(() => {});
   }, [demo, userId, orgId, vault, add, planWant, launch]);
@@ -433,7 +440,17 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <Welcome />
       {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <PlanPrompt />
-      {!demo && !touring && <InstallPrompt />}
+      {!demo && !touring && !starting && <InstallPrompt />}
+      {starting && !touring && (
+        <Start
+          who={userId ?? "demo"}
+          me={userId ?? undefined}
+          lists={lists}
+          panel={panel}
+          onPanel={show}
+          onEnd={() => setStarting(false)}
+        />
+      )}
       <header className={s.top}>
         <button
           className={s.menu}
@@ -1306,6 +1323,7 @@ function ListView({
               let id = uid();
               for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
               setTasks((ts) => [{ id, title: t, done: false, created: Date.now(), sub: [] }, ...ts]);
+              did("add");
               setDraft("");
             }}
           >

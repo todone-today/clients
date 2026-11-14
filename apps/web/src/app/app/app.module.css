@@ -6641,3 +6641,179 @@ body[data-drag="task"] .listGoal {
     transition: none;
   }
 }
+
+/* Getting started: a checklist card in the bottom-right corner (above the bottom tabs on phones). */
+.start,
+.startPill {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 130;
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  border: var(--key);
+  box-shadow: 6px 6px 0 var(--black);
+}
+.start {
+  display: grid;
+  gap: 0.75rem;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 1rem 1rem 0.85rem;
+  background: #fff8ef;
+  animation: startIn 0.35s var(--ease) both;
+}
+@keyframes startIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) rotate(1deg);
+  }
+}
+.start header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.start h2 {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.start header p {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.startFold {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+.startFold:hover {
+  background: var(--lime);
+}
+.start ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.start li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+  background: var(--raise);
+  border: 2px solid transparent;
+}
+.start li[data-done] .startLabel {
+  text-decoration: line-through 2px;
+  color: var(--ink-2);
+}
+.start li[data-just] {
+  border-color: var(--black);
+  background: var(--lime);
+  animation: startJust 0.5s var(--ease);
+}
+@keyframes startJust {
+  40% {
+    transform: scale(1.04) rotate(-1deg);
+  }
+}
+.startBox {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: var(--lime);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.start li[data-done] .startBox {
+  background: var(--black);
+}
+.startXp {
+  padding: 0.05rem 0.4rem;
+  font: normal 800 0.75rem var(--sans);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.startShow {
+  padding: 0.25rem 0.55rem;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+  cursor: pointer;
+}
+.startShow:hover {
+  background: var(--butter);
+}
+.startShow:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+.start footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.startSkip {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  text-decoration: underline 1.5px;
+  text-underline-offset: 0.2em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.startSkip:hover {
+  color: var(--black);
+}
+.startPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  font-weight: 800;
+  background: var(--lime);
+  cursor: pointer;
+}
+.startCount {
+  padding: 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--lime);
+  background: var(--black);
+}
+@media (max-width: 760px) {
+  .start,
+  .startPill {
+    right: 0.75rem;
+    bottom: calc(4.9rem + env(safe-area-inset-bottom));
+  }
+  .start {
+    width: calc(100vw - 1.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .start,
+  .start li[data-just] {
+    animation: none;
+  }
+}

@@ -12,6 +12,7 @@ import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, type Ask } from "./AskBar";
 import { AskSteps } from "./AskBoard";
+import { did } from "@/lib/start";
 import s from "./app.module.css";
 
 const newId = () => uid() + uid();
@@ -155,6 +156,7 @@ export function AiImport({
     };
     const extra: GoalItem[] = [...goals.map(linked), ...rewards.map((r) => ({ ...r, id: newId() }))];
     if (extra.length) changeGoals(everything, (xs) => [...xs, ...extra]);
+    did("ask");
     close();
   };
 

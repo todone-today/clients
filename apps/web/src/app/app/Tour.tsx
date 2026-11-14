@@ -12,12 +12,6 @@ type Step = { target?: string; panel: Panel; title: string; body: string; video?
 
 const STEPS: Step[] = [
   {
-    panel: null,
-    title: "Welcome to todone",
-    body: "Here's todone in two minutes, then a short tour of each part. We made you a couple of lists to play with; change or delete anything.",
-    video: true,
-  },
-  {
     target: "ask",
     panel: null,
     title: "Just tell todone",
