@@ -1300,10 +1300,12 @@ function ListView({
               e.preventDefault();
               const t = draft.trim();
               if (!t) return;
-              setTasks((ts) => [
-                ...ts,
-                { id: uid(), title: t, done: false, sub: [] },
-              ]);
+              // New tasks go first. Colours come from ids and avoid the two notes before them, so the new note gets
+              // an id whose colour differs from the top two: then no note below it changes colour.
+              const near = new Set(list.tasks.slice(0, 2).map((x) => colors.get(x.id)));
+              let id = uid();
+              for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
+              setTasks((ts) => [{ id, title: t, done: false, sub: [] }, ...ts]);
               setDraft("");
             }}
           >
