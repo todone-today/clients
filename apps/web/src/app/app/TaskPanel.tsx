@@ -974,6 +974,7 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
       const x: Extra = {
         list: lists?.find((l) => !l.kind && l.tasks.some((t) => t.id === task.id || t.sub.some((u) => u.id === task.id)))?.name,
         open: `${location.origin}/app?task=${task.id}`,
+        site: location.origin,
       };
       if (task.share) {
         const v = await shareView(task.share);
