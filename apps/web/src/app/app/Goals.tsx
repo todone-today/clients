@@ -48,10 +48,12 @@ const kindLabel = (g: Goal) =>
   g.kind === "habit"
     ? `${g.perWeek ?? 1}× a week`
     : g.kind === "target"
-      ? `Reach ${g.target ?? "?"}${g.unit ? ` ${g.unit}` : ""}`
+      ? `Reach ${g.target ?? "?"}${g.unit ? ` ${g.unit}` : ""}${g.by ? ` by ${shortDay(g.by)}` : ""}`
       : g.kind === "daily"
         ? `${g.target ?? "?"}${g.unit ? ` ${g.unit}` : ""} a day`
         : "Milestones";
+const shortDay = (iso: string) =>
+  new Date(`${iso}T00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 const daysLeft = (by: string) =>
   Math.round((+new Date(by) - +new Date(todayISO())) / 86_400_000);
 export const useMe = () => authClient.useSession().data?.user.id;
@@ -580,6 +582,21 @@ function Meter({
                 : `${fmt(Math.abs(goal.target - p.current))}${unit} to go, from ${fmt(goal.start)}${unit}`}
             </small>
           )}
+        {left !== null && p.towards < 1 && (
+          <small>
+            {left < 0
+              ? "Past the date: still worth it"
+              : left === 0
+                ? "Due today"
+                : `${left === 1 ? "Due tomorrow" : `${left} days left`}${
+                    goal.target !== undefined && p.current !== undefined
+                      ? left >= 14
+                        ? ` · about ${fmt(Math.abs(goal.target - p.current) / (left / 7))}${unit} a week`
+                        : ` · about ${fmt(Math.abs(goal.target - p.current) / left)}${unit} a day`
+                      : ""
+                  }`}
+          </small>
+        )}
       </div>
     );
   if (goal.kind === "daily") {
@@ -863,7 +880,7 @@ export function GoalDialog({
         ...g,
         title: g.title.trim(),
         // Only the fields this kind uses.
-        by: g.kind === "outcome" ? g.by : undefined,
+        by: g.kind === "outcome" || g.kind === "target" ? g.by || undefined : undefined,
         perWeek: g.kind === "habit" ? (g.perWeek ?? 3) : undefined,
         unit:
           g.kind === "target" || g.kind === "daily"
@@ -967,6 +984,10 @@ export function GoalDialog({
                     placeholder="68"
                     required
                   />
+                </label>
+                <label className={s.goalField}>
+                  <span>By when (optional)</span>
+                  <input type="date" value={g.by ?? ""} min={todayISO()} onChange={put("by")} />
                 </label>
               </div>
             ) : g.kind === "daily" ? (

@@ -1,4 +1,4 @@
-import { type Task, fmtMinutes, repeatLabel, serialize } from "@todone/sdk/tasks";
+import { type Kept, type Task, fmtMinutes, repeatLabel, serialize } from "@todone/sdk/tasks";
 
 // Hands the browser a file to save, made here: nothing goes to the server.
 export function save(name: string, type: string, text: string) {
@@ -17,6 +17,18 @@ export const fileName = (title: string, ext: string) =>
 const PRI = ["High", "Medium", "Low"];
 const when = (ms: number) => new Date(ms).toISOString().slice(0, 16).replace("T", " ");
 
+// A shared task's conversation lives on the server, not in the task: the caller fetches it (with the shared
+// attachments) and passes it in, so a download has everything the panel shows.
+export type Extra = { talk?: Kept[]; files?: Task["files"] };
+const threads = (t: Task, x: Extra) =>
+  (
+    [
+      ["Notes", t.history ?? []],
+      ["Conversation", x.talk ?? []],
+    ] as const
+  ).filter(([, ns]) => ns.length);
+const filesOf = (t: Task, x: Extra) => x.files ?? t.files ?? [];
+
 // What a task says besides its title, as short lines, shared by every format.
 function factsOf(t: Task, goal?: string) {
   return [
@@ -33,17 +45,17 @@ function factsOf(t: Task, goal?: string) {
 
 // One task as a Markdown page: its details readable at the top, then the task line in todone's own Markdown (the
 // format the CLI, Obsidian sync and import read, steps included), the description, attachment names and the notes.
-export function taskMarkdown(t: Task, goal?: string): string {
+export function taskMarkdown(t: Task, goal?: string, x: Extra = {}): string {
   const facts = factsOf(t, goal);
   const out = [`# ${t.title}`, ""];
   if (facts.length) out.push(...facts.map((f) => `- ${f}`), "");
   out.push(serialize([t]).trimEnd(), "");
   if (t.note?.trim()) out.push("## Description", "", t.note.trim(), "");
-  if (t.files?.length) out.push("## Attachments", "", ...t.files.map((f) => `- ${f.name}`), "");
-  const notes = t.history ?? [];
-  if (notes.length)
+  const files = filesOf(t, x);
+  if (files.length) out.push("## Attachments", "", ...files.map((f) => `- ${f.name}`), "");
+  for (const [head, notes] of threads(t, x))
     out.push(
-      "## Notes",
+      `## ${head}`,
       "",
       ...notes.flatMap((n) => [
         `**${n.who}**, ${when(n.at)}`,
@@ -57,15 +69,19 @@ export function taskMarkdown(t: Task, goal?: string): string {
 }
 
 // Plain text: the same page without Markdown's marks, for anywhere that shows text as it is.
-export function taskText(t: Task, goal?: string): string {
+export function taskText(t: Task, goal?: string, x: Extra = {}): string {
   const box = (x: Task) => (x.done ? "[x]" : "[ ]");
   const out = [t.title.toUpperCase(), ""];
   const facts = factsOf(t, goal);
   if (facts.length) out.push(...facts, "");
   if (t.sub.length) out.push("Steps", ...t.sub.map((x) => `${box(x)} ${x.title}`), "");
   if (t.note?.trim()) out.push("Description", t.note.trim(), "");
-  if (t.files?.length) out.push("Attachments", ...t.files.map((f) => `- ${f.name}`), "");
-  for (const n of t.history ?? []) out.push(`${n.who}, ${when(n.at)}`, ...(n.text ? [n.text] : []), ...(n.files ?? []).map((f) => `- ${f.name}`), "");
+  const files = filesOf(t, x);
+  if (files.length) out.push("Attachments", ...files.map((f) => `- ${f.name}`), "");
+  for (const [head, notes] of threads(t, x)) {
+    out.push(head.toUpperCase(), "");
+    for (const n of notes) out.push(`${n.who}, ${when(n.at)}`, ...(n.text ? [n.text] : []), ...(n.files ?? []).map((f) => `- ${f.name}`), "");
+  }
   return out.join("\n").trimEnd() + "\n";
 }
 
@@ -73,7 +89,8 @@ const esc = (x: string) => x.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 const para = (x: string) => x.trim().split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("\n");
 
 // A web page that opens anywhere, printable, with nothing loaded from outside (the text is escaped, never run).
-export function taskHtml(t: Task, goal?: string): string {
+export function taskHtml(t: Task, goal?: string, x: Extra = {}): string {
+  const files = filesOf(t, x);
   const facts = factsOf(t, goal);
   const parts = [
     `<h1>${t.done ? "✓ " : ""}${esc(t.title)}</h1>`,
@@ -82,17 +99,18 @@ export function taskHtml(t: Task, goal?: string): string {
       ? `<h2>Steps</h2><ul class="steps">${t.sub.map((x) => `<li${x.done ? ' class="done"' : ""}>${esc(x.title)}</li>`).join("")}</ul>`
       : "",
     t.note?.trim() ? `<h2>Description</h2>${para(t.note)}` : "",
-    t.files?.length ? `<h2>Attachments</h2><ul>${t.files.map((f) => `<li>${esc(f.name)}</li>`).join("")}</ul>` : "",
-    t.history?.length
-      ? `<h2>Notes</h2>${t.history
+    files.length ? `<h2>Attachments</h2><ul>${files.map((f) => `<li>${esc(f.name)}</li>`).join("")}</ul>` : "",
+    ...threads(t, x).map(
+      ([head, notes]) =>
+        `<h2>${head}</h2>${notes
           .map(
             (n) =>
               `<div class="note"><b>${esc(n.who)}</b> <small>${when(n.at)}</small>${n.text ? para(n.text) : ""}${
                 n.files?.length ? `<ul>${n.files.map((f) => `<li>${esc(f.name)}</li>`).join("")}</ul>` : ""
               }</div>`,
           )
-          .join("")}`
-      : "",
+          .join("")}`,
+    ),
   ];
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

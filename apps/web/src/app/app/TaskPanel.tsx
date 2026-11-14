@@ -25,7 +25,14 @@ import {
   todayISO,
 } from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
-import { fileName, save, taskHtml, taskMarkdown, taskText } from "@/lib/export";
+import {
+  type Extra,
+  fileName,
+  save,
+  taskHtml,
+  taskMarkdown,
+  taskText,
+} from "@/lib/export";
 import { Note } from "@/components/Note";
 import { Select } from "@/components/Select";
 import { type Comment, Thread } from "@/components/Thread";
@@ -491,7 +498,9 @@ export function TaskPanel({
           ) : (
             <button
               className={`btn ${s.panelShare}`}
-              onClick={() => (gated ? needsPlan("Sharing comes with Plus.") : setAsking(true))}
+              onClick={() =>
+                gated ? needsPlan("Sharing comes with Plus.") : setAsking(true)
+              }
               disabled={!!busy}
               title="Anyone with the link can see it, comment and add photos. No account needed."
             >
@@ -502,7 +511,13 @@ export function TaskPanel({
         </footer>
 
         {focusing && (
-          <Focus task={task} fill={fill} edit={edit} onTick={onTick} onExit={() => setFocusing(false)} />
+          <Focus
+            task={task}
+            fill={fill}
+            edit={edit}
+            onTick={onTick}
+            onExit={() => setFocusing(false)}
+          />
         )}
         {asking && (
           <Disclosure
@@ -914,20 +929,77 @@ function Notes({
 
 // Download: a menu of formats, each made on this device from the decrypted task (nothing goes to the server).
 const FORMATS = [
-  ["md", "Markdown", "For Obsidian, notes apps and importing back", "text/markdown", taskMarkdown],
-  ["html", "Web page", "Opens in any browser, ready to print", "text/html", taskHtml],
+  [
+    "md",
+    "Markdown",
+    "For Obsidian, notes apps and importing back",
+    "text/markdown",
+    taskMarkdown,
+  ],
+  [
+    "html",
+    "Web page",
+    "Opens in any browser, ready to print",
+    "text/html",
+    taskHtml,
+  ],
   ["txt", "Plain text", "Just the words", "text/plain", taskText],
-  ["json", "JSON", "Everything, for scripts and backups", "application/json", (t: Task) => JSON.stringify(t, null, 2)],
+  [
+    "json",
+    "JSON",
+    "Everything, for scripts and backups",
+    "application/json",
+    (t: Task, _goal: string | undefined, x: Extra) =>
+      JSON.stringify(
+        x.talk ? { ...t, files: x.files ?? t.files, conversation: x.talk } : t,
+        null,
+        2,
+      ),
+  ],
 ] as const;
 
 function SaveAs({ task, goal }: { task: Task; goal?: string }) {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState("");
+  const [err, setErr] = useState("");
   const wrap = useRef<HTMLDivElement>(null);
-  const items = () => [...(wrap.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ?? [])];
+  // A shared task's conversation and attachments are on the server: fetched now, so the file has what the panel shows.
+  const download = async ([ext, , , type, make]: (typeof FORMATS)[number]) => {
+    setErr("");
+    let x: Extra = {};
+    if (task.share) {
+      setBusy(ext);
+      try {
+        const v = await shareView(task.share);
+        x = {
+          files: v.task.files ?? task.files,
+          talk: v.comments.map((c) => ({
+            who: c.who,
+            at: c.at,
+            text: c.body,
+            ...(c.files.length ? { files: c.files } : {}),
+          })),
+        };
+      } catch {
+        setBusy("");
+        return setErr(
+          "Couldn't get the conversation. Check the connection and try again.",
+        );
+      }
+      setBusy("");
+    }
+    save(fileName(task.title, ext), type, make(task, goal, x));
+    setOpen(false);
+  };
+  const items = () => [
+    ...(wrap.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ??
+      []),
+  ];
   useEffect(() => {
     if (!open) return;
     items()[0]?.focus();
-    const away = (e: PointerEvent) => !wrap.current?.contains(e.target as Node) && setOpen(false);
+    const away = (e: PointerEvent) =>
+      !wrap.current?.contains(e.target as Node) && setOpen(false);
     addEventListener("pointerdown", away);
     return () => removeEventListener("pointerdown", away);
   }, [open]);
@@ -945,7 +1017,9 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
           wrap.current?.querySelector<HTMLButtonElement>("button")?.focus();
         } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
-          list[(i + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length]?.focus();
+          list[
+            (i + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length
+          ]?.focus();
         } else if (e.key === "Tab") setOpen(false);
       }}
     >
@@ -961,20 +1035,28 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
       </button>
       {open && (
         <div className={s.saveMenu} role="menu" aria-label="Download as">
-          {FORMATS.map(([ext, name, hint, type, make]) => (
-            <button
-              key={ext}
-              role="menuitem"
-              onClick={() => {
-                save(fileName(task.title, ext), type, make(task, goal));
-                setOpen(false);
-              }}
-            >
-              <b>{name}</b>
-              <i>.{ext}</i>
-              <small>{hint}</small>
-            </button>
-          ))}
+          {FORMATS.map((f) => {
+            const [ext, name, hint] = f;
+            return (
+              <button
+                key={ext}
+                role="menuitem"
+                disabled={!!busy}
+                onClick={() => download(f)}
+              >
+                <b>{name}</b>
+                <i>.{ext}</i>
+                <small>
+                  {busy === ext ? "Getting the conversation…" : hint}
+                </small>
+              </button>
+            );
+          })}
+          {err && (
+            <p className={s.saveErr} role="alert">
+              {err}
+            </p>
+          )}
         </div>
       )}
     </div>

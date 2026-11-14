@@ -1812,14 +1812,7 @@ function DeleteList({
       </ul>
       <label className={s.delCheck}>
         <input type="checkbox" checked={goalsToo} onChange={(e) => setGoalsToo(e.target.checked)} />
-        <span>
-          Delete {one ? "this goal" : "these goals"} too
-          <small>
-            {goalsToo
-              ? `${one ? "It goes" : "They go"} with the list.`
-              : `${one ? "It stays" : "They stay"} in Goals, not linked to any list.`}
-          </small>
-        </span>
+        <span>Delete {one ? "this goal" : "these goals"} too</span>
       </label>
       <div className={s.tools}>
         <button className={s.ghost} onClick={() => ref.current?.close()}>
