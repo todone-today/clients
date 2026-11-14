@@ -118,8 +118,8 @@ export function HeroBoard() {
             Done right.
           </h1>
           <p>
-            Sticky notes you drag onto a day, a calendar to plan the week, and teams to share it with. Open source, and it
-            works offline.
+            Sticky notes you drag onto a day, a calendar to plan the week, and teams to share it with. And it works
+            offline.
           </p>
           <div className={s.ctas}>
             <Link href="/app?new=1" className={`btn ${s.primary}`}>

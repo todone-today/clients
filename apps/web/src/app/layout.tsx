@@ -10,7 +10,7 @@ const mono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: { default: `${NAME} · Todos. Done right.`, template: `%s · ${NAME}` },
   description:
-    "An open-source todo app: sticky notes you drag onto a day, a calendar to plan the week, and teams to share it with. Works offline.",
+    "Sticky-note to-dos, a calendar, goals and Ask todone, which turns your day into tasks in any language. End-to-end encrypted, and it works offline.",
   // Added to an iPhone's Home Screen it opens as its own app, named todone (the icon is app/apple-icon.png).
   appleWebApp: { capable: true, title: NAME },
 };

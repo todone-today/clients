@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   Bug,
   Check,
-  GitPullRequest,
   Heart,
   Lightbulb,
   Lock,
@@ -55,16 +54,6 @@ export default function Home() {
           <Link href="/install">Get the app</Link>
         </nav>
         <div className={s.end}>
-          {/* The same sticker tiles as the app's top bar. */}
-          <a
-            href={REPO}
-            className={s.tile}
-            style={{ "--fill": "#fff8ef" } as React.CSSProperties}
-            aria-label="todone on GitHub"
-            data-tip="GitHub"
-          >
-            <GithubMark />
-          </a>
           <ThemeToggle tile={s.tile} />
           <Link href="/app" className="btn">
             Open the app
@@ -171,7 +160,7 @@ export default function Home() {
                 <b>Drag, don&apos;t type.</b> Dates and priorities are stickers.
               </li>
               <li>
-                <b>Yours alone.</b> Encrypted, open source, export any time.
+                <b>Yours alone.</b> Encrypted, private, export any time.
               </li>
               <li>
                 <b>Calm.</b> No streaks, no feed, no noise.
@@ -252,7 +241,6 @@ export default function Home() {
                   "Works offline",
                   "Installs on iPhone and Android",
                   "Google, Apple & Outlook calendars",
-                  "Open source, self-hostable",
                 ].map((t) => (
                   <li key={t} data-done>
                     {t}
@@ -384,13 +372,13 @@ export default function Home() {
           </h2>
           <div className={`${s.ways} ${s.lands}`} data-reveal="stack">
             <a
-              href={REPO}
+              href="#pricing"
               className={s.way}
               style={{ "--fill": "var(--lime)" } as React.CSSProperties}
             >
-              <GitPullRequest size={22} strokeWidth={2.5} aria-hidden />
-              <b>Contribute code</b>
-              <span>Server, web app and shared code on GitHub, GPL-3.0.</span>
+              <Heart size={22} strokeWidth={2.5} aria-hidden />
+              <b>Back todone</b>
+              <span>Plus or a founding membership funds what we build next.</span>
             </a>
             <a
               href={ISSUES}
@@ -441,7 +429,7 @@ export default function Home() {
 
       <footer className={s.foot}>
         <Logo size={22} />
-        <span>Free and open source, GPL-3.0.</span>
+        <span>Private by design. Source code on GitHub.</span>
         <nav className={s.legal} aria-label="More">
           {[
             ["/docs", "Guide"],
