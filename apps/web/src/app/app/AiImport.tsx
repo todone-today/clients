@@ -81,6 +81,10 @@ export function AiImport({
     goals: items.flatMap((i) => (i.t === "goal" ? [i.title] : [])),
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
     ...(open ? { open } : {}),
+    // The AI remembers nothing between asks: each one carries the conversation so far and any questions still
+    // waiting, so a follow-up (typed or spoken) carries on instead of starting over and asking the same again.
+    ...(said.trim() && !ideasMode.current ? { earlier: said.slice(-2000) } : {}),
+    ...(qs.length && !answeredOnce.current && !ideasMode.current ? { asked: qs } : {}),
   });
   const found = drafts.length > 0 || qs.length > 0;
   const suggest = (md: string, add: boolean, refs = shared?.refs) => {
@@ -106,9 +110,9 @@ export function AiImport({
     return (more.length > 0 || asks.length > 0) && !(want.length && !shared);
   };
 
-  const reset = () => {
+  // Stops whatever is running (a recording, a job) and clears this turn's input. The conversation stays.
+  const halt = () => {
     ideasMode.current = false;
-    answeredOnce.current = false;
     const r = rec.current;
     rec.current = null; // its onstop sees it was cancelled
     r?.stream.getTracks().forEach((t) => t.stop());
@@ -118,6 +122,13 @@ export function AiImport({
     setAnswer("");
     setWords("");
     setTranscript("");
+    setPhase("idle");
+    setErr("");
+  };
+  // Forgets the conversation: once its suggestions are added, or cleared. Closing Ask todone keeps it, so a closed
+  // dialog or an ask from the bar carries on where it was instead of starting over (and asking the same again).
+  const forget = () => {
+    answeredOnce.current = false;
     setDrafts([]);
     setMade([]);
     setSaid("");
@@ -125,13 +136,11 @@ export function AiImport({
     setReplies([]);
     setNeeds([]);
     setShared(null);
-    setPhase("idle");
-    setErr("");
   };
   const close = () => {
     setReviewing(false);
     dialog.current?.close();
-    reset();
+    halt();
   };
 
   // Lists you have get their tasks added; new ones are made. Goals go with a list you already have when the AI named
@@ -164,6 +173,7 @@ export function AiImport({
     const extra: GoalItem[] = [...goals.map(linked), ...rewards.map((r) => ({ ...r, id: newId() }))];
     if (extra.length) changeGoals(everything, (xs) => [...xs, ...extra]);
     did("ask");
+    forget();
     close();
   };
 
@@ -194,6 +204,12 @@ export function AiImport({
     close();
   };
   const answered = (r: { result: string; used?: number; limit?: number | null }, add = true) => {
+    // Spoken while its questions waited: that was the answer (the job carried them), so the plan is made again.
+    if (add && qs.length && !ideasMode.current) {
+      answeredOnce.current = true;
+      add = false;
+      setQs([]);
+    }
     land(r.result, add);
     setWords("");
     setPhase("idle");
@@ -203,10 +219,30 @@ export function AiImport({
     if (!text.trim()) return;
     setErr("");
     setPhase("thinking");
-    if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
+    // Words sent while its questions wait are the answer: the plan is made again with them, and it won't ask again.
+    const ctx = context(open?.open);
+    if (add && qs.length && !ideasMode.current) {
+      answeredOnce.current = true;
+      add = false;
+      setQs([]);
+      setSaid((x) => `${x}\nMy answers: ${text}`);
+    } else if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
-      const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context(open?.open) });
+      const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: ctx });
       land(r.result, add, open?.refs);
+      setWords("");
+      setPhase("idle");
+      setUsage({ used: r.used, limit: r.limit ?? null });
+    } catch (e) {
+      failed(e);
+    }
+  };
+  const askWith = async (text: string, add: boolean, ctx: ReturnType<typeof context>) => {
+    setErr("");
+    setPhase("thinking");
+    try {
+      const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: ctx });
+      land(r.result, add);
       setWords("");
       setPhase("idle");
       setUsage({ used: r.used, limit: r.limit ?? null });
@@ -287,11 +323,11 @@ export function AiImport({
 
   // The answers go back with everything said so far, and the new plan replaces the board.
   const answerQs = () => {
+    const answers = `You asked me:\n${qs.map((q, i) => `- ${q}\n  My answer: ${replies[i]?.trim() || "(no answer, use your judgement)"}`).join("\n")}`;
+    const ctx = context();
     answeredOnce.current = true;
-    return askText(
-      `${said}\n\nYou asked me:\n${qs.map((q, i) => `- ${q}\n  My answer: ${replies[i]?.trim() || "(no answer, use your judgement)"}`).join("\n")}`,
-      false,
-    );
+    setSaid((x) => `${x}\n${answers}`);
+    return askWith(answers, false, ctx);
   };
   const busy = phase !== "idle";
   // They said yes: those lists go along (numbered, so the answer can point at tasks), and the ask runs again.
@@ -336,8 +372,7 @@ export function AiImport({
           today={today || todayISO()}
           onAdd={save}
           onClear={() => {
-            setDrafts([]);
-            setQs([]);
+            forget();
             setReviewing(false);
           }}
           onExit={() => setReviewing(false)}
@@ -365,7 +400,7 @@ export function AiImport({
   const fromBar = useRef<(a: Ask) => void>(() => {});
   fromBar.current = (a: Ask) => {
     if (!ai) return;
-    reset();
+    halt();
     ideasMode.current = !!a.ideas;
     setTab("ask");
     open();
