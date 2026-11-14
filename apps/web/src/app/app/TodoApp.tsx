@@ -100,6 +100,8 @@ import {
   tick,
   unnest,
   waiting,
+  upcoming,
+  doneToday,
 } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
@@ -1420,14 +1422,12 @@ function ListView({
                 );
                 return gap.place === "before" ? [slot, note] : [note, slot];
               })}
-              {show === "open" && list.tasks.some((t) => waiting(t, today)) && (
+              {show === "open" && list.tasks.some((t) => waiting(t, today) && !upcoming(t, today)) && (
                 <li className={s.noMatch}>
-                  {list.tasks.filter((t) => waiting(t, today)).length} repeating
-                  task
-                  {list.tasks.filter((t) => waiting(t, today)).length === 1
-                    ? " comes"
-                    : "s come"}{" "}
-                  back on its day.{" "}
+                  {(() => {
+                    const n = list.tasks.filter((t) => waiting(t, today) && !upcoming(t, today)).length;
+                    return `${n} repeating task${n === 1 ? " comes" : "s come"} back on ${n === 1 ? "its" : "their"} day. `;
+                  })()}
                   <button className={s.link} onClick={() => setShow("all")}>
                     Show
                   </button>
@@ -1650,6 +1650,8 @@ function TaskRow({
         )}
         {/* Tasks start with no date or estimate; clicking a chip takes it off again. */}
         <span className={s.chips}>
+          {upcoming(task, today) && <i className={s.nextChip}>Up next · {dueName(task.due!, today)}</i>}
+          {doneToday(task, today) && <i className={s.nextChip}>Done for today</i>}
           {task.sub.length > 0 && (
             <button
               className={`${s.chip} ${s.fold}`}

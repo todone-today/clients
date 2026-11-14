@@ -34,3 +34,15 @@ test("a repeating task waits for its day before showing as open", () => {
   assert.equal(board(xs, "open", "mine", "2026-11-01").map((t) => t.title).join(","), "Stretch,Plan");
   assert.equal(board(xs, "all", "mine", "2026-10-31").length, 3);
 });
+
+test("Open keeps a weekly repeat a day early and a daily one done today, not a daily one early", async () => {
+  const { parse, tick, todayISO, nextDue } = await import("@todone/sdk/tasks");
+  const today = todayISO(); // "done today" is the device's day, so the test runs on it
+  const tomorrow = nextDue(today, "every day");
+  const [daily] = parse(`- [ ] Stretch 🔁 every day 📅 ${today}\n`);
+  const [weekly] = parse(`- [ ] Gym 🔁 every week 📅 ${tomorrow}\n`);
+  const [later] = parse(`- [ ] Rent 🔁 every month 📅 ${nextDue(nextDue(today, "every week"), "every week")}\n`);
+  const after = tick([daily], daily.id, today); // done today + tomorrow's copy
+  const shown = board([...after, weekly, later], "open", "mine", today).map((t) => `${t.title}:${t.done}:${t.due}`);
+  assert.deepEqual(shown, [`Stretch:true:${today}`, `Gym:false:${tomorrow}`]);
+});

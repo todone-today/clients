@@ -1,4 +1,4 @@
-import { type Task, lateBy, waiting } from "@todone/sdk/tasks";
+import { type Task, doneToday, lateBy, upcoming, waiting } from "@todone/sdk/tasks";
 
 // Filtering and sorting the board. A note counts for a filter if it or one of its steps does.
 export type Show = "all" | "open" | "done" | "today" | "late" | "undated";
@@ -21,7 +21,8 @@ export const SORTS: [Sort, string][] = [
 export function board(tasks: Task[], show: Show, sort: Sort, today: string, nowMin = 0): Task[] {
   const is: Record<Show, (t: Task) => boolean> = {
     all: () => true,
-    open: (t) => !t.done && !waiting(t, today),
+    // Open also keeps a repeat that's close (faded, "up next") and one finished today ("done for today").
+    open: (t) => (!t.done && (!waiting(t, today) || upcoming(t, today))) || doneToday(t, today),
     done: (t) => t.done,
     today: (t) => !t.done && t.due === today,
     late: (t) => lateBy(t, today, nowMin) !== null,

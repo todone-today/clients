@@ -6907,3 +6907,12 @@ body[data-drag="task"] .listGoal {
     animation: none;
   }
 }
+
+/* A repeat shown early ("Up next · tomorrow") or finished today ("Done for today"). */
+.nextChip {
+  padding: 0.1rem 0.45rem;
+  font: normal 800 0.75rem var(--sans);
+  color: var(--black);
+  background: #fff8ef;
+  border: 2px dashed var(--black);
+}
