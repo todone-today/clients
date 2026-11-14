@@ -35,3 +35,13 @@ test("file names stay legal", () => {
   assert.equal(fileName('Buy: milk / eggs?', "md"), "Buy milk eggs.md");
   assert.equal(fileName("  ", "md"), "task.md");
 });
+
+test("the web page escapes what people typed", async () => {
+  const { taskHtml, taskText } = await import("./export.ts");
+  const t = { id: "a", title: "<script>alert(1)</script>", done: false, note: "a & b", sub: [{ id: "b", title: "step", done: true, sub: [] }] };
+  const html = taskHtml(t);
+  assert.ok(!html.includes("<script>alert"));
+  assert.match(html, /&lt;script&gt;/);
+  assert.match(html, /a &amp; b/);
+  assert.match(taskText(t), /\[x\] step/);
+});

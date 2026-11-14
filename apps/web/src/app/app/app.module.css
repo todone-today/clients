@@ -6413,3 +6413,70 @@ body[data-drag="task"] .listGoal {
   font-weight: 700;
   color: var(--ink-2);
 }
+
+/* Download, in the task panel's header: a sticker menu of formats under the button. */
+.saveAs {
+  position: relative;
+  flex: none;
+}
+.saveMenu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  width: min(19rem, 80vw);
+  padding: 0.35rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: 5px 5px 0 var(--black);
+  animation: saveIn 0.16s var(--ease) both;
+  transform-origin: top right;
+}
+@keyframes saveIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+.saveMenu button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 0.6rem;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.saveMenu b {
+  font-weight: 800;
+}
+.saveMenu i {
+  justify-self: end;
+  padding: 0 0.35rem;
+  font: normal 800 0.75rem var(--sans);
+  background: var(--fill, var(--lime));
+  border: 2px solid var(--black);
+}
+.saveMenu small {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  color: #4a4540;
+}
+.saveMenu button:hover,
+.saveMenu button:focus-visible {
+  outline: none;
+  background: var(--lime);
+}
+.saveMenu button:hover small,
+.saveMenu button:focus-visible small {
+  color: var(--black);
+}
+@media (prefers-reduced-motion: reduce) {
+  .saveMenu {
+    animation: none;
+  }
+}

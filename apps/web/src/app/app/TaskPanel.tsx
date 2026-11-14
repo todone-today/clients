@@ -6,7 +6,7 @@ import {
   Check,
   Send,
   Copy,
-  FileDown,
+  Download,
   Lock,
   LockOpen,
   Paperclip,
@@ -25,7 +25,7 @@ import {
   todayISO,
 } from "@todone/sdk/tasks";
 import { Media } from "@/components/Media";
-import { fileName, save, taskMarkdown } from "@/lib/export";
+import { fileName, save, taskHtml, taskMarkdown, taskText } from "@/lib/export";
 import { Note } from "@/components/Note";
 import { Select } from "@/components/Select";
 import { type Comment, Thread } from "@/components/Thread";
@@ -196,6 +196,7 @@ export function TaskPanel({
               if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
             }}
           />
+          <SaveAs task={task} goal={goal?.title} />
           <button className={s.panelClose} onClick={onClose} aria-label="Close">
             <X size={20} strokeWidth={2.75} />
           </button>
@@ -467,15 +468,6 @@ export function TaskPanel({
             <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
           </button>
           {!top && <span className={s.panelHint}>A step of a task.</span>}
-          <button
-            className={`btn ${s.panelShare}`}
-            style={{ "--fill": "#fff8ef" } as React.CSSProperties}
-            onClick={() => save(fileName(task.title, "md"), "text/markdown", taskMarkdown(task, goal?.title))}
-            title="Save this task, its steps, description and notes as a Markdown file. Made on this device."
-            aria-label="Download as Markdown"
-          >
-            <FileDown size={16} strokeWidth={2.5} aria-hidden /> .md
-          </button>
           {!task.done && (
             <button
               className={`btn ${s.panelShare} ${s.panelFocus}`}
@@ -917,5 +909,74 @@ function Notes({
         )}
       </form>
     </section>
+  );
+}
+
+// Download: a menu of formats, each made on this device from the decrypted task (nothing goes to the server).
+const FORMATS = [
+  ["md", "Markdown", "For Obsidian, notes apps and importing back", "text/markdown", taskMarkdown],
+  ["html", "Web page", "Opens in any browser, ready to print", "text/html", taskHtml],
+  ["txt", "Plain text", "Just the words", "text/plain", taskText],
+  ["json", "JSON", "Everything, for scripts and backups", "application/json", (t: Task) => JSON.stringify(t, null, 2)],
+] as const;
+
+function SaveAs({ task, goal }: { task: Task; goal?: string }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const items = () => [...(wrap.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ?? [])];
+  useEffect(() => {
+    if (!open) return;
+    items()[0]?.focus();
+    const away = (e: PointerEvent) => !wrap.current?.contains(e.target as Node) && setOpen(false);
+    addEventListener("pointerdown", away);
+    return () => removeEventListener("pointerdown", away);
+  }, [open]);
+  return (
+    <div
+      ref={wrap}
+      className={s.saveAs}
+      onKeyDown={(e) => {
+        if (!open) return;
+        const list = items();
+        const i = list.indexOf(document.activeElement as HTMLButtonElement);
+        if (e.key === "Escape") {
+          e.stopPropagation(); // closes the menu, not the panel
+          setOpen(false);
+          wrap.current?.querySelector<HTMLButtonElement>("button")?.focus();
+        } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          list[(i + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length]?.focus();
+        } else if (e.key === "Tab") setOpen(false);
+      }}
+    >
+      <button
+        className={s.panelClose}
+        aria-label="Download"
+        title="Download this task"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Download size={19} strokeWidth={2.75} />
+      </button>
+      {open && (
+        <div className={s.saveMenu} role="menu" aria-label="Download as">
+          {FORMATS.map(([ext, name, hint, type, make]) => (
+            <button
+              key={ext}
+              role="menuitem"
+              onClick={() => {
+                save(fileName(task.title, ext), type, make(task, goal));
+                setOpen(false);
+              }}
+            >
+              <b>{name}</b>
+              <i>.{ext}</i>
+              <small>{hint}</small>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
