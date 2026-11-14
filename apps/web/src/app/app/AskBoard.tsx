@@ -1,10 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Gift, Plus, Target, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Gift, Plus, Target, X } from "lucide-react";
 import { Select } from "@/components/Select";
 import { draggable, useDrop } from "@/lib/drag";
-import { BIN, GOALS, REWARDS, type Draft, changeLabel, drop, newLists, newName, newPlace, rename, titleOf } from "@/lib/askBoard";
+import {
+  BIN,
+  GOALS,
+  REWARDS,
+  type Draft,
+  type Step,
+  changeLabel,
+  commit,
+  drop,
+  mergeStep,
+  newLists,
+  newName,
+  newPlace,
+  rename,
+  stepAt,
+  stepsOf,
+  titleOf,
+} from "@/lib/askBoard";
 import { type List, relDue } from "@todone/sdk/tasks";
 import { ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import s from "./app.module.css";
@@ -256,6 +273,172 @@ export function AskBoard({
         ))}
       </ul>
 
+    </div>
+  );
+}
+
+const STEP_NAME: Record<Step, string> = { task: "To-dos", change: "Changes", goal: "Goals", reward: "Rewards", review: "Review" };
+const STEP_HINT: Record<Step, string> = {
+  task: "Check where each one goes. Move with “Move to” or drag; double-click to rename.",
+  change: "What would change in your lists. × leaves one out.",
+  goal: "Goals to work towards. Move one to a list to make it a task instead.",
+  reward: "Treats to spend XP on.",
+  review: "Everything that will be added. Go back to change anything.",
+};
+
+// The results, one kind at a time: to-dos, changes, goals, rewards, then a review with Add. Back and Next move
+// through them; the strip on top jumps to any step and shows what's done.
+export function AskSteps({
+  drafts,
+  onChange,
+  lists,
+  made,
+  onMake,
+  today,
+  onAdd,
+  onClear,
+}: {
+  drafts: Draft[];
+  onChange: (ds: Draft[]) => void;
+  lists: List[];
+  made: string[];
+  onMake: (name: string) => void;
+  today: string;
+  onAdd: () => void;
+  onClear: () => void;
+}) {
+  const [want, setWant] = useState<Step>("task");
+  const steps = stepsOf(drafts);
+  const step = stepAt(drafts, want);
+  const at = steps.indexOf(step);
+  const go = (s: Step) => setWant(s);
+  const shown = step === "review" ? [] : drafts.filter((d) => d.kind === step);
+  const homeless = drafts.filter((d) => d.place === null);
+  const ready = drafts.length - homeless.length;
+  const changes = drafts.some((d) => d.kind === "change");
+  const add = changes ? `Apply ${ready}` : `Add ${ready} ${ready === 1 ? "thing" : "things"}`;
+
+  return (
+    <div className={s.askSteps}>
+      <ol className={s.askStrip} aria-label="Steps">
+        {steps.map((k, i) => {
+          const n = k === "review" ? ready : drafts.filter((d) => d.kind === k).length;
+          return (
+            <li key={k}>
+              <button
+                type="button"
+                aria-current={k === step ? "step" : undefined}
+                data-done={i < at || undefined}
+                onClick={() => go(k)}
+              >
+                <span className={s.askStepNo} aria-hidden>
+                  {i < at ? <Check size={13} strokeWidth={3.5} /> : i + 1}
+                </span>
+                {STEP_NAME[k]}
+                {k !== "review" && <span className={s.askCount}>{n}</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <p className={s.askHint}>{STEP_HINT[step]}</p>
+
+      {step === "review" ? (
+        <Review drafts={drafts} lists={lists} onFix={() => go(homeless[0]?.kind ?? "task")} />
+      ) : (
+        <AskBoard
+          drafts={shown}
+          onChange={(next) => onChange(mergeStep(drafts, shown, next))}
+          lists={lists}
+          made={made}
+          onMake={onMake}
+          today={today}
+        />
+      )}
+
+      <div className={s.askFoot}>
+        <button type="button" className={s.ghost} onClick={onClear}>
+          Clear
+        </button>
+        <span className={s.aiMeter}>
+          Step {at + 1} of {steps.length}
+        </span>
+        {at > 0 && (
+          <button type="button" className="btn" style={{ "--fill": "#fff8ef" } as React.CSSProperties} onClick={() => go(steps[at - 1])}>
+            <ArrowLeft size={16} strokeWidth={2.75} aria-hidden /> Back
+          </button>
+        )}
+        {step === "review" ? (
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={onAdd}>
+            <Check size={16} strokeWidth={3} aria-hidden /> {add}
+          </button>
+        ) : (
+          <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={() => go(steps[at + 1])}>
+            Next: {STEP_NAME[steps[at + 1]]} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// The last step: what goes where, as stickers per place, and anything still without a list.
+function Review({ drafts, lists, onFix }: { drafts: Draft[]; lists: List[]; onFix: () => void }) {
+  const { groups, goals, rewards, changes } = commit(drafts);
+  const homeless = drafts.filter((d) => d.place === null);
+  const rows: { key: string; head: React.ReactNode; fill: string; items: string[]; dashed?: boolean }[] = [
+    ...groups.map((g) => {
+      const l = g.listId ? lists.find((x) => x.id === g.listId) : undefined;
+      return {
+        key: g.listId ?? `new:${g.name}`,
+        head: l ? (
+          <>
+            <ListIcon id={l.id} name={l.name} icon={l.icon} /> {l.name}
+          </>
+        ) : (
+          <>{g.name} · new list</>
+        ),
+        fill: l ? listColor(l.id) : NOTES[noteColor(g.name ?? "")],
+        items: g.tasks.map((t) => t.title),
+        dashed: !l,
+      };
+    }),
+    ...(changes.length
+      ? [{ key: "changes", head: <>Changes</>, fill: "#fff8ef", items: changes.map((c) => `${changeLabel(c.change)}: ${c.task.title}`) }]
+      : []),
+    ...(goals.length
+      ? [{ key: "goals", head: <><Target size={14} strokeWidth={2.5} aria-hidden /> Goals</>, fill: "var(--lime)", items: goals.map((g) => g.title) }]
+      : []),
+    ...(rewards.length
+      ? [{ key: "rewards", head: <><Gift size={14} strokeWidth={2.5} aria-hidden /> Rewards</>, fill: "var(--pink)", items: rewards.map((r) => `${r.title} · ${r.cost} XP`) }]
+      : []),
+  ];
+  return (
+    <div className={s.askReview}>
+      {homeless.length > 0 && (
+        <p className={s.askFix} role="alert">
+          {homeless.length === 1 ? "1 to-do needs" : `${homeless.length} to-dos need`} a list, so{" "}
+          {homeless.length === 1 ? "it won't" : "they won't"} be added.{" "}
+          <button type="button" onClick={onFix}>
+            Choose a list
+          </button>
+        </p>
+      )}
+      <ul className={s.askLanes}>
+        {rows.map((r) => (
+          <li key={r.key} className={s.askTile} data-new={r.dashed || undefined} style={{ "--fill": r.fill } as React.CSSProperties}>
+            <span className={s.askTileHead}>
+              {r.head}
+              <span className={s.askCount}>{r.items.length}</span>
+            </span>
+            <ul className={s.askSum}>
+              {r.items.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

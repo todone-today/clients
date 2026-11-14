@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
-import { type Draft, applyChanges, commit, fromChanges, fromPlan, placed } from "@/lib/askBoard";
+import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
 import { authClient } from "@/lib/auth-client";
 import { toBin, update, useLists } from "@/lib/store";
 import { type GoalItem } from "@todone/sdk/goals";
@@ -11,7 +11,7 @@ import { numbered, parsePlan, planPrompt, type OpenList, type PlanGoal } from "@
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, type Ask } from "./AskBar";
-import { AskBoard } from "./AskBoard";
+import { AskSteps } from "./AskBoard";
 import s from "./app.module.css";
 
 const newId = () => uid() + uid();
@@ -56,6 +56,7 @@ export function AiImport({
   const [usage, setUsage] = useState<{ used: number; limit: number | null } | null>(null);
   const [answer, setAnswer] = useState(""); // a pasted answer (Use your own AI)
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [round, setRound] = useState(0); // a new answer starts the steps again from the first
   const [made, setMade] = useState<string[]>([]); // new lists made by hand on the board
   const [said, setSaid] = useState(""); // everything asked so far, so answers to its questions have the context
   const [qs, setQs] = useState<string[]>([]); // what the AI asked back
@@ -80,7 +81,6 @@ export function AiImport({
     ...(open ? { open } : {}),
   });
   const found = drafts.length > 0 || qs.length > 0;
-  const ready = placed(drafts);
   const suggest = (md: string, add: boolean, refs = shared?.refs) => {
     // Goals get their real "created" when added; tasks the AI left without a list go with the open list.
     const plan = parsePlan(md, newId, 0);
@@ -96,6 +96,7 @@ export function AiImport({
       ...(refs ? fromChanges(plan.changes, refs, (everything ?? []).filter((l) => !l.kind)) : []),
     ];
     setDrafts((ds) => (add ? [...ds, ...more] : more));
+    setRound((r) => r + 1);
     setQs(plan.questions);
     setReplies([]);
   };
@@ -262,7 +263,6 @@ export function AiImport({
       false,
     );
   const busy = phase !== "idle";
-  const changeCount = drafts.filter((d) => d.kind === "change").length;
   // They said yes: those lists go along (numbered, so the answer can point at tasks), and the ask runs again.
   const share = () => {
     let n = 1;
@@ -312,27 +312,17 @@ export function AiImport({
     </form>
   );
   const board = drafts.length > 0 && (
-    <>
-      <AskBoard
-        drafts={drafts}
-        onChange={setDrafts}
-        lists={lists}
-        made={made}
-        onMake={(n) => setMade((m) => [...m, n])}
-        today={today || todayISO()}
-      />
-      <div className={s.askFoot}>
-        <span className={s.aiMeter}>
-          {drafts.length - ready ? `${drafts.length - ready} need a list · ` : ""}Move with “Move to” or drag · double-click to rename
-        </span>
-        <button className={s.ghost} onClick={() => setDrafts([])}>
-          Clear
-        </button>
-        <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={save}>
-          {changeCount ? `Apply ${ready}` : `Add ${ready || ""} ${ready === 1 ? "thing" : "things"}`}
-        </button>
-      </div>
-    </>
+    <AskSteps
+      key={round}
+      drafts={drafts}
+      onChange={setDrafts}
+      lists={lists}
+      made={made}
+      onMake={(n) => setMade((m) => [...m, n])}
+      today={today || todayISO()}
+      onAdd={save}
+      onClear={() => setDrafts([])}
+    />
   );
 
   const open = () => {

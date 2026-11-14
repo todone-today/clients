@@ -157,3 +157,22 @@ export function changeLabel(c: Change) {
 }
 
 export const placed = (ds: Draft[]) => ds.filter((d) => d.place !== null).length;
+
+// Ask todone's results, one kind at a time: to-dos, changes, goals, rewards (only the kinds there are), then a review.
+export const STEPS = ["task", "change", "goal", "reward"] as const;
+export type Step = (typeof STEPS)[number] | "review";
+export const stepsOf = (ds: Draft[]): Step[] => [...STEPS.filter((k) => ds.some((d) => d.kind === k)), "review"];
+// The step to show: the one asked for while it still has something, else the next one that does.
+export function stepAt(ds: Draft[], want: Step): Step {
+  const steps = stepsOf(ds);
+  if (steps.includes(want)) return want;
+  const order: Step[] = [...STEPS, "review"];
+  return steps.find((s) => order.indexOf(s) > order.indexOf(want)) ?? "review";
+}
+// A step edits only its own stickers: put its new version back in place. A sticker moved to another kind (a to-do
+// dropped on Goals) keeps its spot and shows up in that kind's step; one left out is gone.
+export function mergeStep(all: Draft[], shown: Draft[], next: Draft[]): Draft[] {
+  const was = new Set(shown.map((d) => d.id));
+  const now = new Map(next.map((d) => [d.id, d]));
+  return all.flatMap((d) => (was.has(d.id) ? (now.has(d.id) ? [now.get(d.id)!] : []) : [d]));
+}

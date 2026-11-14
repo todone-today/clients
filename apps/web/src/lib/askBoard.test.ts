@@ -96,3 +96,16 @@ test("changes: drafts on the numbered tasks; applied, done ticks (a repeat comes
   assert.deepEqual([r.tasks.find((t) => t.id === "t4")?.title, r.tasks.find((t) => t.id === "t4")?.pri], ["Typo title", 1]);
   assert.equal(changeLabel(cs[3]), "Rename to “Typo title” · High priority");
 });
+
+test("steps: only the kinds there are, then review; a step's edits go back in place", async () => {
+  const { stepsOf, stepAt, mergeStep } = await import("./askBoard.ts");
+  const t = (id: string) => ({ id, kind: "task" as const, task: { id, title: id, done: false, sub: [] }, place: "l1", ai: "l1" });
+  const r = { id: "r", kind: "reward" as const, reward: { t: "reward" as const, id: "r", title: "Movie", cost: 150 }, place: "rewards", ai: "rewards" };
+  const all = [t("a"), r, t("b")];
+  assert.deepEqual(stepsOf(all), ["task", "reward", "review"]);
+  assert.equal(stepAt(all, "goal"), "reward"); // no goals: the next step that has something
+  assert.equal(stepAt([r], "task"), "reward");
+  const shown = all.filter((d) => d.kind === "task");
+  const edited = [{ ...t("b"), place: "l2" }]; // "a" left out, "b" moved
+  assert.deepEqual(mergeStep(all, shown, edited).map((d) => d.id + ":" + d.place), ["r:rewards", "b:l2"]);
+});
