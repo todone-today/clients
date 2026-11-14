@@ -86,6 +86,8 @@ export function AiImport({
   const suggest = (md: string, add: boolean, refs = shared?.refs) => {
     // Goals get their real "created" when added; tasks the AI left without a list go with the open list.
     const plan = parsePlan(md, newId, 0);
+    // One round of questions: once they're answered (or skipped), it goes on with what it has, never asks again.
+    const asks = answeredOnce.current ? [] : plan.questions;
     // It needs to read lists first: ask (see Consent), unless they're already shared.
     const want = lists.filter((l) => plan.needs.some((n) => n.toLowerCase() === l.name.toLowerCase()));
     if (want.length && !shared) setNeeds(want);
@@ -99,13 +101,14 @@ export function AiImport({
     ];
     setDrafts((ds) => (add ? [...ds, ...more] : more));
     setRound((r) => r + 1);
-    setQs(plan.questions);
+    setQs(asks);
     setReplies([]);
-    return (more.length > 0 || plan.questions.length > 0) && !(want.length && !shared);
+    return (more.length > 0 || asks.length > 0) && !(want.length && !shared);
   };
 
   const reset = () => {
     ideasMode.current = false;
+    answeredOnce.current = false;
     const r = rec.current;
     rec.current = null; // its onstop sees it was cancelled
     r?.stream.getTracks().forEach((t) => t.stop());
@@ -173,6 +176,7 @@ export function AiImport({
   // Asked from Brainstorm: everything it found goes there as idea cards, and the dialog closes. Otherwise the
   // results open as steps to review.
   const ideasMode = useRef(false);
+  const answeredOnce = useRef(false);
   const land = (md: string, add: boolean, refs?: Record<number, string>) => {
     if (!ideasMode.current) {
       if (suggest(md, add, refs)) setReviewing(true);
@@ -282,11 +286,13 @@ export function AiImport({
   }, [secs]);
 
   // The answers go back with everything said so far, and the new plan replaces the board.
-  const answerQs = () =>
-    askText(
+  const answerQs = () => {
+    answeredOnce.current = true;
+    return askText(
       `${said}\n\nYou asked me:\n${qs.map((q, i) => `- ${q}\n  My answer: ${replies[i]?.trim() || "(no answer, use your judgement)"}`).join("\n")}`,
       false,
     );
+  };
   const busy = phase !== "idle";
   // They said yes: those lists go along (numbered, so the answer can point at tasks), and the ask runs again.
   const share = () => {
@@ -339,7 +345,10 @@ export function AiImport({
           replies={replies}
           onReply={(i, v) => setReplies((r) => Object.assign([...r], { [i]: v }))}
           onAnswer={answerQs}
-          onSkip={() => setQs([])}
+          onSkip={() => {
+            answeredOnce.current = true;
+            setQs([]);
+          }}
           busy={busy}
         />
       )}

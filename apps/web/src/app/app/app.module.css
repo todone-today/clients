@@ -6543,10 +6543,6 @@ body[data-drag="task"] .listGoal {
 }
 
 /* Ask todone's results, step by step: a strip of steps, a hint, the step's stickers, Back / Next. */
-.askSteps {
-  display: grid;
-  gap: 0.9rem;
-}
 .askStrip {
   display: flex;
   flex-wrap: wrap;
@@ -7207,4 +7203,18 @@ input.askRowTitle:focus-visible {
   .askDialog[open] {
     animation: none;
   }
+}
+
+.askRow .askFold {
+  width: fit-content;
+  padding: 0.1rem 0.25rem;
+  color: var(--black);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.askRow .askSteps {
+  padding-left: 1.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }

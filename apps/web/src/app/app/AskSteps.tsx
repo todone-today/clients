@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Gift, Plus, Sparkles, Target, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Gift, Plus, Sparkles, Target, X } from "lucide-react";
 import { Select } from "@/components/Select";
 import {
   type Draft,
@@ -228,6 +228,7 @@ function Row({
 }) {
   const [naming, setNaming] = useState(false);
   const [title, setTitle] = useState(titleOf(d));
+  const [unfolded, setUnfolded] = useState(false);
   const fresh = newLists(drafts, made, lists);
   const places = [
     ...(d.place ? [] : [{ value: NONE, label: "Choose a list…" }]),
@@ -237,7 +238,8 @@ function Row({
   ];
   const chips = d.kind === "change" ? [] : meta(d, today);
   const why = d.kind === "task" ? d.task.note : d.kind === "change" ? d.change.why : undefined;
-  const steps = d.kind === "task" ? d.task.sub.length : 0;
+  const subs = d.kind === "task" ? d.task.sub : [];
+  const steps = subs.length;
   return (
     <li className={s.askRow} data-off={d.off || undefined} data-kind={d.kind}>
       <button
@@ -272,8 +274,23 @@ function Row({
             {chips.map((c) => (
               <i key={c}>{c}</i>
             ))}
-            {steps > 0 && <i>{steps === 1 ? "1 step" : `${steps} steps`}</i>}
           </span>
+        )}
+        {/* The smaller steps the AI broke it into: they come along as the task's steps. */}
+        {steps > 0 && (
+          <button type="button" className={s.askFold} aria-expanded={unfolded} onClick={() => setUnfolded((u) => !u)}>
+            <ChevronRight size={12} strokeWidth={3} aria-hidden /> {steps === 1 ? "1 step inside" : `${steps} steps inside`}
+          </button>
+        )}
+        {unfolded && (
+          <ul className={s.askSteps} aria-label="Steps">
+            {subs.map((x) => (
+              <li key={x.id}>
+                {x.title}
+                {x.est ? <small> · {x.est >= 60 ? `${Math.floor(x.est / 60)}h${x.est % 60 ? ` ${x.est % 60}m` : ""}` : `${x.est}m`}</small> : null}
+              </li>
+            ))}
+          </ul>
         )}
         {why && <p className={s.askRowWhy}>{why}</p>}
       </div>
