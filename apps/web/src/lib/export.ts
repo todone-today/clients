@@ -129,6 +129,10 @@ function fileHtml(f: FileRef, x: Extra) {
   return `<p class="file">${cap} · ${where.startsWith("http") ? link(where) : where.replace(/(https?:\/\/\S+)/, (u) => link(u))}</p>`;
 }
 
+// Sticky-note colours, as in the app: each person's messages keep one, so a conversation reads at a glance.
+const FILLS = ["#ffe066", "#ff90b3", "#70c1b3", "#b892ff", "#ffbe86", "#00afb9", "#f07167", "#d4f04a"];
+const fillOf = (who: string) => FILLS[[...who].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % FILLS.length];
+
 // A web page that opens anywhere, printable, in todone's own look (sticker cards, ink keylines, hard shadows), with its
 // pictures and files inside it. Fonts come from Google Fonts when online and fall back to the system's otherwise;
 // the text is escaped, never run. The footer tells whoever gets the file what todone is.
@@ -147,14 +151,14 @@ export function taskHtml(t: Task, goal?: string, x: Extra = {}): string {
     t.sub.length
       ? `<h2>Steps</h2><ul class="card steps">${t.sub.map((s) => `<li${s.done ? ' class="done"' : ""}><span class="box">${s.done ? "✓" : ""}</span>${esc(s.title)}</li>`).join("")}</ul>`
       : "",
-    t.note?.trim() ? `<h2>Description</h2><section class="card text">${para(t.note)}</section>` : "",
+    t.note?.trim() ? `<h2>Description</h2><section class="card text" style="background:var(--butter)">${para(t.note)}</section>` : "",
     files.length ? `<h2>Attachments</h2><section class="card files">${files.map((f) => fileHtml(f, x)).join("")}</section>` : "",
     ...threads(t, x).map(
       ([head, notes]) =>
         `<h2>${head}</h2>${notes
           .map(
             (n) =>
-              `<article class="card note"><p class="who"><b>${esc(n.who)}</b> <small>${when(n.at)}</small></p>${n.text ? para(n.text) : ""}${(n.files ?? [])
+              `<article class="card note" style="background:${fillOf(n.who)}"><p class="who"><b>${esc(n.who)}</b> <small>${when(n.at)}</small></p>${n.text ? para(n.text) : ""}${(n.files ?? [])
                 .map((f) => fileHtml(f, x))
                 .join("")}</article>`,
           )
@@ -182,9 +186,9 @@ body{max-width:46rem;margin:0 auto;padding:2rem 1.25rem 3rem;font:16px/1.55 var(
 .facts dl{margin:0}.facts div{display:grid;grid-template-columns:8.5rem 1fr;gap:.75rem;padding:.55rem 0;border-bottom:1.5px dashed #0b0b0b33}.facts div:last-child{border:0}
 dt{font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:.15rem}dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 h2{margin:2.2rem 0 .7rem;font:900 1.6rem/1 var(--display);text-transform:uppercase}
-.steps{margin:0;padding:.4rem 1rem;list-style:none}.steps li{display:flex;gap:.65rem;align-items:center;padding:.45rem 0;font-weight:700}.steps .box{width:1.25rem;height:1.25rem;margin:0;font-size:.8rem}.steps .done{color:var(--muted);text-decoration:line-through 2px}
+.steps{margin:0;padding:.4rem 1rem;list-style:none;background:var(--pink)}.steps li{display:flex;gap:.65rem;align-items:center;padding:.45rem 0;font-weight:700}.steps .box{width:1.25rem;height:1.25rem;margin:0;font-size:.8rem}.steps .done{color:var(--muted);text-decoration:line-through 2px}
 .text,.files{padding:.4rem 1.1rem}
-.note{margin:0 0 .9rem;padding:.8rem 1.1rem;background:var(--cream);box-shadow:4px 4px 0 var(--ink)}.note:nth-of-type(even){rotate:.3deg}.who{margin:0}small{color:var(--muted);font-weight:600}
+.note{margin:0 0 .9rem;padding:.8rem 1.1rem;box-shadow:4px 4px 0 var(--ink);rotate:-.3deg}.note:nth-of-type(even){rotate:.35deg}.who{margin:0}small{color:var(--muted);font-weight:600}.note small,.text small{color:#3d3832}
 figure{margin:.8rem 0}img{display:block;max-width:100%;height:auto;border:2.5px solid var(--ink)}figcaption{margin-top:.35rem;font-size:.85rem;font-weight:700}
 .file{font-size:.95rem;font-weight:600}a{color:inherit;text-decoration-thickness:2px;text-underline-offset:.2em}
 .cta{margin-top:3rem;padding:1.5rem 1.4rem;color:var(--cream);background:var(--ink);box-shadow:6px 6px 0 var(--lime)}
