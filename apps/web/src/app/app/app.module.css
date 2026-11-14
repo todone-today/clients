@@ -6917,10 +6917,7 @@ body[data-drag="task"] .listGoal {
   border: 2px dashed var(--black);
 }
 
-/* Brainstorm: Ask todone above the board, a brain dump in, idea cards out. */
-.ideaAsk {
-  margin-bottom: 0.5rem;
-}
+/* Brainstorm: what Ask todone added, as a line above the board. */
 .ideaSaid {
   margin: 0 0 0.9rem;
   font-size: 0.9rem;

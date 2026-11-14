@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowUp, Sparkles, Trash2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { ideaLines } from "@/lib/board";
-import { parsePlan } from "@todone/sdk/plan";
+import { AskBar, IDEAS_EVENT } from "./AskBar";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
 import { mapTask } from "@/lib/store";
-import { type List, type Task, moveTasks, todayISO, uid } from "@todone/sdk/tasks";
+import { type List, type Task, moveTasks, uid } from "@todone/sdk/tasks";
 import s from "./app.module.css";
 
 type Update = (id: string, f: (l: List) => List | null) => void;
@@ -50,8 +49,6 @@ export function Brainstorm({
   const targets = lists.filter((l) => !l.kind);
   const ideas = board?.tasks ?? [];
   const [draft, setDraft] = useState("");
-  const [dump, setDump] = useState("");
-  const [thinking, setThinking] = useState(false);
   const [said, setSaid] = useState("");
   const [binned, setBinned] = useState<{ before: Task[]; title: string } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
@@ -73,35 +70,20 @@ export function Brainstorm({
     if (board) setIdeas((ts) => [...more, ...ts]);
     else add("Brainstorm", more, "ideas");
   };
-  // Ask todone, brainstorming: whatever it would make into to-dos lands here as idea cards, to drag into lists.
-  const ask = async () => {
-    const text = dump.trim();
-    if (!text || thinking) return;
-    setThinking(true);
-    setSaid("");
-    try {
-      const r = await api<{ result: string }>("POST", "/ai/text", {
-        text,
-        context: {
-          today: todayISO(),
-          weekday: new Date().toLocaleDateString("en", { weekday: "long" }),
-          lists: targets.map((l) => l.name),
-          goals: [],
-          rewards: [],
-        },
-      });
-      const plan = parsePlan(r.result, uid, 0);
-      const found = plan.lists.flatMap((l) => l.tasks);
-      const extra = [...plan.goals.map((g) => g.title), ...plan.rewards.map((x) => x.title)];
-      addIdeas([...found, ...extra.map((title) => ({ id: uid(), title, done: false, sub: [] }))]);
-      const n = found.length + extra.length;
-      setSaid(n ? `Added ${n} ${n === 1 ? "idea" : "ideas"}. Drag them onto a list when they're ready.` : plan.questions[0] ?? "Nothing to add from that. Try it as things to do.");
-      if (n) setDump("");
-    } catch (e) {
-      setSaid(e instanceof Error ? e.message : "The AI isn't answering right now. Try again in a moment.");
-    }
-    setThinking(false);
-  };
+  const addRef = useRef(addIdeas);
+  useEffect(() => {
+    addRef.current = addIdeas;
+  });
+  // Ask todone from the bar below, asked from here: what it finds arrives as idea cards, newest first.
+  useEffect(() => {
+    const on = (e: Event) => {
+      const more = (e as CustomEvent<Task[]>).detail;
+      addRef.current(more);
+      setSaid(`Added ${more.length} ${more.length === 1 ? "idea" : "ideas"}. Drag them onto a list when they're ready.`);
+    };
+    addEventListener(IDEAS_EVENT, on);
+    return () => removeEventListener(IDEAS_EVENT, on);
+  }, []);
   const [armed, setArmed] = useState(false);
   const remove = (ids: string[]) => {
     const gone = ideas.filter((t) => ids.includes(t.id));
@@ -195,35 +177,10 @@ export function Brainstorm({
           </button>
         </div>
       )}
-      {ai && (
-        <>
-          <form
-            className={`${s.askBar} ${s.ideaAsk}`}
-            data-inline
-            onSubmit={(e) => {
-              e.preventDefault();
-              ask();
-            }}
-          >
-            <Sparkles size={18} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy={thinking || undefined} />
-            <input
-              value={dump}
-              disabled={thinking}
-              onChange={(e) => setDump(e.target.value)}
-              placeholder={thinking ? "Sorting your thoughts…" : "Brain dump, in any language. todone turns it into idea cards"}
-              aria-label="Brainstorm with Ask todone"
-              maxLength={4000}
-            />
-            <button className={s.askGo} disabled={thinking || !dump.trim()} aria-label="Make ideas">
-              <ArrowUp size={18} strokeWidth={3} />
-            </button>
-          </form>
-          {said && (
-            <p className={s.ideaSaid} role="status">
-              {said}
-            </p>
-          )}
-        </>
+      {said && (
+        <p className={s.ideaSaid} role="status">
+          {said}
+        </p>
       )}
       <form
         className={s.add}
@@ -284,9 +241,11 @@ export function Brainstorm({
       ) : (
         <div className={s.empty}>
           <p className="display">Blank page.</p>
-          <p>Type anything above. Nothing here is a commitment until you make it a task.</p>
+          <p>Type anything above{ai ? ", or say it below" : ""}. Nothing here is a commitment until you make it a task.</p>
         </div>
       )}
+      {/* Ask todone, in the same place as on a list: thinking out loud is what Brainstorm is for. */}
+      {ai && <AskBar ideas />}
     </>
   );
 }

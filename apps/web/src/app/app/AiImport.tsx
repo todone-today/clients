@@ -10,7 +10,7 @@ import { type GoalItem } from "@todone/sdk/goals";
 import { numbered, parsePlan, planPrompt, type OpenList, type PlanGoal } from "@todone/sdk/plan";
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
-import { ASK_EVENT, type Ask } from "./AskBar";
+import { ASK_EVENT, IDEAS_EVENT, type Ask } from "./AskBar";
 import { AskSteps } from "./AskSteps";
 import { did } from "@/lib/start";
 import s from "./app.module.css";
@@ -105,6 +105,7 @@ export function AiImport({
   };
 
   const reset = () => {
+    ideasMode.current = false;
     const r = rec.current;
     rec.current = null; // its onstop sees it was cancelled
     r?.stream.getTracks().forEach((t) => t.stop());
@@ -169,8 +170,27 @@ export function AiImport({
     setErr(e instanceof Error ? e.message : "Something went wrong. Try again.");
   };
   // Each answer adds to the board, so a few asks build one plan; answering its questions makes the plan again.
+  // Asked from Brainstorm: everything it found goes there as idea cards, and the dialog closes. Otherwise the
+  // results open as steps to review.
+  const ideasMode = useRef(false);
+  const land = (md: string, add: boolean, refs?: Record<number, string>) => {
+    if (!ideasMode.current) {
+      if (suggest(md, add, refs)) setReviewing(true);
+      return;
+    }
+    const plan = parsePlan(md, newId, 0);
+    const card = (title: string): Task => ({ id: newId(), title, done: false, sub: [] });
+    const ideas = [
+      ...plan.lists.flatMap((l) => l.tasks),
+      ...plan.goals.map((g) => card(g.title)),
+      ...plan.rewards.map((r) => card(r.title)),
+    ];
+    if (!ideas.length) return setErr(plan.questions[0] ?? "Nothing to add from that. Try it as things to do.");
+    dispatchEvent(new CustomEvent<Task[]>(IDEAS_EVENT, { detail: ideas }));
+    close();
+  };
   const answered = (r: { result: string; used?: number; limit?: number | null }, add = true) => {
-    if (suggest(r.result, add)) setReviewing(true);
+    land(r.result, add);
     setWords("");
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
@@ -182,7 +202,7 @@ export function AiImport({
     if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
       const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: context(open?.open) });
-      if (suggest(r.result, add, open?.refs)) setReviewing(true);
+      land(r.result, add, open?.refs);
       setWords("");
       setPhase("idle");
       setUsage({ used: r.used, limit: r.limit ?? null });
@@ -337,6 +357,7 @@ export function AiImport({
   fromBar.current = (a: Ask) => {
     if (!ai) return;
     reset();
+    ideasMode.current = !!a.ideas;
     setTab("ask");
     open();
     if ("text" in a) {
