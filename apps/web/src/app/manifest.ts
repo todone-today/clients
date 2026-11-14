@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     background_color: "#0b0b0b",
-    theme_color: "#c6ff00",
+    theme_color: "#d4f04a",
     // PNGs for phones (iOS and Android skip SVG icons); the maskable one has room for Android to crop it round.
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },

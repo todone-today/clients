@@ -100,7 +100,7 @@ export function taskHtml(t: Task, goal?: string): string {
 <style>
 body{max-width:42rem;margin:3rem auto;padding:0 1.25rem;font:16px/1.55 system-ui,sans-serif;color:#0b0b0b;background:#fff8ef}
 h1{font-size:2.2rem;line-height:1.1;margin:0 0 1rem}h2{font-size:1.1rem;margin:2rem 0 .5rem;text-transform:uppercase;letter-spacing:.04em}
-.facts{display:flex;flex-wrap:wrap;gap:.4rem;padding:0;list-style:none}.facts li{padding:.15rem .55rem;border:2px solid #0b0b0b;background:#c6ff00;font-weight:700;font-size:.85rem}
+.facts{display:flex;flex-wrap:wrap;gap:.4rem;padding:0;list-style:none}.facts li{padding:.15rem .55rem;border:2px solid #0b0b0b;background:#d4f04a;font-weight:700;font-size:.85rem}
 .steps{list-style:none;padding:0}.steps li::before{content:"☐ "}.steps li.done{text-decoration:line-through;color:#6b645c}.steps li.done::before{content:"☑ "}
 .note{padding:.75rem 0;border-top:1px solid #0b0b0b33}.note small{color:#6b645c}footer{margin-top:3rem;font-size:.8rem;color:#6b645c}
 </style></head><body>
