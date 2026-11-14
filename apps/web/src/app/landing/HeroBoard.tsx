@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { publishHero } from "@/lib/hero-sync";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { fmtMinutes, relDue, repeatLabel, todayISO, type Task } from "@todone/sdk/tasks";
@@ -58,6 +58,12 @@ export function HeroBoard() {
   );
   const [held, setHeld] = useState<string | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
+  // The board builds itself once on arrival; after that the notes keep only their drag and land motion.
+  const [fresh, setFresh] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setFresh(false), 2200);
+    return () => clearTimeout(t);
+  }, []);
   // Read when a sticker lands, not while rendering: the server and the visitor's clock can disagree.
   const [today, setToday] = useState("");
 
@@ -100,10 +106,12 @@ export function HeroBoard() {
   const tickNote = (id: string) => setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, done: !n.done } : n)));
 
   return (
-    <div className={s.hero} data-holding={held ? "" : undefined}>
+    <div className={s.hero} data-holding={held ? "" : undefined} data-fresh={fresh || undefined}>
       <div className={s.board}>
         <div className={`${s.note} ${s.lead}`}>
-          <span className={`${s.box} ${s.leadBox}`} aria-hidden />
+          <span className={`${s.box} ${s.leadBox}`} aria-hidden>
+            <Check size={18} strokeWidth={3.5} />
+          </span>
           <h1 className="display">
             Todos.
             <br />

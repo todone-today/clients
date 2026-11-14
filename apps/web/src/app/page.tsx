@@ -322,7 +322,7 @@ export default function Home() {
         )}
 
         {/* Pricing: the deal stated plainly; checkout opens with Razorpay. */}
-        <section id="pricing" className={s.pricing} aria-labelledby="price-h">
+        <section id="pricing" className={s.pricing} aria-labelledby="price-h" data-reveal>
           <h2 id="price-h" className="display">
             Free to use. Fair to keep running.
           </h2>
@@ -330,7 +330,7 @@ export default function Home() {
             Free for everyday use. Pay for more lists and sharing.
           </p>
           <Pricing />
-          <div className={s.founding}>
+          <div className={s.founding} data-reveal>
             <span className={s.foundingTag}>Founding member</span>
             <span className={s.foundingFace} aria-hidden>
               K
@@ -411,7 +411,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className={s.close}>
+        <section className={s.close} data-reveal>
           <p className={`display ${s.big}`}>
             Write it down.
             <br />
