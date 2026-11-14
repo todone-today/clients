@@ -31,6 +31,7 @@ import {
 import { HeroBoard } from "./landing/HeroBoard";
 import { AskDemo } from "./landing/AskDemo";
 import { Reveal } from "./landing/Reveal";
+import { Tour } from "./landing/Tour";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
 
@@ -45,6 +46,7 @@ export default function Home() {
         </Link>
         <nav className={s.links} aria-label="Sections">
           <a href="#ask">Ask todone</a>
+          <a href="#tour">Watch</a>
           <a href="#features">What it does</a>
           <a href="#privacy">Privacy</a>
           <a href="#roadmap">Roadmap</a>
@@ -88,6 +90,15 @@ export default function Home() {
           <Link href="/app?new=1" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
             Try it free
           </Link>
+        </section>
+
+        {/* The onboarding video, for people who'd rather watch first. */}
+        <section id="tour" className={s.tourSection} aria-labelledby="tour-h">
+          <h2 id="tour-h" className="display">
+            See it in 100 seconds.
+          </h2>
+          <p className={s.sub}>The whole app, from saying your day to sharing it. Jump to any part.</p>
+          <Tour />
         </section>
 
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}

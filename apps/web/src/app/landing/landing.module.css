@@ -2916,3 +2916,228 @@ button.box:hover {
     animation: marker 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.45s backwards;
   }
 }
+
+/* ---------- The tour: the onboarding video, sticker-framed, with chapters to jump to ---------- */
+.tourSection {
+  display: grid;
+  justify-items: center;
+  padding: clamp(4.5rem, 10vh, 7rem) var(--gutter);
+  text-align: center;
+}
+.tourSection h2 {
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.92;
+}
+.tour {
+  display: grid;
+  gap: 1.5rem;
+  width: min(100%, 62rem);
+}
+.tourScreen {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 2.5px solid var(--ink);
+  box-shadow: 10px 10px 0 var(--lime);
+}
+.tourScreen video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tourPlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: 0;
+  color: var(--black);
+  background: linear-gradient(to top, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.1) 60%);
+  border: 0;
+  cursor: pointer;
+}
+.tourDisc {
+  display: grid;
+  place-items: center;
+  width: clamp(4.5rem, 10vw, 6.5rem);
+  aspect-ratio: 1;
+  padding-left: 0.3rem; /* the triangle's weight sits left of its box */
+  background: var(--lime);
+  border: 3px solid var(--black);
+  border-radius: 50%;
+  box-shadow: 6px 6px 0 var(--black);
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+.tourPlay:hover .tourDisc,
+.tourPlay:focus-visible .tourDisc {
+  transform: translate(-2px, -2px) scale(1.06) rotate(-4deg);
+  box-shadow: 9px 9px 0 var(--black);
+}
+.tourPlay:active .tourDisc {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--black);
+}
+.tourPlay:focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: -6px;
+}
+.tourLen {
+  padding: 0.3rem 0.7rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+  rotate: -2deg;
+}
+.tourEnd {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1.25rem;
+  color: #fff8ef;
+  background: rgb(11 11 11 / 0.82);
+  backdrop-filter: blur(6px);
+  animation: tourEndIn 0.35s var(--ease) both;
+}
+.tourEnd p {
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+}
+.tourEnd div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+}
+.tourEnd :global(.btn) {
+  --shadow: #fff8ef;
+}
+@keyframes tourEndIn {
+  from {
+    opacity: 0;
+  }
+}
+.tourChapters {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tourChapters button {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0.6rem 0.65rem 0.75rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px solid var(--hair);
+  cursor: pointer;
+  transition:
+    background 0.15s var(--ease),
+    color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    transform 0.2s var(--ease);
+}
+.tourChapters b {
+  font-size: 0.88rem;
+  line-height: 1.2;
+}
+.tourChapters small {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+/* How far into the chapter: a bar along the bottom of the one playing. */
+.tourChapters button::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  background: var(--black);
+  transform: scaleX(var(--done, 0));
+  transform-origin: left;
+}
+.tourChapters button:hover,
+.tourChapters button:focus-visible,
+.tourChapters button[aria-current] {
+  color: var(--black);
+  background: var(--fill);
+  border-color: var(--black);
+}
+.tourChapters button:hover small,
+.tourChapters button:focus-visible small,
+.tourChapters button[aria-current] small {
+  color: rgb(11 11 11 / 0.7);
+}
+.tourChapters button:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+.tourChapters button[aria-current] {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.tourChapters button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+/* Phones: the chapters scroll sideways under the video, one swipe at a time. */
+@media (max-width: 760px) {
+  .tourChapters {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 0.25rem var(--gutter) 0.5rem;
+    scrollbar-width: none;
+  }
+  .tourChapters li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .tourChapters button {
+    min-width: 8.5rem;
+  }
+  .tourScreen {
+    box-shadow: 6px 6px 0 var(--lime);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tourDisc,
+  .tourChapters button {
+    transition: none;
+  }
+  .tourPlay:hover .tourDisc,
+  .tourChapters button:hover {
+    transform: none;
+  }
+  .tourEnd {
+    animation: none;
+  }
+}
+/* The hero's quiet third way in: watch first. */
+.watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: center;
+  font-weight: 800;
+  color: var(--black);
+  text-decoration: underline 2.5px;
+  text-underline-offset: 0.25em;
+}
+.watch:hover {
+  text-decoration-thickness: 4px;
+}

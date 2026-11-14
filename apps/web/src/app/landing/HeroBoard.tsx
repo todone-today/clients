@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { publishHero } from "@/lib/hero-sync";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { fmtMinutes, relDue, repeatLabel, todayISO, type Task } from "@todone/sdk/tasks";
@@ -128,6 +128,9 @@ export function HeroBoard() {
             <Link href="/demo" className="btn">
               Try the demo
             </Link>
+            <a href="#tour" className={s.watch}>
+              <Play size={16} strokeWidth={2.75} fill="currentColor" aria-hidden /> Watch the tour
+            </a>
           </div>
         </div>
 
