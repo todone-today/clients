@@ -9,7 +9,6 @@ import { setTheme } from "./setup";
 import { type EditName, FLIGHT, IDEA, TYPED, day } from "./seed";
 import { Fade, Sfx, inStage, usePop } from "./kit";
 import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab } from "./live";
-import { AskScene, BOARD_AT } from "./scenes/Ask";
 import { WhyGoals, WhyRewards } from "./scenes/Why";
 
 // ---- Where things are that need more than a selector ------------------------------------------------------------
@@ -183,13 +182,13 @@ const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slowe
 // ---- Timeline ---------------------------------------------------------------------------------------------------
 const INTRO = 60;
 const OUTRO = 70;
-// Scenes drawn for the video rather than played in the live app: Ask todone first, and why goals and rewards work.
+// Scenes drawn for the video rather than played in the live app: why goals and rewards work. (Ask todone has its
+// own part of the landing page, so the video sticks to the rest of the app.)
 const CUSTOM = {
-  ask: { dur: BOARD_AT + 140, El: AskScene, sfx: [{ at: 0, name: "whoosh" }, { at: BOARD_AT, name: "pop" }, { at: BOARD_AT + 38, name: "pop" }, { at: BOARD_AT + 66, name: "chime" }] },
   whyGoals: { dur: 185, El: WhyGoals, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "pop" }] },
   whyRewards: { dur: 185, El: WhyRewards, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "chime" }] },
 } as const;
-const ORDER = ["ask", "create", "stickers", "steps", "lists", "brainstorm", "calendar", "whyGoals", "goal", "reach", "whyRewards", "rewards", "share", "team", "theme"] as const;
+const ORDER = ["create", "stickers", "steps", "lists", "brainstorm", "calendar", "whyGoals", "goal", "reach", "whyRewards", "rewards", "share", "team", "theme"] as const;
 type Name = (typeof ORDER)[number];
 const custom = (k: Name): k is keyof typeof CUSTOM => k in CUSTOM;
 const durOf = (k: Name) => (custom(k) ? CUSTOM[k].dur : SCENES[k].dur);

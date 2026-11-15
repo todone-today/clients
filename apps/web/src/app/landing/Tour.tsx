@@ -8,16 +8,16 @@ import s from "./landing.module.css";
 // The onboarding video (apps/video renders it), as a sticker-framed player. Nothing downloads until Play; the
 // chapters jump straight to a part, the one playing fills up as it goes, and the end offers the next step.
 // Starts come from the video's scene order (apps/video/src/Onboarding.tsx ORDER, at 30fps).
+// Ask todone isn't in the video: it has its own section higher up the page.
 const CHAPTERS = [
-  [2, "Ask todone", "var(--lime)"],
-  [11.8, "Tasks & stickers", "var(--butter)"],
-  [22, "Steps & lists", "var(--pink)"],
-  [36.2, "Calendar", "var(--cyan)"],
-  [41.9, "Goals", "var(--lime)"],
-  [63.1, "Rewards", "var(--pink)"],
-  [76.3, "Share & teams", "var(--peri)"],
+  [2, "Tasks & stickers", "var(--butter)"],
+  [12.2, "Steps & lists", "var(--pink)"],
+  [26.4, "Calendar", "var(--cyan)"],
+  [32.1, "Goals", "var(--lime)"],
+  [53.3, "Rewards", "var(--pink)"],
+  [66.5, "Share & teams", "var(--peri)"],
 ] as const;
-const LENGTH = 100.4;
+const LENGTH = 90.6;
 const clock = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
 export function Tour() {
@@ -56,10 +56,10 @@ export function Tour() {
           controls={started}
           onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)}
           onEnded={() => setEnded(true)}
-          aria-label="todone in 100 seconds: the onboarding tour"
+          aria-label="todone in 90 seconds: the onboarding tour"
         />
         {!started && (
-          <button type="button" className={s.tourPlay} onClick={() => play()} aria-label="Play the 100-second tour, with sound">
+          <button type="button" className={s.tourPlay} onClick={() => play()} aria-label="Play the 90-second tour, with sound">
             <span className={s.tourDisc} aria-hidden>
               <Play size={34} strokeWidth={2.75} fill="currentColor" />
             </span>
