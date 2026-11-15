@@ -31,6 +31,7 @@ import { HeroBoard } from "./landing/HeroBoard";
 import { AskDemo } from "./landing/AskDemo";
 import { Reveal } from "./landing/Reveal";
 import { Tour } from "./landing/Tour";
+import { Journey } from "@/components/Journey";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
 
@@ -84,9 +85,9 @@ export default function Home() {
         {/* The onboarding video, for people who'd rather watch first. */}
         <section id="tour" className={s.tourSection} aria-labelledby="tour-h">
           <h2 id="tour-h" className="display">
-            See it in 100 seconds.
+            See it in 90 seconds.
           </h2>
-          <p className={s.sub}>The whole app, from saying your day to sharing it. Jump to any part.</p>
+          <p className={s.sub}>Lists, stickers, the calendar, goals, rewards and sharing. Jump to any part.</p>
           <Tour />
         </section>
 
@@ -425,6 +426,7 @@ export default function Home() {
           </Link>
         </section>
         <Reveal />
+        <Journey />
       </main>
 
       <footer className={s.foot}>

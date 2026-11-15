@@ -28,7 +28,8 @@ export function RecoveryKey({
         Your lists are end-to-end encrypted: only your password opens them, and we can&apos;t reset it. If you forget it,
         this key is the only way back in. Keep it somewhere safe, like a password manager or on paper.
       </p>
-      <output className={s.recovery} aria-label="Recovery key">
+      {/* ph-no-capture: never in a PostHog replay (the sign-up form, where this first shows, is on the recorded home page). */}
+      <output className={`${s.recovery} ph-no-capture`} aria-label="Recovery key">
         {value}
       </output>
       <div className={s.recoveryActions}>

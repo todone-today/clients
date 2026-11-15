@@ -123,7 +123,12 @@ export default function Privacy() {
         cookies and stores nothing that identifies you: only the page, the
         country, the kind of device, and which of our links you came from
         (like a link in our email). Links with private parts, such as a shared
-        task or calendar, are counted without them. We don&apos;t use
+        task or calendar, are counted without them. On the home page and its
+        sign-up form only, PostHog records how visitors move through the page
+        (scrolling, clicks, and how long each part is on screen, including
+        replays of the visit), without cookies and with everything typed into
+        a field hidden, so we can make the page clearer. Nothing inside the
+        app is recorded. We don&apos;t use
         advertising or track you across other sites. We don&apos;t sell or rent
         your data, and we don&apos;t use it to train AI models.
       </p>

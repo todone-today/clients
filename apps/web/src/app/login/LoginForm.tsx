@@ -11,6 +11,7 @@ import { RecoveryKey } from "@/components/RecoveryKey";
 import s from "./login.module.css";
 import { PasswordInput } from "@/components/PasswordInput";
 import { GithubMark } from "@/components/GithubMark";
+import { track } from "@/components/Journey";
 import { siDiscord, siGoogle } from "simple-icons";
 
 const PROVIDER = { google: "Google", github: "GitHub", discord: "Discord" } as const;
@@ -95,6 +96,7 @@ export function LoginForm({
               } as Parameters<typeof authClient.signUp.email>[0]);
               if (r.error) throw new Error(r.error.message ?? "That didn't work. Try again.");
               await adopt(r.data!.user.id, a.accountKey, a.keys);
+              track("signed_up", { method: "email" });
               return setRecovery(a.recoveryKey);
             }
             const d = await derive(email, password);
@@ -134,6 +136,7 @@ export function LoginForm({
                   onClick={async () => {
                     setBusy(true);
                     setErr("");
+                    track("social_start", { provider: p, mode });
                     const r = await authClient.signIn.social({ provider: p, callbackURL: safeNext() });
                     if (r?.error) {
                       setErr(r.error.message ?? "That didn't work. Try again.");

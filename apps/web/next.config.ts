@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  skipTrailingSlashRedirect: true, // PostHog's /ingest calls end in a slash
   // The todone server answers /api. Forwarding it keeps one address for the browser: the session cookie,
   // OAuth callbacks, calendar and Markdown links all live on this site.
   // Browser hardening for every page: no framing (clickjacking), no MIME sniffing, HTTPS only, a tight referrer,
@@ -23,7 +24,13 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${process.env.SERVER_URL ?? "http://localhost:4000"}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${process.env.SERVER_URL ?? "http://localhost:4000"}/api/:path*` },
+      // PostHog (the landing page's journey, components/Journey.tsx) through our own address, so blockers of
+      // third-party trackers don't hide whole visits. US cloud.
+      { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
+    ];
   },
 };
 
