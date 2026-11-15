@@ -5281,6 +5281,12 @@ input.stick[data-custom][aria-invalid="true"] {
     flex: 1 1 auto;
     min-width: 0;
     max-width: none;
+    gap: 0.3rem;
+    padding-inline: 0.45rem;
+  }
+  /* A touch smaller, so a list name like "Welcome to todone" fits beside the four tiles. */
+  .top .menu span {
+    font-size: 0.95rem;
   }
   .top .tile {
     flex: none;

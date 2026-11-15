@@ -180,8 +180,8 @@ export function LoginForm({
         )}
         {mode === "up" && (
           <p className={s.fine}>
-            Your lists are encrypted with this password before they leave your device. We never see it and can&apos;t
-            reset it, so pick one you&apos;ll remember. You&apos;ll get a recovery key next.
+            Only you can read your lists: this password locks them on your device, so we never see it. Pick one
+            you&apos;ll remember. If you ever forget it, the recovery key you get next lets you back in.
           </p>
         )}
         {mode === "in" && canReset && (
