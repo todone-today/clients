@@ -25,6 +25,7 @@ import { Select } from "@/components/Select";
 import { Confetti } from "@/components/Confetti";
 import { authClient } from "@/lib/auth-client";
 import { toBin, useLists } from "@/lib/store";
+import { binSound } from "@/lib/sound";
 import { changeGoals, moveGoalItem, useGoalItems } from "./goalStore";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { ListIcon, listColor } from "./listIcon";
@@ -202,6 +203,19 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
       p.kind === "goal" &&
       moveGoalItem(lists, p.id, id, placeOn(at, "x", false)),
   });
+  // Drop a goal on the Bin to delete it, like its own delete button: a goal with tasks asks first (on its card)
+  // what happens to them; one without just goes.
+  const [binning, setBinning] = useState<string | null>(null);
+  const binDrop = useDrop("goals-bin", {
+    accept: (p) => p.kind === "goal",
+    drop: (p) => {
+      if (p.kind !== "goal") return;
+      const linked = (t: Task) => t.goal === p.id;
+      if (tasks.some((t) => linked(t) || t.sub.some(linked))) return setBinning(p.id);
+      changeGoals(lists, (xs) => xs.filter((x) => !(x.t === "goal" && x.id === p.id)));
+      binSound();
+    },
+  });
   const dnd = (g: Goal) => ({
     ...draggable({ kind: "goal", id: g.id }, g.title),
     ...dropGoal(g.id),
@@ -226,6 +240,12 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   return (
     <>
       <div className={s.listHead}>
+        {goals.length > 0 && (
+          <div className={s.bin} data-bin {...binDrop("bin")} title="Drop a goal here to delete it">
+            <Trash2 size={28} strokeWidth={2.5} aria-hidden />
+            <span>Bin</span>
+          </div>
+        )}
         <h1 className={`display ${s.title}`}>Goals</h1>
         <p className={s.progress}>
           {open.length
@@ -267,6 +287,8 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
               <GoalCard
                 key={g.id}
                 dnd={dnd(g)}
+                binned={binning === g.id}
+                onBinned={() => setBinning(null)}
                 goal={g}
                 items={items}
                 tasks={tasks}
@@ -285,6 +307,8 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
               <GoalCard
                 key={g.id}
                 dnd={dnd(g)}
+                binned={binning === g.id}
+                onBinned={() => setBinning(null)}
                 goal={g}
                 items={items}
                 tasks={tasks}
@@ -363,7 +387,11 @@ function GoalCard({
   lists,
   onOpen,
   dnd,
+  binned,
+  onBinned,
 }: {
+  binned: boolean; // dropped on the Bin
+  onBinned: () => void;
   goal: Goal;
   items: GoalItem[];
   tasks: List["tasks"];
@@ -382,6 +410,7 @@ function GoalCard({
   const taskCount = withTasks.flatMap((l) => l.tasks.flatMap((t) => [t, ...t.sub])).filter(mine).length;
   // Deletes the goal; its tasks go to the bin (`drop`), or stay, no longer linked.
   const remove = (drop: boolean) => {
+    onBinned();
     for (const l of withTasks) {
       if (drop) toBin(l.tasks.filter(mine), l);
       update(l.id, (x) => ({
@@ -492,7 +521,7 @@ function GoalCard({
             Not yet
           </button>
         )}
-        {deleting ? (
+        {deleting || binned ? (
           <div className={s.goalAsk} role="group" aria-label={`Delete ${goal.title}`}>
             <span>
               Also delete its {taskCount === 1 ? "task" : `${taskCount} tasks`}?
@@ -503,7 +532,13 @@ function GoalCard({
             <button className="btn" onClick={() => remove(false)}>
               Keep {taskCount === 1 ? "it" : "them"}
             </button>
-            <button className={s.ghost} onClick={() => setDeleting(false)}>
+            <button
+              className={s.ghost}
+              onClick={() => {
+                setDeleting(false);
+                onBinned();
+              }}
+            >
               Cancel
             </button>
           </div>
