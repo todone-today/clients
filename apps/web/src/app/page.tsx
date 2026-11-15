@@ -167,11 +167,11 @@ export default function Home() {
               </li>
             </ul>
             <Link
-              href="/demo"
+              href="/app?new=1"
               className="btn"
               style={{ "--fill": "var(--butter)" } as React.CSSProperties}
             >
-              Try the full app, no account{" "}
+              Sign up free today{" "}
               <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Link>
           </div>

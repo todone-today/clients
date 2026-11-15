@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import { TodoApp } from "../app/TodoApp";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Demo",
-  description: "Try todone with sample lists, no account needed.",
-};
-
+// The no-account demo is gone: todone asks people to sign up (free) instead. Old links land on sign-up.
 export default function DemoPage() {
-  return <TodoApp demo />;
+  redirect("/app?new=1");
 }

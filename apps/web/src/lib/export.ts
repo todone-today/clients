@@ -202,7 +202,7 @@ ${parts.filter(Boolean).join("\n")}
 <footer class="cta">
 <p class="big">Made with todone</p>
 <p class="sub">Sticky-note to-dos you drag onto a day, goals with XP and rewards, and Ask todone to turn your day into tasks, in any language. Private by design: lists are end-to-end encrypted. Free to start.</p>
-<nav><a href="${esc(site)}/app?new=1">Sign up free</a><a href="${esc(site)}/demo">Try it, no account</a></nav>
+<nav><a href="${esc(site)}/app?new=1">Sign up free</a></nav>
 <small>${esc(savedLine(x))} · ${esc(site.replace(/^https?:\/\//, ""))}</small>
 </footer>
 </body></html>

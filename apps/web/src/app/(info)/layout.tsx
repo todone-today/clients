@@ -8,7 +8,7 @@ const PAGES = [
   ["/install", "Get the app"],
   ["/changelog", "Changelog"],
   ["/status", "Status"],
-  ["/demo", "Try the demo"],
+  ["/app?new=1", "Sign up free"],
 ] as const;
 
 export default function InfoLayout({ children }: { children: React.ReactNode }) {

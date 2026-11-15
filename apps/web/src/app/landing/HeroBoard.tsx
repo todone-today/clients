@@ -123,10 +123,7 @@ export function HeroBoard() {
           </p>
           <div className={s.ctas}>
             <Link href="/app?new=1" className={`btn ${s.primary}`}>
-              Start a list <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
-            </Link>
-            <Link href="/demo" className="btn">
-              Try the demo
+              Sign up free today <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Link>
             <a href="#tour" className={s.watch}>
               <Play size={16} strokeWidth={2.75} fill="currentColor" aria-hidden /> Watch the tour

@@ -33,8 +33,8 @@ export default function Docs() {
     <>
       <h1 className="display">Guide</h1>
       <p className={s.lead}>
-        Everything todone does, in one page. Want to try it first? The{" "}
-        <Link href="/demo">demo</Link> has sample lists and needs no account.
+        Everything todone does, in one page. Want to try it?{" "}
+        <Link href="/app?new=1">Sign up free</Link>: it takes a minute, with Google, GitHub or Discord.
       </p>
       <nav aria-label="On this page">
         <ul>
