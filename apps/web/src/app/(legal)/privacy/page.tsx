@@ -119,8 +119,13 @@ export default function Privacy() {
         </tbody>
       </table>
       <p>
-        We don&apos;t use analytics, advertising or tracking. We don&apos;t sell
-        or rent your data, and we don&apos;t use it to train AI models.
+        We count visits to our pages with Vercel Web Analytics, which uses no
+        cookies and stores nothing that identifies you: only the page, the
+        country, the kind of device, and which of our links you came from
+        (like a link in our email). Links with private parts, such as a shared
+        task or calendar, are counted without them. We don&apos;t use
+        advertising or track you across other sites. We don&apos;t sell or rent
+        your data, and we don&apos;t use it to train AI models.
       </p>
 
       <h2>Consent</h2>

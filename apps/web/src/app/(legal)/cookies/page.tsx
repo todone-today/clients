@@ -11,8 +11,8 @@ export default function Cookies() {
     <>
       <h1 className="display">Cookie Policy</h1>
       <p className={s.lead}>
-        {NAME} uses only the cookies and browser storage it needs to work. No analytics, no ads, no tracking across sites, so
-        there&apos;s nothing to accept or refuse.
+        {NAME} uses only the cookies and browser storage it needs to work. Visits are counted without cookies (only the page,
+        country and device), with no ads and no tracking across sites, so there&apos;s nothing to accept or refuse.
       </p>
 
       <h2>Cookies</h2>
