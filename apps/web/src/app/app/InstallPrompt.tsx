@@ -17,7 +17,7 @@ export function InstallPrompt() {
   const [ios, setIos] = useState(false);
   const [native, setNative] = useState<Prompt | null>(null);
   useEffect(() => {
-    // Not in someone's first visit (they're meeting the app and its tour); from the next one on.
+    // Not in someone's first visit (they're meeting the app and its getting-started steps); from the next one on.
     let hidden = false;
     try {
       hidden = localStorage.getItem(KEY) === "1";

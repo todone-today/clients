@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Info, Sparkles } from "lucide-react";
 import type { GoalItem } from "@todone/sdk/goals";
 import { START_STEPS, START_XP, type StartKey, onDid, startWinId, writeStart } from "@/lib/start";
 import { changeGoals, useGoalItems } from "./goalStore";
@@ -9,8 +9,8 @@ import type { Panel } from "./Workspaces";
 import s from "./app.module.css";
 
 // Getting started, for new people: a checklist in the bottom-right corner that ticks itself as they do each thing,
-// paying XP for each (wins "start-<key>" in the goals list, so the XP tile counts them). It replaces the welcome
-// video and the automatic tour; Skip hides it for good, and so does finishing.
+// paying XP for each (wins "start-<key>" in the goals list, so the XP tile counts them). Skip or finishing hides it;
+// the i in the top bar (the menu on a phone) brings it back, and skipping says so.
 export function Start({
   who,
   me,
@@ -29,6 +29,7 @@ export function Start({
   const items = useGoalItems().items;
   const [open, setOpen] = useState(true);
   const [just, setJust] = useState<StartKey | null>(null);
+  const [left, setLeft] = useState<"phone" | "wide" | null>(null); // skipped: the note on how to get them back
   const got = new Set(items.filter((i) => i.t === "win" && i.id.startsWith("start-")).map((i) => i.id));
   const has = (k: StartKey) => got.has(startWinId(k));
   const done = START_STEPS.filter((st) => has(st.key));
@@ -69,8 +70,16 @@ export function Start({
 
   const finish = () => {
     writeStart(who, "off");
-    onEnd();
+    if (all) return onEnd();
+    setLeft(matchMedia("(max-width: 760px)").matches ? "phone" : "wide");
   };
+  useEffect(() => {
+    if (!left) return;
+    const t = setTimeout(onEnd, 9000);
+    return () => clearTimeout(t);
+    // onEnd is a fresh arrow each render; tracking it would restart the 9 seconds on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [left]);
   // "Show me": takes them to where the step happens.
   const show = (k: StartKey) => {
     const focus = (sel: string) =>
@@ -85,6 +94,24 @@ export function Start({
     if (k === "add") focus("#new-task");
     if (k === "done") focus("li[data-card] [role=checkbox], li[data-card] button");
   };
+
+  if (left)
+    return (
+      <aside className={s.start} role="status">
+        <p className={s.startGone}>
+          Steps hidden. Want them back? {left === "phone" ? "Open the menu and tap " : "Click "}
+          <span className={s.startI} aria-label="the i button">
+            <Info size={14} strokeWidth={2.75} aria-hidden />
+          </span>{" "}
+          {left === "phone" ? "Getting started steps." : "at the top, any time."}
+        </p>
+        <footer>
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={onEnd}>
+            Got it
+          </button>
+        </footer>
+      </aside>
+    );
 
   if (!open)
     return (

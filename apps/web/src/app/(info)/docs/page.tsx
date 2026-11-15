@@ -48,10 +48,11 @@ export default function Docs() {
 
       <h2 id="start">Getting started</h2>
       <p>
-        <Link href="/login">Make an account</Link> with your email (or GitHub,
-        where it&apos;s offered). Your first visit starts with two sample lists
-        and a short tour; change or delete anything. Take the tour again any
-        time with <b>Tour</b> at the top.
+        <Link href="/login">Make an account</Link> with your email, Google,
+        GitHub or Discord. Your first visit starts with sample lists and a
+        short Get started checklist that pays XP for each step; change or
+        delete anything. Bring the checklist back any time with the <b>i</b>{" "}
+        at the top (on a phone, <b>Getting started steps</b> in the menu).
       </p>
 
       <h2 id="notes">Lists and notes</h2>
@@ -326,7 +327,6 @@ export default function Docs() {
           Ctrl/⌘-click selects several notes or ideas; Esc clears the selection.
         </li>
         <li>In focus mode, Space pauses, Enter finishes and Esc steps out.</li>
-        <li>In the tour, ← and → move between steps.</li>
       </ul>
 
       <p>

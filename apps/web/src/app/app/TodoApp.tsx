@@ -7,7 +7,6 @@ import { did, readStart, writeStart } from "@/lib/start";
 import { Start } from "./Start";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import {
   Target,
   ListChecks,
@@ -71,7 +70,6 @@ import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
 import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
-import { Tour, watchFullScreen } from "./Tour";
 import { VerifyBanner } from "./VerifyBanner";
 import {
   encryptPlainLists,
@@ -154,7 +152,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
   // ?go=add or ?go=calendar: the home-screen icon's shortcuts (manifest.ts), read once like ?plan.
   const [launch] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("go")));
-  const [touring, setTouring] = useState(false);
   const [starting, setStarting] = useState(false); // the getting-started checklist
   useEffect(() => {
     if (userId && readStart(userId) === "on") Promise.resolve().then(() => setStarting(true));
@@ -380,12 +377,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       if (new URLSearchParams(location.search).has("connect"))
         return setPanel("integrations");
       // From a "Choose Plus" on the pricing page: the plans, straight away (the starter lists still get made
-      // underneath, so closing the plans doesn't leave an empty page; the tour waits for the Tour button).
+      // underneath, so closing the plans doesn't leave an empty page).
       if (planWant) openPlans({ want: planWant });
       if (launch === "calendar") return setPanel("calendar");
       if (launch === "add")
         setTimeout(() => document.querySelector<HTMLInputElement>("input[placeholder^='Add a task']")?.focus(), 300);
-      // First visit: sample lists to play with (made here, so they're encrypted), then the tour.
+      // First visit: sample lists to play with (made here, so they're encrypted), then the getting-started steps.
       if (!orgId && (await startOnboarding())) {
         const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
           await fetch(`/api/demo?today=${todayISO()}`).then((r) => r.json());
@@ -435,15 +432,19 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       />
     );
 
-  // The tour points at the sidebar, so it shows in full while the tour runs (the saved choice is untouched).
-  const folded = slim && !touring;
+  const folded = slim;
+  // The getting-started steps again, from the i in the top bar (or the menu on a phone).
+  const steps = () => {
+    setDrawer(false);
+    if (userId) writeStart(userId, "on");
+    setStarting(true);
+  };
   return (
     <div className={s.shell} data-slim={folded || undefined}>
       <Welcome />
-      {touring && <Tour onPanel={setPanel} onEnd={() => setTouring(false)} />}
       <PlanPrompt />
-      {!demo && !touring && !starting && <InstallPrompt />}
-      {starting && !touring && (
+      {!demo && !starting && <InstallPrompt />}
+      {starting && (
         <Start
           who={userId ?? "demo"}
           me={userId ?? undefined}
@@ -515,15 +516,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <button
           className={s.tile}
           style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
-          onClick={() => {
-            setPanel(null);
-            // Drawn now, so the walkthrough can go full screen within this click.
-            flushSync(() => setTouring(true));
-            watchFullScreen();
-          }}
-          data-tour="tour"
-          aria-label="Tour"
-          data-tip="Tour"
+          onClick={steps}
+          data-tour="steps"
+          aria-label="Getting started steps"
+          data-tip="Getting started"
         >
           <Info size={18} strokeWidth={2.5} aria-hidden />
         </button>
@@ -705,17 +701,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               open(id);
             }}
           />
-          {/* The top bar's Tour tile doesn't fit a phone, so the tour starts from here there. */}
-          <button
-            className={`${s.ghost} ${s.phoneOnly}`}
-            onClick={() => {
-              setDrawer(false);
-              setPanel(null);
-              flushSync(() => setTouring(true));
-              watchFullScreen();
-            }}
-          >
-            <Info size={16} strokeWidth={2.5} aria-hidden /> Take the tour
+          {/* The top bar's i tile doesn't fit a phone, so the steps come back from here there. */}
+          <button className={`${s.ghost} ${s.phoneOnly}`} onClick={steps}>
+            <Info size={16} strokeWidth={2.5} aria-hidden /> Getting started steps
           </button>
           {!demo && <Feedback />}
         </div>
