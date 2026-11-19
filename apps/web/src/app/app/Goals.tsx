@@ -461,6 +461,7 @@ function GoalCard({
 
       <Meter goal={goal} p={p} />
       {!goal.done && <LogBox goal={goal} p={p} />}
+      <LogHistory goal={goal} p={p} />
 
       {p.next && !goal.done && (
         <button
@@ -778,6 +779,41 @@ export function LogBox({ goal, p }: { goal: Goal; p: Progress }) {
         {goal.kind === "target" ? "Log" : "Add"}
       </button>
     </form>
+  );
+}
+
+// Everything logged toward a goal, newest first, folded away until asked for; × removes an entry logged by mistake
+// (its XP stays: logging pays once a day, so a re-log that day earns nothing new).
+function LogHistory({ goal, p }: { goal: Goal; p: Progress }) {
+  const { lists } = useLists();
+  const [count, setCount] = useState(PAGE);
+  if (goal.kind === "outcome" || !p.logs.length) return null;
+  const logs = [...p.logs].reverse();
+  const unit = goal.unit ? ` ${goal.unit}` : "";
+  const what = (v: number) => (goal.kind === "habit" ? "Checked in" : goal.kind === "daily" ? `+${v}${unit}` : `${v}${unit}`);
+  const when = (t: number) =>
+    new Date(t).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const drop = (id: string) => changeGoals(lists, (xs) => xs.filter((x) => x.id !== id));
+  return (
+    <details className={s.logHist}>
+      <summary>History ({logs.length})</summary>
+      <ol>
+        {logs.slice(0, count).map((l) => (
+          <li key={l.id}>
+            <time dateTime={new Date(l.at).toISOString()}>{when(l.at)}</time>
+            <b>{what(l.value)}</b>
+            <button onClick={() => drop(l.id)} aria-label={`Remove ${what(l.value)} from ${when(l.at)}`} data-tip="Remove">
+              <X size={13} strokeWidth={3} aria-hidden />
+            </button>
+          </li>
+        ))}
+      </ol>
+      {logs.length > count && (
+        <button className={s.ghost} onClick={() => setCount((n) => n + 10)}>
+          Show {Math.min(10, logs.length - count)} more
+        </button>
+      )}
+    </details>
   );
 }
 
