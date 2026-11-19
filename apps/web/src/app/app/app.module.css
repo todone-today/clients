@@ -7349,7 +7349,7 @@ input.askRowTitle:focus-visible {
     transition: transform 0.25s var(--ease);
   }
   /* A yellow arrow on the right edge, pointing at where the stickers come from. Open, it rides the panel's edge
-     and turns round to hide it; while the panel is only peeking (a task picked or held) it steps aside. */
+     and turns round to hide it. */
   .stickTab {
     position: fixed;
     top: 50%;
@@ -7383,7 +7383,8 @@ input.askRowTitle:focus-visible {
     clip-path: polygon(0 0, calc(100% - 1.1rem) 0, 100% 50%, calc(100% - 1.1rem) 100%, 0 100%);
     filter: drop-shadow(2px 0 0 var(--black));
   }
-  .stickTab[data-shown]:not([aria-expanded="true"]),
+  /* While a task is picked or held the panel is open regardless, so there's nothing for the tab to do. */
+  .stickTab[data-peek],
   :global(body[data-drag="task"]) .stickTab {
     visibility: hidden;
   }

@@ -1477,7 +1477,7 @@ function ListView({
           className={s.stickTab}
           aria-expanded={pinned}
           aria-label={pinned ? "Hide stickers" : "Show stickers"}
-          data-shown={pinned || !!selected || picked.size > 0 || undefined}
+          data-peek={!!selected || picked.size > 0 || undefined}
           onClick={() => pin(!pinned)}
         >
           {pinned ? (
