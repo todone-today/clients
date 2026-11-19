@@ -74,7 +74,8 @@ export function AiImport({
   const job = useRef<string | null>(null);
   const asking = ai && tab === "ask";
 
-  const context = (open = shared?.open) => ({
+  // `fresh`: the same ask again with lists now shared, so the conversation so far isn't sent as "already planned".
+  const context = (open = shared?.open, fresh = false) => ({
     today: todayISO(),
     weekday: weekday(),
     lists: lists.map((l) => l.name),
@@ -82,21 +83,37 @@ export function AiImport({
     goals: items.flatMap((i) => (i.t === "goal" ? [i.title] : [])),
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
     ...(open ? { open } : {}),
+    // Brainstorm wants idea cards only; with lists shared, it's changing them: either way no goals, rewards or questions.
+    ...(ideasMode.current ? { mode: "ideas" as const } : open ? { mode: "change" as const } : {}),
     // The AI remembers nothing between asks: each one carries the conversation so far and any questions still
     // waiting, so a follow-up (typed or spoken) carries on instead of starting over and asking the same again.
-    ...(said.trim() && !ideasMode.current ? { earlier: said.slice(-2000) } : {}),
-    ...(qs.length && !answeredOnce.current && !ideasMode.current ? { asked: qs } : {}),
+    ...(said.trim() && !ideasMode.current && !fresh ? { earlier: said.slice(-2000) } : {}),
+    ...(qs.length && !answeredOnce.current && !ideasMode.current && !fresh ? { asked: qs } : {}),
   });
   const found = drafts.length > 0 || qs.length > 0;
   const suggest = (md: string, add: boolean, refs = shared?.refs) => {
     // Goals get their real "created" when added; tasks the AI left without a list go with the open list.
     const plan = parsePlan(md, newId, 0);
+    // It needs to read lists first: ask (see Consent), unless they're already shared. That answer is only that
+    // request: anything else in it (goals, rewards, questions) is a guess made without the list, so it's dropped.
+    const want = lists.filter((l) => plan.needs.some((n) => n.toLowerCase() === l.name.toLowerCase()));
+    if (want.length && !shared) {
+      setNeeds(want);
+      setQs([]);
+      return false;
+    }
+    if (plan.needs.length && !want.length) setErr(`Couldn't find a list called “${plan.needs[0]}”.`);
+    // Changing shared lists ("clean this list"): only the changes and any new tasks; goals and rewards only when the
+    // ask was about them, and no questions (it has the list, it decides).
+    if (refs) {
+      if (!/goal|reward|treat|habit/i.test(`${said}\n${lastAsk.current}`)) {
+        plan.goals = [];
+        plan.rewards = [];
+      }
+      plan.questions = [];
+    }
     // One round of questions: once they're answered (or skipped), it goes on with what it has, never asks again.
     const asks = answeredOnce.current ? [] : plan.questions;
-    // It needs to read lists first: ask (see Consent), unless they're already shared.
-    const want = lists.filter((l) => plan.needs.some((n) => n.toLowerCase() === l.name.toLowerCase()));
-    if (want.length && !shared) setNeeds(want);
-    else if (plan.needs.length && !want.length) setErr(`Couldn't find a list called “${plan.needs[0]}”.`);
     const more = [
       ...fromPlan(plan, lists).map((d) =>
         d.kind === "task" && d.ai === null && current ? { ...d, ai: current, place: current } : d,
@@ -113,6 +130,7 @@ export function AiImport({
 
   // Stops whatever is running (a recording, a job) and clears this turn's input. The conversation stays.
   const halt = () => {
+    turn.current++; // an answer still on its way for what was stopped is ignored when it lands
     ideasMode.current = false;
     const r = rec.current;
     rec.current = null; // its onstop sees it was cancelled
@@ -190,18 +208,16 @@ export function AiImport({
   // results open as steps to review.
   const ideasMode = useRef(false);
   const answeredOnce = useRef(false);
+  const turn = useRef(0);
+  const lastAsk = useRef(""); // the words of the ask on its way (typed, or what the transcriber heard)
   const land = (md: string, add: boolean, refs?: Record<number, string>) => {
     if (!ideasMode.current) {
       if (suggest(md, add, refs)) setReviewing(true);
       return;
     }
     const plan = parsePlan(md, newId, 0);
-    const card = (title: string): Task => ({ id: newId(), title, done: false, sub: [] });
-    const ideas = [
-      ...plan.lists.flatMap((l) => l.tasks),
-      ...plan.goals.map((g) => card(g.title)),
-      ...plan.rewards.map((r) => card(r.title)),
-    ];
+    // Brainstorm takes ideas only: every task it found, wherever it put it. Goals and rewards don't belong there.
+    const ideas = plan.lists.flatMap((l) => l.tasks).map((t) => ({ ...t, id: newId(), sub: t.sub.map((x) => ({ ...x, id: newId() })) }));
     if (!ideas.length) return setErr(plan.questions[0] ?? "Nothing to add from that. Try it as things to do.");
     dispatchEvent(new CustomEvent<Task[]>(IDEAS_EVENT, { detail: ideas }));
     close();
@@ -213,17 +229,19 @@ export function AiImport({
       add = false;
       setQs([]);
     }
-    land(r.result, add);
+    land(r.result, add, shared?.refs);
     setWords("");
     setPhase("idle");
     if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
   };
-  const askText = async (text = words, add = true, open = shared) => {
+  const askText = async (text = words, add = true, open = shared, fresh = false) => {
     if (!text.trim()) return;
     setErr("");
     setPhase("thinking");
+    const mine = turn.current;
+    lastAsk.current = text;
     // Words sent while its questions wait are the answer: the plan is made again with them, and it won't ask again.
-    const ctx = context(open?.open);
+    const ctx = context(open?.open, fresh);
     if (add && qs.length && !ideasMode.current) {
       answeredOnce.current = true;
       add = false;
@@ -233,25 +251,28 @@ export function AiImport({
     try {
       const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: ctx });
       counted({ name: "ask_used", via: "typed" });
+      if (mine !== turn.current) return; // stopped meanwhile
       land(r.result, add, open?.refs);
       setWords("");
       setPhase("idle");
       setUsage({ used: r.used, limit: r.limit ?? null });
     } catch (e) {
-      failed(e);
+      if (mine === turn.current) failed(e);
     }
   };
   const askWith = async (text: string, add: boolean, ctx: ReturnType<typeof context>) => {
     setErr("");
     setPhase("thinking");
+    const mine = turn.current;
     try {
       const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: ctx });
-      land(r.result, add);
+      if (mine !== turn.current) return;
+      land(r.result, add, shared?.refs);
       setWords("");
       setPhase("idle");
       setUsage({ used: r.used, limit: r.limit ?? null });
     } catch (e) {
-      failed(e);
+      if (mine === turn.current) failed(e);
     }
   };
   type JobView = { status: Phase | "ready" | "failed"; transcript?: string; result?: string; error?: string; used?: number; limit?: number };
@@ -259,7 +280,7 @@ export function AiImport({
     for (;;) {
       if (job.current !== id) return; // closed, or started again
       const j = await api<JobView>("GET", `/ai/jobs/${id}`);
-      if (j.transcript) setTranscript(j.transcript);
+      if (j.transcript) setTranscript((lastAsk.current = j.transcript));
       if (j.status === "ready" && j.result) {
         const heard = j.transcript ?? "";
         setSaid((x) => (x ? `${x}\n${heard}` : heard));
@@ -325,6 +346,21 @@ export function AiImport({
   useEffect(() => {
     if (secs >= MAX_SECONDS) stop();
   }, [secs]);
+  // How long it has been working (sending, transcribing, thinking), shown beside what it's doing.
+  const [waited, setWaited] = useState(0);
+  useEffect(() => {
+    if (phase === "idle" || phase === "recording") return;
+    const t = setInterval(() => setWaited((n) => n + 1), 1000);
+    return () => (clearInterval(t), setWaited(0));
+  }, [phase]);
+  const doing =
+    phase === "thinking"
+      ? ideasMode.current
+        ? "Making idea cards…"
+        : shared
+          ? `Working on ${shared.open.map((l) => `“${l.name}”`).join(", ")}…`
+          : "Making your lists…"
+      : SAYS[phase];
 
   // The answers go back with everything said so far, and the new plan replaces the board.
   const answerQs = () => {
@@ -348,7 +384,8 @@ export function AiImport({
     const sh = { open, refs };
     setShared(sh);
     setNeeds([]);
-    askText(said, false, sh);
+    setQs([]);
+    askText(said, false, sh, true);
   };
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
   // The results (and any questions it asked back) open in their own step dialog; from here, a button opens it again.
@@ -515,10 +552,23 @@ export function AiImport({
               </>
             )}
             {usage?.limit != null && <Credits used={usage.used} limit={usage.limit} />}
-            <p className={s.aiStatus} role="status">
-              {phase === "recording" && <i className={s.recDot} aria-hidden />}
-              {SAYS[phase]}
-            </p>
+            {busy && phase !== "recording" ? (
+              <div className={s.aiWorking} role="status">
+                <Sparkles size={18} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy />
+                <span>
+                  <b>{doing}</b>
+                  <small>{waited < 20 ? `${waited}s` : `${waited}s · long ones take up to a minute`}</small>
+                </span>
+                <button type="button" className={s.ghost} onClick={halt}>
+                  Stop
+                </button>
+              </div>
+            ) : (
+              <p className={s.aiStatus} role="status">
+                {phase === "recording" && <i className={s.recDot} aria-hidden />}
+                {SAYS[phase]}
+              </p>
+            )}
             {transcript && (
               <details className={s.aiHeard}>
                 <summary>What todone heard</summary>

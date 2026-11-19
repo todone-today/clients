@@ -20,6 +20,7 @@ import {
   Menu,
   Check,
   Info,
+  Tags,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -938,6 +939,20 @@ function ListView({
   }
   const me = authClient.useSession().data?.user.id;
   const [show, setShow] = useState<Show>("open");
+  // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held.
+  const [pinned, setPinned] = useState(() => {
+    try {
+      return localStorage.getItem("todone:stickers") === "pinned";
+    } catch {
+      return false;
+    }
+  });
+  const pin = (on: boolean) => {
+    setPinned(on);
+    try {
+      localStorage.setItem("todone:stickers", on ? "pinned" : "auto");
+    } catch {}
+  };
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   const [binned, setBinned] = useState<{
@@ -1295,7 +1310,7 @@ function ListView({
           </button>
         </div>
       )}
-      <div className={s.listBody}>
+      <div className={s.listBody} data-stickers={pinned ? "pinned" : "auto"}>
         <div>
           <form
             className={s.add}
@@ -1367,6 +1382,14 @@ function ListView({
                   ({list.tasks.filter((t) => t.done).length})
                 </button>
               )}
+              <button
+                className={s.stickToggle}
+                aria-pressed={pinned}
+                onClick={() => pin(!pinned)}
+                title={pinned ? "Hide the stickers (they still slide in while you hold a task)" : "Keep the stickers beside the board"}
+              >
+                <Tags size={16} strokeWidth={2.5} aria-hidden /> Stickers
+              </button>
               <div className={s.sortBy}>
                 <span aria-hidden>Sort</span>
                 <Select

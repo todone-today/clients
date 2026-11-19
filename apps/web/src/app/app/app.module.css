@@ -7295,3 +7295,137 @@ input.askRowTitle:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The sticker panel, tucked away (TodoApp's Stickers toggle): the board takes the full width, and the stickers slide
+   in from the right while a task is picked or held (dragged), so a drop onto one is always within reach. */
+.stickToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  border: 2px solid var(--hair);
+}
+.stickToggle[aria-pressed="true"] {
+  color: var(--black);
+  background: var(--butter);
+  border-color: var(--black);
+}
+@media (min-width: 761px) {
+  .listBody[data-stickers="auto"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .listBody[data-stickers="auto"] .stickers {
+    position: fixed;
+    top: 5rem;
+    right: 0;
+    z-index: 135; /* above the Get started steps (130): these are drop targets */
+    width: 15rem;
+    max-height: calc(100dvh - 6rem);
+    padding: 1rem;
+    background: var(--ground);
+    border: var(--key);
+    border-right: 0;
+    box-shadow: var(--lift);
+    transform: translateX(calc(100% + 1rem));
+    visibility: hidden;
+    transition:
+      transform 0.25s var(--ease),
+      visibility 0s 0.25s;
+  }
+  .listBody[data-stickers="auto"] .stickers[data-active="true"],
+  :global(body[data-drag="task"]) .listBody[data-stickers="auto"] .stickers {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.25s var(--ease);
+  }
+}
+
+/* Phones: the toggle isn't needed (the sheet rises on its own), and the sheet is compact: one row per kind, the
+   label beside it, stickers scrolling sideways. Holding a task brings it up too. */
+@media (max-width: 760px) {
+  .stickToggle {
+    display: none;
+  }
+  :global(body[data-drag="task"]) .stickers {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 55;
+    display: grid;
+    padding: 0.6rem var(--gutter) calc(0.6rem + env(safe-area-inset-bottom));
+    background: var(--ground);
+    border-top: var(--key);
+    box-shadow: 0 -6px 0 var(--shadow);
+  }
+  /* Above the tab bar and the install note, so every sticker can be reached. */
+  .stickers[data-active="true"],
+  :global(body[data-drag="task"]) .stickers {
+    bottom: calc(3.75rem + env(safe-area-inset-bottom));
+    z-index: 125;
+    gap: 0.45rem;
+    max-height: 40dvh;
+    padding-bottom: 0.6rem;
+  }
+  .stickers > p {
+    margin: 0;
+    font-size: 0.75rem;
+  }
+  .stickGroup {
+    display: grid;
+    grid-template-columns: 4.6rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stickGroup h3 {
+    margin: 0;
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+  .stickGroup > div {
+    gap: 0.4rem;
+    padding: 0.2rem 0.2rem 0.35rem;
+    scrollbar-width: none;
+  }
+  .stickGroup > div::-webkit-scrollbar {
+    display: none;
+  }
+  .stick {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    rotate: 0deg;
+  }
+  .stick:nth-child(even) {
+    rotate: 0deg;
+  }
+  .main:has(.stickers[data-active="true"]) {
+    padding-bottom: calc(40dvh + 4rem);
+  }
+}
+
+/* Ask todone at work (AiImport): what it's doing, for how long, and a way to stop. */
+.aiWorking {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--raise);
+  border: 2px dashed var(--ink);
+}
+.aiWorking > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.aiWorking small {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+/* While the plan is being remade, the old suggestions are dimmed and can't be changed. */
+.askDBody[aria-busy="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}

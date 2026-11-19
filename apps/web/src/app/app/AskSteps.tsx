@@ -90,6 +90,12 @@ export function AskSteps({
   const ready = on.filter((d) => d.place !== null).length;
   const count = step === "questions" ? questions.length : step === "review" ? ready : mine.filter((d) => !d.off).length;
   const nextStep = steps[at + 1];
+  // Skip a whole kind (all the goals, say): none of them go in; Keep all brings them back.
+  const allOff = mine.length > 0 && mine.every((d) => d.off);
+  const skipAll = () => {
+    onChange(drafts.map((d) => (d.kind === step ? ({ ...d, off: allOff ? undefined : true } as Draft) : d)));
+    if (!allOff && nextStep) go(nextStep);
+  };
 
   return (
     <dialog
@@ -129,7 +135,12 @@ export function AskSteps({
       </ol>
       <p className={s.askDHint}>{look.hint}</p>
 
-      <div ref={body} className={s.askDBody}>
+      {busy && (
+        <p className={s.askDBusy} role="status">
+          <Sparkles size={15} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy /> Updating your plan…
+        </p>
+      )}
+      <div ref={body} className={s.askDBody} aria-busy={busy}>
         {step === "questions" ? (
           <div className={s.askDQs}>
             {questions.map((q, i) => (
@@ -145,11 +156,6 @@ export function AskSteps({
                 />
               </label>
             ))}
-            {busy && (
-              <p className={s.askDBusy} role="status">
-                <Sparkles size={15} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy /> Updating your plan…
-              </p>
-            )}
           </div>
         ) : step === "review" ? (
           <Review drafts={drafts} lists={lists} onFix={(k) => go(k)} />
@@ -169,6 +175,11 @@ export function AskSteps({
         {drafts.length > 0 && (
           <button type="button" className={s.askDLink} onClick={onClear}>
             Clear all
+          </button>
+        )}
+        {mine.length > 0 && (
+          <button type="button" className={s.askDLink} onClick={skipAll} disabled={busy}>
+            {allOff ? `Keep all ${look.unit[1]}` : `Skip ${mine.length === 1 ? `this ${look.unit[0]}` : `these ${look.unit[1]}`}`}
           </button>
         )}
         <span className={s.wizGap} />
@@ -195,7 +206,7 @@ export function AskSteps({
             </button>
           </>
         ) : step === "review" ? (
-          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={onAdd}>
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready || busy} onClick={onAdd}>
             <Check size={16} strokeWidth={3} aria-hidden /> Add {ready} {ready === 1 ? "thing" : "things"}
           </button>
         ) : (
