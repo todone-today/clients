@@ -127,8 +127,12 @@ export default function Privacy() {
         sign-up form only, PostHog records how visitors move through the page
         (scrolling, clicks, and how long each part is on screen, including
         replays of the visit), without cookies and with everything typed into
-        a field hidden, so we can make the page clearer. Nothing inside the
-        app is recorded. We don&apos;t use
+        a field hidden, so we can make the page clearer. Inside the app,
+        nothing is recorded: we only count a few actions (a task made or
+        finished, a list made, Ask todone used, an account made or upgraded),
+        with a random number that changes every visit and never anything you
+        wrote, your email or who you are. Your lists stay end-to-end
+        encrypted. We don&apos;t use
         advertising or track you across other sites. We don&apos;t sell or rent
         your data, and we don&apos;t use it to train AI models.
       </p>

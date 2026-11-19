@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usage } from "@/lib/usage";
 import { Trash2 } from "lucide-react";
 import { ideaLines } from "@/lib/board";
 import { AskBar, IDEAS_EVENT } from "./AskBar";
@@ -29,6 +30,7 @@ export function ideaToTask(lists: List[], ideaId: string, listId: string, update
     sub: idea.sub.map((x) => ({ ...x, id: uid(), done: false })),
   };
   update(listId, (l) => ({ ...l, tasks: [...l.tasks, task] }));
+  usage({ name: "task_created", via: "idea" });
 }
 
 // A board for loose ideas. They live in the workspace's "ideas" list until one is turned into a task.

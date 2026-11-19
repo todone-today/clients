@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usage as counted } from "@/lib/usage";
 import { ArrowRight, ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
@@ -165,6 +166,8 @@ export function AiImport({
       if (g.listId) onAppend(g.listId, g.tasks);
       else if (g.name) onAdd(g.name, g.tasks);
     }
+    const n = groups.reduce((sum, g) => sum + g.tasks.length, 0);
+    if (n) counted({ name: "task_created", via: "ask", n });
     const linked = (g: PlanGoal): GoalItem => {
       const { listName, ...goal } = g;
       const list = listName && lists.find((l) => l.name.toLowerCase() === listName.toLowerCase())?.id;
@@ -229,6 +232,7 @@ export function AiImport({
     } else if (add) setSaid((x) => (x ? `${x}\n${text}` : text));
     try {
       const r = await api<{ result: string; used: number; limit: number }>("POST", "/ai/text", { text, context: ctx });
+      counted({ name: "ask_used", via: "typed" });
       land(r.result, add, open?.refs);
       setWords("");
       setPhase("idle");
@@ -279,6 +283,7 @@ export function AiImport({
       if (r.status === 402) dispatchEvent(new CustomEvent(PLAN_EVENT, { detail: data?.error }));
       if (!r.ok) throw new Error(data?.error ?? "Couldn't send the recording.");
       job.current = data.id;
+      counted({ name: "ask_used", via: "voice" });
       await poll(data.id);
     } catch (e) {
       failed(e);

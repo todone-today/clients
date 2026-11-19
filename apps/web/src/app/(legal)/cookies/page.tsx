@@ -12,7 +12,8 @@ export default function Cookies() {
       <h1 className="display">Cookie Policy</h1>
       <p className={s.lead}>
         {NAME} uses only the cookies and browser storage it needs to work. Visits are counted without cookies (only the page,
-        country and device, and on the home page how people move through it), with no ads and no tracking across sites, so there&apos;s nothing to accept or refuse.
+        country and device, on the home page how people move through it, and in the app a count of a few actions with
+        nothing you wrote), with no ads and no tracking across sites, so there&apos;s nothing to accept or refuse.
       </p>
 
       <h2>Cookies</h2>

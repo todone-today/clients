@@ -9,6 +9,13 @@ export function proxy(request: NextRequest) {
     for (const [k, v] of Object.entries(proxyHeaders())) headers.set(k, v);
     return NextResponse.next({ request: { headers } });
   }
+  // PostHog (/ingest, next.config rewrites) is another company: the session cookie and the rest never go there.
+  if (request.nextUrl.pathname.startsWith("/ingest")) {
+    const headers = new Headers(request.headers);
+    headers.delete("cookie");
+    headers.delete("authorization");
+    return NextResponse.next({ request: { headers } });
+  }
   // Optimistic check only: the server verifies the session on every call.
   if (getSessionCookie(request)) return NextResponse.next();
   const login = new URL("/login", request.url);
@@ -16,4 +23,4 @@ export function proxy(request: NextRequest) {
   return NextResponse.redirect(login);
 }
 
-export const config = { matcher: ["/app/:path*", "/api/:path*"] };
+export const config = { matcher: ["/app/:path*", "/api/:path*", "/ingest/:path*"] };

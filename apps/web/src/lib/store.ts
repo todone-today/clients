@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { usage } from "./usage";
 import {
   createList,
   deleteList,
@@ -158,6 +159,7 @@ export function add(name: string, tasks: Task[] = [], kind?: "ideas" | "bin" | "
   enqueue(async () => {
     server = put(server, await createList(id, name, tasks, kind));
   });
+  if (!kind && !demo) usage({ name: "list_created" });
   return id;
 }
 
