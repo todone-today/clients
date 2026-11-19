@@ -11,11 +11,11 @@ const MAX = 40;
 
 export function Search({ lists, onOpen, tile }: { lists: List[]; onOpen: (list: string, task: string) => void; tile: string }) {
   const [open, setOpen] = useState(false);
-  // Ctrl/Cmd+K, or "/" when not typing, opens it from anywhere in the app.
+  // Ctrl/Cmd+F or Ctrl/Cmd+K (in place of the browser's find), or "/" when not typing, opens it anywhere in the app.
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       const typing = (e.target as Element).closest?.("input, textarea, select, [contenteditable]");
-      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey)) {
+      if (((e.metaKey || e.ctrlKey) && !e.altKey && ["k", "f"].includes(e.key.toLowerCase())) || (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey)) {
         e.preventDefault();
         setOpen(true);
       }
@@ -30,7 +30,7 @@ export function Search({ lists, onOpen, tile }: { lists: List[]; onOpen: (list: 
         style={{ "--fill": "var(--butter)" } as React.CSSProperties}
         onClick={() => setOpen(true)}
         aria-label="Search tasks"
-        data-tip="Search (Ctrl K)"
+        data-tip="Search (Ctrl F)"
         aria-haspopup="dialog"
       >
         <SearchIcon size={18} strokeWidth={2.5} aria-hidden />
