@@ -65,6 +65,18 @@ export function Brainstorm({
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, []);
+  // Cmd/Ctrl+A picks every idea, as on a list, unless you're typing.
+  useEffect(() => {
+    const all = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.key.toLowerCase() !== "a" || !(e.metaKey || e.ctrlKey) || e.altKey) return;
+      if (el.closest("input, textarea, select, [contenteditable=true], dialog")) return;
+      e.preventDefault();
+      setPicked(new Set((board?.tasks ?? []).map((t) => t.id)));
+    };
+    addEventListener("keydown", all);
+    return () => removeEventListener("keydown", all);
+  }, [board]);
   const setIdeas = (f: (ts: Task[]) => Task[]) => board && update(board.id, (l) => ({ ...l, tasks: f(l.tasks) }));
   // New ideas go first; the board is made with the first ones.
   const addIdeas = (more: Task[]) => {

@@ -553,16 +553,7 @@ export function AiImport({
             )}
             {usage?.limit != null && <Credits used={usage.used} limit={usage.limit} />}
             {busy && phase !== "recording" ? (
-              <div className={s.aiWorking} role="status">
-                <Sparkles size={18} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy />
-                <span>
-                  <b>{doing}</b>
-                  <small>{waited < 20 ? `${waited}s` : `${waited}s · long ones take up to a minute`}</small>
-                </span>
-                <button type="button" className={s.ghost} onClick={halt}>
-                  Stop
-                </button>
-              </div>
+              <Working doing={doing} waited={waited} onStop={halt} />
             ) : (
               <p className={s.aiStatus} role="status">
                 {phase === "recording" && <i className={s.recDot} aria-hidden />}
@@ -723,5 +714,35 @@ function Credits({ used, limit }: { used: number; limit: number }) {
         <i style={{ transform: `scaleX(${left / limit})` }} />
       </span>
     </p>
+  );
+}
+
+// While Ask todone works: a small dialog over everything, so nothing can be changed under it; Esc or Stop halts it.
+function Working({ doing, waited, onStop }: { doing: string; waited: number; onStop: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (d && !d.open) d.showModal();
+    return () => d?.close();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className={`${s.disclosure} ${s.aiWorking}`}
+      aria-label="Ask todone is working"
+      onCancel={(e) => {
+        e.preventDefault();
+        onStop();
+      }}
+    >
+      <Sparkles size={22} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy />
+      <span role="status">
+        <b>{doing}</b>
+        <small>{waited < 20 ? `${waited}s` : `${waited}s · long ones take up to a minute`}</small>
+      </span>
+      <button type="button" className={s.ghost} onClick={onStop} autoFocus>
+        Stop
+      </button>
+    </dialog>
   );
 }

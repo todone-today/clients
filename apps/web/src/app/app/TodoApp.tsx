@@ -20,7 +20,8 @@ import {
   Menu,
   Check,
   Info,
-  Tags,
+  ChevronLeft,
+  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -1382,14 +1383,6 @@ function ListView({
                   ({list.tasks.filter((t) => t.done).length})
                 </button>
               )}
-              <button
-                className={s.stickToggle}
-                aria-pressed={pinned}
-                onClick={() => pin(!pinned)}
-                title={pinned ? "Hide the stickers (they still slide in while you hold a task)" : "Keep the stickers beside the board"}
-              >
-                <Tags size={16} strokeWidth={2.5} aria-hidden /> Stickers
-              </button>
               <div className={s.sortBy}>
                 <span aria-hidden>Sort</span>
                 <Select
@@ -1479,6 +1472,24 @@ function ListView({
             picked.size > 1 ? null : (findTask(list.tasks, selected) ?? null)
           }
         />
+        {/* Wider screens: the one control for the sticker panel, a big tab on the right edge pointing at it. */}
+        <button
+          className={s.stickTab}
+          aria-expanded={pinned}
+          aria-label={pinned ? "Hide stickers" : "Show stickers"}
+          data-shown={pinned || !!selected || picked.size > 0 || undefined}
+          onClick={() => pin(!pinned)}
+        >
+          {pinned ? (
+            <>
+              Hide <ChevronRight size={20} strokeWidth={3} aria-hidden />
+            </>
+          ) : (
+            <>
+              <ChevronLeft size={20} strokeWidth={3} aria-hidden /> Stickers
+            </>
+          )}
+        </button>
       </div>
       {selected && picked.size <= 1 && findTask(list.tasks, selected) && (
         <TaskPanel
