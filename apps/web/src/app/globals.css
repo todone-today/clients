@@ -80,9 +80,10 @@ body {
   overflow-x: hidden;
 }
 
+/* Ink on ground, read where the text is: shows on the page and on every coloured sticker (lime was lost on lime). */
 ::selection {
-  background: var(--lime);
-  color: var(--black);
+  background: var(--ink);
+  color: var(--ground);
 }
 
 :focus-visible {
