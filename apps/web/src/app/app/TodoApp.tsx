@@ -1050,6 +1050,7 @@ function ListView({
   // Notes glide to their new spots when the slot opens or moves, or a drop lands.
   const boardRef = useGlide<HTMLUListElement>();
   const drop = useDrop(`list-${list.id}`, {
+    say: (_, arg) => (arg === "gap" ? "Move here" : arg === "unnest" ? "Make it a task of its own" : undefined),
     accept: (p, arg) =>
       p.kind === "sticker"
         ? arg !== "unnest" && arg !== "gap"

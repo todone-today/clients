@@ -26,7 +26,30 @@ type Target = {
   where?: (p: Payload, arg: string, at: At) => string;
   // Optional: the pointer left the target (or the drag ended), e.g. to hide a preview.
   leave?: () => void;
+  // Optional: what dropping here does, in a few words, shown beside the pointer (else worked out from the page).
+  say?: (p: Payload, arg: string, where: string) => string | undefined;
 };
+
+// A short name for a drop target: its tooltip, else its first line of text.
+function nameOf(el: HTMLElement) {
+  const n = (el.dataset.tip || el.innerText.split("\n").find((l) => l.trim()) || "").trim();
+  return n.length > 32 ? n.slice(0, 31) + "…" : n;
+}
+// What letting go here would do, so a drop never lands somewhere unexpected.
+function sayFor(p: Payload, t: Target, scope: string, arg: string, where: string, el: HTMLElement) {
+  const custom = t.say?.(p, arg, where);
+  if (custom != null) return custom;
+  if (el.hasAttribute("data-bin")) return "Delete";
+  const name = nameOf(el);
+  if (!name) return "Drop here";
+  if (where === "before") return `Before “${name}”`;
+  if (where === "after") return `After “${name}”`;
+  if (scope === "stickers") return `Set ${name}`;
+  if (p.kind === "sticker") return `Apply to “${name}”`;
+  if (scope === "sidebar") return `Move to “${name}”`;
+  if (p.kind === "task" && scope.startsWith("list-")) return `Make it a step of “${name}”`;
+  return `Onto “${name}”`;
+}
 
 // Which part of an element the pointer is on: the first or last quarter along an axis, or the middle.
 export function placeOn(at: At, axis: "x" | "y", middle = true): "before" | "after" | "inside" {
@@ -59,7 +82,7 @@ function targetAt(x: number, y: number) {
   const box = targets.get(scope);
   const t = box?.current;
   // `box` is stable for a target's lifetime; `t` is replaced on every render of its component.
-  return box && t && t.accept(current, arg) ? { el, t, arg, box } : null;
+  return box && t && t.accept(current, arg) ? { el, t, arg, box, scope } : null;
 }
 
 // The page (or a scrolling box under the pointer) scrolls while a drag is held near its edge.
@@ -121,6 +144,7 @@ export function draggable(payload: Payload, label: string) {
       let ghost: ReturnType<typeof lift> | null = null;
       let over: HTMLElement | null = null;
       let overT: { current: Target } | null = null;
+      let tip: HTMLElement | null = null; // what the drop will do, beside the pointer
       let timer = 0;
       let raf = 0;
       let last = start;
@@ -145,8 +169,14 @@ export function draggable(payload: Payload, label: string) {
           if (overT && overT !== t?.box) overT.current.leave?.();
         }
         overT = t?.box ?? null;
-        hit?.setAttribute("data-over", t!.t.where?.(current!, t!.arg, { x, y, el: hit }) ?? "");
+        const where = t ? (t.t.where?.(current!, t.arg, { x, y, el: hit! }) ?? "") : "";
+        hit?.setAttribute("data-over", where);
         over = hit;
+        if (tip) {
+          tip.textContent = t ? sayFor(current!, t.t, t.scope, t.arg, where, hit!) : "";
+          tip.hidden = !t;
+          tip.style.transform = `translate(${x + 16}px, ${y + 18}px)`;
+        }
       };
       // While held: scroll near edges, and look again even if the pointer rests (a target may answer differently
       // after a pause, e.g. a note that takes a step only once you hover its middle a moment).
@@ -162,6 +192,9 @@ export function draggable(payload: Payload, label: string) {
         // What's being moved stays behind as a faint outline of where it was (a sticker is a palette: it stays).
         if (payload.kind !== "sticker") src.dataset.dragging = "";
         if (!ghost.home.width) Object.assign(ghost.g, { className: "drag-ghost", textContent: label });
+        tip = Object.assign(document.createElement("div"), { className: "drag-tip", hidden: true });
+        tip.setAttribute("aria-hidden", "true");
+        document.body.append(tip);
         document.body.classList.add("is-dragging");
         document.body.dataset.drag = payload.kind;
         bins = [...document.querySelectorAll<HTMLElement>("[data-bin]")].map((el) => {
@@ -220,6 +253,8 @@ export function draggable(payload: Payload, label: string) {
         over?.removeAttribute("data-over");
         overT?.current.leave?.();
         ghost?.g.remove();
+        tip?.remove();
+        tip = null;
         document.body.classList.remove("is-dragging");
         delete src.dataset.dragging;
         delete document.body.dataset.drag;

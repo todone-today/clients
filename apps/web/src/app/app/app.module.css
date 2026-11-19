@@ -1181,9 +1181,11 @@
 .idea:has(.moveTo:focus-visible) .grip {
   display: none;
 }
-.listBtn[data-over] {
-  border-color: var(--pink);
-  background: color-mix(in srgb, var(--pink) 25%, transparent);
+.listBtn[data-over="inside"] {
+  color: var(--black);
+  border-color: var(--black);
+  background: var(--pink);
+  box-shadow: 3px 3px 0 var(--black);
 }
 .ideaTools select {
   flex: 1;
@@ -2732,6 +2734,18 @@
   right: 1rem;
   z-index: 85;
   background: var(--ground);
+}
+/* Wider screens: the sticker panel is out on the right while a task is held, so the bin stays above it and,
+   floating, sits just left of it. */
+@media (min-width: 761px) {
+  :global(body.is-dragging) .bin:not([data-float]) {
+    position: relative;
+    z-index: 140;
+  }
+  .bin[data-float] {
+    right: 16rem;
+    z-index: 140;
+  }
 }
 
 /* The open task's editor sits inside the note: no box of its own, fields like stickers, a dashed rule above. */

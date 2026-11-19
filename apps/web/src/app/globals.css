@@ -240,6 +240,28 @@ img {
   box-shadow: var(--lift-sm);
   rotate: -2deg;
 }
+/* Beside the pointer while dragging (src/lib/drag.ts): what letting go there will do. */
+.drag-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1001;
+  max-width: 18rem;
+  padding: 0.3rem 0.6rem;
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--lime);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  background: var(--black);
+  border: 2px solid var(--lime);
+}
+.drag-tip[hidden] {
+  display: none;
+}
+
 /* The card itself, lifted while it's dragged (src/lib/drag.ts): a little bigger, tilted, with a deeper shadow. */
 .drag-card {
   position: fixed !important;
