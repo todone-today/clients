@@ -1496,7 +1496,6 @@
   color: var(--ink);
   border-color: var(--ink);
 }
-.bin[data-armed="true"],
 .bin[data-over] {
   color: var(--black);
   /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
@@ -7118,4 +7117,181 @@ input.askRowTitle:focus-visible {
   background: var(--cyan);
   border: 2px solid var(--black);
   box-shadow: 2px 2px 0 var(--black);
+}
+/* A goal's log history: folded under the log box, a plain list of when and how much. */
+.logHist {
+  font-size: 0.85rem;
+}
+.logHist summary {
+  width: fit-content;
+  font-weight: 800;
+  text-decoration: underline 1.5px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.logHist ol {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.logHist li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px dashed rgb(11 11 11 / 0.25);
+}
+.logHist time {
+  flex: 1;
+  opacity: 0.75;
+}
+.logHist li button {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.logHist li button:hover,
+.logHist li button:focus-visible {
+  opacity: 1;
+}
+
+/* Pull to refresh in the installed app (PullRefresh.tsx): a round sticker that drops in from the top. */
+.pullRefresh {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + var(--pull) - 2.75rem);
+  left: 50%;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-left: -1.375rem;
+  border: var(--key);
+  border-radius: 50%;
+  background: var(--butter);
+  box-shadow: 3px 3px 0 var(--shadow);
+  color: var(--black);
+  pointer-events: none;
+}
+.pullRefresh svg {
+  transform: rotate(var(--turn));
+}
+.pullRefresh[data-ready] {
+  background: var(--lime);
+}
+.pullRefresh[data-busy] {
+  background: var(--lime);
+  transition: top 0.2s ease;
+}
+.pullRefresh[data-busy] svg {
+  animation: pullSpin 0.7s linear infinite;
+}
+@keyframes pullSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pullRefresh[data-busy] svg {
+    animation: none;
+  }
+}
+
+/* Search (Search.tsx): a sticker with one field and the matching tasks, each tagged with its list. */
+.finder {
+  width: min(36rem, calc(100vw - 2rem));
+  margin-top: max(1rem, 10vh);
+  padding: 1rem;
+}
+.finderBox {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--ground);
+  border: var(--key);
+}
+.finderBox input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+.finderBox:focus-within {
+  outline: 3px solid var(--cyan);
+  outline-offset: 2px;
+}
+.finderCount {
+  margin: 0.6rem 0.2rem 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.finderList {
+  max-height: min(60vh, 28rem);
+  margin: 0.5rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.finderList li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  border-left: 6px solid var(--list);
+  border-bottom: 1px solid var(--hair);
+  cursor: pointer;
+}
+.finderList li[aria-selected="true"] {
+  background: var(--ground);
+}
+.finderDone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--black);
+  background: var(--ground);
+}
+.finderText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.finderText b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.finderText b[data-done] {
+  text-decoration: line-through;
+  color: var(--ink-2);
+}
+.finderText small {
+  overflow: hidden;
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.finderWhere {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

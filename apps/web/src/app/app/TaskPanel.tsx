@@ -93,6 +93,8 @@ export function TaskPanel({
 }) {
   const [writing, setWriting] = useState(false);
   const [busy, setBusy] = useState("");
+  // A link made just now: shown (and copied) at once, without waiting for the server again.
+  const [fresh, setFresh] = useState<{ token: string; copied: boolean } | null>(null);
   const [err, setErr] = useState("");
   const [asking, setAsking] = useState(false);
   const { gated } = usePlan();
@@ -142,7 +144,7 @@ export function TaskPanel({
   // Share: a readable copy goes to the server; private attachments go with it, readable (guests can't decrypt).
   const share = () =>
     run("Sharing…", async () => {
-      const { id } = await createShare(task);
+      const { id, token } = await createShare(task);
       try {
         const files = task.files ?? [];
         if (files.length) {
@@ -167,6 +169,12 @@ export function TaskPanel({
         throw x;
       }
       edit((t) => ({ ...t, share: id, files: undefined }));
+      // Copy straight away. Some browsers refuse after a wait; then the Copy link button is right there.
+      const copied = await navigator.clipboard.writeText(`${location.origin}/t/${token}`).then(
+        () => true,
+        () => false,
+      );
+      setFresh({ token, copied });
     });
 
   return (
@@ -408,7 +416,7 @@ export function TaskPanel({
         </section>
 
         {shared ? (
-          <SharedPart task={task} />
+          <SharedPart task={task} fresh={fresh} />
         ) : (
           <section className={s.panelSection}>
             <h3>
@@ -664,7 +672,7 @@ function useStopSharing(
 }
 
 // A shared task: the link, its controls, the shared attachments and the conversation.
-function SharedPart({ task }: { task: Task }) {
+function SharedPart({ task, fresh }: { task: Task; fresh: { token: string; copied: boolean } | null }) {
   const id = task.share!;
   const base = `/task-shares/${id}`;
   const [view, setView] = useState<{
@@ -673,7 +681,12 @@ function SharedPart({ task }: { task: Task }) {
     comments: Comment[];
   } | null>(null);
   const [err, setErr] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(!!fresh?.copied);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2500);
+    return () => clearTimeout(t);
+  }, [copied]);
   const load = useCallback(async () => {
     const v = await shareView(id);
     setView({
@@ -684,16 +697,17 @@ function SharedPart({ task }: { task: Task }) {
     markSeen(id, v.comments.filter((c) => c.guest).length);
     return v.comments;
   }, [id]);
-  useEffect(() => {
-    Promise.resolve()
-      .then(load)
-      .catch((x) =>
-        setErr(
-          x instanceof Error ? x.message : "Couldn't load the shared task.",
-        ),
-      );
+  const retry = useCallback(() => {
+    setErr("");
+    load().catch((x) =>
+      setErr(x instanceof Error ? x.message : "Couldn't load the shared task."),
+    );
   }, [load]);
-  const link = view ? `${location.origin}/t/${view.token}` : "";
+  useEffect(() => {
+    Promise.resolve().then(retry);
+  }, [retry]);
+  const token = view?.token ?? fresh?.token;
+  const link = token ? `${location.origin}/t/${token}` : "";
 
   return (
     <>
@@ -707,15 +721,14 @@ function SharedPart({ task }: { task: Task }) {
           <button
             className="btn"
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            disabled={!view}
+            disabled={!link}
             onClick={async () => {
               await navigator.clipboard.writeText(link).catch(() => {});
               setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
             }}
           >
             <Copy size={14} strokeWidth={2.5} aria-hidden />{" "}
-            {copied ? "Copied" : "Copy link"}
+            {copied ? "Link copied" : "Copy link"}
           </button>
           <button
             className={s.ghost}
@@ -731,7 +744,10 @@ function SharedPart({ task }: { task: Task }) {
         </div>
         {err && (
           <p className={s.err} role="alert">
-            {err}
+            {err}{" "}
+            <button className={s.ghost} onClick={retry}>
+              Try again
+            </button>
           </p>
         )}
       </section>

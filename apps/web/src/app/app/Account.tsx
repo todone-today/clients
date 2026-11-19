@@ -162,6 +162,11 @@ export function Account() {
         )}
       </section>
       {err && <p className={s.err}>{err}</p>}
+      <p className={s.fine}>
+        todone v{process.env.NEXT_PUBLIC_VERSION}
+        {process.env.NEXT_PUBLIC_COMMIT ? ` (${process.env.NEXT_PUBLIC_COMMIT})` : ""} ·{" "}
+        <Link href="/changelog">What&rsquo;s new</Link>
+      </p>
     </>
   );
 }

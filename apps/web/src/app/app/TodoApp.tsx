@@ -61,6 +61,10 @@ import { useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallPrompt } from "./InstallPrompt";
+import { PullRefresh } from "./PullRefresh";
+import { useSwipeDrawer } from "./swipeDrawer";
+import { Search } from "./Search";
+import { usage } from "@/lib/usage";
 import { fileFeedback } from "./feedback-inbox";
 import { openPlans } from "./checkout";
 import { AiImport } from "./AiImport";
@@ -157,6 +161,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     if (userId && readStart(userId) === "on") Promise.resolve().then(() => setStarting(true));
   }, [userId]);
   const [drawer, setDrawer] = useState(false);
+  useSwipeDrawer(drawer, setDrawer);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
   const [slim, setSlim] = useState(false);
   useEffect(() => {
@@ -444,6 +449,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <Welcome />
       <PlanPrompt />
       {!demo && !starting && <InstallPrompt />}
+      {!demo && <PullRefresh />}
       {starting && (
         <Start
           who={userId ?? "demo"}
@@ -511,6 +517,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <p className={s.local} role="status">
           {error && <span className={s.err}>{error}</span>}
         </p>
+        {lists && <Search lists={lists} onOpen={open} tile={s.tile} />}
         {!demo && <NotificationBell onOpen={open} />}
         <XpTile onClick={() => show("rewards")} />
         <button
@@ -908,8 +915,7 @@ function ListView({
   });
   const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
-  const [armed, setArmed] = useState(false);
-  // Deleting a list with goals linked to it asks whether they go too (yes by default) or stay, unlinked.
+  // Deleting a list always asks first (it can't be undone); linked goals go too by default, or stay, unlinked.
   const [asking, setAsking] = useState(false);
   const { lists: all } = useLists();
   const linked = useGoalItems().items.filter((g): g is Goal => g.t === "goal" && g.list === list.id);
@@ -1175,28 +1181,18 @@ function ListView({
   return (
     <>
       <div className={s.listHead}>
-        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click twice to delete the whole list. */}
+        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click it to delete the whole list (asks first). */}
         <button
           className={s.bin}
           data-tour="bin"
           data-bin
-          data-armed={armed}
           {...binDrop("bin")}
-          onClick={() => (!armed ? setArmed(true) : linked.length ? setAsking(true) : removeList(false))}
-          onBlur={() => setArmed(false)}
-          aria-label={
-            armed
-              ? "Click again to delete this list"
-              : "Delete list, or drop tasks here to delete them"
-          }
-          title={
-            armed
-              ? "Click again to delete this list"
-              : "Drop tasks here to delete them. Click to delete the list."
-          }
+          onClick={() => setAsking(true)}
+          aria-label="Delete list, or drop tasks here to delete them"
+          title="Drop tasks here to delete them. Click to delete the list."
         >
           <Trash2 size={28} strokeWidth={2.5} />
-          <span>{armed ? "Delete list?" : "Bin"}</span>
+          <span>Bin</span>
         </button>
         {/* Click the name to rename; Enter or clicking away saves, Esc cancels. */}
         {renaming ? (
@@ -1259,6 +1255,7 @@ function ListView({
       {asking && (
         <DeleteList
           name={list.name}
+          tasks={c.all}
           goals={linked.map((g) => g.title)}
           onCancel={() => setAsking(false)}
           onDelete={(goalsToo) => {
@@ -1314,6 +1311,7 @@ function ListView({
               for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
               setTasks((ts) => [{ id, title: t, done: false, created: Date.now(), sub: [] }, ...ts]);
               did("add");
+              usage({ name: "task_created", via: "typed" });
               setDraft("");
             }}
           >
@@ -1466,7 +1464,10 @@ function ListView({
           top={isTop(selected)}
           fill={colors.get(selected)}
           edit={(f) => setTasks((ts) => mapTask(ts, selected, f))}
-          onTick={() => setTasks((ts) => tick(ts, selected, today, me))}
+          onTick={() => {
+            if (!findTask(list.tasks, selected)?.done) usage({ name: "task_done" });
+            setTasks((ts) => tick(ts, selected, today, me));
+          }}
           onDelete={() => {
             const before = list.tasks;
             const gone = flatten(before).filter((t) => t.id === selected);
@@ -1586,7 +1587,10 @@ function TaskRow({
               ? `Comes back ${dueName(task.due!, today)}`
               : undefined
           }
-          onClick={() => setTasks((ts) => tick(ts, task.id, today, me))}
+          onClick={() => {
+            if (!task.done) usage({ name: "task_done" });
+            setTasks((ts) => tick(ts, task.id, today, me));
+          }}
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
@@ -1786,15 +1790,17 @@ const dueName = (due: string, today: string) => {
       : `on ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
 };
 
-// Deleting a list that has goals linked to it: a dialog, with its goals ticked to go too (untick to keep them,
-// no longer linked to a list).
+// Deleting a list: a dialog first, since it can't be undone. Goals linked to it are ticked to go too (untick to keep
+// them, no longer linked to a list).
 function DeleteList({
   name,
+  tasks,
   goals,
   onCancel,
   onDelete,
 }: {
   name: string;
+  tasks: number;
   goals: string[];
   onCancel: () => void;
   onDelete: (goalsToo: boolean) => void;
@@ -1811,28 +1817,39 @@ function DeleteList({
         Delete “{name}”?
       </h2>
       <p className={s.delNote}>
-        {one ? "A goal is linked to this list:" : `${goals.length} goals are linked to this list:`}
+        {tasks ? `Its ${tasks === 1 ? "task goes" : `${tasks} tasks go`} with it, for good. This can't be undone.` : "This can't be undone."}
       </p>
-      <ul className={s.delGoals}>
-        {goals.map((g, i) => (
-          <li key={i}>
-            <Target size={15} strokeWidth={2.5} aria-hidden /> {g}
-          </li>
-        ))}
-      </ul>
-      <label className={s.delCheck}>
-        <input type="checkbox" checked={goalsToo} onChange={(e) => setGoalsToo(e.target.checked)} />
-        <span>Delete {one ? "this goal" : "these goals"} too</span>
-      </label>
+      {goals.length > 0 && (
+        <>
+          <p className={s.delNote}>
+            {one ? "A goal is linked to this list:" : `${goals.length} goals are linked to this list:`}
+          </p>
+          <ul className={s.delGoals}>
+            {goals.map((g, i) => (
+              <li key={i}>
+                <Target size={15} strokeWidth={2.5} aria-hidden /> {g}
+              </li>
+            ))}
+          </ul>
+          <label className={s.delCheck}>
+            <input type="checkbox" checked={goalsToo} onChange={(e) => setGoalsToo(e.target.checked)} />
+            <span>Delete {one ? "this goal" : "these goals"} too</span>
+          </label>
+        </>
+      )}
       <div className={s.tools}>
-        <button className="btn" style={{ "--fill": "#fff8ef" } as React.CSSProperties} onClick={() => ref.current?.close()}>
+        <button
+          className="btn"
+          style={{ "--fill": "#fff8ef" } as React.CSSProperties}
+          onClick={() => ref.current?.close()}
+          autoFocus
+        >
           Cancel
         </button>
         <button
           className="btn"
           style={{ "--fill": "var(--hot)" } as React.CSSProperties}
           onClick={() => onDelete(goalsToo)}
-          autoFocus
         >
           <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete list
         </button>

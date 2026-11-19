@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import { readFileSync } from "node:fs";
+
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
 const nextConfig: NextConfig = {
+  // Shown in Account: the app's version and the commit it was built from (Vercel sets the commit).
+  env: {
+    NEXT_PUBLIC_VERSION: version,
+    NEXT_PUBLIC_COMMIT: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7),
+  },
   cacheComponents: true,
   partialPrefetching: true,
   skipTrailingSlashRedirect: true, // PostHog's /ingest calls end in a slash

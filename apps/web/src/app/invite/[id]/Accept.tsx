@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import s from "../../login/login.module.css";
 
 export function Accept() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [invite, setInvite] = useState<{ organizationName: string; email: string } | null>(null);
   const [err, setErr] = useState("");
@@ -48,8 +47,10 @@ export function Accept() {
               onClick={async () => {
                 const r = await authClient.organization.acceptInvitation({ invitationId: id });
                 if (r.error) return setErr(r.error.message ?? "Couldn't join.");
-                await authClient.organization.setActive({ organizationId: r.data.invitation.organizationId });
-                router.replace("/app");
+                const a = await authClient.organization.setActive({ organizationId: r.data.invitation.organizationId });
+                if (a.error) return setErr(a.error.message ?? "Joined, but couldn't open the team. Pick it in the workspace menu.");
+                // A full load, so the app reads the new team from the server rather than the cached session.
+                location.replace("/app");
               }}
             >
               Accept and open lists
