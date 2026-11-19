@@ -9,6 +9,8 @@ export const sentryOptions = {
   sendDefaultPii: false,
   tracesSampleRate: 0,
   beforeBreadcrumb: () => null,
+  // Microsoft's email link scanners (Outlook Safe Links, Bing) throw this when they open our links; not our code.
+  ignoreErrors: [/Object Not Found Matching Id/],
   beforeSend(event: ErrorEvent) {
     delete event.request;
     delete event.user;
