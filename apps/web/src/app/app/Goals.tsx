@@ -243,9 +243,19 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
     <>
       <Tip k="goals" title="Goals keep you going">
         <p>
-          Pick one thing that matters, log tiny wins as you go, and see your progress. Link a goal to a list and the
-          tasks you tick there count towards it.
+          A goal is one thing that matters to you. Link it to a list and the tasks you tick there count towards it.
         </p>
+        <ol className={s.goalHow}>
+          <li>
+            <b>Pick one thing.</b> Say why it matters, and what you&apos;ll do when it gets hard.
+          </li>
+          <li>
+            <b>Log tiny wins.</b> A tap a day. A quiet week never resets anything.
+          </li>
+          <li>
+            <b>Treat yourself.</b> Every finished task earns XP; spend it on rewards you choose.
+          </li>
+        </ol>
         <Drafts kind="goals" onPick={(g) => setMaking(g)} />
       </Tip>
       <div className={s.listHead}>
@@ -372,19 +382,6 @@ function GoalStart({ onPick, more = false, taken = [] }: { onPick: (g: Partial<G
           </li>
         ))}
       </ul>
-      {!more && (
-        <ol className={s.goalHow}>
-          <li>
-            <b>Pick one thing.</b> Say why it matters, and what you&apos;ll do when it gets hard.
-          </li>
-          <li>
-            <b>Log tiny wins.</b> A tap a day. A quiet week never resets anything.
-          </li>
-          <li>
-            <b>Treat yourself.</b> Every finished task earns XP; spend it on rewards you choose.
-          </li>
-        </ol>
-      )}
     </section>
   );
 }
@@ -1410,7 +1407,12 @@ export function Rewards() {
           </li>
         ))}
       </ul>
-      {!rewards.length && (
+    </section>
+  );
+  return (
+    <>
+      <Tip k="rewards" title="Earn XP, treat yourself">
+        <p>Rewards make finishing feel worth it today, not someday.</p>
         <ol className={s.goalHow}>
           <li>
             <b>Pick a treat.</b> Something you&apos;d genuinely look forward to, big or small.
@@ -1422,16 +1424,6 @@ export function Rewards() {
             <b>Claim it, guilt-free.</b> You earned it. Then pick the next one.
           </li>
         </ol>
-      )}
-    </section>
-  );
-  return (
-    <>
-      <Tip k="rewards" title="Earn XP, treat yourself">
-        <p>
-          Every task you finish earns XP: more for bigger, high-priority and on-time ones. Pick treats here and spend
-          your XP on them, so finishing feels worth it today.
-        </p>
         <Drafts
           kind="rewards"
           onPick={(r) =>
