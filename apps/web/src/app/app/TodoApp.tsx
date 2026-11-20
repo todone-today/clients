@@ -1637,7 +1637,7 @@ function TaskRow({
         >
           {task.done && <Check size={16} strokeWidth={3.5} />}
         </button>
-        {/* Click picks the task (its stickers and custom values are in the sidebar); double-click renames it. */}
+        {/* Click opens the task's panel (rename it there); Ctrl/Cmd-click picks it (with others). */}
         {renaming ? (
           <input
             className={`${s.taskTitle} ${s.titleField}`}
@@ -1678,7 +1678,7 @@ function TaskRow({
               );
             }}
             aria-pressed={open}
-            title="Click to pick, double-click to rename"
+            title="Click to open and edit · Ctrl/⌘-click to pick several · Drag to move"
           >
             {task.title}
           </button>
