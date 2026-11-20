@@ -29,6 +29,7 @@ import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
 import { listColor } from "./listIcon";
 import { useFolded } from "./folded";
 import { TaskPanel } from "./TaskPanel";
+import { Tip } from "./Tip";
 import s from "./app.module.css";
 
 type View = "day" | "week" | "month" | "year";
@@ -323,6 +324,13 @@ export function CalendarView({
   );
 
   return (
+    <>
+    <Tip k="calendar" title="Plan your days">
+      <p>
+        Tasks with a day show up here. Drag one from &ldquo;To plan&rdquo; onto a day or a time, and stretch a block to
+        set how long it takes. Day, week, month or year: switch at the top.
+      </p>
+    </Tip>
     <div
       className={s.calendar}
       onPointerDown={(e) => {
@@ -606,6 +614,7 @@ export function CalendarView({
         )}
       </div>
     </div>
+    </>
   );
 }
 

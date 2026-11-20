@@ -29,6 +29,8 @@ import { binSound } from "@/lib/sound";
 import { changeGoals, moveGoalItem, useGoalItems } from "./goalStore";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { ListIcon, listColor } from "./listIcon";
+import { type Suggested, suggest, suggested } from "@/lib/onboard";
+import { Tip } from "./Tip";
 import s from "./app.module.css";
 
 const FILLS = [
@@ -239,6 +241,13 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   ].filter((x) => x.goals.length);
   return (
     <>
+      <Tip k="goals" title="Goals keep you going">
+        <p>
+          Pick one thing that matters, log tiny wins as you go, and see your progress. Link a goal to a list and the
+          tasks you tick there count towards it.
+        </p>
+        <Drafts kind="goals" onPick={(g) => setMaking(g)} />
+      </Tip>
       <div className={s.listHead}>
         {goals.length > 0 && (
           <div className={s.bin} data-bin {...binDrop("bin")} title="Drop a goal here to delete it">
@@ -1418,6 +1427,18 @@ export function Rewards() {
   );
   return (
     <>
+      <Tip k="rewards" title="Earn XP, treat yourself">
+        <p>
+          Every task you finish earns XP: more for bigger, high-priority and on-time ones. Pick treats here and spend
+          your XP on them, so finishing feels worth it today.
+        </p>
+        <Drafts
+          kind="rewards"
+          onPick={(r) =>
+            changeGoals(lists, (xs) => [...xs, { t: "reward", id: uid() + uid(), title: r.title, cost: r.cost || perTask * 5 }])
+          }
+        />
+      </Tip>
       <div className={s.listHead}>
         <h1 className={`display ${s.title}`}>Rewards</h1>
         <div className={s.xpNotes}>
@@ -1810,5 +1831,38 @@ export function XpTile({ onClick }: { onClick: () => void }) {
         </b>
       )}
     </button>
+  );
+}
+
+// What Ask todone drafted from "About you" (lib/onboard.ts), offered once in the Goals or Rewards tip. A goal opens
+// in the goal dialog to look over; a reward is added as it is. Each one picked is gone from the drafts.
+function Drafts<K extends keyof Suggested>({ kind, onPick }: { kind: K; onPick: (x: Suggested[K][number]) => void }) {
+  const who = useMe();
+  const [all, setAll] = useState<Suggested | null>(() => (who ? suggested(who) : null));
+  const picks = (all?.[kind] ?? []) as Suggested[K][number][];
+  if (!who || !all || !picks.length) return null;
+  return (
+    <>
+      <p>
+        <b>From what you told us:</b>
+      </p>
+      <ul className={s.tipPicks}>
+        {picks.map((x, i) => (
+          <li key={`${x.title}-${i}`}>
+            <button
+              type="button"
+              onClick={() => {
+                onPick(x);
+                const next = { ...all, [kind]: picks.filter((_, j) => j !== i) } as Suggested;
+                suggest(who, next);
+                setAll(next);
+              }}
+            >
+              <Plus size={14} strokeWidth={3} aria-hidden /> {x.title}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

@@ -10,6 +10,7 @@ import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
 import { mapTask } from "@/lib/store";
 import { type List, type Task, moveTasks, uid } from "@todone/sdk/tasks";
+import { Tip } from "./Tip";
 import s from "./app.module.css";
 
 type Update = (id: string, f: (l: List) => List | null) => void;
@@ -145,6 +146,12 @@ export function Brainstorm({
 
   return (
     <>
+      <Tip k="ideas" title="A place for loose ideas">
+        <p>
+          Dump anything here, half-formed is fine. When an idea is ready, drag it onto a list in the sidebar and it
+          becomes a task. Not yet? Drag a task back here.
+        </p>
+      </Tip>
       <div className={s.listHead}>
         {/* Drop ideas here to delete them; click twice to clear them all. Undo brings them back either way. */}
         <button

@@ -6551,182 +6551,6 @@ body[data-drag="task"] .listGoal {
   }
 }
 
-/* Getting started: a checklist card in the bottom-right corner (above the bottom tabs on phones). */
-.start,
-.startPill {
-  position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  z-index: 130;
-  color: var(--black);
-  --ink: var(--black);
-  --ink-2: #4a4540;
-  --hair: rgb(11 11 11 / 0.22);
-  --ground: #fff8ef;
-  --raise: #f3eadb;
-  border: var(--key);
-  box-shadow: 6px 6px 0 var(--black);
-}
-.start {
-  display: grid;
-  gap: 0.75rem;
-  width: min(22rem, calc(100vw - 2rem));
-  padding: 1rem 1rem 0.85rem;
-  background: #fff8ef;
-  animation: startIn 0.35s var(--ease) both;
-}
-@keyframes startIn {
-  from {
-    opacity: 0;
-    transform: translateY(1rem) rotate(1deg);
-  }
-}
-.start header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-.start h2 {
-  font-size: 1.7rem;
-  line-height: 1;
-}
-.start header p {
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-2);
-}
-.startFold {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  flex: none;
-  color: var(--black);
-  background: #fff;
-  border: 2px solid var(--black);
-  cursor: pointer;
-}
-.startFold:hover {
-  background: var(--lime);
-}
-.start ol {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.start li {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0.5rem;
-  font-weight: 700;
-  font-size: 0.92rem;
-  background: var(--raise);
-  border: 2px solid transparent;
-}
-.start li[data-done] .startLabel {
-  text-decoration: line-through 2px;
-  color: var(--ink-2);
-}
-.start li[data-just] {
-  border-color: var(--black);
-  background: var(--lime);
-  animation: startJust 0.5s var(--ease);
-}
-@keyframes startJust {
-  40% {
-    transform: scale(1.04) rotate(-1deg);
-  }
-}
-.startBox {
-  display: grid;
-  place-items: center;
-  width: 1.3rem;
-  height: 1.3rem;
-  color: var(--lime);
-  background: #fff;
-  border: 2px solid var(--black);
-}
-.start li[data-done] .startBox {
-  background: var(--black);
-}
-.startXp {
-  padding: 0.05rem 0.4rem;
-  font: normal 800 0.75rem var(--sans);
-  background: var(--lime);
-  border: 2px solid var(--black);
-}
-.startShow {
-  padding: 0.25rem 0.55rem;
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: var(--black);
-  background: #fff;
-  border: 2px solid var(--black);
-  box-shadow: 2px 2px 0 var(--black);
-  cursor: pointer;
-}
-.startShow:hover {
-  background: var(--butter);
-}
-.startShow:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-}
-.start footer {
-  display: flex;
-  justify-content: flex-end;
-}
-.startSkip {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--ink-2);
-  text-decoration: underline 1.5px;
-  text-underline-offset: 0.2em;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-.startSkip:hover {
-  color: var(--black);
-}
-.startPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 0.8rem;
-  font-weight: 800;
-  background: var(--lime);
-  cursor: pointer;
-}
-.startCount {
-  padding: 0 0.4rem;
-  font-size: 0.8rem;
-  color: var(--lime);
-  background: var(--black);
-}
-@media (max-width: 760px) {
-  .start,
-  .startPill {
-    right: 0.75rem;
-    bottom: calc(4.9rem + env(safe-area-inset-bottom));
-  }
-  .start {
-    width: calc(100vw - 1.5rem);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .start,
-  .start li[data-just] {
-    animation: none;
-  }
-}
-
 /* Ask todone's results as their own dialog: title and steps on top, the stickers scroll, the buttons stay put. */
 .askWizard {
   display: none;
@@ -7131,22 +6955,6 @@ input.askRowTitle:focus-visible {
   font-size: 0.85rem;
   font-weight: 600;
 }
-/* After Skip: where the steps come back from, with the i drawn as it looks in the top bar. */
-.startGone {
-  margin: 0;
-  font-weight: 600;
-  line-height: 1.5;
-}
-.startI {
-  display: inline-grid;
-  place-items: center;
-  width: 1.6em;
-  height: 1.6em;
-  vertical-align: -0.35em;
-  background: var(--cyan);
-  border: 2px solid var(--black);
-  box-shadow: 2px 2px 0 var(--black);
-}
 /* A goal's log history: folded under the log box, a plain list of when and how much. */
 .logHist {
   font-size: 0.85rem;
@@ -7491,4 +7299,275 @@ input.askRowTitle:focus-visible {
 .askDBody[aria-busy="true"] {
   opacity: 0.5;
   pointer-events: none;
+}
+
+/* First visit, "About you" (Intro.tsx): a calm full-screen sheet with one question at a time, then the review. */
+.intro {
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--ground);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.intro::backdrop {
+  background: rgb(11 11 11 / 0.7);
+}
+.introCard {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+.introCard h2 {
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  line-height: 1;
+}
+.introCard h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.introCount {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.introHint {
+  color: var(--ink-2);
+}
+.introCard textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.45;
+  resize: vertical;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2.5px solid var(--ink);
+}
+.introCard textarea:focus-visible {
+  outline: none;
+  border-color: var(--lime);
+  box-shadow: 4px 4px 0 var(--lime);
+}
+.introFine {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+.introCard footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.introCard footer .link {
+  margin-right: auto;
+}
+.introPicks {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 32dvh;
+  overflow-y: auto;
+  list-style: none;
+}
+.introPicks label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  font-weight: 600;
+  background: var(--raise);
+  border: 2px solid var(--hair);
+  cursor: pointer;
+}
+.introPicks input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--lime);
+}
+.introPicks label:has(input:not(:checked)) span {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+/* The short tour (Tour.tsx): a spotlight cut out of a dimmed page, and a card beside it. Clicks pass through. */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  pointer-events: none;
+}
+.tourShade {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+}
+.tourSpot {
+  position: absolute;
+  border: 3px solid var(--lime);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.5);
+  transition:
+    left 0.25s var(--ease),
+    top 0.25s var(--ease),
+    width 0.25s var(--ease),
+    height 0.25s var(--ease);
+}
+.tourCard {
+  position: fixed;
+  display: grid;
+  gap: 0.6rem;
+  max-width: calc(100vw - 2rem);
+  padding: 1.1rem 1.25rem 1rem;
+  color: var(--black);
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+  pointer-events: auto;
+}
+.tourCard:focus-visible {
+  outline: 3px solid var(--cyan);
+}
+.tourCard h2 {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.tourCount {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.tourNav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+.tourNav .link {
+  margin-right: auto;
+  color: var(--black);
+}
+.tourNav .ghost {
+  color: var(--black);
+  border-color: var(--black);
+}
+/* Its stickers card brings the tucked-away sticker panel out while it shows. */
+@media (min-width: 761px) {
+  :global(body[data-tour-step]) .stickTab {
+    visibility: hidden;
+  }
+  :global(body[data-tour-step="stickers"]) .stickers {
+    transform: none;
+    visibility: visible;
+  }
+}
+@media (max-width: 760px) {
+  /* Its stickers card raises the phone's sticker sheet, with the card at the top so both show. */
+  :global(body[data-tour-step="stickers"]) .stickers {
+    position: fixed;
+    inset: auto 0 calc(3.75rem + env(safe-area-inset-bottom)) 0;
+    z-index: 125;
+    display: grid;
+    gap: 0.45rem;
+    max-height: 40dvh;
+    padding: 0.6rem var(--gutter);
+    background: var(--ground);
+    border-top: var(--key);
+  }
+  .tourCard[data-step="stickers"] {
+    top: calc(1rem + env(safe-area-inset-top)) !important;
+    bottom: auto;
+  }
+  .tourCard {
+    left: 1rem !important;
+    right: 1rem;
+    top: auto !important;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    width: auto !important;
+    translate: none !important;
+  }
+}
+
+/* One-time tips at the top of Brainstorm, Calendar, Goals and Rewards (Tip.tsx). */
+.tip {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+}
+.tip header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.tip h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.tip p {
+  max-width: 60ch;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.tipClose {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--black);
+}
+.tipClose:hover {
+  background: var(--black);
+  color: var(--butter);
+}
+.tipPicks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}
+.tipPicks button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: var(--ground);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+}
+.tipPicks button:hover {
+  background: var(--lime);
 }

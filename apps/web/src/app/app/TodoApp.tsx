@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { Welcome } from "@/components/Welcome";
-import { did, readStart, writeStart } from "@/lib/start";
-import { Start } from "./Start";
+import { Welcome, skipWelcome } from "@/components/Welcome";
+import { setTour, tourDue } from "@/lib/onboard";
+import { Intro } from "./Intro";
+import { Tour } from "./Tour";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -158,9 +159,11 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
   // ?go=add or ?go=calendar: the home-screen icon's shortcuts (manifest.ts), read once like ?plan.
   const [launch] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("go")));
-  const [starting, setStarting] = useState(false); // the getting-started checklist
+  // First visit: "About you" (Intro), then the short tour; the i in the top bar plays the tour again.
+  const [intro, setIntro] = useState(false);
+  const [touring, setTouring] = useState(false);
   useEffect(() => {
-    if (userId && readStart(userId) === "on") Promise.resolve().then(() => setStarting(true));
+    if (userId && tourDue(userId)) Promise.resolve().then(() => setTouring(true)); // reloaded mid-tour
   }, [userId]);
   const [drawer, setDrawer] = useState(false);
   useSwipeDrawer(drawer, setDrawer);
@@ -344,7 +347,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             position: i + 1,
           })),
         );
-        setStarting(true);
+        setTouring(true);
       });
   }, [demo]);
   // The service worker keeps the app openable offline (and shows push notifications).
@@ -389,13 +392,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       if (launch === "calendar") return setPanel("calendar");
       if (launch === "add")
         setTimeout(() => document.querySelector<HTMLInputElement>("input[placeholder^='Add a task']")?.focus(), 300);
-      // First visit: sample lists to play with (made here, so they're encrypted), then the getting-started steps.
+      // First visit: "About you" sets up their first list from what they say (made here, so it's encrypted).
       if (!orgId && (await startOnboarding())) {
-        const demoLists: { name: string; tasks: Task[]; kind?: "ideas" }[] =
-          await fetch(`/api/demo?today=${todayISO()}`).then((r) => r.json());
-        reorder(demoLists.map((l) => add(l.name, l.tasks, l.kind)));
-        writeStart(userId, "on");
-        setStarting(true);
+        skipWelcome();
+        setIntro(true);
       }
     })().catch(() => {});
   }, [demo, userId, orgId, vault, add, planWant, launch]);
@@ -440,31 +440,40 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     );
 
   const folded = slim;
-  // The getting-started steps again, from the i in the top bar (or the menu on a phone).
+  // The tour again, from the i in the top bar (or the menu on a phone), on the board where it points.
   const steps = () => {
     setDrawer(false);
-    if (userId) writeStart(userId, "on");
-    setStarting(true);
+    setPanel(null);
+    setTouring(true);
+  };
+  const endTour = () => {
+    setTouring(false);
+    if (userId) setTour(userId, false);
   };
   return (
     <div className={s.shell} data-slim={folded || undefined}>
       <Welcome />
       <PlanPrompt />
-      {!demo && !starting && <InstallPrompt />}
+      {!demo && !intro && !touring && <InstallPrompt />}
       {!demo && <PullRefresh />}
-      {starting && (
-        <Start
-          who={userId ?? "demo"}
-          me={userId ?? undefined}
-          lists={lists}
-          panel={panel}
-          onPanel={show}
-          onEnd={() => setStarting(false)}
+      {intro && userId && (
+        <Intro
+          who={userId}
+          ai={askAi}
+          add={add}
+          onDone={(id) => {
+            setIntro(false);
+            open(id);
+            setTour(userId, true);
+            setTouring(true);
+          }}
         />
       )}
+      {touring && lists && <Tour onEnd={endTour} />}
       <header className={s.top}>
         <button
           className={s.menu}
+          data-tour="menu"
           onClick={() => setDrawer(true)}
           aria-label="Lists and workspace"
           aria-expanded={drawer}
@@ -527,8 +536,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           style={{ "--fill": "var(--cyan)" } as React.CSSProperties}
           onClick={steps}
           data-tour="steps"
-          aria-label="Getting started steps"
-          data-tip="Getting started"
+          aria-label="Take the tour"
+          data-tip="Take the tour"
         >
           <Info size={18} strokeWidth={2.5} aria-hidden />
         </button>
@@ -712,7 +721,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           />
           {/* The top bar's i tile doesn't fit a phone, so the steps come back from here there. */}
           <button className={`${s.ghost} ${s.phoneOnly}`} onClick={steps}>
-            <Info size={16} strokeWidth={2.5} aria-hidden /> Getting started steps
+            <Info size={16} strokeWidth={2.5} aria-hidden /> Take the tour
           </button>
           {!demo && <Feedback />}
         </div>
@@ -1327,7 +1336,6 @@ function ListView({
               let id = uid();
               for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
               setTasks((ts) => [{ id, title: t, done: false, created: Date.now(), sub: [] }, ...ts]);
-              did("add");
               usage({ name: "task_created", via: "typed" });
               setDraft("");
             }}

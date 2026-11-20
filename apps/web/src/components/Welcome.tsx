@@ -21,7 +21,8 @@ export function greet(haiku: string[]) {
   } catch {}
 }
 
-function dismiss() {
+// The greeting closes (or is skipped: a first visit asks "About you" instead).
+export function skipWelcome() {
   try {
     sessionStorage.removeItem(KEY);
   } catch {}
@@ -44,7 +45,7 @@ export function Welcome() {
     lines = JSON.parse(raw);
   } catch {}
   return (
-    <dialog ref={dialog} className={s.welcome} aria-label="A haiku to start" onClose={dismiss}>
+    <dialog ref={dialog} className={s.welcome} aria-label="A haiku to start" onClose={skipWelcome}>
       <p className={s.lines}>
         {lines.map((l) => (
           <span key={l}>{l}</span>

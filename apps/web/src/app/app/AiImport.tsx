@@ -13,7 +13,6 @@ import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, IDEAS_EVENT, type Ask } from "./AskBar";
 import { AskSteps } from "./AskSteps";
-import { did } from "@/lib/start";
 import s from "./app.module.css";
 
 const newId = () => uid() + uid();
@@ -193,7 +192,6 @@ export function AiImport({
     };
     const extra: GoalItem[] = [...goals.map(linked), ...rewards.map((r) => ({ ...r, id: newId() }))];
     if (extra.length) changeGoals(everything, (xs) => [...xs, ...extra]);
-    did("ask");
     forget();
     close();
   };
@@ -718,7 +716,7 @@ function Credits({ used, limit }: { used: number; limit: number }) {
 }
 
 // While Ask todone works: a small dialog over everything, so nothing can be changed under it; Esc or Stop halts it.
-function Working({ doing, waited, onStop }: { doing: string; waited: number; onStop: () => void }) {
+export function Working({ doing, waited, onStop }: { doing: string; waited: number; onStop: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;

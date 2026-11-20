@@ -49,10 +49,13 @@ export default function Docs() {
       <h2 id="start">Getting started</h2>
       <p>
         <Link href="/login">Make an account</Link> with your email, Google,
-        GitHub or Discord. Your first visit starts with sample lists and a
-        short Get started checklist that pays XP for each step; change or
-        delete anything. Bring the checklist back any time with the <b>i</b>{" "}
-        at the top (on a phone, <b>Getting started steps</b> in the menu).
+        GitHub or Discord. Your first visit asks two things: what you want
+        more of in life, and what&apos;s on your plate now. Ask todone turns
+        your answers into your first list and some ideas in Brainstorm (skip
+        it to start with an empty list). A four-step tour follows; take it
+        again any time with the <b>i</b> at the top (on a phone,{" "}
+        <b>Take the tour</b> in the menu). Brainstorm, the calendar, Goals and
+        Rewards each explain themselves the first time you open them.
       </p>
 
       <h2 id="notes">Lists and notes</h2>
