@@ -9,6 +9,27 @@ export const metadata: Metadata = {
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.
 const ENTRIES: { date: string; title: string; items: string[] }[] = [
   {
+    date: "20 November 2026",
+    title: "A friendlier start",
+    items: [
+      "New here? todone asks what you want more of in life and what's on your plate, and Ask todone turns it into your first list and some ideas in Brainstorm. Skip it to start with an empty list.",
+      "Then a four-step tour on your own tasks. Take it again any time with the i at the top.",
+      "Brainstorm, the calendar, Goals and Rewards each explain themselves the first time you open them, and Goals and Rewards offer the ones Ask todone suggested from your answers.",
+      "The Get started checklist and the practice lists are gone.",
+    ],
+  },
+  {
+    date: "20 November 2026",
+    title: "Smaller things",
+    items: [
+      "Search every list with Ctrl/Cmd+F (or K, or /) and jump straight to the task.",
+      "The sticker panel tucks away: open it with the yellow arrow on the right, and it slides in on its own while you hold a task.",
+      "While you drag, a label beside the pointer says where it will land.",
+      "Ctrl/Cmd+A picks every idea in Brainstorm; deleting a list asks first; share links copy themselves.",
+      "On phones: swipe from the left for your lists, and pull down to refresh the installed app.",
+    ],
+  },
+  {
     date: "12 November 2026",
     title: "Sign in with Google, GitHub or Discord",
     items: [
