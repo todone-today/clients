@@ -74,11 +74,12 @@ export function Intro({
       usage({ name: "ask_used", via: "typed" });
       const plan = parsePlan(r.result, newId, 0);
       const isIdeas = (n: string | null) => !!n && /^ideas?$/i.test(n.trim());
-      const first = plan.lists.find((l) => !isIdeas(l.name) && l.tasks.length);
+      // One list to start: if it made more than one, their tasks join the first (nothing is dropped).
+      const todo = plan.lists.filter((l) => !isIdeas(l.name) && l.tasks.length);
       const ideas = plan.lists.filter((l) => isIdeas(l.name)).flatMap((l) => l.tasks);
       suggest(who, { goals: plan.goals, rewards: plan.rewards });
-      if (!first && !ideas.length) return fail("It didn't find anything to add from that.");
-      setMade({ name: first?.name?.trim() || "My tasks", tasks: first?.tasks ?? [], ideas });
+      if (!todo.length && !ideas.length) return fail("It didn't find anything to add from that.");
+      setMade({ name: todo[0]?.name?.trim() || "My tasks", tasks: todo.flatMap((l) => l.tasks), ideas });
       setStep("review");
     } catch (e) {
       if (mine === turn.current) fail(e instanceof Error ? e.message : "Ask todone didn't answer.");
