@@ -109,7 +109,8 @@ function edgeScroll(x: number, y: number) {
 
 // The card itself, lifted: a copy of what was grabbed, held where the pointer took it. It sits beside the original
 // so the page's styles still apply to it; `fixed` keeps it with the pointer.
-function lift(src: HTMLElement, count: number, x: number, y: number) {
+// `above`: touch. The card rides just above the finger, so the finger doesn't hide it or the spot it would land on.
+function lift(src: HTMLElement, count: number, x: number, y: number, above = false) {
   const r = src.getBoundingClientRect();
   const g = src.cloneNode(true) as HTMLElement;
   for (const el of [g, ...g.querySelectorAll<HTMLElement>("[data-id],[data-drop],[data-tour],[id],[data-dragged]")]) {
@@ -130,7 +131,7 @@ function lift(src: HTMLElement, count: number, x: number, y: number) {
   const at = g.getBoundingClientRect();
   g.style.left = `${r.left * 2 - at.left}px`;
   g.style.top = `${r.top * 2 - at.top}px`;
-  return { g, dx: x - r.left, dy: y - r.top, home: r };
+  return { g, dx: x - r.left, dy: above ? Math.min(r.height, 140) + 16 : y - r.top, home: r };
 }
 
 // Props for a draggable element. `label` names what's moving (it's the fallback ghost when nothing can be lifted).
@@ -175,7 +176,10 @@ export function draggable(payload: Payload, label: string) {
         if (tip) {
           tip.textContent = t ? sayFor(current!, t.t, t.scope, t.arg, where, hit!) : "";
           tip.hidden = !t;
-          tip.style.transform = `translate(${x + 16}px, ${y + 18}px)`;
+          // Touch: above the lifted card, where it can be read; a mouse pointer: just below-right of it.
+          tip.style.transform = touch
+            ? `translate(${Math.max(8, Math.min(x - 60, innerWidth - 200))}px, ${Math.max(8, y - ghost.dy - 44)}px)`
+            : `translate(${x + 16}px, ${y + 18}px)`;
         }
       };
       // While held: scroll near edges, and look again even if the pointer rests (a target may answer differently
@@ -188,7 +192,7 @@ export function draggable(payload: Payload, label: string) {
       const begin = (x: number, y: number) => {
         current = payload;
         const count = "ids" in payload ? payload.ids.length : 1;
-        ghost = lift(src, count, x, y);
+        ghost = lift(src, count, x, y, touch);
         // What's being moved stays behind as a faint outline of where it was (a sticker is a palette: it stays).
         if (payload.kind !== "sticker") src.dataset.dragging = "";
         if (!ghost.home.width) Object.assign(ghost.g, { className: "drag-ghost", textContent: label });

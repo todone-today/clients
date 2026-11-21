@@ -7851,3 +7851,69 @@ input.askRowTitle:focus-visible {
     font-size: 0.92rem;
   }
 }
+
+/* The drop dock (phones, while a task or idea is held): the lists to move it to, above the tab bar. */
+.dropDock {
+  display: none;
+}
+@media (max-width: 760px) {
+  :global(body[data-drag="task"]) .dropDock,
+  :global(body[data-drag="idea"]) .dropDock {
+    position: fixed;
+    inset: auto 0 calc(3.75rem + env(safe-area-inset-bottom)) 0;
+    z-index: 126;
+    display: grid;
+    gap: 0.4rem;
+    max-height: 34dvh;
+    padding: 0.6rem var(--gutter) 0.7rem;
+    overflow: hidden;
+    background: var(--ground);
+    border-top: var(--key);
+    box-shadow: 0 -6px 0 var(--shadow);
+  }
+  .dropDock p {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .dropDock ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    list-style: none;
+  }
+  /* A task can't move to the list it's in, and only tasks go back to Brainstorm. */
+  :global(body[data-drag="task"]) .dropDock li[data-current],
+  :global(body[data-drag="idea"]) .dropDock li[data-ideas] {
+    display: none;
+  }
+  .dockList {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 11rem;
+    padding: 0.55rem 0.7rem;
+    overflow: hidden;
+    font-size: 0.88rem;
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--ink);
+    background: var(--raise);
+    border: 2.5px solid var(--ink);
+    border-left: 8px solid var(--list, var(--peri));
+  }
+  .dockList[data-over] {
+    color: var(--black);
+    background: var(--lime);
+    transform: scale(1.06);
+  }
+  /* While holding, the board stays in view: the sticker sheet waits (tap stickers on picked tasks instead). */
+  :global(body[data-drag="task"]) .stickers[data-active="true"],
+  :global(body[data-drag="task"]) .stickers {
+    display: none;
+  }
+}

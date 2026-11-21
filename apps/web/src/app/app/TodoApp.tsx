@@ -730,6 +730,32 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         </div>
       </aside>
 
+      {/* Phones: the sidebar is a drawer, so while a task or idea is held, its drop targets come up from the bottom:
+          the other lists (move it there) and, for a task, Brainstorm. The same targets as the sidebar's. */}
+      {lists && (
+        <div className={s.dropDock} aria-hidden>
+          <p>Move to</p>
+          <ul>
+            {sorted.map((l) => (
+              <li key={l.id} data-current={(!panel && l.id === list?.id) || undefined}>
+                <span
+                  className={s.dockList}
+                  style={{ "--list": listColor(l.id) } as React.CSSProperties}
+                  {...dropOnList(l.id)}
+                  data-tip={l.name}
+                >
+                  <ListIcon id={l.id} name={l.name} icon={l.icon} /> {l.name}
+                </span>
+              </li>
+            ))}
+            <li data-ideas>
+              <span className={s.dockList} {...dropOnList("ideas")} data-tip="Brainstorm">
+                <Lightbulb size={15} strokeWidth={2.5} aria-hidden /> Brainstorm
+              </span>
+            </li>
+          </ul>
+        </div>
+      )}
       <main className={s.main}>
         {panel === "calendar" ? (
           lists && (
@@ -1071,7 +1097,15 @@ function ListView({
   // Notes glide to their new spots when the slot opens or moves, or a drop lands.
   const boardRef = useGlide<HTMLUListElement>();
   const drop = useDrop(`list-${list.id}`, {
-    say: (_, arg) => (arg === "gap" ? "Move here" : arg === "unnest" ? "Make it a task of its own" : undefined),
+    // Over the board's space a held note lands in the open slot; only a step dropped there becomes a task of its own.
+    say: (p, arg) =>
+      arg === "gap" || (arg === "unnest" && gap)
+        ? "Move here"
+        : arg === "unnest"
+          ? p.kind === "task" && p.ids.every(isTop)
+            ? "Leave it here"
+            : "Make it a task of its own"
+          : undefined,
     accept: (p, arg) =>
       p.kind === "sticker"
         ? arg !== "unnest" && arg !== "gap"
