@@ -1798,14 +1798,27 @@ export function XpTile({ onClick }: { onClick: () => void }) {
   const xp = balance(items, me);
   const prev = useRef<number | null>(null);
   const [pop, setPop] = useState<{ n: number; k: number } | null>(null);
+  // The number shown rolls from the old total to the new one (ease-out, ~0.8s); jumps when motion is reduced.
+  const [shown, setShown] = useState(xp);
   useEffect(() => {
     const before = prev.current;
     prev.current = xp;
-    if (before !== null && xp > before) {
-      Promise.resolve().then(() => setPop({ n: xp - before, k: Date.now() }));
-      const t = setTimeout(() => setPop(null), 1400);
-      return () => clearTimeout(t);
+    if (before === null || before === xp || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      Promise.resolve().then(() => setShown(xp));
+      return;
     }
+    const start = performance.now();
+    let raf = requestAnimationFrame(function step(now) {
+      const p = Math.min(1, (now - start) / 800);
+      setShown(Math.round(before + (xp - before) * (1 - (1 - p) ** 3)));
+      if (p < 1) raf = requestAnimationFrame(step);
+    });
+    if (xp > before) Promise.resolve().then(() => setPop({ n: xp - before, k: Date.now() }));
+    const t = setTimeout(() => setPop(null), 1400);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
   }, [xp]);
   return (
     <button
@@ -1816,7 +1829,9 @@ export function XpTile({ onClick }: { onClick: () => void }) {
       data-tip="Your XP: spend it on rewards"
     >
       <Zap size={15} strokeWidth={2.75} aria-hidden />
-      <span>{xp}</span>
+      <span className={s.xpCount} data-rolling={shown !== xp || undefined}>
+        {shown}
+      </span>
       {pop && (
         <b key={pop.k} className={s.xpPop} aria-hidden>
           +{pop.n}

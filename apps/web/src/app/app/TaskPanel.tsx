@@ -33,7 +33,6 @@ import {
   taskMarkdown,
   taskText,
 } from "@/lib/export";
-import { Note } from "@/components/Note";
 import { Select } from "@/components/Select";
 import { type Comment, Thread } from "@/components/Thread";
 import {
@@ -91,7 +90,6 @@ export function TaskPanel({
   onDelete: () => void;
   onClose: () => void;
 }) {
-  const [writing, setWriting] = useState(false);
   const [busy, setBusy] = useState("");
   // A link made just now: shown (and copied) at once, without waiting for the server again.
   const [fresh, setFresh] = useState<{ token: string; copied: boolean } | null>(null);
@@ -188,6 +186,15 @@ export function TaskPanel({
         aria-modal="true"
         aria-label={`Task: ${task.title}`}
         style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}
+        // Files dropped anywhere on the task attach to it (dropped on Notes, they go with the note instead).
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+        }}
+        onDrop={(e) => {
+          if (!e.dataTransfer.files.length) return;
+          e.preventDefault();
+          attach(e.dataTransfer.files);
+        }}
       >
         <header className={s.panelHead}>
           <button
@@ -380,40 +387,6 @@ export function TaskPanel({
             </p>
           )}
 
-        <section className={s.panelSection}>
-          <h3>Description</h3>
-          {writing ? (
-            <textarea
-              className={s.panelNote}
-              autoFocus
-              defaultValue={task.note ?? ""}
-              maxLength={20_000}
-              placeholder="Details, links, a checklist (- item)… **bold**, _italic_ work."
-              onBlur={(e) => {
-                const v = e.target.value.trim();
-                if (v !== (task.note ?? ""))
-                  edit((t) => ({ ...t, note: v || undefined }));
-                setWriting(false);
-              }}
-            />
-          ) : task.note ? (
-            <button
-              className={s.panelNoteView}
-              onClick={() => setWriting(true)}
-              title="Click to edit"
-            >
-              <Note text={task.note} />
-            </button>
-          ) : (
-            <button
-              className={s.panelNoteView}
-              data-empty
-              onClick={() => setWriting(true)}
-            >
-              Add details, links or a checklist…
-            </button>
-          )}
-        </section>
 
         {shared ? (
           <SharedPart task={task} fresh={fresh} />
@@ -866,6 +839,12 @@ function Notes({
       )}
       <form
         className={s.noteForm}
+        onDrop={(e) => {
+          if (!e.dataTransfer.files.length) return;
+          e.preventDefault();
+          e.stopPropagation();
+          attach(e.dataTransfer.files);
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           add();
@@ -898,6 +877,12 @@ function Notes({
             aria-label="Note"
             maxLength={4000}
             rows={2}
+            onPaste={(e) => {
+              // Pasted screenshots or copied files attach; plain text pastes as usual.
+              if (!e.clipboardData.files.length) return;
+              e.preventDefault();
+              attach(e.clipboardData.files);
+            }}
             onKeyDown={(e) => {
               if (
                 e.key === "Enter" &&

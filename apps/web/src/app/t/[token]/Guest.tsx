@@ -6,7 +6,6 @@ import { Check, LockOpen } from "lucide-react";
 import { type Task, fmtMinutes } from "@todone/sdk/tasks";
 import { Logo } from "@/components/Logo";
 import { Media } from "@/components/Media";
-import { Note } from "@/components/Note";
 import { type Comment, Thread } from "@/components/Thread";
 import { sharedUrl } from "@/lib/files";
 import s from "./guest.module.css";
@@ -113,9 +112,6 @@ export function Guest({ token }: { token: string }) {
               {data.task.pri ? <span>{PRI[data.task.pri]}</span> : null}
               {data.task.rep ? <span>{data.task.rep}</span> : null}
             </p>
-            {data.task.note && (
-              <Note text={data.task.note} className={s.note} />
-            )}
             {data.task.sub.length > 0 && (
               <ul className={s.steps}>
                 {data.task.sub.map((x) => (

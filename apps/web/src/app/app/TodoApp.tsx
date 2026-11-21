@@ -13,7 +13,7 @@ import {
   ListChecks,
   CalendarDays,
   Gift,
-  AlignLeft,
+  MessageSquare,
   Lightbulb,
   Lock,
   LockOpen,
@@ -1754,9 +1754,12 @@ function TaskRow({
               {task.files.length}
             </span>
           ) : null}
-          {task.note ? (
-            <span title="Has a description">
-              <AlignLeft size={11} strokeWidth={2.75} aria-hidden />
+          {task.history?.length ? (
+            <span
+              title={`${task.history.length} note${task.history.length === 1 ? "" : "s"}`}
+            >
+              <MessageSquare size={11} strokeWidth={2.75} aria-hidden />{" "}
+              {task.history.length}
             </span>
           ) : null}
           {task.due ? (
