@@ -12,6 +12,7 @@ import {
   Target,
   ListChecks,
   CalendarDays,
+  Ellipsis,
   Gift,
   MessageSquare,
   Lightbulb,
@@ -1254,6 +1255,7 @@ function ListView({
     onSelect: setSelected,
     picked,
     onPick: pick,
+    onRemove: remove,
     selecting: selectMode,
     drop,
     colors,
@@ -1633,6 +1635,7 @@ function TaskRow({
   onSelect,
   picked,
   onPick,
+  onRemove,
   selecting,
   drop,
   colors,
@@ -1649,6 +1652,7 @@ function TaskRow({
   onSelect: (id: string | null) => void;
   picked: Set<string>;
   onPick: (id: string) => void;
+  onRemove: (ids: string[]) => void; // to the bin, with undo
   selecting: boolean; // select mode: a tap picks instead of ticking or opening
   drop: (arg: string) => object;
   colors: Map<string, string>;
@@ -1667,6 +1671,7 @@ function TaskRow({
   const late = lateBy(task, today, nowMin);
   // Dragging a selected task carries the whole selection.
   const ids = picked.has(task.id) ? [...picked] : [task.id];
+  const swipe = useSwipe(task.id, top && !selecting);
   const row = {
     listId,
     today,
@@ -1676,6 +1681,7 @@ function TaskRow({
     onSelect,
     picked,
     onPick,
+    onRemove,
     selecting,
     drop,
     colors,
@@ -1690,9 +1696,11 @@ function TaskRow({
       data-pop={pop || undefined}
       data-open={open || undefined}
       data-dragged={dragged || undefined}
+      data-swiped={swipe.x ? "" : undefined}
+      {...swipe.handlers}
       style={
         top
-          ? ({ "--fill": colors.get(task.id) } as React.CSSProperties)
+          ? ({ "--fill": colors.get(task.id), "--swipe": `${swipe.x}px` } as React.CSSProperties)
           : undefined
       }
     >
@@ -1882,6 +1890,23 @@ function TaskRow({
           ))}
         </ul>
       )}
+      {top && (
+        // Swiped left (phones): the note's quick actions, sliding in from its right edge.
+        <div className={s.swipeActions} data-swipe-actions aria-hidden={!swipe.x} inert={!swipe.x}>
+          <button onClick={() => (swipe.close(), onSelect(task.id))}>
+            <Ellipsis size={18} strokeWidth={2.75} aria-hidden /> More
+          </button>
+          <button
+            data-act="today"
+            onClick={() => (swipe.close(), edit((t) => ({ ...t, due: today })))}
+          >
+            <CalendarDays size={18} strokeWidth={2.5} aria-hidden /> Today
+          </button>
+          <button data-act="delete" onClick={() => (swipe.close(), onRemove([task.id]))}>
+            <Trash2 size={18} strokeWidth={2.5} aria-hidden /> Delete
+          </button>
+        </div>
+      )}
     </li>
   );
 }
@@ -1998,4 +2023,65 @@ function DeleteList({
       </div>
     </dialog>
   );
+}
+
+// Swipe a note left (touch) to show its actions, like a phone's mail app; swipe back, tap it, or open another to
+// close. Only one note is open at a time. A long press still drags the note (lib/drag.ts gives way to a swipe).
+const SWIPE_W = 168; // the actions' width
+const SWIPE_EVENT = "todone:swipe";
+function useSwipe(id: string, on: boolean) {
+  const [x, setX] = useState(0);
+  const from = useRef<{ x: number; y: number; base: number; dir?: "h" | "v" } | null>(null);
+  const close = () => setX(0);
+  useEffect(() => {
+    const other = (e: Event) => (e as CustomEvent<string>).detail !== id && setX(0);
+    addEventListener(SWIPE_EVENT, other);
+    return () => removeEventListener(SWIPE_EVENT, other);
+  }, [id]);
+  useEffect(() => {
+    if (!on) Promise.resolve().then(() => setX(0));
+  }, [on]);
+  const handlers = on
+    ? {
+        onPointerDown: (e: React.PointerEvent) => {
+          if (e.pointerType !== "touch") return;
+          from.current = { x: e.clientX, y: e.clientY, base: x };
+        },
+        onPointerMove: (e: React.PointerEvent) => {
+          const f = from.current;
+          if (!f || document.body.classList.contains("is-dragging")) return;
+          const dx = e.clientX - f.x;
+          const dy = e.clientY - f.y;
+          if (!f.dir && Math.hypot(dx, dy) > 10) f.dir = Math.abs(dx) > Math.abs(dy) * 1.2 ? "h" : "v";
+          if (f.dir === "h") setX(Math.max(-SWIPE_W, Math.min(0, f.base + dx)));
+        },
+        onPointerUp: () => {
+          const f = from.current;
+          from.current = null;
+          if (f?.dir !== "h") return;
+          const open = x < -SWIPE_W / 2;
+          setX(open ? -SWIPE_W : 0);
+          if (open) {
+            navigator.vibrate?.(8);
+            dispatchEvent(new CustomEvent(SWIPE_EVENT, { detail: id }));
+          }
+          // The tap the browser sends at the end of a swipe isn't a tap on the note.
+          const swallow = (c: MouseEvent) => (c.stopPropagation(), c.preventDefault());
+          addEventListener("click", swallow, { capture: true, once: true });
+          setTimeout(() => removeEventListener("click", swallow, { capture: true }), 0);
+        },
+        onPointerCancel: () => {
+          from.current = null;
+          setX((v) => (v < -SWIPE_W / 2 ? -SWIPE_W : 0));
+        },
+        // Open: a tap on the note (not its actions) closes it instead of opening the task.
+        onClickCapture: (e: React.MouseEvent) => {
+          if (!x || (e.target as HTMLElement).closest("[data-swipe-actions]")) return;
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        },
+      }
+    : {};
+  return { x, close, handlers };
 }

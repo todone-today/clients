@@ -7917,3 +7917,61 @@ input.askRowTitle:focus-visible {
     display: none;
   }
 }
+
+/* Chips are stickers of their own, not tints of the note: cream with a dark edge, so "Daily", "30m" or the notes
+   count never melt into the note's colour (date, late and priority chips keep their colours). */
+.chips span:not(.due, .late, .sharedChip, .goalChip),
+.chips .chip:not(.due, .late, [data-pri], [data-effort]) {
+  color: var(--black);
+  background: #fff8ef;
+  border-color: var(--black);
+}
+
+/* Swipe a note left (phones): its actions slide in from the right edge, the note's face moves aside with them. */
+.swipeActions {
+  display: none;
+}
+@media (max-width: 760px) {
+  .note {
+    position: relative;
+    overflow: clip;
+    touch-action: pan-y; /* sideways moves are ours (the swipe); up and down still scroll the page */
+  }
+  .note > :not(.swipeActions) {
+    translate: var(--swipe, 0) 0;
+    transition: translate 0.14s var(--ease);
+  }
+  .swipeActions {
+    position: absolute;
+    inset: 0 0 0 auto;
+    display: flex;
+    width: 168px;
+    translate: calc(168px + var(--swipe, 0px)) 0;
+    transition: translate 0.14s var(--ease);
+  }
+  .swipeActions button {
+    display: grid;
+    flex: 1;
+    place-content: center;
+    justify-items: center;
+    gap: 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--black);
+    background: var(--peri);
+    border-left: 2px solid var(--black);
+  }
+  .swipeActions [data-act="today"] {
+    background: var(--butter);
+  }
+  .swipeActions [data-act="delete"] {
+    color: #fff;
+    background: var(--hot);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note > :not(.swipeActions),
+  .swipeActions {
+    transition: none;
+  }
+}
