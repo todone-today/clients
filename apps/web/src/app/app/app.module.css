@@ -7975,3 +7975,79 @@ input.askRowTitle:focus-visible {
     transition: none;
   }
 }
+
+/* What a tick just earned (Goals.tsx XpWon): a card that pops up above the bottom bars, then goes. */
+.xpWon {
+  position: fixed;
+  left: 50%;
+  bottom: 6.5rem;
+  z-index: 140;
+  display: grid;
+  gap: 0.35rem;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.9rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--black);
+  cursor: pointer;
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: var(--lift);
+  translate: -50% 0;
+  animation: xpWonIn 0.35s var(--ease) both;
+}
+.xpWon[data-ready] {
+  background: var(--lime);
+}
+.xpWonGain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font: 900 1.4rem/1 var(--display);
+}
+.xpWonBar {
+  display: block;
+  height: 0.7rem;
+  overflow: hidden;
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.xpWonBar i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  border-right: 2px solid var(--black);
+  transform-origin: left;
+  animation: xpWonFill 0.9s 0.25s var(--ease) both;
+}
+.xpWon[data-ready] .xpWonBar i {
+  background: var(--butter);
+}
+@keyframes xpWonIn {
+  from {
+    opacity: 0;
+    translate: -50% 1rem;
+    scale: 0.96;
+  }
+}
+@keyframes xpWonFill {
+  from {
+    transform: scaleX(var(--from));
+  }
+  to {
+    transform: scaleX(var(--to));
+  }
+}
+@media (max-width: 760px) {
+  .xpWon {
+    bottom: calc(9.5rem + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xpWon,
+  .xpWonBar i {
+    animation: none;
+  }
+  .xpWonBar i {
+    transform: scaleX(var(--to));
+  }
+}

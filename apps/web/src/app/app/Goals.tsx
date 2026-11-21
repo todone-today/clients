@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   Gift,
@@ -1857,11 +1858,27 @@ export function XpTile({ onClick }: { onClick: () => void }) {
   const xp = balance(items, me);
   const prev = useRef<number | null>(null);
   const [pop, setPop] = useState<{ n: number; k: number } | null>(null);
+  // Earned some: a card pops up with the XP and how close the next reward is (or that it's ready).
+  const [won, setWon] = useState<Won | null>(null);
+  const [since] = useState(() => Date.now());
+  // Read when XP changes (not a reason to re-run that effect, which would cut the roll short).
+  const rewardsNow = useRef(items);
+  useEffect(() => {
+    rewardsNow.current = items;
+  });
   // The number shown rolls from the old total to the new one (ease-out, ~0.8s); jumps when motion is reduced.
   const [shown, setShown] = useState(xp);
   useEffect(() => {
     const before = prev.current;
     prev.current = xp;
+    // Not for XP that arrives with the page loading (another device's ticks syncing in), only what you just earned.
+    if (before !== null && xp > before && Date.now() - since > 3000) {
+      const next = rewardsNow.current
+        .filter((i): i is Reward => i.t === "reward")
+        .sort((a, b) => a.cost - b.cost)
+        .find((r) => r.cost > before);
+      Promise.resolve().then(() => setWon({ before, xp, next, k: Date.now() }));
+    }
     if (before === null || before === xp || matchMedia("(prefers-reduced-motion: reduce)").matches) {
       Promise.resolve().then(() => setShown(xp));
       return;
@@ -1878,7 +1895,7 @@ export function XpTile({ onClick }: { onClick: () => void }) {
       cancelAnimationFrame(raf);
       clearTimeout(t);
     };
-  }, [xp]);
+  }, [xp, since]);
   return (
     <button
       className={`${s.tile} ${s.xpTile}`}
@@ -1896,7 +1913,57 @@ export function XpTile({ onClick }: { onClick: () => void }) {
           +{pop.n}
         </b>
       )}
+      {won && <XpWon key={won.k} won={won} onSee={onClick} onDone={() => setWon(null)} />}
     </button>
+  );
+}
+
+// What a tick just earned, and the pull of the next reward: a bar that fills from where you were to where you are
+// now (progress feels faster near the end, so it shows the distance left), or, once it's paid for, "ready to claim"
+// with confetti. It goes by itself; tapping it opens Rewards.
+type Won = { before: number; xp: number; next?: Reward; k: number };
+function XpWon({ won, onSee, onDone }: { won: Won; onSee: () => void; onDone: () => void }) {
+  const { before, xp, next } = won;
+  const ready = !!next && xp >= next.cost;
+  const done = useRef(onDone);
+  useEffect(() => {
+    done.current = onDone;
+  });
+  useEffect(() => {
+    const t = setTimeout(() => done.current(), ready ? 4500 : 3200);
+    return () => clearTimeout(t);
+  }, [ready]);
+  return createPortal(
+    <div
+      className={s.xpWon}
+      data-ready={ready || undefined}
+      role="status"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSee();
+        onDone();
+      }}
+    >
+      {ready && <Confetti />}
+      <b className={s.xpWonGain}>
+        <Zap size={16} strokeWidth={2.75} aria-hidden /> +{xp - before} XP
+      </b>
+      {next ? (
+        <>
+          <span>{ready ? <>Ready to claim: <b>{next.title}</b></> : <>{next.cost - xp} XP to <b>{next.title}</b></>}</span>
+          <span
+            className={s.xpWonBar}
+            aria-hidden
+            style={{ "--from": Math.min(1, before / next.cost), "--to": Math.min(1, xp / next.cost) } as React.CSSProperties}
+          >
+            <i />
+          </span>
+        </>
+      ) : (
+        <span>Add a reward to save up for. Tap to pick one.</span>
+      )}
+    </div>,
+    document.body,
   );
 }
 
