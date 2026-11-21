@@ -4940,6 +4940,7 @@ input.stick[data-custom][aria-invalid="true"] {
 @media (min-width: 761px) {
   .shell[data-slim] > .side {
     overflow: visible;
+    z-index: 40; /* above the board's cards, so a list's name tip isn't drawn under them */
   }
 }
 
@@ -5230,12 +5231,13 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .listGoal header {
   display: flex;
+  flex-wrap: wrap; /* the title keeps room; a long "Reach 3000 users by…" label drops to its own line */
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
 }
 .listGoal header b {
-  flex: 1;
+  flex: 1 1 8rem;
   min-width: 0;
   overflow: hidden;
   font-size: 0.9rem;
@@ -5265,6 +5267,12 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 .listGoal {
   cursor: pointer;
+}
+@media (max-width: 760px) {
+  /* A phone: each goal takes the full width, so its title and numbers aren't squeezed. */
+  .listGoal {
+    width: 100%;
+  }
 }
 
 /* ---------- Responsive shell ----------
@@ -5475,7 +5483,8 @@ body[data-drag="task"] .listGoal {
   box-shadow: 1px 1px 0 var(--ink);
 }
 /* Clear done: the same ink outline and size as the filter tabs beside it. */
-.clearDone {
+.clearDone,
+.selectBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -5490,7 +5499,9 @@ body[data-drag="task"] .listGoal {
   transition: background 0.15s var(--ease), color 0.15s var(--ease);
 }
 .clearDone:hover,
-.clearDone:focus-visible {
+.clearDone:focus-visible,
+.selectBtn:hover,
+.selectBtn:focus-visible {
   background: var(--ink);
   color: var(--ground);
 }
@@ -7616,4 +7627,106 @@ input.askRowTitle:focus-visible {
 }
 .tipPicks button:hover {
   background: var(--lime);
+}
+
+/* Selecting: what's picked, then All / Done / Delete / stop. */
+.pickBar p {
+  margin: 0;
+}
+.pickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+.pickActions .ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0;
+}
+@media (max-width: 760px) {
+  /* On a phone the sticker sheet rises from the bottom while tasks are picked, so the bar sits at the top, full
+     width, where the thumb still reaches it. */
+  .pickBar,
+  .shell:has(.askBar) .pickBar {
+    top: calc(0.5rem + env(safe-area-inset-top));
+    bottom: auto;
+    z-index: 130;
+    width: calc(100vw - 1rem);
+    max-width: none;
+    padding: 0.45rem 0.5rem 0.45rem 0.75rem;
+  }
+  .pickHint {
+    display: none;
+  }
+  .pickBar + .undo,
+  .undo:has(+ .pickBar),
+  .shell:has(.askBar) .pickBar + .undo,
+  .shell:has(.askBar) .undo:has(+ .pickBar) {
+    bottom: calc(9rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Select sits on the sort row, at its start; it's lighter than the bar's other buttons. */
+.sortBy .selectBtn {
+  margin-right: auto;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  border-width: 2px;
+}
+.sortBy .selectBtn + span {
+  margin-left: 0.6rem;
+}
+
+/* The composer's Task / Ask switch (phones): a small sticker at the bar's start. */
+.askMode {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.askBar[data-mode="ask"] .askMode {
+  background: var(--peri);
+}
+@media (max-width: 760px) {
+  /* A phone adds tasks from the bar at the bottom, in thumb reach, so the box at the top of the list goes. */
+  .listBody .add {
+    display: none;
+  }
+  /* Smaller notes, two to a row, so more of the list fits on the screen. */
+  .listBody .tasks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+  .note {
+    padding: 0.35rem 0.55rem 0.45rem;
+  }
+  .note .row {
+    gap: 0.5rem;
+  }
+  .note > .row .taskTitle {
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+  .note .check {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+  .note .chips {
+    gap: 0.25rem;
+    font-size: 0.7rem;
+  }
+  .note .subs {
+    padding-left: 1.6rem;
+  }
+  .note .subs .taskTitle {
+    font-size: 0.82rem;
+  }
 }

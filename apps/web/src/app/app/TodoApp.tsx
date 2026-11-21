@@ -29,6 +29,9 @@ import {
   Trash2,
   ChevronDown,
   BrushCleaning,
+  CheckCheck,
+  SquareCheckBig,
+  X,
   LayoutGrid,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -761,7 +764,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             lists={sorted}
             update={update}
             focus={focus}
-            bar={askAi && <AskBar />}
+            ai={askAi}
           />
         ) : (
           // No lists yet: start in Brainstorm, where ideas can become the first tasks.
@@ -911,13 +914,13 @@ function ListView({
   lists,
   update,
   focus,
-  bar,
+  ai,
 }: {
   list: List;
   lists: { id: string; name: string }[];
   update: Update;
   focus?: { id: string } | null;
-  bar?: React.ReactNode; // Ask todone's bar, as wide as the tasks
+  ai: boolean; // Ask todone is on: its bar sits under the tasks
 }) {
   // A list opened: what it has is "known" (no pop), however long ago it was made.
   useState(() => {
@@ -965,6 +968,13 @@ function ListView({
   };
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
+  // Select mode (the Select button; phones have no Ctrl key and a long press drags): every tap picks.
+  const [selecting, setSelecting] = useState(false);
+  const selectMode = selecting || picked.size > 0;
+  const endPick = () => {
+    setPicked(new Set());
+    setSelecting(false);
+  };
   const [binned, setBinned] = useState<{
     before: Task[];
     text: string;
@@ -993,12 +1003,14 @@ function ListView({
   const setTasks = (f: (ts: Task[]) => Task[]) =>
     update(list.id, (l) => ({ ...l, tasks: f(l.tasks) }));
   const isTop = (id: string) => list.tasks.some((t) => t.id === id);
-  const pick = (id: string) =>
+  const pick = (id: string) => {
+    navigator.vibrate?.(8); // a tick of feel on phones, as the Android app gives
     setPicked((p) => {
       const n = new Set(p);
       if (!n.delete(id)) n.add(id);
       return n;
     });
+  };
   const applySticker = (key: string, ids: string[]) => {
     if (key.startsWith("custom-"))
       return dispatchEvent(
@@ -1112,11 +1124,25 @@ function ListView({
                   : moveTasks(ts, p.ids, arg, "inside")
                 : moveTasks(ts, p.ids, arg, where),
         );
-        setPicked(new Set());
+        endPick();
       }
       aim.current = null;
     },
   });
+  // Deletes tasks (to the bin for 7 days) with an undo bar, and ends any selection.
+  const remove = (ids: string[]) => {
+    const before = list.tasks;
+    const gone = flatten(before).filter((t) => ids.includes(t.id));
+    if (!gone.length) return;
+    setTasks((ts) => ids.reduce((acc, id) => mapTask(acc, id, () => null), ts));
+    binSound();
+    setBinned({
+      before,
+      ids: bin(gone),
+      text: gone.length > 1 ? `Deleted ${gone.length} tasks.` : `Deleted “${gone[0]?.title}”.`,
+    });
+    endPick();
+  };
   // The bin takes tasks, or a date sticker: then every task due that day goes. Either way, undo puts the list back.
   const binDrop = useDrop(`bin-${list.id}`, {
     accept: (p) =>
@@ -1124,22 +1150,8 @@ function ListView({
       (p.kind === "sticker" && !!sticker(p.key, today)?.due),
     drop: (p) => {
       const before = list.tasks;
-      if (p.kind === "task") {
-        const gone = flatten(before).filter((t) => p.ids.includes(t.id));
-        setTasks((ts) =>
-          p.ids.reduce((acc, id) => mapTask(acc, id, () => null), ts),
-        );
-        binSound();
-        setBinned({
-          before,
-          ids: bin(gone),
-          text:
-            gone.length > 1
-              ? `Deleted ${gone.length} tasks.`
-              : `Deleted “${gone[0]?.title}”.`,
-        });
-        setPicked(new Set());
-      } else if (p.kind === "sticker") {
+      if (p.kind === "task") remove(p.ids);
+      else if (p.kind === "sticker") {
         const due = sticker(p.key, today)!.due!;
         const gone = flatten(before).filter((t) => t.due === due);
         const day = relDue(due, today);
@@ -1164,7 +1176,7 @@ function ListView({
   }, [binned]);
   useEffect(() => {
     const esc = (e: KeyboardEvent) =>
-      e.key === "Escape" && setPicked(new Set());
+      e.key === "Escape" && endPick();
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, []);
@@ -1190,6 +1202,15 @@ function ListView({
   }, [list.tasks, show, sort, today, nowMin, selected]);
 
   const colors = noteColors(list.tasks);
+  // New tasks go first. Colours come from ids and avoid the two notes before them, so the new note gets an id whose
+  // colour differs from the top two: then no note below it changes colour.
+  const addTask = (title: string) => {
+    const near = new Set(list.tasks.slice(0, 2).map((x) => colors.get(x.id)));
+    let id = uid();
+    for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
+    setTasks((ts) => [{ id, title, done: false, created: Date.now(), sub: [] }, ...ts]);
+    usage({ name: "task_created", via: "typed" });
+  };
   const row = {
     listId: list.id,
     today,
@@ -1199,6 +1220,7 @@ function ListView({
     onSelect: setSelected,
     picked,
     onPick: pick,
+    selecting: selectMode,
     drop,
     colors,
     lists,
@@ -1312,13 +1334,52 @@ function ListView({
           )}
         </div>
       )}
-      {picked.size > 0 && (
-        <div className={s.pickBar} role="status">
-          <b>{picked.size} selected.</b> Drag them onto a sticker, the bin or
-          another list, or click a sticker.
-          <button className={s.ghost} onClick={() => setPicked(new Set())}>
-            Clear <kbd>Esc</kbd>
-          </button>
+      {selectMode && (
+        // Pinned to the top while selecting (on a phone the sticker sheet has the bottom): what's picked, and what
+        // to do with it.
+        <div className={s.pickBar} role="toolbar" aria-label="Selected tasks">
+          <p role="status">
+            {picked.size ? (
+              <>
+                <b>{picked.size} selected.</b>{" "}
+                <span className={s.pickHint}>Tap a sticker, or drag them onto the bin or another list.</span>
+              </>
+            ) : (
+              "Tap tasks to select them."
+            )}
+          </p>
+          <div className={s.pickActions}>
+            <button
+              className={s.ghost}
+              onClick={() =>
+                setPicked(new Set(board(list.tasks, show, sort, today, nowMin).map((t) => t.id)))
+              }
+            >
+              <CheckCheck size={16} strokeWidth={2.5} aria-hidden /> All
+            </button>
+            {picked.size > 0 && (
+              <>
+                <button
+                  className={s.ghost}
+                  onClick={() => {
+                    const open = [...picked].filter((id) => !findTask(list.tasks, id)?.done);
+                    open.forEach(() => usage({ name: "task_done" }));
+                    setTasks((ts) => open.reduce((acc, id) => tick(acc, id, today, me), ts));
+                    navigator.vibrate?.(12);
+                    endPick();
+                  }}
+                >
+                  <Check size={16} strokeWidth={3} aria-hidden /> Done
+                </button>
+                <button className={s.ghost} onClick={() => remove([...picked])}>
+                  <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
+                </button>
+              </>
+            )}
+            <button className={s.ghost} onClick={endPick} aria-label="Stop selecting">
+              <X size={16} strokeWidth={3} aria-hidden /> <kbd>Esc</kbd>
+            </button>
+          </div>
         </div>
       )}
       <div className={s.listBody} data-stickers={pinned ? "pinned" : "auto"}>
@@ -1328,15 +1389,8 @@ function ListView({
             data-tour="add"
             onSubmit={(e) => {
               e.preventDefault();
-              const t = draft.trim();
-              if (!t) return;
-              // New tasks go first. Colours come from ids and avoid the two notes before them, so the new note gets
-              // an id whose colour differs from the top two: then no note below it changes colour.
-              const near = new Set(list.tasks.slice(0, 2).map((x) => colors.get(x.id)));
-              let id = uid();
-              for (let i = 0; i < 30 && near.has(NOTES[noteColor(id)]); i++) id = uid();
-              setTasks((ts) => [{ id, title: t, done: false, created: Date.now(), sub: [] }, ...ts]);
-              usage({ name: "task_created", via: "typed" });
+              if (!draft.trim()) return;
+              addTask(draft.trim());
               setDraft("");
             }}
           >
@@ -1393,6 +1447,11 @@ function ListView({
                 </button>
               )}
               <div className={s.sortBy}>
+                {list.tasks.length > 0 && !selectMode && (
+                  <button className={s.selectBtn} onClick={() => setSelecting(true)} data-tip="Select tasks (or Ctrl/Cmd-click them)">
+                    <SquareCheckBig size={15} strokeWidth={2.5} aria-hidden /> Select
+                  </button>
+                )}
                 <span aria-hidden>Sort</span>
                 <Select
                   label="Sort"
@@ -1460,7 +1519,7 @@ function ListView({
               <p>Add the first task above. Enjoy the quiet while it lasts.</p>
             </div>
           )}
-          {bar}
+          <AskBar ai={ai} onAdd={addTask} />
         </div>
         <Stickers
           active={!!selected || picked.size > 0}
@@ -1540,6 +1599,7 @@ function TaskRow({
   onSelect,
   picked,
   onPick,
+  selecting,
   drop,
   colors,
   lists,
@@ -1555,6 +1615,7 @@ function TaskRow({
   onSelect: (id: string | null) => void;
   picked: Set<string>;
   onPick: (id: string) => void;
+  selecting: boolean; // select mode: a tap picks instead of ticking or opening
   drop: (arg: string) => object;
   colors: Map<string, string>;
   lists: { id: string; name: string }[];
@@ -1581,6 +1642,7 @@ function TaskRow({
     onSelect,
     picked,
     onPick,
+    selecting,
     drop,
     colors,
     lists,
@@ -1610,9 +1672,9 @@ function TaskRow({
           { kind: "task", listId, id: task.id, ids },
           ids.length > 1 ? `${ids.length} tasks` : task.title,
         )}
-        // Ctrl/Cmd-click selects instead of ticking or opening.
+        // Ctrl/Cmd-click (or any tap in select mode) selects instead of ticking or opening.
         onClickCapture={(e) => {
-          if (!e.metaKey && !e.ctrlKey) return;
+          if (!selecting && !e.metaKey && !e.ctrlKey) return;
           e.preventDefault();
           e.stopPropagation();
           onPick(task.id);
