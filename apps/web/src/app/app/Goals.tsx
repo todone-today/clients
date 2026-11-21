@@ -31,6 +31,8 @@ import { draggable, placeOn, useDrop } from "@/lib/drag";
 import { ListIcon, listColor } from "./listIcon";
 import { type Suggested, suggest, suggested } from "@/lib/onboard";
 import { Tip } from "./Tip";
+import { GoalTemplates, RewardTemplates } from "./Templates";
+import { GOAL_TEMPLATES, REWARD_TEMPLATES, asGoal } from "@/lib/templates";
 import s from "./app.module.css";
 
 const FILLS = [
@@ -116,7 +118,8 @@ function saveGoal(
 export function ListGoals({ list }: { list: List }) {
   const { lists, update } = useLists();
   const { items } = useGoalItems();
-  const [making, setMaking] = useState(false);
+  const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
+  const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState<Goal | null>(null);
   // Drop tasks on a goal's note to link them to it: they become its milestones (or count toward the habit).
   const dropOnGoal = useDrop("goal-notes", {
@@ -159,7 +162,7 @@ export function ListGoals({ list }: { list: List }) {
           </div>
         );
       })}
-      <button className={s.listGoalAdd} onClick={() => setMaking(true)}>
+      <button className={s.listGoalAdd} onClick={() => setPicking(true)}>
         <Plus size={15} strokeWidth={2.75} aria-hidden />{" "}
         {goals.length ? "Goal" : "Add a goal"}
       </button>
@@ -174,10 +177,25 @@ export function ListGoals({ list }: { list: List }) {
           }}
         />
       )}
+      {picking && (
+        <GoalTemplates
+          taken={goals.map((g) => g.title)}
+          onPick={(t) => {
+            setPicking(false);
+            setMaking(asGoal(t));
+          }}
+          onOwn={() => {
+            setPicking(false);
+            setMaking(true);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
       {making && (
         <GoalDialog
           lists={all}
           list={list.id}
+          preset={making === true ? undefined : making}
           onClose={() => setMaking(false)}
           onSave={(g, steps, listId) => {
             saveGoal(lists, update, g, steps, listId);
@@ -196,6 +214,7 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
   const { items } = useGoalItems();
   // `true` for a blank goal, or a suggestion to start from.
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
+  const [picking, setPicking] = useState(false); // the templates, before the dialog
   const goals = items.filter((i): i is Goal => i.t === "goal");
   // Drag a goal onto another to put it before or after it.
   const dropGoal = useDrop("goals", {
@@ -275,13 +294,13 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           <button
             className="btn"
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            onClick={() => setMaking(true)}
+            onClick={() => setPicking(true)}
           >
             <Plus size={16} strokeWidth={2.75} aria-hidden /> New goal
           </button>
         </div>
       </div>
-      {!goals.length && <GoalStart onPick={(p) => setMaking(p)} />}
+      {!goals.length && <GoalStart onPick={(p) => setMaking(p)} onBrowse={() => setPicking(true)} />}
       {groups.map(({ id, name, goals }) => (
         <section key={id} className={s.goalGroup}>
           {groups.length > 1 && (
@@ -338,7 +357,20 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </ul>
         </>
       )}
-      {goals.length > 0 && <GoalStart more taken={goals.map((g) => g.title)} onPick={(p) => setMaking(p)} />}
+      {picking && (
+        <GoalTemplates
+          taken={goals.map((g) => g.title)}
+          onPick={(t) => {
+            setPicking(false);
+            setMaking(asGoal(t));
+          }}
+          onOwn={() => {
+            setPicking(false);
+            setMaking(true);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
       {making && (
         <GoalDialog
           lists={all}
@@ -362,15 +394,13 @@ const STARTERS: { goal: Partial<Goal>; note: string; fill: string }[] = [
   { goal: { title: "Save ₹50,000", kind: "target", start: 0, target: 50000, unit: "₹" }, note: "A number to reach", fill: "var(--butter)" },
   { goal: { title: "Ship my side project", kind: "outcome" }, note: "Milestones, by a date", fill: "var(--pink)" },
 ];
-// With goals made, the same starters sit below them (minus ones you have), without the how-to.
-function GoalStart({ onPick, more = false, taken = [] }: { onPick: (g: Partial<Goal>) => void; more?: boolean; taken?: string[] }) {
-  const left = STARTERS.filter(({ goal }) => !taken.includes(goal.title!));
-  if (!left.length) return null;
+// Then every template, by area of life (Templates.tsx).
+function GoalStart({ onPick, onBrowse }: { onPick: (g: Partial<Goal>) => void; onBrowse: () => void }) {
   return (
     <section className={s.goalStart}>
-      {more ? <h2 className={s.sideHead}>More ideas</h2> : <h2 className="display">Start with one.</h2>}
+      <h2 className="display">Start with one.</h2>
       <ul className={s.starters}>
-        {left.map(({ goal, note, fill }) => (
+        {STARTERS.map(({ goal, note, fill }) => (
           <li key={goal.title}>
             <button type="button" onClick={() => onPick(goal)} style={{ "--fill": fill } as React.CSSProperties}>
               <b>{goal.title}</b>
@@ -382,6 +412,9 @@ function GoalStart({ onPick, more = false, taken = [] }: { onPick: (g: Partial<G
           </li>
         ))}
       </ul>
+      <button className={`btn ${s.tplBrowse}`} onClick={onBrowse}>
+        See all {GOAL_TEMPLATES.length} goal ideas, from health to money to travel
+      </button>
     </section>
   );
 }
@@ -1276,6 +1309,20 @@ export function Rewards() {
   const me = useMe();
   const [title, setTitle] = useState("");
   const [cost, setCost] = useState("100");
+  const [picking, setPicking] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+  // A template (or "my own") fills the form below to check and change, then Add saves it.
+  const fill = (t?: { title: string; size: number }) => {
+    setPicking(false);
+    if (t) {
+      setTitle(t.title);
+      setCost(String(t.size * perTask));
+    }
+    requestAnimationFrame(() => {
+      titleRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      titleRef.current?.focus({ preventScroll: true });
+    });
+  };
   const [claimed, setClaimed] = useState("");
   const xp = balance(items, me);
   const mine = items
@@ -1377,8 +1424,8 @@ export function Rewards() {
       </footer>
     </li>
   );
-  // Like the Goals page's starters: pick one and it's yours, priced in tasks like yours. They stay once you have
-  // rewards (below them, minus ones you have), without the how-to.
+  // Like the Goals page's starters: pick one and it's yours, priced in tasks like yours. Shown until there's a reward;
+  // after that, the templates (Templates.tsx) are a tap away from New reward.
   const ideasLeft = IDEAS.filter(([idea]) => !rewards.some((r) => r.title === idea));
   const ideas = (
     <section className={s.goalStart}>
@@ -1489,12 +1536,23 @@ export function Rewards() {
               <ul className={s.rewardGrid}>{saving.map(card)}</ul>
             </>
           )}
-          {rewards.length > 0 && ideasLeft.length > 0 && ideas}
           <Claimed spends={mine.filter((w) => w.spend)} rewards={rewards} />
         </div>
         <aside className={s.rewardSide}>
           <section className={s.rewardNew}>
             <h2 className={s.sideHead}>New reward</h2>
+            <button type="button" className={`btn ${s.tplBrowse}`} onClick={() => setPicking(true)}>
+              Pick from {REWARD_TEMPLATES.length} ideas
+            </button>
+            {picking && (
+              <RewardTemplates
+                taken={rewards.map((r) => r.title)}
+                perTask={perTask}
+                onPick={fill}
+                onOwn={() => fill()}
+                onClose={() => setPicking(false)}
+              />
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1515,6 +1573,7 @@ export function Rewards() {
               <label className={s.goalField}>
                 <span>A reward</span>
                 <input
+                  ref={titleRef}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={80}

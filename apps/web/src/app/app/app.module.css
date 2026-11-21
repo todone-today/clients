@@ -7730,3 +7730,124 @@ input.askRowTitle:focus-visible {
     font-size: 0.82rem;
   }
 }
+
+/* Templates (Templates.tsx): a search, the areas as chips, then cards to pick from. */
+.tplDialog {
+  width: min(56rem, calc(100vw - 2rem));
+  height: min(46rem, calc(100dvh - 2rem));
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0.9rem;
+  overflow: hidden;
+  background: var(--ground);
+}
+.tplDialog:not([open]) {
+  display: none;
+}
+.tplHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.tplHead h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+.tplHead .panelClose {
+  position: static;
+}
+.tplSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  background: #fff;
+  border: 2.5px solid var(--black);
+}
+.tplSearch input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0;
+  font: inherit;
+  font-weight: 700;
+  background: none;
+  border: 0;
+  outline: none;
+}
+.tplSearch:focus-within {
+  box-shadow: 4px 4px 0 var(--lime);
+}
+.tplAreas {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+.tplAreas button {
+  flex: none;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.tplAreas button[aria-pressed="true"] {
+  background: var(--lime);
+}
+.tplGrid {
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.4rem 0.4rem 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: 0.8rem;
+}
+.tplGrid b {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.tplArea {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.starters .tplOwn {
+  background: #fff;
+  border-style: dashed;
+}
+.tplOwn b {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.tplBrowse {
+  justify-self: start;
+}
+.rewardNew .tplBrowse {
+  margin-bottom: 0.8rem;
+}
+@media (max-width: 760px) {
+  /* A phone: the templates fill the screen, like a sheet. */
+  .tplDialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: calc(0.9rem + env(safe-area-inset-top)) 1rem calc(0.5rem + env(safe-area-inset-bottom));
+    border: 0;
+  }
+  .tplGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .tplGrid button {
+    padding: 0.7rem 0.75rem;
+  }
+  .tplGrid b {
+    font-size: 0.92rem;
+  }
+}
