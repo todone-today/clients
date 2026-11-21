@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Welcome, skipWelcome } from "@/components/Welcome";
 import { setTour, tourDue } from "@/lib/onboard";
 import { Intro } from "./Intro";
-import { Tour } from "./Tour";
+import { Training } from "./Training";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -444,11 +444,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     );
 
   const folded = slim;
-  // The tour again, from the i in the top bar (or the menu on a phone), on the board where it points.
+  // The training again, from the i in the top bar (or the menu on a phone).
   const steps = () => {
     setDrawer(false);
     setPanel(null);
     setTouring(true);
+    if (userId) setTour(userId, true); // a reload mid-training picks it up again
   };
   const endTour = () => {
     setTouring(false);
@@ -473,7 +474,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           }}
         />
       )}
-      {touring && lists && <Tour onEnd={endTour} />}
+      {touring && lists && <Training who={userId} lists={lists} onEnd={endTour} />}
       <header className={s.top}>
         <button
           className={s.menu}
@@ -817,6 +818,7 @@ function NewList({
   return (
     <form
       className={s.newList}
+      data-tour="newlist"
       onSubmit={(e) => {
         e.preventDefault();
         if (!clean || clash) return;
