@@ -1084,20 +1084,15 @@ function ListView({
   }
   const me = authClient.useSession().data?.user.id;
   const [show, setShow] = useState<Show>("open");
-  // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held.
-  const [pinned, setPinned] = useState(() => {
-    try {
-      return localStorage.getItem("todone:stickers") === "pinned";
-    } catch {
-      return false;
-    }
-  });
-  const pin = (on: boolean) => {
-    setPinned(on);
-    try {
-      localStorage.setItem("todone:stickers", on ? "pinned" : "auto");
-    } catch {}
-  };
+  // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held. A pin
+  // lasts while you're on this list: it folds again on a refresh or another list.
+  const [pinned, setPinned] = useState(false);
+  const [pinnedOn, setPinnedOn] = useState(list.id);
+  if (pinnedOn !== list.id) {
+    setPinnedOn(list.id);
+    setPinned(false);
+  }
+  const pin = (on: boolean) => setPinned(on);
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   // Select mode (the Select button; phones have no Ctrl key and a long press drags): every tap picks.

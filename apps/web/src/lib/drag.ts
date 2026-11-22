@@ -52,11 +52,17 @@ function sayFor(p: Payload, t: Target, scope: string, arg: string, where: string
 }
 
 // Which part of an element the pointer is on: the first or last quarter along an axis, or the middle.
+// Measured where the element sits, not where a slide is carrying it, and with some give around the middle (it keeps
+// its last answer there), so a slot opening and the cards moving aside don't flip the answer back and forth.
+const lastSide = new WeakMap<HTMLElement, "before" | "after">();
 export function placeOn(at: At, axis: "x" | "y", middle = true): "before" | "after" | "inside" {
   const r = at.el.getBoundingClientRect();
-  const f = axis === "x" ? (at.x - r.left) / r.width : (at.y - r.top) / r.height;
-  if (!middle) return f < 0.5 ? "before" : "after";
-  return f < 0.25 ? "before" : f > 0.75 ? "after" : "inside";
+  const m = new DOMMatrixReadOnly(getComputedStyle(at.el).transform === "none" ? undefined : getComputedStyle(at.el).transform);
+  const f = axis === "x" ? (at.x - (r.left - m.m41)) / r.width : (at.y - (r.top - m.m42)) / r.height;
+  if (middle) return f < 0.25 ? "before" : f > 0.75 ? "after" : "inside";
+  const side = f < 0.4 ? "before" : f > 0.6 ? "after" : (lastSide.get(at.el) ?? (f < 0.5 ? "before" : "after"));
+  lastSide.set(at.el, side);
+  return side;
 }
 
 const targets = new Map<string, { current: Target }>();
