@@ -69,7 +69,7 @@ import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallPrompt } from "./InstallPrompt";
 import { PullRefresh } from "./PullRefresh";
-import { useSwipeDrawer } from "./swipeDrawer";
+import { useSwipeNav } from "./swipeDrawer";
 import { Search } from "./Search";
 import { usage } from "@/lib/usage";
 import { fileFeedback } from "./feedback-inbox";
@@ -112,6 +112,9 @@ import {
   doneToday,
 } from "@todone/sdk/tasks";
 import s from "./app.module.css";
+
+// The four views in the tab bar's order (Lists is no panel), for swiping between them on a phone.
+const VIEWS = [null, "calendar", "goals", "rewards"] as const satisfies readonly Panel[];
 
 // Each main task is a sticky note; its colour comes from its id, so it stays put when tasks move.
 // Sticky colours. Each note's colour comes from its own id, so adding, deleting or moving notes doesn't recolour
@@ -169,7 +172,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     if (userId && tourDue(userId)) Promise.resolve().then(() => setTouring(true)); // reloaded mid-tour
   }, [userId]);
   const [drawer, setDrawer] = useState(false);
-  useSwipeDrawer(drawer, setDrawer);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
   const [slim, setSlim] = useState(false);
   useEffect(() => {
@@ -202,6 +204,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setPanel(p);
     setDrawer(false);
   };
+  // Phones: swipe sideways between the views, as the tab bar orders them (and from the edge for the lists).
+  const mainRef = useRef<HTMLElement>(null);
+  useSwipeNav({ open: drawer, setOpen: setDrawer, views: VIEWS, view: panel, go: show, main: mainRef });
   // Dragged lists keep their order; lists never dragged come first, newest first.
   const sorted = useMemo(
     () =>
@@ -757,7 +762,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           </ul>
         </div>
       )}
-      <main className={s.main}>
+      <main className={s.main} ref={mainRef}>
         {panel === "calendar" ? (
           lists && (
             <>
