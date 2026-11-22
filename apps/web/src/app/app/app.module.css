@@ -9471,3 +9471,13 @@ input.askRowTitle:focus-visible {
     height: 2.75rem;
   }
 }
+
+/* List names read in capitals wherever they show, however they were typed. */
+.listBtn .label,
+.dockList,
+.goalGroupHead,
+.goalListChip,
+.menu > span {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
