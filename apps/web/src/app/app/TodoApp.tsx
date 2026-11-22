@@ -164,6 +164,19 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  // Phones: scrolling down tucks the tab bar's labels away; scrolling up brings them back.
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    let last = scrollY;
+    const on = () => {
+      const y = scrollY;
+      if (Math.abs(y - last) < 8) return;
+      setSmall(y > last && y > 80);
+      last = y;
+    };
+    addEventListener("scroll", on, { passive: true });
+    return () => removeEventListener("scroll", on);
+  }, []);
   // Back where you were: a refresh or a new visit opens the same tab and list (links like ?task= still win).
   // Nothing is written until it's been read back, so a quick remount can't wipe it.
   const restored = useRef(false);
@@ -619,7 +632,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Logo size={26} />
           </span>
         )}
-        <nav className={s.tabs} aria-label="Views">
+        <nav className={s.tabs} aria-label="Views" data-small={small || undefined}>
           {(
             [
               [null, "Lists", ListChecks],
