@@ -3515,12 +3515,14 @@ input.stick[data-custom][aria-invalid="true"] {
 }
 
 @media (min-width: 761px) {
-  /* The sidebar stays put while the board scrolls; if it's taller than the window, it scrolls on its own. */
+  /* The sidebar stays put while the board scrolls; if it's taller than the window, it scrolls on its own. It's as
+     tall as what's on screen below where it starts (--top-cut, kept by TodoApp), so its foot (All lists, the Bin) is
+     always in view, never below the window. */
   .side {
     position: sticky;
     top: 0;
     align-self: start;
-    height: 100dvh;
+    height: calc(100dvh - var(--top-cut, 0px));
     overflow-y: auto;
   }
   /* The demo has no Workspace heading for the fold button to sit beside, so it gets its own row. */
@@ -8411,4 +8413,10 @@ input.askRowTitle:focus-visible {
   .gdTimes button {
     transition: none;
   }
+}
+
+/* The task's encryption, as just a lock (or an open lock when shared by link); its tooltip says which. */
+.privacyLine {
+  justify-self: start;
+  padding: 0.3rem;
 }

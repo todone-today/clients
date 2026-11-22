@@ -5,12 +5,10 @@ import {
   Bell,
   Check,
   Send,
-  Copy,
   Download,
   Lock,
   LockOpen,
   Paperclip,
-  RefreshCw,
   Share2,
   Timer,
   Trash2,
@@ -46,7 +44,6 @@ import {
 import {
   createShare,
   revokeShare,
-  rotateShare,
   setShareFiles,
   shareView,
   workspaceKey,
@@ -91,10 +88,6 @@ export function TaskPanel({
   onClose: () => void;
 }) {
   const [busy, setBusy] = useState("");
-  // A link made just now: shown (and copied) at once, without waiting for the server again.
-  const [fresh, setFresh] = useState<{ token: string; copied: boolean } | null>(
-    null,
-  );
   const [err, setErr] = useState("");
   const [asking, setAsking] = useState(false);
   const { gated } = usePlan();
@@ -102,6 +95,14 @@ export function TaskPanel({
   const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
   const stopping = useStopSharing(task, edit);
+  // The share link's token: from sharing just now, or read back by the shared part below. "Copied" shows a moment.
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2500);
+    return () => clearTimeout(t);
+  }, [copied]);
   const goals = useGoalItems().items.filter((i): i is Goal => i.t === "goal");
   const goal = goals.find((g) => g.id === task.goal);
   const reminders = useReminders();
@@ -187,7 +188,8 @@ export function TaskPanel({
           () => true,
           () => false,
         );
-      setFresh({ token, copied });
+      setShareToken(token);
+      setCopied(copied);
     });
 
   return (
@@ -240,36 +242,44 @@ export function TaskPanel({
                 className={s.panelClose}
                 onClick={() => setFocusing(true)}
                 aria-label="Focus"
-                data-tip="Focus: just this task, with a timer"
+                data-tip="Focus"
               >
                 <Timer size={19} strokeWidth={2.5} />
               </button>
             )}
             {shared ? (
-              <button
-                className={s.panelClose}
-                onClick={stopping.stop}
-                disabled={!!stopping.busy}
-                aria-label="Stop sharing"
-                data-tip="Stop sharing: the link stops working"
-              >
-                <Lock size={19} strokeWidth={2.5} />
-              </button>
+              <>
+                {/* Shared: the link, copied with a tap (sharing again after stopping makes a new one). */}
+                <button
+                  className={s.panelClose}
+                  onClick={async () => {
+                    if (!shareToken) return;
+                    await navigator.clipboard.writeText(`${location.origin}/t/${shareToken}`).catch(() => {});
+                    setCopied(true);
+                  }}
+                  disabled={!shareToken}
+                  aria-label={copied ? "Link copied" : "Copy link"}
+                  data-tip={copied ? "Link copied" : "Copy link"}
+                >
+                  {copied ? <Check size={19} strokeWidth={3} /> : <Share2 size={19} strokeWidth={2.5} />}
+                </button>
+                <button
+                  className={s.panelClose}
+                  onClick={stopping.stop}
+                  disabled={!!stopping.busy}
+                  aria-label="Stop sharing"
+                  data-tip="Stop sharing"
+                >
+                  <Lock size={19} strokeWidth={2.5} />
+                </button>
+              </>
             ) : (
               <button
                 className={s.panelClose}
-                onClick={() =>
-                  gated
-                    ? needsPlan("Sharing comes with Plus.")
-                    : setAsking(true)
-                }
+                onClick={() => (gated ? needsPlan("Sharing comes with Plus.") : setAsking(true))}
                 disabled={!!busy}
                 aria-label={gated ? "Share (needs Plus)" : "Share"}
-                data-tip={
-                  gated
-                    ? "Share by link (comes with Plus)"
-                    : "Share by link: they can see it, comment and add photos"
-                }
+                data-tip={gated ? "Share (needs Plus)" : "Share"}
               >
                 <Share2 size={19} strokeWidth={2.5} />
               </button>
@@ -279,7 +289,7 @@ export function TaskPanel({
               className={`${s.panelClose} ${s.panelDelete}`}
               onClick={onDelete}
               aria-label="Delete"
-              data-tip={task.sub.length ? "Delete (its steps too)" : "Delete"}
+              data-tip="Delete"
             >
               <Trash2 size={19} strokeWidth={2.5} />
             </button>
@@ -287,6 +297,8 @@ export function TaskPanel({
               className={s.panelClose}
               onClick={onClose}
               aria-label="Close"
+              data-tip="Close"
+              data-tip-end
             >
               <X size={20} strokeWidth={2.75} />
             </button>
@@ -294,19 +306,17 @@ export function TaskPanel({
         </header>
 
         {!top && <p className={s.panelHint}>A step of a task.</p>}
-        <p className={s.privacyLine} data-shared={shared || undefined}>
-          {shared ? (
-            <>
-              <LockOpen size={14} strokeWidth={2.5} aria-hidden /> Shared by
-              link · not end-to-end encrypted
-            </>
-          ) : (
-            <>
-              <Lock size={14} strokeWidth={2.5} aria-hidden /> End-to-end
-              encrypted
-            </>
-          )}
-        </p>
+        {/* Encrypted or not, as a lock or an open lock; the tooltip says which. */}
+        <span
+          className={s.privacyLine}
+          data-shared={shared || undefined}
+          role="img"
+          tabIndex={0}
+          aria-label={shared ? "Not encrypted: shared by link" : "End-to-end encrypted"}
+          data-tip={shared ? "Not encrypted: shared by link" : "End-to-end encrypted"}
+        >
+          {shared ? <LockOpen size={16} strokeWidth={2.5} aria-hidden /> : <Lock size={16} strokeWidth={2.5} aria-hidden />}
+        </span>
 
         <div className={s.panelFields}>
           <label>
@@ -457,7 +467,7 @@ export function TaskPanel({
           )}
 
         {shared ? (
-          <SharedPart task={task} fresh={fresh} />
+          <SharedPart task={task} onToken={setShareToken} />
         ) : (
           <section className={s.panelSection}>
             <h3>
@@ -674,10 +684,10 @@ function useStopSharing(
 // A shared task: the link, its controls, the shared attachments and the conversation.
 function SharedPart({
   task,
-  fresh,
+  onToken,
 }: {
   task: Task;
-  fresh: { token: string; copied: boolean } | null;
+  onToken: (token: string) => void;
 }) {
   const id = task.share!;
   const base = `/task-shares/${id}`;
@@ -687,12 +697,6 @@ function SharedPart({
     comments: Comment[];
   } | null>(null);
   const [err, setErr] = useState("");
-  const [copied, setCopied] = useState(!!fresh?.copied);
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2500);
-    return () => clearTimeout(t);
-  }, [copied]);
   const load = useCallback(async () => {
     const v = await shareView(id);
     setView({
@@ -700,9 +704,10 @@ function SharedPart({
       files: v.task.files ?? [],
       comments: v.comments,
     });
+    onToken(v.token);
     markSeen(id, v.comments.filter((c) => c.guest).length);
     return v.comments;
-  }, [id]);
+  }, [id, onToken]);
   const retry = useCallback(() => {
     setErr("");
     load().catch((x) =>
@@ -712,43 +717,10 @@ function SharedPart({
   useEffect(() => {
     Promise.resolve().then(retry);
   }, [retry]);
-  const token = view?.token ?? fresh?.token;
-  const link = token ? `${location.origin}/t/${token}` : "";
 
   return (
     <>
-      <section className={s.panelSection}>
-        <h3>Shared by link</h3>
-        <p className={s.panelHint}>
-          Anyone with the link can see this task, comment and add photos. No
-          account needed.
-        </p>
-        <div className={s.tools}>
-          <button
-            className="btn"
-            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            disabled={!link}
-            onClick={async () => {
-              await navigator.clipboard.writeText(link).catch(() => {});
-              setCopied(true);
-            }}
-          >
-            <Copy size={14} strokeWidth={2.5} aria-hidden />{" "}
-            {copied ? "Link copied" : "Copy link"}
-          </button>
-          <button
-            className={s.ghost}
-            disabled={!view}
-            onClick={async () => {
-              const r = await rotateShare(id).catch(() => null);
-              if (r) setView((v) => (v ? { ...v, token: r.token } : v));
-            }}
-            title="The current link stops working"
-          >
-            <RefreshCw size={14} strokeWidth={2.5} aria-hidden /> New link
-          </button>
-        </div>
-        {err && (
+      {err && (
           <p className={s.err} role="alert">
             {err}{" "}
             <button className={s.ghost} onClick={retry}>
@@ -756,7 +728,6 @@ function SharedPart({
             </button>
           </p>
         )}
-      </section>
       {view && view.files.length > 0 && (
         <section className={s.panelSection}>
           <h3>Attachments</h3>
@@ -1083,7 +1054,7 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
       <button
         className={s.panelClose}
         aria-label="Download"
-        title="Download this task"
+        data-tip={open ? undefined : "Download"}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}

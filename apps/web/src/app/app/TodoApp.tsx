@@ -204,6 +204,32 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setPanel(p);
     setDrawer(false);
   };
+  // Wider screens: how far down the window the sidebar starts (below the top bar and any banner, until they scroll
+  // away and it sticks at the top), for its height.
+  const shellRef = useRef<HTMLDivElement>(null);
+  const sideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let raf = 0;
+    const cut = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const b = sideRef.current?.getBoundingClientRect().top ?? 0;
+        shellRef.current?.style.setProperty("--top-cut", `${Math.max(0, Math.round(b))}px`);
+      });
+    };
+    cut();
+    addEventListener("scroll", cut, { passive: true });
+    addEventListener("resize", cut);
+    // Also when something above it comes or goes (a banner, a notice), moving where it starts.
+    const ro = new ResizeObserver(cut);
+    if (shellRef.current) ro.observe(shellRef.current);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      removeEventListener("scroll", cut);
+      removeEventListener("resize", cut);
+    };
+  }, []);
   // Phones: swipe sideways between the views, as the tab bar orders them (and from the edge for the lists).
   const mainRef = useRef<HTMLElement>(null);
   useSwipeNav({ open: drawer, setOpen: setDrawer, views: VIEWS, view: panel, go: show, main: mainRef });
@@ -460,7 +486,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     if (userId) setTour(userId, false);
   };
   return (
-    <div className={s.shell} data-slim={folded || undefined}>
+    <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
       <Welcome />
       <PlanPrompt />
       {!demo && !intro && !touring && <InstallPrompt />}
@@ -610,6 +636,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         />
       )}
       <aside
+        ref={sideRef}
         className={s.side}
         aria-label="Lists"
         data-open={drawer}
