@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Download, FileText, Lock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Download, FileText, Lock, X } from "lucide-react";
 import type { FileRef } from "@todone/sdk/tasks";
 import { isImage, isVideo, sizeLabel } from "@/lib/files";
 import s from "./Media.module.css";
@@ -44,8 +44,8 @@ export function Media({ file, load }: { file: FileRef; load: () => Promise<strin
         ) : !src ? (
           <span className={s.loading} aria-label="Loading" />
         ) : isImage(file.type) ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed or decrypted blob URLs; nothing to optimise
-          <img src={src} alt={file.name} />
+          // Tap to see it full screen, like a chat app.
+          <Viewer src={src} name={file.name} />
         ) : (
           <video src={src} controls preload="metadata" />
         )}
@@ -62,5 +62,40 @@ export function Media({ file, load }: { file: FileRef; load: () => Promise<strin
       {file.enc ? <Lock size={11} strokeWidth={2.5} aria-label="End-to-end encrypted" /> : null}
       <Download size={14} strokeWidth={2.5} aria-hidden />
     </button>
+  );
+}
+
+// An image, and full screen when tapped: the whole picture on a dark page; tap it for full size (scroll to look
+// around), × or Esc or the dark around it to close, and a download.
+function Viewer({ src, name }: { src: string; name: string }) {
+  const box = useRef<HTMLDialogElement>(null);
+  const [big, setBig] = useState(false);
+  return (
+    <>
+      <button type="button" className={s.thumb} onClick={() => box.current?.showModal()} aria-label={`Open ${name}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- signed or decrypted blob URLs; nothing to optimise */}
+        <img src={src} alt={name} />
+      </button>
+      <dialog
+        ref={box}
+        className={s.viewer}
+        aria-label={name}
+        onClose={() => setBig(false)}
+        onClick={(e) => e.target === e.currentTarget && box.current?.close()}
+      >
+        <div className={s.viewerTools}>
+          <a href={src} download={name} aria-label={`Download ${name}`} data-tip="Download">
+            <Download size={20} strokeWidth={2.5} />
+          </a>
+          <button type="button" onClick={() => box.current?.close()} aria-label="Close" data-tip="Close" data-tip-end>
+            <X size={22} strokeWidth={2.75} />
+          </button>
+        </div>
+        <div className={s.viewerStage} data-big={big || undefined} onClick={(e) => e.target === e.currentTarget && box.current?.close()}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed or decrypted blob URLs; nothing to optimise */}
+          <img src={src} alt={name} onClick={() => setBig((b) => !b)} />
+        </div>
+      </dialog>
+    </>
   );
 }
