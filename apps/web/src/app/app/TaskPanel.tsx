@@ -523,6 +523,7 @@ export function TaskPanel({
             edit={edit}
             onTick={onTick}
             onExit={() => setFocusing(false)}
+            notes={<Notes task={task} edit={edit} shared={shared} />}
           />
         )}
         {asking && (

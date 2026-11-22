@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { Check, NotebookPen, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
 import { type Task, fmtMinutes, tick, todayISO } from "@todone/sdk/tasks";
 import { Confetti } from "@/components/Confetti";
 import { authClient } from "@/lib/auth-client";
@@ -53,13 +53,16 @@ export function Focus({
   edit,
   onTick,
   onExit,
+  notes,
 }: {
   task: Task;
   fill?: string;
   edit: (f: (t: Task) => Task | null) => void;
   onTick: () => void;
   onExit: () => void;
+  notes?: React.ReactNode; // the task's notes, a tap away on the right (below, on a phone)
 }) {
+  const [noting, setNoting] = useState(false);
   const me = authClient.useSession().data?.user.id;
   // Elapsed time is banked time plus the current run, so a throttled background tab still counts right.
   const [banked, setBanked] = useState(0);
@@ -154,7 +157,7 @@ export function Focus({
   const step = (id: string) => edit((t) => tick([t], id, todayISO(), me)[0] ?? t);
 
   return createPortal(
-    <div className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`}>
+    <div className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`} data-notes={noting || undefined}>
       {finished !== null && <Confetti />}
       <div className={s.focusCard} style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}>
         <p className={s.focusKicker}>{finished !== null ? "Done" : since === null ? "Paused" : "Focusing on"}</p>
@@ -220,9 +223,21 @@ export function Focus({
             <button className="btn" onClick={finish} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
               <Check size={18} strokeWidth={3} aria-hidden /> {task.done ? "Finish" : "Done"}
             </button>
+            {notes && (
+              <button
+                className={s.focusIcon}
+                aria-pressed={noting}
+                aria-label={noting ? "Hide notes" : "Notes"}
+                data-tip={noting ? "Hide notes" : "Notes"}
+                onClick={() => setNoting(!noting)}
+              >
+                <NotebookPen size={20} strokeWidth={2.5} aria-hidden />
+              </button>
+            )}
           </div>
         )}
       </div>
+      {noting && notes && <aside className={s.focusNotes}>{notes}</aside>}
       {finished === null && (
         <button className={s.focusExit} onClick={leave} aria-label="Step out (keeps the time)" data-tip="Step out, time kept">
           <X size={22} strokeWidth={2.75} aria-hidden />
