@@ -297,7 +297,6 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
   // `true` for a blank goal, or a suggestion to start from.
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false); // the templates, before the dialog
-  const [recapping, setRecapping] = useState(false); // this week's recap card
   // Arrived from a shared goal (TodoApp): open the dialog with it, and say what happened (joined, or why not).
   const [note, setNote] = useState("");
   useEffect(() => {
@@ -309,7 +308,6 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
     addEventListener(GOAL_PRESET, on);
     return () => removeEventListener(GOAL_PRESET, on);
   }, []);
-  const me = useMe();
   const goals = items.filter((i): i is Goal => i.t === "goal");
   // Drag a goal onto another to put it before or after it.
   const dropGoal = useDrop("goals", {
@@ -393,9 +391,6 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
           >
             <Plus size={16} strokeWidth={2.75} aria-hidden /> New goal
           </button>
-          <button className={s.ghost} onClick={() => setRecapping(true)}>
-            <Share2 size={15} strokeWidth={2.5} aria-hidden /> My week
-          </button>
         </div>
       </div>
       {note && (
@@ -459,19 +454,6 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
             ))}
           </ul>
         </>
-      )}
-      {recapping && (
-        <ShareSheet
-          spec={{
-            kind: "recap",
-            r: recap(
-              items.filter((i): i is Win => i.t === "win" && (i.by ?? undefined) === me),
-              new Date(),
-            ),
-          }}
-          name="My week"
-          onClose={() => setRecapping(false)}
-        />
       )}
       {/* The bar: name a goal (the dialog opens to finish it), or ask todone to suggest some. */}
       <AskBar place="goals" ai={ai} onAdd={(title) => setMaking({ title })} />
@@ -968,7 +950,7 @@ export function Moments() {
               setNow(null);
             }}
           >
-            <Share2 size={15} strokeWidth={2.5} aria-hidden /> Show it off
+            <Share2 size={15} strokeWidth={2.5} aria-hidden /> Let others see
           </button>
           <button className={s.momentClose} aria-label="Not now" data-tip="Not now" onClick={() => setNow(null)}>
             <X size={16} strokeWidth={2.75} />
@@ -1757,7 +1739,7 @@ export function Rewards({ ai }: { ai: boolean }) {
           ],
     );
     setClaimed(r.title);
-    setTimeout(() => setClaimed(""), 8000); // long enough to tap "Show it off"
+    setTimeout(() => setClaimed(""), 8000); // long enough to tap "Let others see"
   };
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const ready = rewards.filter((r) => xp >= r.cost);
@@ -1888,7 +1870,7 @@ export function Rewards({ ai }: { ai: boolean }) {
           <Gift size={20} strokeWidth={2.5} aria-hidden /> Enjoy: {claimed}. You
           earned it.{" "}
           <button className={s.link} onClick={() => setSharingClaim(claimed)}>
-            Show it off
+            Let others see
           </button>
         </p>
       )}
@@ -2327,5 +2309,47 @@ function Drafts<K extends keyof Suggested>({ kind, onPick }: { kind: K; onPick: 
         ))}
       </ul>
     </>
+  );
+}
+
+// Once a week, on the first visit after a week ends: last week, summed up as a Story card (like a year-in-review, for
+// seven days), ready to share. Only if something got done; once per week, remembered in this browser.
+const RECAP_SEEN = "todone:recap-week";
+export function WeeklyRecap() {
+  const { items } = useGoalItems();
+  const me = useMe();
+  const [week, setWeek] = useState<{ key: string; spec: CardSpec } | null>(null);
+  useEffect(() => {
+    if (!items.length || week) return;
+    const monday = new Date();
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const key = monday.toLocaleDateString("en-CA");
+    try {
+      if (localStorage.getItem(RECAP_SEEN) === key) return;
+    } catch {
+      return;
+    }
+    const sunday = new Date(monday.getTime() - 1); // the end of last week
+    const r = recap(
+      items.filter((i): i is Win => i.t === "win" && (i.by ?? undefined) === me),
+      sunday,
+    );
+    if (!r.done) return;
+    Promise.resolve().then(() => setWeek({ key, spec: { kind: "recap", r } }));
+  }, [items, me, week]);
+  if (!week) return null;
+  return (
+    <ShareSheet
+      spec={week.spec}
+      name="My week"
+      title="Your week"
+      onClose={() => {
+        try {
+          localStorage.setItem(RECAP_SEEN, week.key);
+        } catch {}
+        setWeek(null); // remembered above: it won't open again this week
+      }}
+    />
   );
 }

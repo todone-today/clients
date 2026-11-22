@@ -8913,32 +8913,54 @@ input.askRowTitle:focus-visible {
 .sharePreview[data-format="square"] canvas {
   max-height: min(20rem, calc(100dvh - 22rem));
 }
-/* See-through: a checkerboard shows what's transparent. */
-.sharePreview[data-overlay] canvas {
-  background: repeating-conic-gradient(#d9d2c4 0 25%, #f3eadb 0 50%) 0 0 / 16px 16px;
-}
-.shareStyles {
-  display: flex;
-  justify-content: center;
-  gap: 0.4rem;
-}
-.shareStyles button {
-  min-height: 2.75rem;
-  padding: 0 0.9rem;
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--black);
-  background: rgb(255 255 255 / 0.6);
-  border: 2px solid var(--black);
-}
-.shareStyles button[aria-pressed="true"] {
-  background: var(--lime);
-  box-shadow: 3px 3px 0 var(--black);
+/* See-through: shown over a sample photo (an evening sky over hills), so it's clear your own photo goes behind. */
+.sharePreview[data-photo] canvas {
+  background:
+    radial-gradient(circle at 70% 28%, #ffe9b0 0 7%, transparent 8%),
+    radial-gradient(120% 60% at 30% 100%, #2f5d50 0 40%, transparent 41%),
+    radial-gradient(120% 55% at 85% 100%, #3f7a63 0 42%, transparent 43%),
+    linear-gradient(180deg, #ff9a6b 0%, #ffbf87 35%, #f6d6a8 60%, #7fb4a4 100%);
 }
 .shareDo {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.6rem;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.swatches button {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--black);
+}
+.swatches button[aria-checked="true"] {
+  outline: 3px solid var(--black);
+  outline-offset: 2px;
+}
+.shareIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--black);
+  background: #fff;
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.shareIconMain {
+  background: var(--lime);
+}
+.shareIcon:active {
+  translate: 2px 2px;
+  box-shadow: 1px 1px 0 var(--black);
+}
+.shareMain.shareStop,
+.shareAlt.shareStop {
+  --fill: #fff8ef;
 }
 .shareMain {
   --fill: var(--lime);

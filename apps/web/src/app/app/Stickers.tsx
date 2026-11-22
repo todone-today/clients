@@ -264,7 +264,6 @@ export function Stickers({
       data-tour="stickers"
       data-active={active}
     >
-      {selected && <p>Tap or click one to apply it to “{selected}”.</p>}
       {group("When", WHEN, "when", when)}
       {group("How long", LONG, "long", long)}
       {group("Effort", EFFORT, "effort")}

@@ -60,7 +60,7 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
-import { Goals, ListGoals, Moments, OPEN_GOAL, Rewards, XpTile } from "./Goals";
+import { Goals, ListGoals, Moments, OPEN_GOAL, Rewards, WeeklyRecap, XpTile } from "./Goals";
 import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { api } from "@/lib/api";
@@ -549,6 +549,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <PlanPrompt />
       {!demo && !intro && !touring && <InstallSheet />}
       {!demo && vault === "open" && <Moments />}
+      {!demo && vault === "open" && !intro && !touring && <WeeklyRecap />}
       {!demo && <PullRefresh />}
       {intro && userId && (
         <Intro

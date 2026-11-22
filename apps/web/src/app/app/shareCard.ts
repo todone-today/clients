@@ -5,7 +5,7 @@ import type { Recap } from "@/lib/recap";
 
 export type CardFormat = "story" | "square";
 export type CardSpec =
-  | { kind: "win"; eyebrow: string; title: string; line: string; grid: number[]; fill: string }
+  | { kind: "win"; eyebrow: string; title: string; line: string; grid: number[]; fill: string; overlay?: boolean }
   | {
       kind: "progress";
       title: string;
@@ -18,7 +18,7 @@ export type CardSpec =
       eyebrow?: string; // the moment: "Halfway there"; otherwise "In progress"
       weeks?: number[]; // the last 8 weeks, a square each
     }
-  | { kind: "recap"; r: Recap; who?: string };
+  | { kind: "recap"; r: Recap; who?: string; fill?: string };
 
 const W = 360;
 const H: Record<CardFormat, number> = { story: 640, square: 360 };
@@ -111,7 +111,33 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
   const pad = 28;
   const story = format === "story";
 
-  if (spec.kind === "win") {
+  if (spec.kind === "win" && spec.overlay) {
+    // See-through, to lay over a photo: a sticker low on the card with the win on it, and the brand on a tab.
+    const bw = W - pad * 2;
+    ctx.font = `900 30px ${f.display}`;
+    const rows = lines(ctx, spec.title.toUpperCase(), bw - 36, 3);
+    const bh = 150 + rows.length * 32 + (spec.grid.length ? 40 : 0);
+    const bx = pad;
+    const by = h - bh - 90;
+    sticker(ctx, bx, by, bw, bh, colour(spec.fill));
+    ctx.fillStyle = INK;
+    ctx.font = `800 12px ${f.sans}`;
+    ctx.fillText(spec.eyebrow.toUpperCase(), bx + 18, by + 30);
+    ctx.font = `900 72px ${f.display}`;
+    ctx.fillText("DONE.", bx + 16, by + 98);
+    ctx.font = `900 30px ${f.display}`;
+    let y = by + 104;
+    for (const l of rows) {
+      y += 32;
+      ctx.fillText(l, bx + 18, y);
+    }
+    if (spec.grid.length) grid(ctx, spec.grid, bx + 18, y + 16, 22, 8);
+    ctx.fillStyle = CREAM;
+    ctx.fillRect(bx, by + bh + 16, 118, 24);
+    brand(ctx, f, bx + 6, by + bh + 33);
+  }
+
+  if (spec.kind === "win" && !spec.overlay) {
     ctx.fillStyle = colour(spec.fill);
     ctx.fillRect(0, 0, W, h);
     let y = story ? 120 : 64;
@@ -200,10 +226,10 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
       ctx.fillText(l, bx + 18, y);
       y += 16;
     }
-    ctx.font = `900 88px ${f.display}`;
-    ctx.fillText(spec.big, bx + 16, y + 70);
+    ctx.font = `900 84px ${f.display}`;
+    ctx.fillText(spec.big, bx + 16, y + 68);
     ctx.font = `900 22px ${f.display}`;
-    ctx.fillText(spec.label.toUpperCase(), bx + 18, y + 98);
+    ctx.fillText(spec.label.toUpperCase(), bx + 18, y + 106); // clear of the big number's slash
     const barY = by + bh - 34;
     ctx.fillStyle = CREAM;
     ctx.fillRect(bx + 18, barY, bw - 36, 14);
@@ -218,7 +244,7 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
 
   if (spec.kind === "recap") {
     const r = spec.r;
-    ctx.fillStyle = colour("var(--peri)");
+    ctx.fillStyle = colour(spec.fill ?? "var(--peri)");
     ctx.fillRect(0, 0, W, h);
     let y = story ? 96 : 50;
     ctx.fillStyle = INK;
