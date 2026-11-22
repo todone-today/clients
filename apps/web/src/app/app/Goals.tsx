@@ -19,6 +19,8 @@ import {
   ArrowRight,
   Eye,
   ArrowLeft,
+  History as HistoryIcon,
+  Pencil,
 } from "lucide-react";
 import {
   balance,
@@ -103,7 +105,7 @@ const goalTask = (g: Goal, title: string, habit: boolean): Task => ({
 // Clicks on a card's own controls don't open its editor.
 const onControl = (e: React.MouseEvent) =>
   !!(e.target as HTMLElement).closest(
-    "button, input, select, textarea, a, form, details, [role=combobox]",
+    "button, input, select, textarea, a, form, details, dialog, [role=combobox]",
   );
 function saveGoal(
   lists: List[] | null,
@@ -557,6 +559,7 @@ function GoalCard({
   const { lists: all, update } = useLists();
   const [reflecting, setReflecting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [viewing, setViewing] = useState(false); // the read-only view, from a tap on the card
   const [deleting, setDeleting] = useState(false); // asking what happens to its tasks
   const [sharing, setSharing] = useState<CardSpec | null>(null);
   const plan = usePlan();
@@ -592,6 +595,7 @@ function GoalCard({
         x.t === "goal" && x.id === goal.id ? (f(x) ?? []) : [x],
       ),
     );
+  const goalList = goal.list ? lists.find((l) => l.id === goal.list) : undefined;
   const nextList =
     p.next &&
     lists.find((l) =>
@@ -603,8 +607,7 @@ function GoalCard({
     <li
       {...dnd}
       id={`goal-${goal.id}`}
-      onClick={(e) => !onControl(e) && setEditing(true)}
-      title="Click to edit"
+      onClick={(e) => !onControl(e) && setViewing(true)}
       className={s.goal}
       style={{ "--fill": fillFor(goal.id) } as React.CSSProperties}
       data-done={goal.done ? "" : undefined}
@@ -612,21 +615,43 @@ function GoalCard({
       <header>
         <Target size={18} strokeWidth={2.5} aria-hidden />
         <h3>{goal.title}</h3>
-        <span className={s.goalKind}>{kindLabel(goal)}</span>
+        {/* Its actions, on the right: change it, share it, delete it. */}
+        <span className={s.goalTools}>
+          <button onClick={() => setEditing(true)} aria-label={`Change ${goal.title}`} data-tip="Change">
+            <Pencil size={15} strokeWidth={2.5} />
+          </button>
+          <button onClick={() => setSharing(goalCard(goal, p))} aria-label={`Share ${goal.title}`} data-tip="Let others see">
+            <Share2 size={15} strokeWidth={2.5} />
+          </button>
+          {!(deleting || binned) && (
+            <button
+              onClick={() => (taskCount ? setDeleting(true) : remove(false))}
+              aria-label={`Delete goal ${goal.title}`}
+              data-tip="Delete"
+              data-tip-end
+            >
+              <Trash2 size={15} strokeWidth={2.5} />
+            </button>
+          )}
+        </span>
       </header>
+      <p className={s.goalSub}>
+        <span className={s.goalKind}>{kindLabel(goal)}</span>
+        {goalList && (
+          // Its list: one tap opens it.
+          <button className={s.goalListChip} onClick={() => onOpen(goalList.id)}>
+            {goalList.name} <ArrowRight size={12} strokeWidth={3} aria-hidden />
+          </button>
+        )}
+      </p>
       {goal.why && <p className={s.goalWhy}>{goal.why}</p>}
-      {goal.become && <p className={s.goalBecome}>Becoming: {goal.become}</p>}
 
       <Meter goal={goal} p={p} />
       {!goal.done && <LogBox goal={goal} p={p} />}
       <LogHistory goal={goal} p={p} />
 
       {p.next && !goal.done && (
-        <button
-          className={s.goalNext}
-          onClick={() => nextList && onOpen(nextList.id)}
-          title="Open its list"
-        >
+        <button className={s.goalNext} onClick={() => nextList && onOpen(nextList.id)}>
           Next: <b>{p.next.title}</b>
         </button>
       )}
@@ -651,25 +676,7 @@ function GoalCard({
           Link tasks to this goal from a task&apos;s panel (Goal field).
         </p>
       )}
-      {goal.plan && (
-        <p className={s.goalPlan}>
-          {goal.obstacle ? `If ${goal.obstacle.replace(/^if\s+/i, "")} → ` : ""}
-          {goal.plan}
-        </p>
-      )}
-      {goal.done && goal.reflection && (
-        <p className={s.goalWhy}>What helped: {goal.reflection}</p>
-      )}
-
       <footer>
-        <button
-          className={s.goalShare}
-          onClick={() => setSharing(goalCard(goal, p))}
-          aria-label={`Share ${goal.title}`}
-          data-tip="Show it off"
-        >
-          <Share2 size={15} strokeWidth={2.5} aria-hidden />
-        </button>
         {goal.kind === "outcome" && !goal.done && (
           <button
             className={`btn ${s.claim}`}
@@ -709,16 +716,71 @@ function GoalCard({
               Cancel
             </button>
           </div>
-        ) : (
-          <button
-            className={s.rewardX}
-            onClick={() => (taskCount ? setDeleting(true) : remove(false))}
-            aria-label={`Delete goal ${goal.title}`}
-          >
-            <Trash2 size={15} strokeWidth={2.5} aria-hidden />
-          </button>
-        )}
+        ) : null}
       </footer>
+      {viewing && (
+        // View mode: the whole goal at a glance, read-only; the pencil changes it.
+        <Modal label={goal.title} onClose={() => setViewing(false)}>
+          <div className={s.goalView} style={{ "--fill": fillFor(goal.id) } as React.CSSProperties}>
+            <p className={s.goalStep}>{kindLabel(goal)}</p>
+            <h2 className="display">{goal.title}</h2>
+            <Meter goal={goal} p={p} />
+            {goalList && (
+              <p>
+                On{" "}
+                <button className={s.goalListChip} onClick={() => (setViewing(false), onOpen(goalList.id))}>
+                  {goalList.name} <ArrowRight size={12} strokeWidth={3} aria-hidden />
+                </button>
+              </p>
+            )}
+            {goal.why && (
+              <section>
+                <h3>Why it matters</h3>
+                <p>{goal.why}</p>
+              </section>
+            )}
+            {goal.become && (
+              <section>
+                <h3>Who you&apos;ll be</h3>
+                <p>{goal.become}</p>
+              </section>
+            )}
+            {goal.plan && (
+              <section>
+                <h3>If it gets hard</h3>
+                <p>
+                  {goal.obstacle ? `If ${goal.obstacle.replace(/^if\s+/i, "")}, ` : ""}
+                  {goal.plan}
+                </p>
+              </section>
+            )}
+            {p.next && !goal.done && (
+              <section>
+                <h3>Next step</h3>
+                <p>{p.next.title}</p>
+              </section>
+            )}
+            {goal.done && goal.reflection && (
+              <section>
+                <h3>What helped</h3>
+                <p>{goal.reflection}</p>
+              </section>
+            )}
+            <div className={s.gdFoot}>
+              <button className={s.ghost} onClick={() => (setViewing(false), setSharing(goalCard(goal, p)))}>
+                <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share
+              </button>
+              <button
+                className="btn"
+                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+                onClick={() => (setViewing(false), setEditing(true))}
+              >
+                <Pencil size={16} strokeWidth={2.5} aria-hidden /> Change
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {editing && (
         <GoalDialog
           lists={lists}
@@ -1137,6 +1199,7 @@ export function LogBox({ goal, p }: { goal: Goal; p: Progress }) {
 function LogHistory({ goal, p }: { goal: Goal; p: Progress }) {
   const { lists } = useLists();
   const [count, setCount] = useState(PAGE);
+  const [open, setOpen] = useState(false);
   if (goal.kind === "outcome" || !p.logs.length) return null;
   const logs = [...p.logs].reverse();
   const unit = goal.unit ? ` ${goal.unit}` : "";
@@ -1144,9 +1207,16 @@ function LogHistory({ goal, p }: { goal: Goal; p: Progress }) {
   const when = (t: number) =>
     new Date(t).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
   const drop = (id: string) => changeGoals(lists, (xs) => xs.filter((x) => x.id !== id));
+  // A button on the card; the log itself opens in a dialog, so the card keeps its size (as Rewards' history does).
   return (
-    <details className={s.logHist}>
-      <summary>History ({logs.length})</summary>
+    <>
+      <button className={s.logHistBtn} onClick={() => setOpen(true)}>
+        <HistoryIcon size={14} strokeWidth={2.5} aria-hidden /> History ({logs.length})
+      </button>
+      {open && (
+    <Modal label={`${goal.title}: history`} onClose={() => setOpen(false)}>
+    <div className={s.logHist}>
+      <h2 className="display">History</h2>
       <ol>
         {logs.slice(0, count).map((l) => (
           <li key={l.id}>
@@ -1163,7 +1233,10 @@ function LogHistory({ goal, p }: { goal: Goal; p: Progress }) {
           Show {Math.min(10, logs.length - count)} more
         </button>
       )}
-    </details>
+    </div>
+    </Modal>
+      )}
+    </>
   );
 }
 

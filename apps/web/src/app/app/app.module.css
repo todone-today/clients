@@ -9356,3 +9356,96 @@ input.askRowTitle:focus-visible {
 .privacyCard {
   width: 14rem;
 }
+
+/* A goal card's actions, top right: change, share, delete. */
+.goalTools {
+  display: flex;
+  flex: none;
+  gap: 0.3rem;
+  margin: -0.2rem -0.2rem 0 0;
+}
+.goalTools button {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--black);
+  background: rgb(255 255 255 / 0.7);
+  border: 2px solid var(--black);
+}
+.goalTools button:hover {
+  background: #fff;
+}
+.goal header svg.lucide-target {
+  margin-top: 0.2rem;
+}
+.goalTools svg {
+  margin: 0 !important;
+}
+.goalSub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: -0.2rem;
+}
+/* The goal's list: tap to open it. */
+.goalListChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.6rem;
+  padding: 0 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--black);
+  background: rgb(255 255 255 / 0.7);
+  border: 1.5px solid var(--black);
+}
+.goalListChip:hover {
+  background: #fff;
+}
+.logHistBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  width: fit-content;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  text-decoration: underline 1.5px;
+  text-underline-offset: 0.2em;
+}
+.logHist h2 {
+  margin-bottom: 0.6rem;
+  font-size: 2rem;
+}
+/* View mode: the whole goal, read-only. */
+.goalView {
+  display: grid;
+  gap: 0.9rem;
+}
+.goalView h2 {
+  padding-right: 3rem;
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  line-height: 0.95;
+}
+.goalView section {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 2px dashed rgb(11 11 11 / 0.25);
+}
+.goalView h3 {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@media (pointer: coarse) {
+  .goalTools button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
