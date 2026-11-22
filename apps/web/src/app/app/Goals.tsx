@@ -1230,7 +1230,7 @@ function Reflect({
 // 1. What kind: four choices, each with a real example.
 // 2. The goal: its name and numbers, read as a sentence, with a live preview of the card it makes. Save is ready here.
 // 3. Picture it: breathe, and the questions fade in one at a time, to think about (skippable).
-// 4–6. The answers, one per screen, all optional: why, if it gets hard, first steps.
+// 4–6. The answers, one per screen, all optional: why, if it gets hard, baby steps.
 // A goal started from a template or the bar starts at 2; editing starts at 2 and skips the pause and first steps.
 const KINDS = [
   ["target", "Reach a number", "Save $5,000 by the end of the month", Target],
@@ -1272,7 +1272,7 @@ const BECOME = [
 ];
 // "Go to it" on a list's goal: TodoApp opens Goals, which scrolls to the goal and flashes it.
 export const OPEN_GOAL = "todone:open-goal";
-const PAUSE_MS = 6000; // each thought in the pause
+
 export function GoalDialog({
   lists,
   list,
@@ -1312,20 +1312,24 @@ export function GoalDialog({
   const back = () => setStage(order[Math.max(at - 1, 0)]);
   const last = at === order.length - 1;
   const [line, setLine] = useState(0); // which thought the pause is on
-  const thoughts = [
-    "Take a deep breath in… and let it out.",
-    "Close your eyes for a moment.",
-    `Picture the day you get there: ${g.title.trim() || "your goal"}.`,
-    "How does it feel?",
-    "Why do you want it?",
-    "What could get in the way?",
-    "And what will you do when it does?",
+  // Each thought and how long it stays: long enough to close your eyes and look back, and longest for the three
+  // questions, the ones to really think about.
+  const thoughts: [string, number][] = [
+    ["Take a deep breath in… and let it out.", 6000],
+    ["Close your eyes for 5 seconds.", 8000],
+    [`Now picture the day you get there: ${g.title.trim() || "your goal"}.`, 8000],
+    ["How does it feel?", 7000],
+    ["Why do you want it?", 12000],
+    ["What could get in the way?", 12000],
+    ["And what will you do when it does?", 12000],
   ];
+  const pauseMs = thoughts.reduce((n, [, ms]) => n + ms, 0);
+  const lineMs = thoughts[line]?.[1] ?? 6000;
   useEffect(() => {
     if (stage !== "pause") return;
-    const t = setTimeout(() => (line + 1 < thoughts.length ? setLine(line + 1) : setStage("why")), PAUSE_MS);
+    const t = setTimeout(() => (line + 1 < thoughts.length ? setLine(line + 1) : setStage("why")), lineMs);
     return () => clearTimeout(t);
-  }, [stage, line, thoughts.length]);
+  }, [stage, line, thoughts.length, lineMs]);
   const putNum = (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value.replace(",", ".");
     setG((x) => ({ ...x, [k]: v === "" || !Number.isFinite(+v) ? undefined : +v }));
@@ -1363,7 +1367,7 @@ export function GoalDialog({
     pause: "Picture it",
     why: "Why does this matter to you?",
     plan: "If it gets hard",
-    steps: g.kind === "habit" ? "Make it a habit" : "First steps",
+    steps: g.kind === "habit" ? "Make it a habit" : "Baby steps",
   };
   // An optional step with nothing written yet: its button says Skip, and Next once something is.
   const blank =
@@ -1539,11 +1543,11 @@ export function GoalDialog({
           // Nothing to do here but breathe, picture it and think: each thought fades in, stays, fades out.
           <div className={s.gdPause}>
             <span className={s.gdBreath} aria-hidden />
-            <p key={line} className={`display ${s.gdThought}`} aria-live="polite" style={{ animationDuration: `${PAUSE_MS}ms` }}>
-              {thoughts[line]}
+            <p key={line} className={`display ${s.gdThought}`} aria-live="polite" style={{ animationDuration: `${lineMs}ms` }}>
+              {thoughts[line][0]}
             </p>
             <span className={s.gdPath} aria-hidden>
-              <i style={{ animationDuration: `${PAUSE_MS * thoughts.length}ms`, transform: `scaleX(${(line + 1) / thoughts.length})` }} />
+              <i style={{ animationDuration: `${pauseMs}ms`, transform: `scaleX(${(line + 1) / thoughts.length})` }} />
             </span>
             <button type="button" className={s.link} autoFocus onClick={() => setStage("why")}>
               Skip
@@ -1575,8 +1579,8 @@ export function GoalDialog({
           <section className={s.gdQ}>
             <p className={s.panelHint}>
               {g.kind === "habit"
-                ? `Optional. It repeats ${habitRule(g.perWeek ?? 3)}${lists.length ? ` on ${listName}` : ""}. Small enough for a bad day.`
-                : `Optional. Tiny is good: the first could take 5 minutes.${lists.length ? ` They go on ${listName}.` : ""}`}
+                ? `It repeats ${habitRule(g.perWeek ?? 3)}${lists.length ? ` on ${listName}` : ""}. Small enough for a bad day.`
+                : `A few small things to do first, each one a step closer. Tiny is fine.${lists.length ? ` They go on ${listName} as tasks.` : ""}`}
             </p>
             {(g.kind === "habit" ? steps.slice(0, 1) : steps).map((v, i) => (
               <input
