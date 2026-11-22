@@ -1239,6 +1239,37 @@ const KINDS = [
   ["outcome", "Get somewhere", "Launch my shop by March", Flag],
 ] as const;
 type Stage = "kind" | "goal" | "pause" | "why" | "plan" | "steps";
+// Examples for "why it matters" and "who you'll be", one of each shown at random.
+const WHY = [
+  "So I have more energy for my kids",
+  "So money stops being a worry",
+  "Because I want to feel strong again",
+  "So I can travel without checking prices",
+  "To prove to myself I can finish something",
+  "So my mornings feel calm, not rushed",
+  "Because my health is worth it",
+  "So I can say yes when friends ask",
+  "To build something that's mine",
+  "So I sleep better at night",
+  "Because future me will thank me",
+  "So I can help my parents",
+  "To feel proud when I look back",
+];
+const BECOME = [
+  "Who I'll be: someone who finishes what they start",
+  "Who I'll be: someone who keeps promises to myself",
+  "Who I'll be: the calm one in the room",
+  "Who I'll be: someone my kids look up to",
+  "Who I'll be: someone who shows up, even on bad days",
+  "Who I'll be: someone with savings, not worries",
+  "Who I'll be: fit enough to run for the bus",
+  "Who I'll be: someone who reads every day",
+  "Who I'll be: someone who makes things, not just plans",
+  "Who I'll be: someone who's good with money",
+  "Who I'll be: someone who takes care of their body",
+  "Who I'll be: someone who doesn't quit at the first hurdle",
+  "Who I'll be: the person I needed a few years ago",
+];
 // "Go to it" on a list's goal: TodoApp opens Goals, which scrolls to the goal and flashes it.
 export const OPEN_GOAL = "todone:open-goal";
 const PAUSE_MS = 6000; // each thought in the pause
@@ -1272,6 +1303,8 @@ export function GoalDialog({
       },
   );
   const [steps, setSteps] = useState(["", "", ""]);
+  // A different example each time, to help picture it.
+  const [hints] = useState(() => [WHY[Math.floor(Math.random() * WHY.length)], BECOME[Math.floor(Math.random() * BECOME.length)]]);
   const order: Stage[] = editing ? ["goal", "why", "plan"] : ["kind", "goal", "pause", "why", "plan", "steps"];
   const [stage, setStage] = useState<Stage>(editing || preset?.kind ? "goal" : "kind");
   const at = order.indexOf(stage);
@@ -1328,10 +1361,14 @@ export function GoalDialog({
     kind: "What kind of goal?",
     goal: KINDS.find(([k]) => k === g.kind)?.[1] ?? "Your goal",
     pause: "Picture it",
-    why: "Why do you want it?",
+    why: "Why does this matter to you?",
     plan: "If it gets hard",
     steps: g.kind === "habit" ? "Make it a habit" : "First steps",
   };
+  // An optional step with nothing written yet: its button says Skip, and Next once something is.
+  const blank =
+    (stage === "why" && !g.why?.trim() && !g.become?.trim()) ||
+    (stage === "plan" && !g.obstacle?.trim() && !g.plan?.trim());
   // The foot of each step: back on the left, on to the next (or save, on the last) on the right.
   const foot = (
     <div className={s.gdFoot}>
@@ -1345,8 +1382,14 @@ export function GoalDialog({
           {editing ? "Save" : "Save goal"}
         </button>
       ) : (
-        <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={next}>
-          Next <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+        <button
+          type="button"
+          className={blank ? s.ghost : "btn"}
+          style={blank ? undefined : ({ "--fill": "var(--lime)" } as React.CSSProperties)}
+          disabled={!ready}
+          onClick={next}
+        >
+          {blank ? "Skip" : "Next"} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
         </button>
       )}
     </div>
@@ -1510,16 +1553,14 @@ export function GoalDialog({
 
         {stage === "why" && (
           <section className={s.gdQ}>
-            <p className={s.panelHint}>Optional. What came to mind?</p>
-            <textarea value={g.why ?? ""} onChange={put("why")} maxLength={1000} rows={3} placeholder="So I have energy for my kids…" aria-label="Why you want it" autoFocus />
-            <input value={g.become ?? ""} onChange={put("become")} maxLength={300} placeholder="Who you'll be: someone who finishes what they start" aria-label="Who you'll be when you get there" />
+            <textarea value={g.why ?? ""} onChange={put("why")} maxLength={1000} rows={3} placeholder={hints[0]} aria-label="Why it matters to you" autoFocus />
+            <textarea value={g.become ?? ""} onChange={put("become")} maxLength={300} rows={2} placeholder={hints[1]} aria-label="Who you'll be when you get there" />
             {foot}
           </section>
         )}
 
         {stage === "plan" && (
           <section className={s.gdQ}>
-            <p className={s.panelHint}>Optional. Deciding now what you&apos;ll do then makes it far more likely you will.</p>
             <div className={s.gdIf}>
               <span>If</span>
               <input value={g.obstacle ?? ""} onChange={put("obstacle")} maxLength={500} placeholder="I'm too tired after work" aria-label="What could get in the way" autoFocus />
