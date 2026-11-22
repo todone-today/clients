@@ -67,6 +67,9 @@ const REPEATS = [
   "every year",
 ];
 
+// Files dropped on the task panel, handed to its notes.
+const NOTE_FILES = "todone:note-files";
+
 // Everything about one task, on a sticker in the middle of the screen: fields, description, attachments, and (when shared by link)
 // the conversation and sharing controls. Private tasks stay end-to-end encrypted, attachments included. Sharing
 // switches that off for this one task, only after the owner reads what that means and says "I Understand".
@@ -92,7 +95,6 @@ export function TaskPanel({
   const [asking, setAsking] = useState(false);
   const { gated } = usePlan();
   const [focusing, setFocusing] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
   const shared = !!task.share;
   const stopping = useStopSharing(task, edit);
   // The share link's token: from sharing just now, or read back by the shared part below. "Copied" shows a moment.
@@ -125,26 +127,6 @@ export function TaskPanel({
     setBusy("");
   };
 
-  // Private attachments: encrypted here, then uploaded. One that can't go (too big, say) is said in the
-  // Attachments section; the rest still go.
-  const [fileErr, setFileErr] = useState("");
-  const attach = (list: FileList | File[] | null) => {
-    setFileErr("");
-    const files = Array.from(list ?? []); // copied now: a FileList empties when its input is reset
-    return run("Uploading…", async () => {
-      const key = await workspaceKey();
-      for (const f of files) {
-        try {
-          const ref = await uploadPrivate(f, key);
-          edit((t) => ({ ...t, files: [...(t.files ?? []), ref] }));
-        } catch (x) {
-          setFileErr(
-            x instanceof Error ? x.message : "That file didn't upload.",
-          );
-        }
-      }
-    });
-  };
   const removeFile = (f: FileRef) => {
     edit((t) => ({
       ...t,
@@ -210,7 +192,7 @@ export function TaskPanel({
         onDrop={(e) => {
           if (!e.dataTransfer.files.length) return;
           e.preventDefault();
-          attach(e.dataTransfer.files);
+          dispatchEvent(new CustomEvent<File[]>(NOTE_FILES, { detail: Array.from(e.dataTransfer.files) }));
         }}
       >
         <header className={s.panelHead}>
@@ -469,34 +451,10 @@ export function TaskPanel({
         {shared ? (
           <SharedPart task={task} onToken={setShareToken} />
         ) : (
-          <section className={s.panelSection}>
-            <h3>
-              Attachments
-              <button
-                className={s.ghost}
-                onClick={() => fileInput.current?.click()}
-                disabled={!!busy}
-              >
-                <Paperclip size={14} strokeWidth={2.5} aria-hidden /> Add
-              </button>
-            </h3>
-            <input
-              ref={fileInput}
-              type="file"
-              accept={ACCEPT}
-              multiple
-              hidden
-              onChange={(e) => {
-                attach(Array.from(e.target.files ?? []));
-                e.target.value = ""; // the same file can be picked again
-              }}
-            />
-            {fileErr && (
-              <p className={s.err} role="alert">
-                {fileErr}
-              </p>
-            )}
-            {task.files?.length ? (
+          // Files go with notes now; a task attached to before that still shows its files, to open or remove.
+          !!task.files?.length && (
+            <section className={s.panelSection}>
+              <h3>Attachments</h3>
               <div className={s.panelFiles}>
                 {task.files.map((f) => (
                   <div key={f.id} className={s.panelFile}>
@@ -514,8 +472,8 @@ export function TaskPanel({
                   </div>
                 ))}
               </div>
-            ) : null}
-          </section>
+            </section>
+          )
         )}
 
         <Notes task={task} edit={edit} shared={shared} />
@@ -766,7 +724,7 @@ function Notes({
   const [err, setErr] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const notes = task.history ?? [];
-  const attach = async (list: FileList | null) => {
+  const attach = async (list: FileList | File[] | null) => {
     setErr("");
     const key = await workspaceKey();
     for (const f of Array.from(list ?? [])) {
@@ -780,6 +738,12 @@ function Notes({
       setBusy((n) => n - 1);
     }
   };
+  // Files dropped anywhere on the task come here, to go with the next note.
+  useEffect(() => {
+    const on = (e: Event) => attach((e as CustomEvent<File[]>).detail);
+    addEventListener(NOTE_FILES, on);
+    return () => removeEventListener(NOTE_FILES, on);
+  });
   const add = () => {
     const body = text.trim();
     if (busy || (!body && !files.length)) return;
