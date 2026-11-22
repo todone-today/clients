@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
-  ChevronDown,
   Droplet,
   Flag,
   Gift,
@@ -13,11 +12,11 @@ import {
   Share2,
   Sparkles,
   Target,
-  Timer,
   Trash2,
   X,
   Zap,
   Users,
+  ArrowRight,
 } from "lucide-react";
 import {
   balance,
@@ -1105,15 +1104,17 @@ function Reflect({
   );
 }
 
-// A goal on one page: what you want and how it's measured, read as a sentence, with a live preview of the card it
-// makes; Save is ready as soon as that's there. Then three optional parts, folded until wanted: why it matters, the
-// if-then plan for when it gets hard, and first steps. Wanting to think it through? A short timer holds the space.
+// A goal in three calm steps. First what you want and how it's measured, read as a sentence, with a live preview of
+// the card it makes. Then a short pause (skippable): breathe, and the questions fade in one at a time, to think
+// about, not answer yet. Then the answers, all optional: why it matters, who you'll become, the if-then plan, first
+// steps. Editing skips the pause.
 const KINDS = [
   ["target", "Reach a number", "68 kg, ₹50,000", Target],
   ["habit", "Show up", "Gym 3× a week", Repeat],
   ["daily", "A daily amount", "8 glasses a day", Droplet],
   ["outcome", "Get somewhere", "Milestones, by a date", Flag],
 ] as const;
+const PAUSE_MS = 6000; // each thought in the pause
 export function GoalDialog({
   lists,
   list,
@@ -1144,18 +1145,21 @@ export function GoalDialog({
       },
   );
   const [steps, setSteps] = useState(["", "", ""]);
-  // Which optional parts are open: any that already say something, when editing.
-  const [open, setOpen] = useState(() => ({
-    why: !!(initial?.why || initial?.become),
-    plan: !!(initial?.obstacle || initial?.plan),
-    steps: false,
-  }));
-  const [think, setThink] = useState<number | null>(null); // seconds of thinking time left
+  const [stage, setStage] = useState<"what" | "pause" | "answers">("what");
+  const [line, setLine] = useState(0); // which thought the pause is on
+  const thoughts = [
+    "Take a deep breath in… and let it out.",
+    `Picture it done: ${g.title.trim() || "your goal"}.`,
+    "Why do you want it?",
+    "Who will you be when you get there?",
+    "What could get in the way?",
+    "And what will you do when it does?",
+  ];
   useEffect(() => {
-    if (!think) return;
-    const t = setTimeout(() => setThink((n) => (n ? n - 1 : n)), 1000);
+    if (stage !== "pause") return;
+    const t = setTimeout(() => (line + 1 < thoughts.length ? setLine(line + 1) : setStage("answers")), PAUSE_MS);
     return () => clearTimeout(t);
-  }, [think]);
+  }, [stage, line, thoughts.length]);
   const putNum = (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value.replace(",", ".");
     setG((x) => ({ ...x, [k]: v === "" || !Number.isFinite(+v) ? undefined : +v }));
@@ -1195,7 +1199,12 @@ export function GoalDialog({
           if (ready) save();
         }}
       >
-        <p className={s.goalStep}>{editing ? "Edit goal" : "New goal"}</p>
+        <p className={s.goalStep}>
+          {editing ? "Edit goal" : "New goal"}
+          {stage === "pause" ? " · take a minute" : stage === "answers" ? " · think it through" : ""}
+        </p>
+        {stage === "what" && (
+          <>
         <input
           className={s.gdTitle}
           value={g.title}
@@ -1269,112 +1278,92 @@ export function GoalDialog({
           </div>
         )}
 
-        <div className={s.gdMore}>
-          <p>
-            <b>Optional</b> · add any of these now or later
-          </p>
-          {think === null ? (
-            <button
-              type="button"
-              className={s.gdThink}
-              onClick={() => {
-                setThink(120);
-                setOpen({ why: true, plan: true, steps: true });
-              }}
-            >
-              <Timer size={14} strokeWidth={2.75} aria-hidden /> Think it through · 2 min
-            </button>
-          ) : (
-            <button type="button" className={s.gdThink} data-on onClick={() => setThink(null)} aria-live="polite">
-              <Timer size={14} strokeWidth={2.75} aria-hidden />
-              {think ? `${Math.floor(think / 60)}:${String(think % 60).padStart(2, "0")} to think` : "Time's up: save when ready"}
-            </button>
-          )}
-        </div>
-        <Extra
-          title="Why it matters"
-          open={open.why}
-          filled={!!(g.why || g.become)}
-          onToggle={() => setOpen((o) => ({ ...o, why: !o.why }))}
-        >
-          <textarea value={g.why ?? ""} onChange={put("why")} maxLength={1000} rows={2} placeholder="So I have energy for my kids…" aria-label="Why it matters to you" />
-          <input value={g.become ?? ""} onChange={put("become")} maxLength={300} placeholder="Who you want to become: someone who finishes what they start" aria-label="Who you want to become" />
-        </Extra>
-        <Extra
-          title="If it gets hard"
-          open={open.plan}
-          filled={!!(g.obstacle || g.plan)}
-          onToggle={() => setOpen((o) => ({ ...o, plan: !o.plan }))}
-        >
-          <div className={s.gdIf}>
-            <span>If</span>
-            <input value={g.obstacle ?? ""} onChange={put("obstacle")} maxLength={500} placeholder="I'm too tired after work" aria-label="What could get in the way" />
-            <span>then I&apos;ll</span>
-            <input value={g.plan ?? ""} onChange={put("plan")} maxLength={500} placeholder="do the 10-minute version" aria-label="Then I'll" />
-          </div>
-          <small>Deciding now what you&apos;ll do then makes it far more likely you will.</small>
-        </Extra>
-        {!editing && (
-          <Extra
-            title={g.kind === "habit" ? "Make it a repeating task" : "First steps"}
-            open={open.steps}
-            filled={steps.some((x) => x.trim())}
-            onToggle={() => setOpen((o) => ({ ...o, steps: !o.steps }))}
-          >
-            {(g.kind === "habit" ? steps.slice(0, 1) : steps).map((v, i) => (
-              <input
-                key={i}
-                value={v}
-                maxLength={500}
-                placeholder={g.kind === "habit" ? g.title || "Go to the gym" : ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]}
-                aria-label={g.kind === "habit" ? "The habit" : `Step ${i + 1}`}
-                onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? e.target.value : x)))}
-              />
-            ))}
-            <small>
-              {g.kind === "habit"
-                ? `It repeats ${habitRule(g.perWeek ?? 3)}${lists.length ? ` on ${lists.find((l) => l.id === listId)?.name ?? "your list"}` : ""}. Small enough for a bad day.`
-                : `Tiny is good: the first could take 5 minutes.${lists.length ? ` They go on ${lists.find((l) => l.id === listId)?.name ?? "your list"}.` : ""}`}
-            </small>
-          </Extra>
-        )}
-
         <div className={s.tools}>
-          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready}>
-            {editing ? "Save" : "Save goal"}
+          <button
+            type="button"
+            className="btn"
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            disabled={!ready}
+            onClick={() => {
+              setLine(0);
+              setStage(editing ? "answers" : "pause");
+            }}
+          >
+            Next <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+          </button>
+          <button className={s.ghost} disabled={!ready}>
+            {editing ? "Save" : "Save now"}
           </button>
         </div>
+          </>
+        )}
+
+        {stage === "pause" && (
+          // Nothing to do here but breathe and think: each thought fades in, stays, fades out; the bar moves on.
+          <div className={s.gdPause}>
+            <span className={s.gdBreath} aria-hidden />
+            <p key={line} className={`display ${s.gdThought}`} aria-live="polite" style={{ animationDuration: `${PAUSE_MS}ms` }}>
+              {thoughts[line]}
+            </p>
+            <span className={s.gdPath} aria-hidden>
+              <i style={{ animationDuration: `${PAUSE_MS * thoughts.length}ms`, transform: `scaleX(${(line + 1) / thoughts.length})` }} />
+            </span>
+            <button type="button" className={s.link} autoFocus onClick={() => setStage("answers")}>
+              Skip
+            </button>
+          </div>
+        )}
+
+        {stage === "answers" && (
+          <>
+            <p className={s.panelHint}>All optional. Write what came to mind, or save as it is.</p>
+            <section className={s.gdQ}>
+              <h3>Why do you want it?</h3>
+              <textarea value={g.why ?? ""} onChange={put("why")} maxLength={1000} rows={2} placeholder="So I have energy for my kids…" aria-label="Why you want it" autoFocus />
+              <input value={g.become ?? ""} onChange={put("become")} maxLength={300} placeholder="Who you'll be: someone who finishes what they start" aria-label="Who you'll be when you get there" />
+            </section>
+            <section className={s.gdQ}>
+              <h3>If it gets hard</h3>
+              <div className={s.gdIf}>
+                <span>If</span>
+                <input value={g.obstacle ?? ""} onChange={put("obstacle")} maxLength={500} placeholder="I'm too tired after work" aria-label="What could get in the way" />
+                <span>then I&apos;ll</span>
+                <input value={g.plan ?? ""} onChange={put("plan")} maxLength={500} placeholder="do the 10-minute version" aria-label="Then I'll" />
+              </div>
+              <small>Deciding now what you&apos;ll do then makes it far more likely you will.</small>
+            </section>
+            {!editing && (
+              <section className={s.gdQ}>
+                <h3>{g.kind === "habit" ? "Make it a repeating task" : "First steps"}</h3>
+                {(g.kind === "habit" ? steps.slice(0, 1) : steps).map((v, i) => (
+                  <input
+                    key={i}
+                    value={v}
+                    maxLength={500}
+                    placeholder={g.kind === "habit" ? g.title || "Go to the gym" : ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]}
+                    aria-label={g.kind === "habit" ? "The habit" : `Step ${i + 1}`}
+                    onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? e.target.value : x)))}
+                  />
+                ))}
+                <small>
+                  {g.kind === "habit"
+                    ? `It repeats ${habitRule(g.perWeek ?? 3)}${lists.length ? ` on ${lists.find((l) => l.id === listId)?.name ?? "your list"}` : ""}. Small enough for a bad day.`
+                    : `Tiny is good: the first could take 5 minutes.${lists.length ? ` They go on ${lists.find((l) => l.id === listId)?.name ?? "your list"}.` : ""}`}
+                </small>
+              </section>
+            )}
+            <div className={s.tools}>
+              <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+                {editing ? "Save" : "Save goal"}
+              </button>
+              <button type="button" className={s.ghost} onClick={() => setStage("what")}>
+                Back
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </Modal>
-  );
-}
-
-// An optional part of the goal: a sticker that says so, folding open below itself (animated, unless motion is off).
-function Extra({
-  title,
-  open,
-  filled,
-  onToggle,
-  children,
-}: {
-  title: string;
-  open: boolean;
-  filled: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={s.gdExtra} data-open={open || undefined}>
-      <button type="button" aria-expanded={open} onClick={onToggle}>
-        {filled ? <Check size={16} strokeWidth={3} aria-hidden /> : <Plus size={16} strokeWidth={3} aria-hidden />}
-        <b>{title}</b>
-        <span className={s.gdOptional}>Optional</span>
-        <ChevronDown size={16} strokeWidth={2.75} aria-hidden className={s.gdChevron} />
-      </button>
-      <div className={s.gdBody} inert={!open}>
-        <div>{children}</div>
-      </div>
-    </section>
   );
 }
 

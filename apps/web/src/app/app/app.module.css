@@ -8272,90 +8272,102 @@ input.askRowTitle:focus-visible {
   font-size: 0.85rem;
   font-weight: 800;
 }
-.gdMore {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding-top: 0.6rem;
-  font-size: 0.85rem;
-  border-top: 2px dashed rgb(11 11 11 / 0.25);
+/* The pause: a breathing circle, one thought at a time fading in and out, a bar that only moves forward. */
+.gdPause {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1.4rem;
+  min-height: 22rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
 }
-.gdThink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: var(--black);
-  background: #fff;
+.gdBreath {
+  width: 5rem;
+  height: 5rem;
+  background: var(--lime);
+  border: 3px solid var(--black);
+  border-radius: 50%;
+  animation: gdBreathe 8s ease-in-out infinite;
+}
+.gdThought {
+  min-height: 5.4rem;
+  max-width: 22rem;
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  line-height: 1.05;
+  animation: gdThought linear both;
+}
+.gdPath {
+  display: block;
+  width: min(16rem, 100%);
+  height: 0.45rem;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.6);
   border: 2px solid var(--black);
 }
-.gdThink[data-on] {
-  background: var(--peri);
-  font-variant-numeric: tabular-nums;
+.gdPath i {
+  display: block;
+  height: 100%;
+  background: var(--black);
+  transform-origin: left;
+  animation: gdPath linear both;
 }
-.gdExtra {
+@keyframes gdBreathe {
+  0%,
+  100% {
+    scale: 0.7;
+  }
+  50% {
+    scale: 1.15;
+  }
+}
+@keyframes gdThought {
+  0% {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  18%,
+  82% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+@keyframes gdPath {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* The answers: one card per question, all optional. */
+.gdQ {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem;
   background: rgb(255 255 255 / 0.55);
   border: 2px solid var(--black);
+  animation: gdIn 0.3s var(--ease) both;
 }
-.gdExtra > button {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  width: 100%;
-  padding: 0.55rem 0.7rem;
-  text-align: left;
-  color: var(--black);
-}
-.gdOptional {
-  padding: 0.05rem 0.4rem;
-  font-size: 0.68rem;
+.gdQ h3 {
+  font-size: 1rem;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: var(--butter);
-  border: 1.5px solid var(--black);
-  rotate: -2deg;
 }
-.gdChevron {
-  margin-left: auto;
-  transition: rotate 0.2s var(--ease);
-}
-.gdExtra[data-open] .gdChevron {
-  rotate: 180deg;
-}
-/* Folds open by growing its row from nothing to its height. */
-.gdBody {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.25s var(--ease);
-}
-.gdExtra[data-open] .gdBody {
-  grid-template-rows: 1fr;
-}
-.gdBody > div {
-  display: grid;
-  gap: 0.45rem;
-  min-height: 0;
-  overflow: hidden;
-  padding: 0 0.7rem;
-}
-.gdExtra[data-open] .gdBody > div {
-  padding-bottom: 0.7rem;
-}
-.gdBody input,
-.gdBody textarea {
+.gdQ input,
+.gdQ textarea {
   width: 100%;
+  min-height: 2.75rem;
   padding: 0.45rem 0.55rem;
   font: inherit;
   color: var(--black);
   background: #fff;
   border: 2px solid var(--black);
 }
-.gdBody small {
+.gdQ small {
   font-size: 0.78rem;
   color: #4a4540;
 }
@@ -8381,8 +8393,15 @@ input.askRowTitle:focus-visible {
   .gdSentence {
     animation: none;
   }
-  .gdBody,
-  .gdChevron,
+  .gdBreath,
+  .gdQ {
+    animation: none;
+  }
+  /* Motion off: each thought simply shows, and the bar shows how far along it is, without moving. */
+  .gdThought,
+  .gdPath i {
+    animation: none;
+  }
   .gdKinds button,
   .gdTimes button {
     transition: none;
