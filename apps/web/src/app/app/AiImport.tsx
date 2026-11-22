@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usage as counted } from "@/lib/usage";
-import { ArrowRight, ArrowUp, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
 import { api, PLAN_EVENT } from "@/lib/api";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
 import { authClient } from "@/lib/auth-client";
@@ -609,20 +609,23 @@ export function AiImport({
           <ol className={s.aiSteps}>
             <li>
               <p>
-                <b>Copy this prompt</b> into ChatGPT, Claude or any AI, then add your plans after it: a brain dump, a
-                meeting&apos;s notes, “plan my week”.
+                <b>Copy the prompt</b>, paste it into ChatGPT, Claude or any AI, and add your plans after it.
               </p>
-              <pre className={s.code}>{today && planPrompt({ ...context(), today })}</pre>
               <button
-                className="btn"
+                className={`btn ${s.aiCopy}`}
                 onClick={async () => {
                   await navigator.clipboard.writeText(planPrompt({ ...context(), today: today || todayISO() }));
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
               >
-                <Copy size={16} strokeWidth={2.5} /> {copied ? "Copied" : "Copy prompt"}
+                {copied ? <Check size={18} strokeWidth={3} /> : <Copy size={18} strokeWidth={2.5} />} {copied ? "Copied" : "Copy prompt"}
               </button>
+              {/* The prompt itself, for the curious: folded away. */}
+              <details className={s.aiPrompt}>
+                <summary>See what it says</summary>
+                <pre className={s.code}>{today && planPrompt({ ...context(), today })}</pre>
+              </details>
             </li>
             <li>
               <label htmlFor="ai-answer">

@@ -25,6 +25,7 @@ export function Select({
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [up, setUp] = useState(false); // opens upward: not enough room below, inside its dialog or the screen
   const box = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -38,6 +39,10 @@ export function Select({
   }, [open]);
 
   const show = () => {
+    const r = button.current?.getBoundingClientRect();
+    const room = button.current?.closest("dialog")?.getBoundingClientRect() ?? { top: 0, bottom: innerHeight };
+    const need = Math.min(288, options.length * 44 + 16); // the list's height, at most 18rem
+    if (r) setUp(room.bottom - r.bottom < need && r.top - room.top > room.bottom - r.bottom);
     setActive(Math.max(0, options.findIndex((o) => o.value === value)));
     setOpen(true);
   };
@@ -90,7 +95,7 @@ export function Select({
         <ChevronDown size={16} strokeWidth={2.5} aria-hidden />
       </button>
       {open && (
-        <ul className={s.list} role="listbox" id={id} aria-label={label}>
+        <ul className={s.list} role="listbox" id={id} aria-label={label} data-up={up || undefined}>
           {options.map((o, i) => (
             <li
               key={o.value}

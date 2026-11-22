@@ -46,6 +46,10 @@
   border-color: var(--ink);
   box-shadow: var(--lift-sm);
 }
+.list[data-up] {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
 .list li {
   display: flex;
   align-items: center;

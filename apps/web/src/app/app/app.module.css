@@ -9124,6 +9124,7 @@ input.askRowTitle:focus-visible {
 }
 .gdFoot .btn {
   min-height: 3rem;
+  margin-left: auto;
 }
 .gdBack {
   display: grid;
@@ -9169,4 +9170,24 @@ input.askRowTitle:focus-visible {
   color: var(--black);
   background: #fff;
   border: 2.5px solid var(--black);
+}
+
+/* Import with AI, step 1: one big Copy button; the prompt's text folds away below it. */
+.aiCopy {
+  --fill: var(--lime);
+  justify-self: start;
+  min-height: 3.2rem;
+  padding-inline: 1.4rem;
+  font-size: 1.05rem;
+}
+.aiPrompt summary {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.aiPrompt pre {
+  max-height: 14rem;
+  margin-top: 0.5rem;
+  overflow: auto;
 }

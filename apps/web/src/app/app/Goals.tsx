@@ -1332,7 +1332,7 @@ export function GoalDialog({
     plan: "If it gets hard",
     steps: g.kind === "habit" ? "Make it a habit" : "First steps",
   };
-  // The buttons at the foot of an answer step: on to the next, or save on the last; back; and skip it.
+  // The foot of each step: back on the left, on to the next (or save, on the last) on the right.
   const foot = (
     <div className={s.gdFoot}>
       {at > 0 && (
@@ -1347,11 +1347,6 @@ export function GoalDialog({
       ) : (
         <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready} onClick={next}>
           Next <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
-        </button>
-      )}
-      {!last && ready && (
-        <button className={s.ghost} title="Save the goal as it is">
-          {editing ? "Save" : "Save now"}
         </button>
       )}
     </div>
