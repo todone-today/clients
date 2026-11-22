@@ -1,0 +1,170 @@
+/* A shared goal's public page: one sticker card with the goal and its progress, the people in a challenge, one way in. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a column no wider than the screen, whatever is inside */
+  justify-items: center;
+  align-content: start; /* rows keep their own height, even on a tall screen */
+  overflow-x: clip;
+  gap: 1.4rem;
+  min-height: 100svh;
+  padding: 1.5rem 1rem 3rem;
+  color: var(--ink);
+  background: var(--ground);
+}
+.mark {
+  justify-self: start;
+  text-decoration: none;
+}
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  width: min(26rem, 100%);
+  padding: 1.3rem 1.3rem 1.4rem;
+  color: var(--black);
+  background: var(--butter);
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  rotate: -0.6deg;
+  animation: in 0.4s var(--ease) both;
+}
+.card[data-reached] {
+  background: var(--lime);
+}
+.card h1 {
+  font-size: clamp(2rem, 9vw, 2.8rem);
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+}
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  overflow: hidden;
+  font-weight: 900;
+  background: var(--peri);
+  border: 2px solid var(--black);
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kind {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #4a4540;
+}
+.big {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.big b {
+  font-size: 4rem;
+  line-height: 0.9;
+}
+.big span {
+  font-weight: 800;
+}
+.bar {
+  display: block;
+  height: 0.9rem;
+  overflow: hidden;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--black);
+  transform-origin: left;
+}
+.weeks {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.35rem;
+  list-style: none;
+}
+.weeks li {
+  aspect-ratio: 1;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+}
+.weeks li[data-on] {
+  background: var(--black);
+}
+.reward {
+  padding-top: 0.6rem;
+  font-size: 0.9rem;
+  border-top: 2px dashed rgb(11 11 11 / 0.3);
+}
+.people {
+  display: grid;
+  gap: 0.5rem;
+  width: min(26rem, 100%);
+}
+.people h2 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.people ol {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+}
+.people li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.people li span {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.invite {
+  display: grid;
+  gap: 0.6rem;
+  width: min(26rem, 100%);
+}
+.cta {
+  --fill: var(--lime);
+  min-height: 3.2rem;
+  font-size: 1.1rem;
+}
+.second {
+  --fill: #fff8ef;
+}
+.fine {
+  max-width: 26rem;
+  font-size: 0.82rem;
+  text-align: center;
+  color: var(--ink-2);
+}
+@keyframes in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}

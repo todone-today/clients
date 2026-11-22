@@ -41,6 +41,8 @@ import { Tip } from "./Tip";
 import { GoalTemplates, RewardTemplates } from "./Templates";
 import { AskBar } from "./AskBar";
 import { ShareSheet } from "./ShareSheet";
+import { GOAL_PRESET, type GoalPreset, linksChanged, shareGoal } from "./goalLinks";
+import { usePlan } from "./PlanPrompt";
 import type { CardSpec } from "./shareCard";
 import { recap } from "@/lib/recap";
 import { GOAL_TEMPLATES, REWARD_TEMPLATES, asGoal } from "@/lib/templates";
@@ -268,6 +270,17 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false); // the templates, before the dialog
   const [recapping, setRecapping] = useState(false); // this week's recap card
+  // Arrived from a shared goal (TodoApp): open the dialog with it, and say what happened (joined, or why not).
+  const [note, setNote] = useState("");
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<GoalPreset>).detail;
+      if (d.preset) setMaking(d.preset);
+      setNote(d.note ?? "");
+    };
+    addEventListener(GOAL_PRESET, on);
+    return () => removeEventListener(GOAL_PRESET, on);
+  }, []);
   const me = useMe();
   const goals = items.filter((i): i is Goal => i.t === "goal");
   // Drag a goal onto another to put it before or after it.
@@ -357,6 +370,11 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
           </button>
         </div>
       </div>
+      {note && (
+        <p className={s.goalCheer} role="status">
+          <Sparkles size={20} strokeWidth={2.5} aria-hidden /> {note}
+        </p>
+      )}
       {!goals.length && <GoalStart onPick={(p) => setMaking(p)} onBrowse={() => setPicking(true)} />}
       {groups.map(({ id, name, goals }) => (
         <section key={id} className={s.goalGroup}>
@@ -515,6 +533,7 @@ function GoalCard({
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false); // asking what happens to its tasks
   const [sharing, setSharing] = useState<CardSpec | null>(null);
+  const plan = usePlan();
   const p = goalProgress(goal, tasks, items);
   // Its tasks (a repeating one made from it, or ones linked to it), by list.
   const mine = (t: Task) => t.goal === goal.id;
@@ -700,7 +719,19 @@ function GoalCard({
           }}
         />
       )}
-      {sharing && <ShareSheet spec={sharing} name={goal.title} onClose={() => setSharing(null)} />}
+      {sharing && (
+        <ShareSheet
+          spec={sharing}
+          name={goal.title}
+          onClose={() => setSharing(null)}
+          gated={plan.gated}
+          link={async (mode) => {
+            const { slug } = await shareGoal(goal, mode, tasks, items);
+            linksChanged();
+            return slug;
+          }}
+        />
+      )}
     </li>
   );
 }

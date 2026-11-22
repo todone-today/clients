@@ -62,7 +62,9 @@ import { TaskPanel } from "./TaskPanel";
 import { Goals, ListGoals, Rewards, XpTile } from "./Goals";
 import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
-import { fold, reconcile, type Goal } from "@todone/sdk/goals";
+import { api } from "@/lib/api";
+import { fold, reconcile, type Goal, type GoalItem } from "@todone/sdk/goals";
+import { GOAL_PRESET, type GoalPreset, joinGoal, linksChanged, takeInvite, useGoalLinks } from "./goalLinks";
 import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { useFolded } from "./folded";
@@ -349,6 +351,45 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     fileFeedback(lists);
   }, [demo, orgId, vault, lists]);
 
+  // Goals shared by link (or challenges joined): their public copies follow progress (goalLinks.ts).
+  const linkTasks = useMemo(() => (lists ? lists.filter((l) => !l.kind).flatMap((l) => l.tasks) : null), [lists]);
+  const linkItems = useMemo(
+    () => (lists?.find((l) => l.kind === "goals")?.tasks ?? []) as unknown as GoalItem[],
+    [lists],
+  );
+  useGoalLinks(linkTasks, linkItems, !demo && vault === "open" && !!userId);
+  // Arrived from a shared goal (/g/…): copy it into a new goal, or join the challenge with one, then show Goals.
+  const invited = useRef(false);
+  useEffect(() => {
+    if (demo || vault !== "open" || !userId || !lists || invited.current) return;
+    invited.current = true;
+    const inv = takeInvite();
+    if (!inv) return;
+    (async () => {
+      const g = await api<{ owner: { name: string }; snapshot: Partial<Goal> & { title: string; kind: Goal["kind"] } }>(
+        "GET",
+        `/g/${encodeURIComponent(inv.slug)}`,
+      ).catch(() => null);
+      setPanel("goals");
+      const tell = (d: GoalPreset) =>
+        setTimeout(() => dispatchEvent(new CustomEvent<GoalPreset>(GOAL_PRESET, { detail: d })), 300);
+      if (!g) return tell({ note: "That shared goal isn't there any more." });
+      const s = g.snapshot;
+      // Their own copy: the goal and how it's measured (where they start is theirs to say).
+      const preset: Partial<Goal> = { title: s.title, kind: s.kind, unit: s.unit, target: s.target, perWeek: s.perWeek, by: s.by };
+      if (inv.what === "clone") return tell({ preset });
+      const id = uid() + uid();
+      try {
+        await joinGoal(inv.slug, id);
+        changeGoals(lists, (xs) => [...xs, { ...preset, t: "goal", id, created: Date.now() } as Goal]);
+        linksChanged();
+        tell({ note: `You joined ${g.owner.name}'s challenge: “${s.title}”. Your progress shows on the challenge page.` });
+      } catch (x) {
+        // Full, or no longer a challenge: they can still do it on their own.
+        tell({ preset, note: x instanceof Error ? x.message : undefined });
+      }
+    })();
+  }, [demo, vault, userId, lists]);
   // XP: whenever lists change, finished tasks earn a win in the goals list and unticked ones lose it. One place,
   // so it covers every way a task gets ticked (card, panel, calendar). Idempotent: an unchanged log isn't saved.
   useEffect(() => {
