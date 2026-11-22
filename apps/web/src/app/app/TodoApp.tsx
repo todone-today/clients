@@ -64,7 +64,7 @@ import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { api } from "@/lib/api";
 import { fold, reconcile, type Goal, type GoalItem } from "@todone/sdk/goals";
-import { GOAL_PRESET, type GoalPreset, joinGoal, linksChanged, takeInvite, useGoalLinks } from "./goalLinks";
+import { GOAL_PRESET, type GoalPreset, joinGoal, linksChanged, shareFor, takeInvite, useGoalLinks } from "./goalLinks";
 import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { useFolded } from "./folded";
@@ -377,15 +377,17 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       const s = g.snapshot;
       // Their own copy: the goal and how it's measured (where they start is theirs to say).
       const preset: Partial<Goal> = { title: s.title, kind: s.kind, unit: s.unit, target: s.target, perWeek: s.perWeek, by: s.by };
-      if (inv.what === "clone") return tell({ preset });
+      if (inv.what === "clone") return usage({ name: "goal_link_used", what: "clone", ok: true }), tell({ preset });
       const id = uid() + uid();
       try {
         await joinGoal(inv.slug, id);
         changeGoals(lists, (xs) => [...xs, { ...preset, t: "goal", id, created: Date.now() } as Goal]);
         linksChanged();
+        usage({ name: "goal_link_used", what: "join", ok: true });
         tell({ note: `You joined ${g.owner.name}'s challenge: “${s.title}”. Your progress shows on the challenge page.` });
       } catch (x) {
         // Full, or no longer a challenge: they can still do it on their own.
+        usage({ name: "goal_link_used", what: "join", ok: false });
         tell({ preset, note: x instanceof Error ? x.message : undefined });
       }
     })();
@@ -399,9 +401,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     const items = (goals?.tasks ?? []) as unknown as Parameters<
       typeof reconcile
     >[0];
-    if (reconcile(items, tasks, todayISO(), userId) === items) return;
+    if (reconcile(items, tasks, todayISO(), userId, shareFor) === items) return;
     changeGoals(lists, (xs) =>
-      fold(reconcile(xs, tasks, todayISO(), userId), () => uid() + uid()),
+      fold(reconcile(xs, tasks, todayISO(), userId, shareFor), () => uid() + uid()),
     );
   }, [lists, vault, userId]);
 

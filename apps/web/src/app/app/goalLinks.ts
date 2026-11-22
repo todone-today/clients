@@ -4,12 +4,23 @@
 // readable copy made here, with the owner's say-so: the goal, how it's measured, and its progress. While a goal is
 // shared (or a challenge joined), every change to its progress republishes the copy, so the page stays live.
 import { useEffect, useRef } from "react";
-import { type Goal, type GoalItem, goalProgress } from "@todone/sdk/goals";
+import { type Goal, type GoalItem, goalProgress, togetherShare } from "@todone/sdk/goals";
 import type { Task } from "@todone/sdk/tasks";
 import { api } from "@/lib/api";
 
 export type Mode = "view" | "challenge";
-export type Mine = { own: { slug: string; goal: string; mode: Mode }[]; joined: { slug: string; goal: string }[] };
+export type Mine = {
+  own: { slug: string; goal: string; mode: Mode }[];
+  joined: { slug: string; goal: string }[];
+  together: { slug: string; active: number; boost: boolean }[];
+};
+// The latest list of links, for the together bonus: what share of a goal's XP friends in its challenge add.
+let latest: Mine | null = null;
+export function shareFor(goal: string) {
+  const slug = [...(latest?.own ?? []), ...(latest?.joined ?? [])].find((x) => x.goal === goal)?.slug;
+  const t = latest?.together.find((x) => x.slug === slug);
+  return t ? togetherShare(t.active, t.boost) : 0;
+}
 export const goalLink = (slug: string) => `${location.origin}/g/${slug}`;
 
 // The readable copy of one goal: only what the public page shows.
@@ -48,7 +59,7 @@ export function useGoalLinks(tasks: Task[] | null, items: GoalItem[], on: boolea
     if (!on) return;
     const load = () =>
       api<Mine>("GET", "/goal-shares").then(
-        (m) => void (mine.current = m),
+        (m) => void (mine.current = latest = m),
         () => {},
       );
     load();

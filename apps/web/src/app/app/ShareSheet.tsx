@@ -125,6 +125,7 @@ export function ShareSheet({
                     const slug = await link(m);
                     await navigator.clipboard.writeText(goalLink(slug)).catch(() => {});
                     setShared({ slug, mode: m });
+                    usage({ name: "goal_link_made", mode: m });
                   } catch (x) {
                     if ((x as { status?: number }).status !== 402) setLinkErr(x instanceof Error ? x.message : "Couldn't make the link.");
                   }

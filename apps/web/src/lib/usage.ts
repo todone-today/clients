@@ -12,7 +12,9 @@ export type UsageEvent =
   | { name: "ask_used"; via: "typed" | "voice" }
   // Share cards (the card's kind, and whether it went to the share sheet or was saved: never what's on it).
   | { name: "share_sheet_opened"; kind: "win" | "progress" | "recap" }
-  | { name: "share_card_exported"; kind: "win" | "progress" | "recap"; via: "share" | "save" };
+  | { name: "share_card_exported"; kind: "win" | "progress" | "recap"; via: "share" | "save" }
+  | { name: "goal_link_made"; mode: "view" | "challenge" }
+  | { name: "goal_link_used"; what: "join" | "clone"; ok: boolean };
 
 export function usage({ name, ...props }: UsageEvent) {
   if (!KEY || typeof window === "undefined") return;

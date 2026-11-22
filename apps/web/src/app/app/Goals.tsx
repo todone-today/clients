@@ -17,6 +17,7 @@ import {
   Trash2,
   X,
   Zap,
+  Users,
 } from "lucide-react";
 import {
   balance,
@@ -41,7 +42,7 @@ import { Tip } from "./Tip";
 import { GoalTemplates, RewardTemplates } from "./Templates";
 import { AskBar } from "./AskBar";
 import { ShareSheet } from "./ShareSheet";
-import { GOAL_PRESET, type GoalPreset, linksChanged, shareGoal } from "./goalLinks";
+import { GOAL_PRESET, type GoalPreset, linksChanged, shareFor, shareGoal } from "./goalLinks";
 import { usePlan } from "./PlanPrompt";
 import type { CardSpec } from "./shareCard";
 import { recap } from "@/lib/recap";
@@ -192,7 +193,7 @@ export function ListGoals({ list }: { list: List }) {
                   disabled={checked}
                   aria-label={checked ? "Done today" : `Did ${g.title} today`}
                   data-tip={checked ? "Done today" : "Did it today"}
-                  onClick={() => changeGoals(lists, (xs) => logGoal(xs, g, 1, Date.now(), () => uid() + uid(), me))}
+                  onClick={() => changeGoals(lists, (xs) => logGoal(xs, g, 1, Date.now(), () => uid() + uid(), me, shareFor(g.id)))}
                 >
                   <Check size={14} strokeWidth={3} />
                 </button>
@@ -939,7 +940,7 @@ export function LogBox({ goal, p }: { goal: Goal; p: Progress }) {
   const [v, setV] = useState("");
   const log = (value: number) =>
     changeGoals(lists, (xs) =>
-      logGoal(xs, goal, value, Date.now(), () => uid() + uid(), me),
+      logGoal(xs, goal, value, Date.now(), () => uid() + uid(), me, shareFor(goal.id)),
     );
   if (goal.kind === "habit") {
     const today = todayISO();
@@ -1660,9 +1661,10 @@ export function Rewards({ ai }: { ai: boolean }) {
                         day: "numeric",
                       })}
                     </time>
-                    <b>
+                    <b title={w.together ? `${w.together} of it for doing it with friends` : undefined}>
                       {w.xp > 0 ? "+" : ""}
                       {w.xp}
+                      {w.together ? <Users size={12} strokeWidth={2.75} aria-label="with friends" /> : null}
                     </b>
                   </li>
                 ))}

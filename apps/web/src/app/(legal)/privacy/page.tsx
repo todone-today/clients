@@ -96,6 +96,20 @@ export default function Privacy() {
             </td>
           </tr>
           <tr>
+            <td>
+              A goal you share by link, <b>stored readable</b>: its name, how
+              it&apos;s measured and its progress, kept up to date while it&apos;s
+              shared, with your first name and picture. In a challenge, the same
+              for everyone who joins. Who joined through whose challenge, if
+              their account is new.
+            </td>
+            <td>
+              So anyone with the link can see the goal, and friends can do it
+              together. Stop sharing (or leave a challenge) and your copy is
+              deleted from our server; your own goal stays, encrypted.
+            </td>
+          </tr>
+          <tr>
             <td>Your teams, invitations and settings</td>
             <td>To run teams and the features you turn on.</td>
           </tr>
@@ -157,6 +171,7 @@ export default function Privacy() {
           readable so your calendar can fetch them, and each list says so.
         </li>
         <li>A task you share by link, with its comments and files, until you stop sharing it.</li>
+        <li>A goal you share by link (or a challenge you join): its name and progress, until you stop sharing it.</li>
         <li>When a reminder is due. Never what it says.</li>
         <li>
           What you type or say to Ask todone, while it&apos;s being turned into suggestions (below). Not your lists.
