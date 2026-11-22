@@ -8476,6 +8476,7 @@ input.askRowTitle:focus-visible {
   margin: 0;
 }
 .listMeta {
+  min-width: 0; /* a grid item: without this a long goal would widen the page */
   margin-bottom: 1.25rem;
 }
 
@@ -8526,5 +8527,120 @@ input.askRowTitle:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .listDone {
     animation: none;
+  }
+}
+
+/* A list's goals, one line each (Goals.tsx ListGoals): its name, a slim bar, how far, and a quick log. */
+.goalPillBox {
+  position: relative;
+  max-width: 100%;
+}
+.goalPill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  height: 2.5rem;
+  padding: 0 0.35rem 0 0.7rem;
+  font-size: 0.85rem;
+  color: var(--black);
+  cursor: pointer;
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift-sm);
+  transition: transform 0.12s var(--ease);
+}
+.goalPill:hover {
+  transform: translate(-1px, -1px);
+}
+.goalPill[data-over] {
+  outline: 3px dashed var(--ink);
+  outline-offset: 3px;
+}
+.goalPill b {
+  min-width: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goalPillBar {
+  flex: none;
+  width: 3.5rem;
+  height: 0.45rem;
+  overflow: hidden;
+  background: #fff;
+  border: 1.5px solid var(--black);
+}
+.goalPillBar i {
+  display: block;
+  height: 100%;
+  background: var(--black);
+  transform-origin: left;
+}
+.goalPill small {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3d3832;
+  white-space: nowrap;
+}
+.goalPillLog {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.goalPillLog:disabled {
+  background: var(--lime);
+  opacity: 0.8;
+}
+.goalPillPop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 20;
+  width: 16rem;
+  padding: 0.5rem;
+  background: #fff8ef;
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift);
+  animation: pop 0.2s var(--ease) both;
+}
+@media (pointer: coarse) {
+  .goalPillLog::after {
+    content: "";
+    position: absolute;
+    inset: -0.5rem;
+  }
+  .goalPillLog {
+    position: relative;
+  }
+}
+@media (max-width: 760px) {
+  .goalPillBox {
+    flex: 1 1 100%;
+  }
+  .goalPill b {
+    flex: 1;
+    max-width: none;
+  }
+}
+@media (max-width: 760px) {
+  /* The goals take the row's full width and no more, so each pill fits the screen. */
+  .listMeta .listGoals {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .goalPillBox {
+    min-width: 0;
+  }
+  .goalPillBar {
+    width: 2.5rem;
   }
 }

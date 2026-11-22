@@ -125,8 +125,10 @@ function saveGoal(
 export function ListGoals({ list }: { list: List }) {
   const { lists, update } = useLists();
   const { items } = useGoalItems();
+  const me = useMe();
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false);
+  const [logging, setLogging] = useState<string | null>(null); // the goal whose log box is open
   const [editing, setEditing] = useState<Goal | null>(null);
   // Drop tasks on a goal's note to link them to it: they become its milestones (or count toward the habit).
   const dropOnGoal = useDrop("goal-notes", {
@@ -150,22 +152,61 @@ export function ListGoals({ list }: { list: List }) {
     <div className={s.listGoals}>
       {goals.map((g) => {
         const p = goalProgress(g, tasks, items);
+        const unit = g.unit ? ` ${g.unit}` : "";
+        // How far along, as a fraction and a few words, the way its kind counts.
+        const [frac, count] =
+          g.kind === "target"
+            ? [p.towards, `${p.current ?? "–"}/${g.target ?? "?"}${unit}`]
+            : g.kind === "daily"
+              ? [g.target ? p.today / g.target : 0, `${p.today}/${g.target ?? "?"}${unit} today`]
+              : g.kind === "habit"
+                ? [p.thisWeek / (g.perWeek ?? 1), `${p.thisWeek}/${g.perWeek ?? 1} this week`]
+                : [p.total ? p.done / p.total : 0, `${p.done}/${p.total} steps`];
+        const today = todayISO();
+        const checked = g.kind === "habit" && p.logs.some((l) => new Date(l.at).toLocaleDateString("en-CA") === today);
         return (
-          <div
-            key={g.id}
-            className={s.listGoal}
-            {...dropOnGoal(g.id)}
-            onClick={(e) => !onControl(e) && setEditing(g)}
-            title="Click to edit"
-            style={{ "--fill": fillFor(g.id) } as React.CSSProperties}
-          >
-            <header>
+          // One line per goal: tap it to open it; the + logs (a habit: checks in for today).
+          <div key={g.id} className={s.goalPillBox}>
+            <div
+              className={s.goalPill}
+              {...dropOnGoal(g.id)}
+              onClick={(e) => !onControl(e) && setEditing(g)}
+              data-tip={`${g.title}: tap to open`}
+              style={{ "--fill": fillFor(g.id) } as React.CSSProperties}
+            >
               <Target size={14} strokeWidth={2.75} aria-hidden />
               <b>{g.title}</b>
-              <span className={s.goalKind}>{kindLabel(g)}</span>
-            </header>
-            <Meter goal={g} p={p} compact />
-            <LogBox goal={g} p={p} />
+              <span className={s.goalPillBar} aria-hidden>
+                <i style={{ transform: `scaleX(${Math.min(1, Math.max(0, frac))})` }} />
+              </span>
+              <small>{count}</small>
+              {g.kind === "habit" ? (
+                <button
+                  className={s.goalPillLog}
+                  disabled={checked}
+                  aria-label={checked ? "Done today" : `Did ${g.title} today`}
+                  data-tip={checked ? "Done today" : "Did it today"}
+                  onClick={() => changeGoals(lists, (xs) => logGoal(xs, g, 1, Date.now(), () => uid() + uid(), me))}
+                >
+                  <Check size={14} strokeWidth={3} />
+                </button>
+              ) : g.kind !== "outcome" ? (
+                <button
+                  className={s.goalPillLog}
+                  aria-expanded={logging === g.id}
+                  aria-label={`Log ${g.title}`}
+                  data-tip="Log"
+                  onClick={() => setLogging(logging === g.id ? null : g.id)}
+                >
+                  <Plus size={14} strokeWidth={3} />
+                </button>
+              ) : null}
+            </div>
+            {logging === g.id && (
+              <div className={s.goalPillPop}>
+                <LogBox goal={g} p={p} />
+              </div>
+            )}
           </div>
         );
       })}
@@ -1459,33 +1500,6 @@ export function Rewards({ ai }: { ai: boolean }) {
                 onClose={() => setPicking(false)}
               />
             )}
-            <details className={s.priceHow}>
-              <summary>How a task earns XP</summary>
-              <ul>
-                <li>
-                  <b>5</b> for finishing it
-                </li>
-                <li>
-                  <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
-                  4 h)
-                </li>
-                <li>
-                  <b>+3</b> S, <b>+6</b> M, <b>+10</b> L, <b>+15</b> XL effort
-                </li>
-                <li>
-                  <b>+6</b> high priority, <b>+3</b> medium
-                </li>
-                <li>
-                  <b>+4</b> done on or before its day
-                </li>
-                <li>
-                  <b>+2</b> a step (up to 10)
-                </li>
-                <li>
-                  <b>+5</b> toward a goal
-                </li>
-              </ul>
-            </details>
           </section>
           {mine.length > 0 && (
             <section>
