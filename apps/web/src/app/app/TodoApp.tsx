@@ -36,6 +36,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Confetti } from "@/components/Confetti";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
@@ -1320,7 +1321,8 @@ function ListView({
           {...binDrop("bin")}
           onClick={() => setAsking(true)}
           aria-label="Delete list, or drop tasks here to delete them"
-          title="Drop tasks here to delete them. Click to delete the list."
+          data-tip="Bin: drop tasks here, or click to delete this list"
+          data-tip-end
         >
           <Trash2 size={28} strokeWidth={2.5} />
           <span>Bin</span>
@@ -1381,6 +1383,8 @@ function ListView({
             onPick={(icon) => update(list.id, (l) => ({ ...l, icon }))}
           />
           <Privacy list={list} update={update} />
+          {/* Its goals sit on the same row: the list's icon, lock and goals read as one line about it. */}
+          <ListGoals list={list} />
         </div>
       </div>
       {asking && (
@@ -1395,8 +1399,6 @@ function ListView({
           }}
         />
       )}
-      <ListGoals list={list} />
-
       {binned && (
         <div className={s.undo} role="status">
           {binned.text}
@@ -1559,14 +1561,28 @@ function ListView({
                 </li>
               )}
               {!board(list.tasks, show, sort, today, nowMin).length &&
-                !list.tasks.some((t) => waiting(t, today)) && (
+                !list.tasks.some((t) => waiting(t, today)) &&
+                (show === "open" && c.all > 0 && c.done === c.all ? (
+                  // Everything on the list is ticked: say so, properly, instead of "nothing here".
+                  <li className={s.listDone} role="status">
+                    <Confetti />
+                    <p className="display">All done.</p>
+                    <p>
+                      Every task on {list.name} is ticked. Add the next one in the bar below, or{" "}
+                      <button className={s.link} onClick={() => setShow("done")}>
+                        look back at what you did
+                      </button>
+                      .
+                    </p>
+                  </li>
+                ) : (
                   <li className={s.noMatch}>
                     No tasks here.{" "}
                     <button className={s.link} onClick={() => setShow("all")}>
                       Show all
                     </button>
                   </li>
-                )}
+                ))}
             </ul>
           ) : (
             <div className={s.empty}>

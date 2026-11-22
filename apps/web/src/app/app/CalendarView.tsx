@@ -414,7 +414,7 @@ export function CalendarView({
       )}
       <div className={s.listHead}>
         {update && !locked && (
-          <div className={s.bin} {...drop("bin")} aria-label="Bin: drop a task here to delete it" title="Drop a task here to delete it">
+          <div className={s.bin} {...drop("bin")} aria-label="Bin: drop a task here to delete it" data-tip="Bin: drop a task here" data-tip-end>
             <Trash2 size={28} strokeWidth={2.5} aria-hidden />
             <span>Bin</span>
           </div>

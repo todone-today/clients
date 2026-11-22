@@ -286,7 +286,7 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
       </Tip>
       <div className={s.listHead}>
         {goals.length > 0 && (
-          <div className={s.bin} data-bin {...binDrop("bin")} title="Drop a goal here to delete it">
+          <div className={s.bin} data-bin {...binDrop("bin")} data-tip="Bin: drop a goal here" data-tip-end>
             <Trash2 size={28} strokeWidth={2.5} aria-hidden />
             <span>Bin</span>
           </div>
@@ -1230,21 +1230,13 @@ export function Rewards({ ai }: { ai: boolean }) {
   const { lists } = useLists();
   const { items } = useGoalItems();
   const me = useMe();
-  const [title, setTitle] = useState("");
-  const [cost, setCost] = useState("100");
   const [picking, setPicking] = useState(false);
-  const titleRef = useRef<HTMLInputElement>(null);
-  // A template (or "my own") fills the form below to check and change, then Add saves it.
+  // A template adds the reward, priced in tasks like yours (tap it to change); "my own" goes to the bar to type it.
   const fill = (t?: { title: string; size: number }) => {
     setPicking(false);
-    if (t) {
-      setTitle(t.title);
-      setCost(String(t.size * perTask));
-    }
-    requestAnimationFrame(() => {
-      titleRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-      titleRef.current?.focus({ preventScroll: true });
-    });
+    if (t)
+      changeGoals(lists, (xs) => [...xs, { t: "reward", id: uid() + uid(), title: t.title, cost: t.size * perTask }]);
+    else requestAnimationFrame(() => document.getElementById("ask-bar")?.focus());
   };
   const [claimed, setClaimed] = useState("");
   const xp = balance(items, me);
@@ -1261,7 +1253,6 @@ export function Rewards({ ai }: { ai: boolean }) {
   const perTask = earned.length
     ? Math.round(earned.reduce((n, w) => n + w.xp, 0) / earned.length)
     : 15;
-  const price = Math.round(+cost);
   const dropReward = useDrop("rewards", {
     accept: (p, id) => p.kind === "reward" && p.id !== id,
     where: (_, __, at) => placeOn(at, "x", false),
@@ -1335,15 +1326,7 @@ export function Rewards({ ai }: { ai: boolean }) {
             <Gift size={15} strokeWidth={2.5} aria-hidden /> Claim
           </button>
         )}
-        <button
-          className={s.rewardX}
-          aria-label={`Delete reward ${r.title}`}
-          onClick={() =>
-            changeGoals(lists, (xs) => xs.filter((x) => x.id !== r.id))
-          }
-        >
-          <Trash2 size={15} strokeWidth={2.5} aria-hidden />
-        </button>
+        {/* Deleting is in the reward's own dialog (tap the card), away from Claim. */}
       </footer>
     </li>
   );
@@ -1476,107 +1459,33 @@ export function Rewards({ ai }: { ai: boolean }) {
                 onClose={() => setPicking(false)}
               />
             )}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const c = Math.round(+cost);
-                if (!title.trim() || !(c >= 1 && c <= 100_000)) return;
-                changeGoals(lists, (xs) => [
-                  ...xs,
-                  {
-                    t: "reward",
-                    id: uid() + uid(),
-                    title: title.trim(),
-                    cost: c,
-                  },
-                ]);
-                setTitle("");
-              }}
-            >
-              <label className={s.goalField}>
-                <span>A reward</span>
-                <input
-                  ref={titleRef}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={80}
-                  placeholder="Cheat meal, 20 min Instagram…"
-                />
-              </label>
-              <label className={s.goalField}>
-                <span>Costs (XP)</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={100000}
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                />
-              </label>
-              <div className={s.priceChips} role="group" aria-label="Sizes">
-                {(
-                  [
-                    ["Small", 3],
-                    ["Medium", 10],
-                    ["Big", 30],
-                  ] as const
-                ).map(([name, n]) => (
-                  <button
-                    key={name}
-                    type="button"
-                    aria-pressed={price === perTask * n}
-                    onClick={() => setCost(String(perTask * n))}
-                  >
-                    {name} · {perTask * n}
-                  </button>
-                ))}
-              </div>
-              {price >= 1 && (
-                <p className={s.priceHint} role="status">
-                  About <b>{Math.max(1, Math.round(price / perTask))}</b> task
-                  {Math.round(price / perTask) === 1 ? "" : "s"}
-                  {thisWeek > 0 &&
-                    ` · about ${Math.max(1, Math.ceil(price / (thisWeek / 7)))} day${Math.ceil(price / (thisWeek / 7)) === 1 ? "" : "s"} at this week's pace`}
-                  {earned.length
-                    ? `, at ${perTask} XP a task, your average.`
-                    : ", at about 15 XP a task."}
-                </p>
-              )}
-              <details className={s.priceHow}>
-                <summary>How a task earns XP</summary>
-                <ul>
-                  <li>
-                    <b>5</b> for finishing it
-                  </li>
-                  <li>
-                    <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
-                    4 h)
-                  </li>
-                  <li>
-                    <b>+3</b> S, <b>+6</b> M, <b>+10</b> L, <b>+15</b> XL effort
-                  </li>
-                  <li>
-                    <b>+6</b> high priority, <b>+3</b> medium
-                  </li>
-                  <li>
-                    <b>+4</b> done on or before its day
-                  </li>
-                  <li>
-                    <b>+2</b> a step (up to 10)
-                  </li>
-                  <li>
-                    <b>+5</b> toward a goal
-                  </li>
-                </ul>
-              </details>
-              <button
-                className="btn"
-                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-                disabled={!title.trim()}
-              >
-                <Plus size={16} strokeWidth={2.75} aria-hidden /> Add reward
-              </button>
-            </form>
+            <details className={s.priceHow}>
+              <summary>How a task earns XP</summary>
+              <ul>
+                <li>
+                  <b>5</b> for finishing it
+                </li>
+                <li>
+                  <b>+1</b> every 5 minutes it&apos;s estimated to take (up to
+                  4 h)
+                </li>
+                <li>
+                  <b>+3</b> S, <b>+6</b> M, <b>+10</b> L, <b>+15</b> XL effort
+                </li>
+                <li>
+                  <b>+6</b> high priority, <b>+3</b> medium
+                </li>
+                <li>
+                  <b>+4</b> done on or before its day
+                </li>
+                <li>
+                  <b>+2</b> a step (up to 10)
+                </li>
+                <li>
+                  <b>+5</b> toward a goal
+                </li>
+              </ul>
+            </details>
           </section>
           {mine.length > 0 && (
             <section>

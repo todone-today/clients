@@ -8420,3 +8420,111 @@ input.askRowTitle:focus-visible {
   justify-self: start;
   padding: 0.3rem;
 }
+
+/* The Bin at rest is a small icon in the corner, so the page's title leads; while something is held it opens out
+   into a big target to drop on. */
+.bin {
+  width: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  gap: 0;
+  transition:
+    width 0.18s var(--ease),
+    min-height 0.18s var(--ease),
+    transform 0.15s var(--ease),
+    color 0.15s,
+    border-color 0.15s;
+}
+.bin > span {
+  display: none;
+}
+.bin > svg {
+  width: 22px;
+  height: 22px;
+}
+:global(body.is-dragging) .bin {
+  width: 11rem;
+  min-height: 6.5rem;
+  gap: 0.2rem;
+}
+:global(body.is-dragging) .bin > span {
+  display: block;
+}
+:global(body.is-dragging) .bin > svg {
+  width: 28px;
+  height: 28px;
+}
+.title {
+  padding-right: 4rem;
+}
+@media (max-width: 760px) {
+  .bin {
+    width: 2.75rem;
+    min-height: 2.75rem;
+  }
+  :global(body.is-dragging) .bin {
+    width: 7rem;
+    min-height: 5rem;
+  }
+  .title {
+    padding-right: 3.5rem;
+  }
+}
+
+/* A list's goals on its icon-and-lock row. */
+.listMeta .listGoals {
+  margin: 0;
+}
+.listMeta {
+  margin-bottom: 1.25rem;
+}
+
+/* The top bar's tools (search, notifications, the tour, theme) are one kind of thing, so one look: cream. Only the
+   XP tile keeps its colour, the one thing up there that changes as you work. */
+.top .tile:not(.xpTile) {
+  background: #fff8ef;
+}
+
+/* Touch: everything you tap is at least 44px. The tick boxes keep their look and gain an invisible margin to hit. */
+@media (pointer: coarse) {
+  .seg button,
+  .selectBtn {
+    min-height: 2.75rem;
+  }
+  .check {
+    position: relative;
+  }
+  .check::after {
+    content: "";
+    position: absolute;
+    inset: -0.7rem;
+  }
+}
+
+/* A list with everything ticked (Peak-End): a sticker of its own, with a little confetti. */
+.listDone {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.4rem;
+  justify-self: start;
+  max-width: 30rem;
+  padding: 1.1rem 1.3rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -0.6deg;
+  animation: pop 0.38s var(--ease) both;
+}
+.tasks .listDone p:global(.display) {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.listDone .link {
+  color: var(--black);
+}
+@media (prefers-reduced-motion: reduce) {
+  .listDone {
+    animation: none;
+  }
+}
