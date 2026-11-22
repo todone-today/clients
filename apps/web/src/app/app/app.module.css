@@ -470,6 +470,18 @@
 .empty p:last-child {
   color: var(--ink-2);
 }
+/* A whole page with nothing on it yet: the message sits in the middle, like a 404. */
+.emptyPage {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  min-height: 50svh;
+  text-align: center;
+}
+.emptyPage p:last-child {
+  max-width: 28rem;
+  text-wrap: balance;
+}
 
 @media (max-width: 760px) {
   .shell {
@@ -8539,6 +8551,23 @@ input.askRowTitle:focus-visible {
 }
 .goalPill:hover {
   transform: translate(-1px, -1px);
+}
+.goalPill:active {
+  transform: translate(1px, 1px);
+}
+.goalPill:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+/* Touch: the whole line is the thing to tap, and its two buttons are big enough for a thumb. */
+@media (pointer: coarse) {
+  .goalPill {
+    height: 3rem;
+  }
+  .goalPill .goalPillLog {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
 }
 .goalPill[data-over] {
   outline: 3px dashed var(--ink);

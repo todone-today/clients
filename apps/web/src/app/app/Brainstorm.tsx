@@ -173,7 +173,7 @@ export function Brainstorm({
           <span>{armed ? "Clear all?" : "Bin"}</span>
         </button>
         <h1 className={`display ${s.title}`}>Brainstorm</h1>
-        <p className={s.progress}>Dump ideas here, half-formed is fine. Drag a good one onto a list to make it a task.</p>
+        <p className={s.progress}>Jot ideas here. Drag one to a list when you&rsquo;re ready to make it a task.</p>
       </div>
       {binned && (
         <div className={s.undo} role="status">
@@ -227,7 +227,7 @@ export function Brainstorm({
           })}
         </ul>
       ) : (
-        <div className={s.empty}>
+        <div className={`${s.empty} ${s.emptyPage}`}>
           <p className="display">Blank page.</p>
           <p>Type anything in the bar below{ai ? ", or say it" : ""}. Nothing here is a commitment until you make it a task.</p>
         </div>

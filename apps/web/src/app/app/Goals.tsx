@@ -17,6 +17,7 @@ import {
   Zap,
   Users,
   ArrowRight,
+  Eye,
 } from "lucide-react";
 import {
   balance,
@@ -135,7 +136,7 @@ export function ListGoals({ list }: { list: List }) {
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false);
   const [logging, setLogging] = useState<string | null>(null); // the goal whose log box is open
-  const [editing, setEditing] = useState<Goal | null>(null);
+  const [viewing, setViewing] = useState<Goal | null>(null);
   // Drop tasks on a goal's note to link them to it: they become its milestones (or count toward the habit).
   const dropOnGoal = useDrop("goal-notes", {
     accept: (p) => p.kind === "task",
@@ -171,42 +172,46 @@ export function ListGoals({ list }: { list: List }) {
         const today = todayISO();
         const checked = g.kind === "habit" && p.logs.some((l) => new Date(l.at).toLocaleDateString("en-CA") === today);
         return (
-          // One line per goal: tap it to open it; the + logs (a habit: checks in for today).
+          // One line per goal. Tapping it logs: a habit checks in for today, a number or amount opens the log box,
+          // milestones (ticked as tasks) show the goal. The eye shows the goal here; the arrow goes to it in Goals.
           <div key={g.id} className={s.goalPillBox}>
             <div
               className={s.goalPill}
               {...dropOnGoal(g.id)}
-              onClick={(e) => !onControl(e) && setEditing(g)}
-              data-tip={`${g.title}: tap to open`}
+              role="button"
+              tabIndex={0}
+              aria-label={
+                g.kind === "habit" ? (checked ? `${g.title}: done today` : `Did ${g.title} today`) : g.kind === "outcome" ? `Show ${g.title}` : `Log ${g.title}`
+              }
+              data-on={checked || undefined}
+              onClick={(e) => {
+                if (onControl(e)) return;
+                if (g.kind === "habit") {
+                  if (!checked) changeGoals(lists, (xs) => logGoal(xs, g, 1, Date.now(), () => uid() + uid(), me, shareFor(g.id)));
+                } else if (g.kind === "outcome") setViewing(g);
+                else setLogging(logging === g.id ? null : g.id);
+              }}
+              onKeyDown={(e) => e.target === e.currentTarget && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), e.currentTarget.click())}
+              data-tip={g.kind === "habit" ? (checked ? "Done today" : "Tap: did it today") : g.kind === "outcome" ? "Tap to see it" : "Tap to log"}
               style={{ "--fill": fillFor(g.id) } as React.CSSProperties}
             >
-              <Target size={14} strokeWidth={2.75} aria-hidden />
+              {checked ? <Check size={14} strokeWidth={3} aria-hidden /> : <Target size={14} strokeWidth={2.75} aria-hidden />}
               <b>{g.title}</b>
               <span className={s.goalPillBar} aria-hidden>
                 <i style={{ transform: `scaleX(${Math.min(1, Math.max(0, frac))})` }} />
               </span>
               <small>{count}</small>
-              {g.kind === "habit" ? (
-                <button
-                  className={s.goalPillLog}
-                  disabled={checked}
-                  aria-label={checked ? "Done today" : `Did ${g.title} today`}
-                  data-tip={checked ? "Done today" : "Did it today"}
-                  onClick={() => changeGoals(lists, (xs) => logGoal(xs, g, 1, Date.now(), () => uid() + uid(), me, shareFor(g.id)))}
-                >
-                  <Check size={14} strokeWidth={3} />
-                </button>
-              ) : g.kind !== "outcome" ? (
-                <button
-                  className={s.goalPillLog}
-                  aria-expanded={logging === g.id}
-                  aria-label={`Log ${g.title}`}
-                  data-tip="Log"
-                  onClick={() => setLogging(logging === g.id ? null : g.id)}
-                >
-                  <Plus size={14} strokeWidth={3} />
-                </button>
-              ) : null}
+              <button className={s.goalPillLog} aria-label={`See ${g.title}`} data-tip="See it" onClick={() => setViewing(g)}>
+                <Eye size={14} strokeWidth={2.75} />
+              </button>
+              <button
+                className={s.goalPillLog}
+                aria-label={`Go to ${g.title} in Goals`}
+                data-tip="Go to it"
+                onClick={() => dispatchEvent(new CustomEvent(OPEN_GOAL, { detail: g.id }))}
+              >
+                <ArrowRight size={14} strokeWidth={3} />
+              </button>
             </div>
             {logging === g.id && (
               <div className={s.goalPillPop}>
@@ -220,16 +225,22 @@ export function ListGoals({ list }: { list: List }) {
         <Plus size={15} strokeWidth={2.75} aria-hidden />{" "}
         {goals.length ? "Goal" : "Add a goal"}
       </button>
-      {editing && (
-        <GoalDialog
-          lists={all}
-          initial={editing}
-          onClose={() => setEditing(null)}
-          onSave={(g, steps, listId) => {
-            saveGoal(lists, update, g, steps, listId);
-            setEditing(null);
-          }}
-        />
+      {viewing && (
+        // The goal as it is on the Goals page, without leaving this list.
+        <Modal label={viewing.title} onClose={() => setViewing(null)}>
+          <ul className={s.goalGrid}>
+            <GoalCard
+              goal={items.find((i): i is Goal => i.t === "goal" && i.id === viewing.id) ?? viewing}
+              items={items}
+              tasks={tasks}
+              lists={all}
+              onOpen={() => setViewing(null)}
+              dnd={{}}
+              binned={false}
+              onBinned={() => setViewing(null)}
+            />
+          </ul>
+        </Modal>
       )}
       {picking && (
         <GoalTemplates
@@ -576,6 +587,7 @@ function GoalCard({
   return (
     <li
       {...dnd}
+      id={`goal-${goal.id}`}
       onClick={(e) => !onControl(e) && setEditing(true)}
       title="Click to edit"
       className={s.goal}
@@ -1114,6 +1126,8 @@ const KINDS = [
   ["daily", "A daily amount", "8 glasses a day", Droplet],
   ["outcome", "Get somewhere", "Milestones, by a date", Flag],
 ] as const;
+// "Go to it" on a list's goal: TodoApp opens Goals, which scrolls to the goal and flashes it.
+export const OPEN_GOAL = "todone:open-goal";
 const PAUSE_MS = 6000; // each thought in the pause
 export function GoalDialog({
   lists,

@@ -59,7 +59,7 @@ import {
 } from "@/lib/store";
 import { BinView } from "./BinPanel";
 import { TaskPanel } from "./TaskPanel";
-import { Goals, ListGoals, Rewards, XpTile } from "./Goals";
+import { Goals, ListGoals, OPEN_GOAL, Rewards, XpTile } from "./Goals";
 import { NotificationBell } from "./Bell";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { api } from "@/lib/api";
@@ -358,6 +358,19 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     [lists],
   );
   useGoalLinks(linkTasks, linkItems, !demo && vault === "open" && !!userId);
+  // "Go to it" on a list's goal: Goals opens on it, scrolled into view and flashed.
+  useEffect(() => {
+    const go = (e: Event) => {
+      setPanel("goals");
+      setTimeout(() => {
+        const el = document.getElementById(`goal-${(e as CustomEvent<string>).detail}`);
+        el?.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        el?.animate?.([{ outline: "4px solid var(--black)", outlineOffset: "4px" }, { outline: "4px solid transparent", outlineOffset: "4px" }], { duration: 1400 });
+      }, 350);
+    };
+    addEventListener(OPEN_GOAL, go);
+    return () => removeEventListener(OPEN_GOAL, go);
+  }, []);
   // Arrived from a shared goal (/g/…): copy it into a new goal, or join the challenge with one, then show Goals.
   const invited = useRef(false);
   useEffect(() => {
