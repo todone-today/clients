@@ -8770,3 +8770,48 @@ input.askRowTitle:focus-visible {
     animation: none;
   }
 }
+
+/* Wider screens: the views as separate sticker tiles, like the tools on the right (same size, edge and shadow), each
+   in its own colour; the open one is pressed in and ringed. */
+@media (min-width: 761px) {
+  .tabs {
+    gap: inherit; /* the top bar's own spacing, the same as between the tools on the right */
+    border: 0;
+  }
+  .tabs button,
+  .tabs button + button {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    color: var(--black);
+    background: var(--tab, var(--butter));
+    border: 2.5px solid var(--black);
+    box-shadow: var(--lift-sm);
+    transition:
+      transform 0.12s,
+      box-shadow 0.12s;
+  }
+  .tabs button:nth-child(1) {
+    --tab: var(--butter);
+  }
+  .tabs button:nth-child(2) {
+    --tab: var(--cyan);
+  }
+  .tabs button:nth-child(3) {
+    --tab: var(--lime);
+  }
+  .tabs button:nth-child(4) {
+    --tab: var(--pink);
+  }
+  .tabs button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .tabs button[aria-pressed="true"] {
+    background: var(--tab);
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--shadow);
+    outline: 2.5px solid var(--ink);
+    outline-offset: 3px;
+  }
+}
