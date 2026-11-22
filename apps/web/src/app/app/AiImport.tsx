@@ -120,6 +120,21 @@ export function AiImport({
       }
       plan.questions = [];
     }
+    // Asked from Rewards or Goals: only that kind comes back, even when the AI planned more.
+    if (focus.current === "rewards") {
+      plan.lists = [];
+      plan.goals = [];
+      plan.changes = [];
+      plan.questions = [];
+    } else if (focus.current === "goals") {
+      plan.lists = [];
+      plan.rewards = [];
+      plan.changes = [];
+    }
+    if (focus.current && !plan.goals.length && !plan.rewards.length && !plan.questions.length) {
+      setErr(`No ${focus.current} in that. Try saying what you'd enjoy${focus.current === "goals" ? " working towards" : ""}.`);
+      return false;
+    }
     // One round of questions: once they're answered (or skipped), it goes on with what it has, never asks again.
     const asks = answeredOnce.current ? [] : plan.questions;
     const more = [
@@ -172,9 +187,10 @@ export function AiImport({
   };
 
   // Lists you have get their tasks added; new ones are made. Goals go with a list you already have when the AI named
-  // one. Ids are fresh. Whichever list is added last is the one that opens.
-  const save = () => {
-    const { groups, goals, rewards, changes } = commit(drafts);
+  // one. Ids are fresh. Whichever list is added last is the one that opens. `only`: just that kind (the rewards,
+  // say), added now; the rest stays on the board to review.
+  const save = (only?: Draft["kind"]) => {
+    const { groups, goals, rewards, changes } = commit(only ? drafts.filter((d) => d.kind === only) : drafts);
     // Changes to tasks you have, list by list: done, edited, deleted (to the bin), moved (to a list by name).
     for (const listId of new Set(changes.map((d) => d.place))) {
       const list = (everything ?? []).find((l) => l.id === listId);
@@ -202,6 +218,8 @@ export function AiImport({
     };
     const extra: GoalItem[] = [...goals.map(linked), ...rewards.map((r) => ({ ...r, id: newId() }))];
     if (extra.length) changeGoals(everything, (xs) => [...xs, ...extra]);
+    const left = only ? drafts.filter((d) => d.kind !== only) : [];
+    if (left.length) return setDrafts(left);
     forget();
     close();
   };
@@ -421,7 +439,8 @@ export function AiImport({
           made={made}
           onMake={(n: string) => setMade((m) => [...m, n])}
           today={today || todayISO()}
-          onAdd={save}
+          onAdd={() => save()}
+          onAddSome={save}
           onClear={() => {
             forget();
             setReviewing(false);
@@ -565,7 +584,7 @@ export function AiImport({
             )}
             {usage?.limit != null && <Credits used={usage.used} limit={usage.limit} />}
             {busy && phase !== "recording" ? (
-              <Working doing={doing} waited={waited} onStop={halt} />
+              <Working doing={doing} waited={waited} onStop={halt} hearing={phase !== "thinking"} />
             ) : (
               <p className={s.aiStatus} role="status">
                 {phase === "recording" && <i className={s.recDot} aria-hidden />}
@@ -730,8 +749,24 @@ function Credits({ used, limit }: { used: number; limit: number }) {
 }
 
 // While Ask todone works: a small dialog over everything, so nothing can be changed under it; Esc or Stop halts it.
-export function Working({ doing, waited, onStop }: { doing: string; waited: number; onStop: () => void }) {
+// What it's up to, said playfully, a new word every couple of seconds; the plain truth goes underneath.
+const THINK = ["Mulling…", "Cooking…", "Pondering…", "Untangling…", "Connecting the dots…", "Weighing it up…", "Sketching your plan…", "Brewing…", "Sorting it out…", "Nearly there…"];
+const HEAR = ["Listening back…", "Catching every word…", "Tuning in…", "Untangling accents…", "Writing it down…"];
+
+export function Working({
+  doing,
+  waited,
+  onStop,
+  hearing = false,
+}: {
+  doing: string;
+  waited: number;
+  onStop: () => void;
+  hearing?: boolean; // still turning speech into words
+}) {
   const ref = useRef<HTMLDialogElement>(null);
+  const words = hearing ? HEAR : THINK;
+  const word = words[Math.floor(waited / 2.5) % words.length];
   useEffect(() => {
     const d = ref.current;
     if (d && !d.open) d.showModal();
@@ -748,9 +783,13 @@ export function Working({ doing, waited, onStop }: { doing: string; waited: numb
       }}
     >
       <Sparkles size={22} strokeWidth={2.5} aria-hidden className={s.askSpark} data-busy />
-      <span role="status">
-        <b>{doing}</b>
-        <small>{waited < 20 ? `${waited}s` : `${waited}s · long ones take up to a minute`}</small>
+      <span role="status" aria-label={doing}>
+        <b key={word} className={s.aiWord} aria-hidden>
+          {word}
+        </b>
+        <small>
+          {doing.replace(/…$/, "")} · {waited < 20 ? `${waited}s` : `${waited}s, long ones take up to a minute`}
+        </small>
       </span>
       <button type="button" className={s.ghost} onClick={onStop} autoFocus>
         Stop

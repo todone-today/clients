@@ -5444,8 +5444,17 @@ body[data-drag="task"] .listGoal {
     scrollbar-width: none;
   }
 }
-/* The view tabs only need their tooltip while their names are hidden (tablets). */
-@media (min-width: 1101px), (max-width: 760px) {
+/* Wider screens: the view tabs are icons, each with a sticker tooltip naming it. Phones keep the names under the
+   icons in the tab bar, so no tooltip there. */
+@media (min-width: 761px) {
+  .tabs .tabName {
+    display: none;
+  }
+  .tabs button {
+    padding: 0.45rem 0.7rem;
+  }
+}
+@media (max-width: 760px) {
   .tabs [data-tip]::after {
     display: none;
   }
@@ -8445,12 +8454,6 @@ input.askRowTitle:focus-visible {
   margin-bottom: 1.25rem;
 }
 
-/* The top bar's tools (search, notifications, the tour, theme) are one kind of thing, so one look: cream. Only the
-   XP tile keeps its colour, the one thing up there that changes as you work. */
-.top .tile:not(.xpTile) {
-  background: #fff8ef;
-}
-
 /* Touch: everything you tap is at least 44px. The tick boxes keep their look and gain an invisible margin to hit. */
 @media (pointer: coarse) {
   .seg button,
@@ -8723,6 +8726,47 @@ input.askRowTitle:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .sheet[open] {
+    animation: none;
+  }
+}
+
+/* Ask todone at work: a playful word that changes every few seconds, a sweep of light along the card's foot. */
+.aiWorking[open] {
+  position: relative;
+  overflow: hidden;
+}
+.aiWorking[open]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--lime), var(--peri), transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: aiSweep 1.6s linear infinite;
+}
+.aiWord {
+  font: 900 1.5rem/1.05 var(--display);
+  text-transform: uppercase;
+  animation: aiWordIn 0.35s var(--ease) both;
+}
+@keyframes aiWordIn {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+@keyframes aiSweep {
+  from {
+    background-position: -50% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aiWord,
+  .aiWorking[open]::after {
     animation: none;
   }
 }

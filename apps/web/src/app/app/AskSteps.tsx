@@ -45,6 +45,7 @@ export function AskSteps({
   onMake,
   today,
   onAdd,
+  onAddSome,
   onClear,
   onExit,
   questions,
@@ -61,6 +62,7 @@ export function AskSteps({
   onMake: (name: string) => void;
   today: string;
   onAdd: () => void;
+  onAddSome: (kind: Draft["kind"]) => void; // just this step's kind, now
   onClear: () => void;
   onExit: () => void;
   questions: string[];
@@ -210,9 +212,25 @@ export function AskSteps({
             <Check size={16} strokeWidth={3} aria-hidden /> Add {ready} {ready === 1 ? "thing" : "things"}
           </button>
         ) : (
-          <button type="button" className="btn" style={{ "--fill": "var(--black)", color: "#fff8ef" } as React.CSSProperties} onClick={() => nextStep && go(nextStep)}>
-            Next{nextStep ? `: ${LOOK[nextStep].title.replace(/^Your (.)/, (_, c: string) => c.toUpperCase())}` : ""} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
-          </button>
+          <>
+            {/* Just these, now (the rewards without the lists, say); the rest stays to review. */}
+            {count > 0 && (
+              <button
+                type="button"
+                className="btn"
+                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+                disabled={busy}
+                onClick={() => onAddSome(step as Draft["kind"])}
+              >
+                <Check size={16} strokeWidth={3} aria-hidden /> Add {count === 1 ? "it" : `these ${count}`}
+              </button>
+            )}
+            {nextStep && (
+              <button type="button" className="btn" style={{ "--fill": "var(--black)", color: "#fff8ef" } as React.CSSProperties} onClick={() => go(nextStep)}>
+                Next: {LOOK[nextStep].title.replace(/^Your (.)/, (_, c: string) => c.toUpperCase())} <ArrowRight size={16} strokeWidth={2.75} aria-hidden />
+              </button>
+            )}
+          </>
         )}
       </footer>
     </dialog>
