@@ -6,7 +6,18 @@ import type { Recap } from "@/lib/recap";
 export type CardFormat = "story" | "square";
 export type CardSpec =
   | { kind: "win"; eyebrow: string; title: string; line: string; grid: number[]; fill: string }
-  | { kind: "progress"; title: string; big: string; label: string; frac: number; sub: string; fill: string; overlay: boolean }
+  | {
+      kind: "progress";
+      title: string;
+      big: string;
+      label: string;
+      frac: number;
+      sub: string;
+      fill: string;
+      overlay: boolean;
+      eyebrow?: string; // the moment: "Halfway there"; otherwise "In progress"
+      weeks?: number[]; // the last 8 weeks, a square each
+    }
   | { kind: "recap"; r: Recap; who?: string };
 
 const W = 360;
@@ -131,25 +142,56 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
     brand(ctx, f, pad, h - 26);
   }
 
-  if (spec.kind === "progress") {
-    // See-through: only the sticker is drawn, to lay over a photo. Otherwise a cream page behind it.
-    if (!spec.overlay) {
-      ctx.fillStyle = CREAM;
-      ctx.fillRect(0, 0, W, h);
-      if (story) {
-        // A Story on its own (no photo behind): a headline fills the space above the sticker.
-        ctx.fillStyle = INK;
-        ctx.font = `800 13px ${f.sans}`;
-        ctx.fillText("IN PROGRESS", pad, 110);
-        ctx.font = `900 84px ${f.display}`;
-        ctx.fillText("ON MY", pad, 190);
-        ctx.fillText("WAY.", pad, 262);
-      }
+  if (spec.kind === "progress" && !spec.overlay) {
+    // The whole card in the goal's colour: the moment, the goal, the number, the bar, the weeks, the brand.
+    ctx.fillStyle = colour(spec.fill);
+    ctx.fillRect(0, 0, W, h);
+    ctx.fillStyle = INK;
+    const inner = W - pad * 2;
+    let y = story ? 64 : 44;
+    ctx.font = `800 13px ${f.sans}`;
+    ctx.fillText((spec.eyebrow ?? "In progress").toUpperCase(), pad, y);
+    ctx.font = `900 ${story ? 44 : 30}px ${f.display}`;
+    for (const l of lines(ctx, spec.title.toUpperCase(), inner, story ? 3 : 2)) {
+      y += story ? 44 : 30;
+      ctx.fillText(l, pad, y);
     }
+    // The number block sits low in a Story, right under the title in a square.
+    const weeks = spec.weeks?.length ? spec.weeks : [];
+    const cell = story ? (inner - 7 * 6) / 8 : 22;
+    const foot = (story ? 44 : 36) + (weeks.length ? cell + (story ? 26 : 14) : 0); // brand and the weeks, from the bottom
+    let by = h - foot - (story ? 210 : 100);
+    ctx.font = `900 ${story ? 128 : 64}px ${f.display}`;
+    ctx.fillText(spec.big, pad - 3, by);
+    if (story) {
+      by += 44; // clear of the big number's slash, which dips below the line
+      ctx.font = `900 26px ${f.display}`;
+      ctx.fillText(spec.label.toUpperCase(), pad, by);
+    } else {
+      const bigW = ctx.measureText(spec.big).width;
+      ctx.font = `900 20px ${f.display}`;
+      for (const [i, l] of lines(ctx, spec.label.toUpperCase(), inner - bigW - 14, 2).entries()) ctx.fillText(l, pad + bigW + 12, by - 24 + i * 20);
+    }
+    by += story ? 22 : 14;
+    ctx.fillStyle = CREAM;
+    ctx.fillRect(pad, by, inner, story ? 18 : 14);
+    ctx.fillStyle = INK;
+    ctx.fillRect(pad, by, inner * Math.max(0, Math.min(1, spec.frac)), story ? 18 : 14);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(pad, by, inner, story ? 18 : 14);
+    by += story ? 44 : 32;
+    ctx.font = `700 ${story ? 15 : 12}px ${f.sans}`;
+    ctx.fillText(lines(ctx, spec.sub, inner, 1)[0] ?? "", pad, by);
+    if (weeks.length) grid(ctx, weeks, pad, h - foot, cell, 8);
+    brand(ctx, f, pad, h - (story ? 24 : 16));
+  }
+
+  if (spec.kind === "progress" && spec.overlay) {
+    // See-through, to lay over a photo: only a sticker at the bottom, and the brand on its own small cream tab.
     const bw = W - pad * 2;
-    const bh = story ? 250 : 220;
+    const bh = story ? 230 : 210;
     const bx = pad;
-    const by = story ? h - bh - 120 : (h - bh) / 2 - 6;
+    const by = story ? h - bh - 90 : (h - bh) / 2 - 14;
     sticker(ctx, bx, by, bw, bh, colour(spec.fill));
     ctx.fillStyle = INK;
     ctx.font = `800 12px ${f.sans}`;
@@ -158,27 +200,20 @@ export async function drawCard(canvas: HTMLCanvasElement, spec: CardSpec, format
       ctx.fillText(l, bx + 18, y);
       y += 16;
     }
-    ctx.font = `900 92px ${f.display}`;
-    ctx.fillText(spec.big, bx + 16, y + 74);
+    ctx.font = `900 88px ${f.display}`;
+    ctx.fillText(spec.big, bx + 16, y + 70);
     ctx.font = `900 22px ${f.display}`;
-    ctx.fillText(spec.label.toUpperCase(), bx + 18, y + 102);
-    // The bar: how far along.
-    const barY = by + bh - 52;
+    ctx.fillText(spec.label.toUpperCase(), bx + 18, y + 98);
+    const barY = by + bh - 34;
     ctx.fillStyle = CREAM;
     ctx.fillRect(bx + 18, barY, bw - 36, 14);
     ctx.fillStyle = INK;
     ctx.fillRect(bx + 18, barY, (bw - 36) * Math.max(0, Math.min(1, spec.frac)), 14);
     ctx.lineWidth = 2.5;
     ctx.strokeRect(bx + 18, barY, bw - 36, 14);
-    ctx.font = `700 12px ${f.sans}`;
-    ctx.fillText(spec.sub, bx + 18, barY + 32);
-    brand(ctx, f, bx + 4, by + bh + 34, false);
-    if (spec.overlay) {
-      // On a photo the brand sits on its own small cream tab so it reads on anything.
-      ctx.fillStyle = CREAM;
-      ctx.fillRect(bx, by + bh + 18, 118, 24);
-      brand(ctx, f, bx + 6, by + bh + 35);
-    }
+    ctx.fillStyle = CREAM;
+    ctx.fillRect(bx, by + bh + 16, 118, 24);
+    brand(ctx, f, bx + 6, by + bh + 33);
   }
 
   if (spec.kind === "recap") {

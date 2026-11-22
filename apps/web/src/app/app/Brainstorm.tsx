@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usage } from "@/lib/usage";
-import { Trash2 } from "lucide-react";
+import { Lightbulb, Trash2 } from "lucide-react";
 import { ideaLines } from "@/lib/board";
 import { AskBar, IDEAS_EVENT } from "./AskBar";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
@@ -228,8 +228,10 @@ export function Brainstorm({
         </ul>
       ) : (
         <div className={`${s.empty} ${s.emptyPage}`}>
+          <span className={s.emptyNote} aria-hidden>
+            <Lightbulb size={40} strokeWidth={2.25} />
+          </span>
           <p className="display">Blank page.</p>
-          <p>Type anything in the bar below{ai ? ", or say it" : ""}. Nothing here is a commitment until you make it a task.</p>
         </div>
       )}
       {/* The bar, in the same place as on a list: type an idea, or think out loud to Ask todone. */}

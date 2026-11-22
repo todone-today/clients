@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
@@ -750,8 +750,10 @@ function GoalCard({
 
 // A goal as a share card: reached, a "done" card with the weeks it took as a grid; still going, its progress the way
 // its kind counts it.
-function goalCard(goal: Goal, p: Progress): CardSpec {
+// `moment`: what just happened ("Halfway there"), for the card's top line.
+export function goalCard(goal: Goal, p: Progress, moment?: string): CardSpec {
   const fill = fillFor(goal.id);
+  const more = { weeks: p.weeks.map((w) => w.n), ...(moment ? { eyebrow: moment } : {}) };
   const unit = goal.unit ? ` ${goal.unit}` : "";
   const active = p.weeks.filter((w) => w.n > 0).length;
   if (goal.done)
@@ -773,6 +775,7 @@ function goalCard(goal: Goal, p: Progress): CardSpec {
       sub: `${p.current === undefined ? "Just started" : `${fmt(p.current)}${unit} now`}${goal.by ? ` · by ${shortDay(goal.by)}` : ""}`,
       fill,
       overlay: false,
+      ...more,
     };
   if (goal.kind === "daily")
     return {
@@ -784,6 +787,7 @@ function goalCard(goal: Goal, p: Progress): CardSpec {
       sub: `Every day: ${fmt(goal.target ?? 0)}${unit} · hit ${p.daysHit} day${p.daysHit === 1 ? "" : "s"} this week`,
       fill,
       overlay: false,
+      ...more,
     };
   if (goal.kind === "habit")
     return {
@@ -795,6 +799,7 @@ function goalCard(goal: Goal, p: Progress): CardSpec {
       sub: `Showed up ${active} of the last ${p.weeks.length} weeks`,
       fill,
       overlay: false,
+      ...more,
     };
   return {
     kind: "progress",
@@ -805,7 +810,111 @@ function goalCard(goal: Goal, p: Progress): CardSpec {
     sub: goal.by ? `By ${shortDay(goal.by)}` : "One step at a time",
     fill,
     overlay: false,
+    ...more,
   };
+}
+
+// The milestones a goal has passed, each with its own key and the words for it. Kept per goal in this browser, so
+// each is offered once: the first log, a quarter, half and three quarters of the way, a full week of a habit, each
+// step of a goal with steps. Reaching the goal itself has its own card (Reflect).
+function milestones(goal: Goal, p: Progress): [string, string][] {
+  const out: [string, string][] = [];
+  if (p.logs.length || p.done) out.push(["first", "First step taken"]);
+  if (goal.kind === "target")
+    for (const [q, words] of [
+      [0.25, "A quarter of the way"],
+      [0.5, "Halfway there"],
+      [0.75, "Three quarters there"],
+    ] as const)
+      if (p.towards >= q) out.push([`q${q}`, words]);
+  if (goal.kind === "habit" && p.thisWeek >= (goal.perWeek ?? 1)) {
+    const monday = new Date();
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    out.push([`week-${monday.toLocaleDateString("en-CA")}`, "A full week"]);
+  }
+  if (goal.kind === "outcome" && p.total > 1)
+    for (let n = 1; n <= p.done && n < p.total; n++) out.push([`step-${n}`, `Step ${n} of ${p.total} done`]);
+  return out;
+}
+const SEEN = "todone:moments";
+
+// When a goal passes a milestone, a quiet note at the top offers to show it off, then goes away by itself. Goals
+// already past a milestone when the app opens are noted silently: only what happens now is offered.
+export function Moments() {
+  const { lists } = useLists();
+  const { items } = useGoalItems();
+  const [now, setNow] = useState<{ goal: Goal; words: string } | null>(null);
+  const [sharing, setSharing] = useState<CardSpec | null>(null);
+  const plan = usePlan();
+  const tasks = useMemo(() => (lists ?? []).filter((l) => !l.kind).flatMap((l) => l.tasks), [lists]);
+  useEffect(() => {
+    if (!lists) return;
+    let seen: Record<string, string[]> = {};
+    try {
+      seen = JSON.parse(localStorage.getItem(SEEN) ?? "{}");
+    } catch {}
+    let fresh: { goal: Goal; words: string } | null = null;
+    for (const g of items) {
+      if (g.t !== "goal" || g.done) continue;
+      const passed = milestones(g, goalProgress(g, tasks, items));
+      const had = seen[g.id];
+      const added = passed.filter(([k]) => !had?.includes(k));
+      if (!added.length) continue;
+      if (had) fresh = { goal: g, words: added[added.length - 1][1] }; // known goal: this just happened
+      seen[g.id] = [...(had ?? []), ...added.map(([k]) => k)].slice(-40);
+    }
+    try {
+      localStorage.setItem(SEEN, JSON.stringify(seen));
+    } catch {}
+    if (fresh) {
+      const f = fresh;
+      Promise.resolve().then(() => setNow(f));
+    }
+  }, [items, tasks, lists]);
+  useEffect(() => {
+    if (!now) return;
+    const t = setTimeout(() => setNow(null), 9000);
+    return () => clearTimeout(t);
+  }, [now]);
+  return (
+    <>
+      {now && (
+        <p className={s.moment} role="status" style={{ "--fill": fillFor(now.goal.id) } as React.CSSProperties}>
+          <Sparkles size={18} strokeWidth={2.5} aria-hidden />
+          <span>
+            <b>{now.words}.</b> {now.goal.title}
+          </span>
+          <button
+            className="btn"
+            onClick={() => {
+              setSharing(goalCard(now.goal, goalProgress(now.goal, tasks, items), now.words));
+              setNow(null);
+            }}
+          >
+            <Share2 size={15} strokeWidth={2.5} aria-hidden /> Show it off
+          </button>
+          <button className={s.momentClose} aria-label="Not now" data-tip="Not now" onClick={() => setNow(null)}>
+            <X size={16} strokeWidth={2.75} />
+          </button>
+        </p>
+      )}
+      {sharing && sharing.kind !== "recap" && (
+        <ShareSheet
+          spec={sharing}
+          name={sharing.title}
+          onClose={() => setSharing(null)}
+          gated={plan.gated}
+          link={async (mode) => {
+            const g = items.find((i): i is Goal => i.t === "goal" && i.title === sharing.title);
+            if (!g) throw new Error("That goal is gone.");
+            const { slug } = await shareGoal(g, mode, tasks, items);
+            linksChanged();
+            return slug;
+          }}
+        />
+      )}
+    </>
+  );
 }
 
 type Progress = ReturnType<typeof goalProgress>;

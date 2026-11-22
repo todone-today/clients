@@ -479,8 +479,20 @@
   text-align: center;
 }
 .emptyPage p:last-child {
-  max-width: 28rem;
-  text-wrap: balance;
+  color: var(--ink);
+}
+/* A blank sticky note, tilted, with a bulb: nothing here yet. */
+.emptyNote {
+  display: grid;
+  place-items: center;
+  width: 6.5rem;
+  height: 6.5rem;
+  margin-bottom: 1.2rem;
+  color: var(--black);
+  background: var(--butter);
+  border: 3px solid var(--black);
+  box-shadow: var(--lift);
+  rotate: -6deg;
 }
 
 @media (max-width: 760px) {
@@ -8879,8 +8891,8 @@ input.askRowTitle:focus-visible {
 }
 .shareSheet {
   display: grid;
-  gap: 0.8rem;
-  width: min(26rem, calc(100vw - 1.5rem));
+  gap: 0.9rem;
+  width: min(25rem, calc(100vw - 1.5rem));
 }
 .shareSheet:not([open]) {
   display: none;
@@ -8896,42 +8908,185 @@ input.askRowTitle:focus-visible {
 .shareHead .panelClose {
   position: static;
 }
+/* Picture | Link: two halves of one bar, the chosen one filled. */
+.shareTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 2.5px solid var(--black);
+}
+.shareTabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  font-weight: 800;
+  color: var(--black);
+  background: #fff8ef;
+}
+.shareTabs button + button {
+  border-left: 2.5px solid var(--black);
+}
+.shareTabs button[aria-selected="true"] {
+  background: var(--black);
+  color: #fff8ef;
+}
+/* The picture: as big as the screen allows, so the sheet never scrolls. */
 .sharePreview {
   display: grid;
   place-items: center;
-  max-height: 58dvh;
-  overflow: hidden;
 }
 .sharePreview canvas {
   width: auto;
   max-width: 100%;
-  max-height: 58dvh;
-  border: 2px solid var(--black);
+  height: auto;
+  max-height: calc(100dvh - 22rem);
+  border: 2.5px solid var(--black);
   box-shadow: var(--lift-sm);
 }
 .sharePreview[data-format="square"] canvas {
-  max-height: 22rem;
+  max-height: min(20rem, calc(100dvh - 22rem));
 }
 /* See-through: a checkerboard shows what's transparent. */
 .sharePreview[data-overlay] canvas {
   background: repeating-conic-gradient(#d9d2c4 0 25%, #f3eadb 0 50%) 0 0 / 16px 16px;
 }
-.shareOpts {
+.shareStyles {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.shareStyles button {
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--black);
+  background: rgb(255 255 255 / 0.6);
+  border: 2px solid var(--black);
+}
+.shareStyles button[aria-pressed="true"] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.shareDo {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+}
+.shareMain {
+  --fill: var(--lime);
+  justify-content: center;
+  min-height: 3.2rem;
+  font-size: 1.1rem;
+}
+.shareAlt {
+  --fill: var(--peri);
+  justify-content: center;
+  min-height: 3rem;
+}
+.shareDo .ghost {
+  min-height: 3.2rem;
+}
+.shareGoalLink {
+  display: grid;
+  gap: 0.7rem;
+}
+/* What friends will see, small. */
+.sharePeek {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  color: var(--black);
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift-sm);
+  rotate: -0.8deg;
+}
+.sharePeek small {
+  font-size: 0.75rem;
+  font-weight: 800;
+  opacity: 0.7;
+}
+.sharePeek b {
+  font-size: 1.05rem;
+}
+.sharePeek strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+.shareDone {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-.shareOverlay {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
+  gap: 0.4rem 0.6rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.9rem;
   font-weight: 700;
+  background: #fff8ef;
+  border: 2px solid var(--black);
 }
-.shareOverlay input {
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: var(--lime);
+.shareDone .link {
+  margin-left: auto;
+}
+/* Phones: a sheet from the bottom, full width. */
+@media (max-width: 760px) {
+  .shareSheet {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100dvh;
+    margin: auto 0 0;
+    padding: 1.1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    border-width: 3px 0 0;
+    box-shadow: none;
+  }
+  .sharePreview canvas {
+    max-height: calc(100dvh - 21rem);
+  }
+}
+
+/* A milestone just passed: a quiet sticker at the top, offering to show it off; it leaves by itself. */
+.moment {
+  position: fixed;
+  z-index: 60;
+  top: calc(4.6rem + env(safe-area-inset-top)); /* under the top bar, clear of the typing bar */
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(30rem, calc(100vw - 1.5rem));
+  padding: 0.5rem 0.5rem 0.5rem 0.8rem;
+  font-size: 0.92rem;
+  color: var(--black);
+  background: var(--fill);
+  border: 2.5px solid var(--black);
+  box-shadow: var(--lift-sm);
+  translate: -50% 0;
+  animation: momentIn 0.35s var(--ease) both;
+}
+@keyframes momentIn {
+  from {
+    opacity: 0;
+    translate: -50% -12px;
+  }
+}
+.moment span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.moment .btn {
+  --fill: #fff8ef;
+  flex: none;
+  min-height: 2.75rem;
+}
+.momentClose {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--black);
 }
