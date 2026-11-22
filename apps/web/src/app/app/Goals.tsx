@@ -1860,7 +1860,11 @@ export function XpTile({ onClick }: { onClick: () => void }) {
   const [pop, setPop] = useState<{ n: number; k: number } | null>(null);
   // Earned some: a card pops up with the XP and how close the next reward is (or that it's ready).
   const [won, setWon] = useState<Won | null>(null);
-  const [since] = useState(() => Date.now());
+  // When this tile appeared (set after render: the clock can't be read while the page is prerendered).
+  const since = useRef(Infinity);
+  useEffect(() => {
+    since.current = Date.now();
+  }, []);
   // Read when XP changes (not a reason to re-run that effect, which would cut the roll short).
   const rewardsNow = useRef(items);
   useEffect(() => {
@@ -1872,7 +1876,7 @@ export function XpTile({ onClick }: { onClick: () => void }) {
     const before = prev.current;
     prev.current = xp;
     // Not for XP that arrives with the page loading (another device's ticks syncing in), only what you just earned.
-    if (before !== null && xp > before && Date.now() - since > 3000) {
+    if (before !== null && xp > before && Date.now() - since.current > 3000) {
       const next = rewardsNow.current
         .filter((i): i is Reward => i.t === "reward")
         .sort((a, b) => a.cost - b.cost)
@@ -1895,7 +1899,7 @@ export function XpTile({ onClick }: { onClick: () => void }) {
       cancelAnimationFrame(raf);
       clearTimeout(t);
     };
-  }, [xp, since]);
+  }, [xp]);
   return (
     <button
       className={`${s.tile} ${s.xpTile}`}
