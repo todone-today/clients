@@ -957,14 +957,13 @@ type Update = (id: string, f: (l: List) => List | null) => void;
 // Each list is end-to-end encrypted unless its owner switches that off, so integrations, the calendar feed and
 // shared links can use it. Switching off asks twice: the server can then read the list.
 function Privacy({ list, update }: { list: List; update: Update }) {
-  // A short sticker; what it means, and the switch, open in a small card on click (switching off asks twice).
+  // A lock; a click opens one on/off switch for encryption.
   const [open, setOpen] = useState(false);
-  const [sure, setSure] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && (setOpen(false), setSure(false));
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && (setOpen(false), setSure(false));
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     addEventListener("pointerdown", away);
     addEventListener("keydown", esc);
     return () => {
@@ -980,55 +979,28 @@ function Privacy({ list, update }: { list: List; update: Update }) {
         data-plain={plain || undefined}
         aria-expanded={open}
         aria-label={plain ? "Not encrypted" : "Encrypted"}
-        onClick={() => (setOpen(!open), setSure(false))}
+        onClick={() => setOpen(!open)}
         data-tip={open ? undefined : plain ? "Not encrypted: integrations can read this list" : "Encrypted: only you can read this list"}
       >
         {plain ? <LockOpen size={18} strokeWidth={2.5} aria-hidden /> : <Lock size={18} strokeWidth={2.5} aria-hidden />}
       </button>
       {open && (
+        // One switch: encrypted, on or off. Off means our server can read the list (for integrations and calendar
+        // links); it can be switched back any time.
         <div className={s.privacyCard} role="dialog" aria-label="Encryption">
-          {plain ? (
-            <>
-              <p>
-                <b>Not encrypted.</b> Our server can read this list, so integrations and calendar links can use it.
-              </p>
-              <button
-                className="btn"
-                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-                onClick={() => (update(list.id, (l) => ({ ...l, plain: false })), setOpen(false))}
-              >
-                <Lock size={15} strokeWidth={2.75} aria-hidden /> Encrypt it
-              </button>
-            </>
-          ) : (
-            <>
-              <p>
-                <b>End-to-end encrypted.</b> It&apos;s locked on your device; nobody else can read it, not even us.
-                Integrations and calendar links can&apos;t see it.
-              </p>
-              {sure ? (
-                <>
-                  <p className={s.privacyWarn}>Our server could read this list. Switch off anyway?</p>
-                  <div className={s.privacyRow}>
-                    <button
-                      className="btn"
-                      style={{ "--fill": "var(--hot)" } as React.CSSProperties}
-                      onClick={() => (update(list.id, (l) => ({ ...l, plain: true })), setOpen(false), setSure(false))}
-                    >
-                      Switch off
-                    </button>
-                    <button className={s.link} onClick={() => setSure(false)}>
-                      Keep it
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <button className={s.link} onClick={() => setSure(true)}>
-                  Switch off for integrations…
-                </button>
-              )}
-            </>
-          )}
+          <button
+            role="switch"
+            aria-checked={!plain}
+            className={s.privacySwitch}
+            onClick={() => update(list.id, (l) => ({ ...l, plain: !plain }))}
+          >
+            {plain ? <LockOpen size={16} strokeWidth={2.5} aria-hidden /> : <Lock size={16} strokeWidth={2.5} aria-hidden />}
+            <b>Encrypted</b>
+            <span className={s.switchTrack} aria-hidden>
+              <i />
+            </span>
+          </button>
+          {plain && <small>Off: integrations can read this list.</small>}
         </div>
       )}
     </div>
@@ -1367,21 +1339,16 @@ function ListView({
   return (
     <>
       <div className={s.listHead}>
-        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click it to delete the whole list (asks first). */}
-        <button
-          className={s.bin}
-          data-tour="bin"
-          data-bin
-          {...binDrop("bin")}
-          onClick={() => setAsking(true)}
-          aria-label="Delete list, or drop tasks here to delete them"
-          data-tip="Bin: drop tasks here, or click to delete this list"
-          data-tip-end
-        >
-          <Trash2 size={28} strokeWidth={2.5} />
-          <span>Bin</span>
-        </button>
-        {/* Click the name to rename; Enter or clicking away saves, Esc cancels. */}
+        {/* First row: the list's icon, its lock and its name. Click the name to rename; Enter or clicking away saves,
+            Esc cancels. */}
+        <div className={s.nameRow} style={{ "--list": listColor(list.id) } as React.CSSProperties}>
+          <IconPick
+            id={list.id}
+            name={list.name}
+            icon={list.icon}
+            onPick={(icon) => update(list.id, (l) => ({ ...l, icon }))}
+          />
+          <Privacy list={list} update={update} />
         {renaming ? (
           <>
             <label className="sr-only" htmlFor="list-name">
@@ -1420,6 +1387,7 @@ function ListView({
             </button>
           </h1>
         )}
+        </div>
         <p className={s.progress}>
           {c.all ? `${c.done} of ${c.all} done` : "Empty"}
           <span className={s.bar} aria-hidden>
@@ -1430,14 +1398,7 @@ function ListView({
           className={s.listMeta}
           style={{ "--list": listColor(list.id) } as React.CSSProperties}
         >
-          <IconPick
-            id={list.id}
-            name={list.name}
-            icon={list.icon}
-            onPick={(icon) => update(list.id, (l) => ({ ...l, icon }))}
-          />
-          <Privacy list={list} update={update} />
-          {/* Its goals sit on the same row: the list's icon, lock and goals read as one line about it. */}
+          {/* Second row: the list's goals. */}
           <ListGoals list={list} />
         </div>
       </div>
@@ -1634,7 +1595,24 @@ function ListView({
               <p>Add the first task in the bar below. Enjoy the quiet while it lasts.</p>
             </div>
           )}
-          <AskBar place="list" ai={ai} onAdd={addTask} />
+          {/* The bar, with the Bin just above its right end: where your hands already are. */}
+          <div className={s.askDock}>
+        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click it to delete the whole list (asks first). */}
+            <button
+              className={s.bin}
+              data-tour="bin"
+              data-bin
+              {...binDrop("bin")}
+              onClick={() => setAsking(true)}
+              aria-label="Delete list, or drop tasks here to delete them"
+              data-tip="Bin: drop tasks here, or click to delete this list"
+              data-tip-end
+            >
+              <Trash2 size={28} strokeWidth={2.5} />
+              <span>Bin</span>
+            </button>
+            <AskBar place="list" ai={ai} onAdd={addTask} />
+          </div>
         </div>
         <Stickers
           active={!!selected || picked.size > 0}

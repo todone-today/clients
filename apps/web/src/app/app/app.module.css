@@ -9280,3 +9280,79 @@ input.askRowTitle:focus-visible {
     width: 2.75rem;
   }
 }
+
+/* A list's first row: its icon, its lock and its name, in one line. */
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.nameRow > h1,
+.nameRow > input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0;
+}
+/* The bar and, just above its right end, the Bin: both stay in reach as the board scrolls. */
+.askDock {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: grid;
+  justify-items: end;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+.askDock .askBar {
+  position: static;
+  margin: 0;
+}
+.askDock .bin {
+  position: static;
+  background: var(--ground);
+}
+@media (max-width: 760px) {
+  .askDock {
+    bottom: calc(4.4rem + env(safe-area-inset-bottom));
+    margin-top: 1.25rem;
+  }
+}
+/* Encryption: one switch. */
+.privacySwitch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  font-weight: 800;
+  color: inherit;
+}
+.switchTrack {
+  position: relative;
+  width: 2.6rem;
+  height: 1.5rem;
+  margin-left: auto;
+  background: var(--hair);
+  border: 2px solid var(--ink);
+  transition: background 0.15s var(--ease);
+}
+.switchTrack i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  background: var(--ink);
+  transition: translate 0.15s var(--ease);
+}
+.privacySwitch[aria-checked="true"] .switchTrack {
+  background: var(--lime);
+}
+.privacySwitch[aria-checked="true"] .switchTrack i {
+  translate: 1.1rem 0;
+  background: var(--black);
+}
+.privacyCard {
+  width: 14rem;
+}
