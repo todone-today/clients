@@ -47,6 +47,17 @@ async function put(url: string, body: Blob) {
 // so does anything that wouldn't come out smaller.
 const EDGE = 2560;
 const SHRINKS: Record<string, string> = { "image/jpeg": "image/jpeg", "image/png": "image/webp", "image/webp": "image/webp" };
+// How big each kind may be: the server's limits (server lib/filetypes.ts, which decides), checked here first so a
+// file that's too big is turned away at once, before it's encrypted and sent.
+const MB = 1024 * 1024;
+const maxFor = (type: string) => (type.startsWith("video/") ? 50 * MB : type.startsWith("image/") ? 5 * MB : 10 * MB);
+function fits(file: File, type: string) {
+  const max = maxFor(type);
+  if (file.size <= max) return;
+  const kind = type.startsWith("video/") ? "Videos" : type.startsWith("image/") ? "Photos" : "Files like this";
+  throw new Error(`“${file.name}” is ${Math.ceil(file.size / MB)} MB. ${kind} can be up to ${max / MB} MB.`);
+}
+
 export async function shrink(file: File): Promise<File> {
   const out = SHRINKS[typeOf(file)];
   if (!out || file.size < 300_000) return file;
@@ -69,6 +80,7 @@ export async function shrink(file: File): Promise<File> {
 export async function uploadPrivate(original: File, key: CryptoKey): Promise<FileRef> {
   const file = await shrink(original);
   const type = typeOf(file);
+  fits(file, type);
   const { id, uploadUrl } = await call<{ id: string; uploadUrl: string }>("POST", "/files", {
     name: file.name,
     type,
@@ -98,6 +110,7 @@ export const deletePrivate = (id: string) => call("DELETE", `/files/${id}`).catc
 // Shared: `base` is the owner's "/task-shares/<id>" or a guest's "/s/<token>" (with their x-guest header).
 export async function uploadShared(base: string, original: File, headers?: Headers): Promise<FileRef> {
   const file = await shrink(original);
+  fits(file, typeOf(file));
   const { id, uploadUrl } = await call<{ id: string; uploadUrl: string }>(
     "POST",
     `${base}/files`,

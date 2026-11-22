@@ -8125,3 +8125,29 @@ input.askRowTitle:focus-visible {
     animation: none;
   }
 }
+
+/* The task panel's actions, as icons beside its name: focus, share, download, delete, close. */
+.panelActions {
+  display: flex;
+  flex: none;
+  gap: 0.45rem;
+}
+.panelActions .panelDelete:hover {
+  color: #fff;
+  background: var(--hot);
+}
+@media (max-width: 760px) {
+  /* A phone: the icons get their own row above the name, so the name keeps the width. */
+  .panelHead {
+    flex-wrap: wrap;
+  }
+  .panelActions {
+    order: -1;
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .panelActions .panelClose {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+}

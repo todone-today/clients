@@ -51,7 +51,7 @@ import {
   shareView,
   workspaceKey,
 } from "./actions";
-import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
+import { needsPlan, usePlan } from "./PlanPrompt";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { Focus } from "./Focus";
@@ -92,7 +92,9 @@ export function TaskPanel({
 }) {
   const [busy, setBusy] = useState("");
   // A link made just now: shown (and copied) at once, without waiting for the server again.
-  const [fresh, setFresh] = useState<{ token: string; copied: boolean } | null>(null);
+  const [fresh, setFresh] = useState<{ token: string; copied: boolean } | null>(
+    null,
+  );
   const [err, setErr] = useState("");
   const [asking, setAsking] = useState(false);
   const { gated } = usePlan();
@@ -122,15 +124,26 @@ export function TaskPanel({
     setBusy("");
   };
 
-  // Private attachments: encrypted here, then uploaded.
-  const attach = (list: FileList | null) =>
-    run("Uploading…", async () => {
+  // Private attachments: encrypted here, then uploaded. One that can't go (too big, say) is said in the
+  // Attachments section; the rest still go.
+  const [fileErr, setFileErr] = useState("");
+  const attach = (list: FileList | File[] | null) => {
+    setFileErr("");
+    const files = Array.from(list ?? []); // copied now: a FileList empties when its input is reset
+    return run("Uploading…", async () => {
       const key = await workspaceKey();
-      for (const f of Array.from(list ?? [])) {
-        const ref = await uploadPrivate(f, key);
-        edit((t) => ({ ...t, files: [...(t.files ?? []), ref] }));
+      for (const f of files) {
+        try {
+          const ref = await uploadPrivate(f, key);
+          edit((t) => ({ ...t, files: [...(t.files ?? []), ref] }));
+        } catch (x) {
+          setFileErr(
+            x instanceof Error ? x.message : "That file didn't upload.",
+          );
+        }
       }
     });
+  };
   const removeFile = (f: FileRef) => {
     edit((t) => ({
       ...t,
@@ -168,10 +181,12 @@ export function TaskPanel({
       }
       edit((t) => ({ ...t, share: id, files: undefined }));
       // Copy straight away. Some browsers refuse after a wait; then the Copy link button is right there.
-      const copied = await navigator.clipboard.writeText(`${location.origin}/t/${token}`).then(
-        () => true,
-        () => false,
-      );
+      const copied = await navigator.clipboard
+        .writeText(`${location.origin}/t/${token}`)
+        .then(
+          () => true,
+          () => false,
+        );
       setFresh({ token, copied });
     });
 
@@ -219,12 +234,66 @@ export function TaskPanel({
               if (v && v !== task.title) edit((t) => ({ ...t, title: v }));
             }}
           />
-          <SaveAs task={task} goal={goal?.title} />
-          <button className={s.panelClose} onClick={onClose} aria-label="Close">
-            <X size={20} strokeWidth={2.75} />
-          </button>
+          <div className={s.panelActions}>
+            {!task.done && (
+              <button
+                className={s.panelClose}
+                onClick={() => setFocusing(true)}
+                aria-label="Focus"
+                data-tip="Focus: just this task, with a timer"
+              >
+                <Timer size={19} strokeWidth={2.5} />
+              </button>
+            )}
+            {shared ? (
+              <button
+                className={s.panelClose}
+                onClick={stopping.stop}
+                disabled={!!stopping.busy}
+                aria-label="Stop sharing"
+                data-tip="Stop sharing: the link stops working"
+              >
+                <Lock size={19} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <button
+                className={s.panelClose}
+                onClick={() =>
+                  gated
+                    ? needsPlan("Sharing comes with Plus.")
+                    : setAsking(true)
+                }
+                disabled={!!busy}
+                aria-label={gated ? "Share (needs Plus)" : "Share"}
+                data-tip={
+                  gated
+                    ? "Share by link (comes with Plus)"
+                    : "Share by link: they can see it, comment and add photos"
+                }
+              >
+                <Share2 size={19} strokeWidth={2.5} />
+              </button>
+            )}
+            <SaveAs task={task} goal={goal?.title} />
+            <button
+              className={`${s.panelClose} ${s.panelDelete}`}
+              onClick={onDelete}
+              aria-label="Delete"
+              data-tip={task.sub.length ? "Delete (its steps too)" : "Delete"}
+            >
+              <Trash2 size={19} strokeWidth={2.5} />
+            </button>
+            <button
+              className={s.panelClose}
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <X size={20} strokeWidth={2.75} />
+            </button>
+          </div>
         </header>
 
+        {!top && <p className={s.panelHint}>A step of a task.</p>}
         <p className={s.privacyLine} data-shared={shared || undefined}>
           {shared ? (
             <>
@@ -387,7 +456,6 @@ export function TaskPanel({
             </p>
           )}
 
-
         {shared ? (
           <SharedPart task={task} fresh={fresh} />
         ) : (
@@ -408,8 +476,16 @@ export function TaskPanel({
               accept={ACCEPT}
               multiple
               hidden
-              onChange={(e) => attach(e.target.files)}
+              onChange={(e) => {
+                attach(Array.from(e.target.files ?? []));
+                e.target.value = ""; // the same file can be picked again
+              }}
             />
+            {fileErr && (
+              <p className={s.err} role="alert">
+                {fileErr}
+              </p>
+            )}
             {task.files?.length ? (
               <div className={s.panelFiles}>
                 {task.files.map((f) => (
@@ -428,12 +504,7 @@ export function TaskPanel({
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className={s.panelHint}>
-                Images, videos (up to 50 MB), PDFs. Encrypted before they leave
-                this device.
-              </p>
-            )}
+            ) : null}
           </section>
         )}
 
@@ -447,50 +518,6 @@ export function TaskPanel({
             {err || stopping.err || busy || stopping.busy}
           </p>
         )}
-
-        <footer className={s.panelFoot}>
-          <button
-            className={s.edDelete}
-            onClick={onDelete}
-            title={task.sub.length ? "Deletes its steps too" : undefined}
-          >
-            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
-          </button>
-          {!top && <span className={s.panelHint}>A step of a task.</span>}
-          {!task.done && (
-            <button
-              className={`btn ${s.panelShare} ${s.panelFocus}`}
-              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-              onClick={() => setFocusing(true)}
-              title="Just this task across the tab, with a timer. The time goes on the task."
-            >
-              <Timer size={16} strokeWidth={2.5} aria-hidden /> Focus
-            </button>
-          )}
-          {shared ? (
-            <button
-              className={`btn ${s.panelShare}`}
-              style={{ "--fill": "var(--butter)" } as React.CSSProperties}
-              onClick={stopping.stop}
-              disabled={!!stopping.busy}
-              title="The link stops working; the conversation stays here, encrypted"
-            >
-              <Lock size={16} strokeWidth={2.5} aria-hidden /> Stop sharing
-            </button>
-          ) : (
-            <button
-              className={`btn ${s.panelShare}`}
-              onClick={() =>
-                gated ? needsPlan("Sharing comes with Plus.") : setAsking(true)
-              }
-              disabled={!!busy}
-              title="Anyone with the link can see it, comment and add photos. No account needed."
-            >
-              <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share
-              {gated && <Diamond />}
-            </button>
-          )}
-        </footer>
 
         {focusing && (
           <Focus
@@ -645,7 +672,13 @@ function useStopSharing(
 }
 
 // A shared task: the link, its controls, the shared attachments and the conversation.
-function SharedPart({ task, fresh }: { task: Task; fresh: { token: string; copied: boolean } | null }) {
+function SharedPart({
+  task,
+  fresh,
+}: {
+  task: Task;
+  fresh: { token: string; copied: boolean } | null;
+}) {
   const id = task.share!;
   const base = `/task-shares/${id}`;
   const [view, setView] = useState<{
@@ -973,7 +1006,13 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
     setBusy(ext);
     try {
       const x: Extra = {
-        list: lists?.find((l) => !l.kind && l.tasks.some((t) => t.id === task.id || t.sub.some((u) => u.id === task.id)))?.name,
+        list: lists?.find(
+          (l) =>
+            !l.kind &&
+            l.tasks.some(
+              (t) => t.id === task.id || t.sub.some((u) => u.id === task.id),
+            ),
+        )?.name,
         open: `${location.origin}/app?task=${task.id}`,
         site: location.origin,
       };
@@ -981,17 +1020,31 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
         const v = await shareView(task.share);
         x.page = `${location.origin}/t/${v.token}`;
         x.files = v.task.files ?? task.files;
-        x.talk = v.comments.map((c) => ({ who: c.who, at: c.at, text: c.body, ...(c.files.length ? { files: c.files } : {}) }));
+        x.talk = v.comments.map((c) => ({
+          who: c.who,
+          at: c.at,
+          text: c.body,
+          ...(c.files.length ? { files: c.files } : {}),
+        }));
       }
       if (ext === "html")
         x.data = await carry(
-          [...(x.files ?? task.files ?? []), ...[...(task.history ?? []), ...(x.talk ?? [])].flatMap((n) => n.files ?? [])],
+          [
+            ...(x.files ?? task.files ?? []),
+            ...[...(task.history ?? []), ...(x.talk ?? [])].flatMap(
+              (n) => n.files ?? [],
+            ),
+          ],
           task.share ? `/task-shares/${task.share}` : null,
         );
       save(fileName(task.title, ext), type, make(task, goal, x));
       setOpen(false);
     } catch {
-      setErr(task.share ? "Couldn't get the conversation. Check the connection and try again." : "That didn't work. Try again.");
+      setErr(
+        task.share
+          ? "Couldn't get the conversation. Check the connection and try again."
+          : "That didn't work. Try again.",
+      );
     }
     setBusy("");
   };
