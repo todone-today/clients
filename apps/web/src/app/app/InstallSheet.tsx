@@ -46,7 +46,7 @@ export function InstallSheet() {
   };
   // Installed while the sheet was up (Android's prompt): the install part is done.
   useEffect(() => {
-    if (pwa.installed && open && !notifyOnly) close(false);
+    if (pwa.installed && open && !notifyOnly) Promise.resolve().then(() => close(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pwa.installed]);
 
