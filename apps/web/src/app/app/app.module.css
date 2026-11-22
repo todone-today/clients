@@ -8190,38 +8190,6 @@ input.askRowTitle:focus-visible {
 .gdTitle::placeholder {
   color: rgb(11 11 11 / 0.35);
 }
-.gdKinds {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-.gdKinds button {
-  display: grid;
-  justify-items: start;
-  gap: 0.15rem;
-  padding: 0.5rem 0.55rem;
-  text-align: left;
-  color: var(--black);
-  background: #fff;
-  border: 2px solid var(--black);
-  transition:
-    transform 0.15s var(--ease),
-    background 0.15s var(--ease),
-    box-shadow 0.15s var(--ease);
-}
-.gdKinds button b {
-  font-size: 0.82rem;
-  line-height: 1.1;
-}
-.gdKinds button small {
-  font-size: 0.7rem;
-  color: #4a4540;
-}
-.gdKinds button[aria-checked="true"] {
-  background: var(--lime);
-  box-shadow: 3px 3px 0 var(--black);
-  transform: translate(-1px, -2px) rotate(-1deg);
-}
 .gdSentence {
   display: flex;
   flex-wrap: wrap;
@@ -8408,11 +8376,6 @@ input.askRowTitle:focus-visible {
     translate: 0 6px;
   }
 }
-@media (max-width: 760px) {
-  .gdKinds {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .gdSentence {
     animation: none;
@@ -8426,7 +8389,6 @@ input.askRowTitle:focus-visible {
   .gdPath i {
     animation: none;
   }
-  .gdKinds button,
   .gdTimes button {
     transition: none;
   }
@@ -9089,4 +9051,122 @@ input.askRowTitle:focus-visible {
   width: 2.75rem;
   height: 2.75rem;
   color: var(--black);
+}
+
+/* The new-goal steps: where you are, as segments filled up to this step. */
+.gdTop {
+  display: grid;
+  gap: 0.5rem;
+  padding-right: 3rem; /* clear of the close button */
+}
+.gdTop h2 {
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  line-height: 0.95;
+}
+.gdSteps {
+  display: flex;
+  gap: 0.3rem;
+  list-style: none;
+}
+.gdSteps li {
+  flex: 1;
+  height: 0.45rem;
+  background: rgb(255 255 255 / 0.6);
+  border: 2px solid var(--black);
+  transition: background 0.3s var(--ease);
+}
+.gdSteps li[data-on] {
+  background: var(--black);
+}
+/* Step 1: each kind as a big card, with an example and what you get. */
+.gdKindList {
+  display: grid;
+  gap: 0.55rem;
+}
+.gdKindList button {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 4rem;
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  color: var(--black);
+  background: #fff;
+  border: 2.5px solid var(--black);
+  transition:
+    transform 0.15s var(--ease),
+    background 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.gdKindList button:hover,
+.gdKindList button[aria-checked="true"] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+  transform: translate(-1px, -2px);
+}
+.gdKindList span {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+}
+.gdKindList b {
+  font-size: 1.05rem;
+}
+.gdKindList i {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.gdFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.gdFoot .btn {
+  min-height: 3rem;
+}
+.gdBack {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gdKindList button,
+  .gdSteps li {
+    transition: none;
+  }
+}
+
+/* A goal's numbers: two by two, each with its label above, full width on a phone. */
+.gdFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  animation: gdIn 0.28s var(--ease) both;
+}
+.gdFields label {
+  display: grid;
+  gap: 0.3rem;
+}
+.gdFields label > span {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.gdFields small {
+  font-weight: 600;
+  color: #4a4540;
+}
+.gdFields input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  font-weight: 800;
+  color: var(--black);
+  background: #fff;
+  border: 2.5px solid var(--black);
 }
