@@ -164,6 +164,27 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const { lists, error, update, add } = useLists();
   const [picked, setPicked] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  // Back where you were: a refresh or a new visit opens the same tab and list (links like ?task= still win).
+  // Nothing is written until it's been read back, so a quick remount can't wipe it.
+  const restored = useRef(false);
+  useEffect(() => {
+    try {
+      const w = JSON.parse(localStorage.getItem("todone:where") ?? "null") as { panel?: Panel; list?: string } | null;
+      Promise.resolve().then(() => {
+        if (w?.panel) setPanel(w.panel);
+        if (w?.list) setPicked(w.list);
+        restored.current = true;
+      });
+    } catch {
+      restored.current = true;
+    }
+  }, []);
+  useEffect(() => {
+    if (!restored.current) return;
+    try {
+      localStorage.setItem("todone:where", JSON.stringify({ panel, list: picked }));
+    } catch {}
+  }, [panel, picked]);
   const plan = usePlan();
   // ?plan=plus-year from the pricing page, read once (the address is tidied up after loading).
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));

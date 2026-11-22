@@ -49,6 +49,7 @@ import { GOAL_PRESET, type GoalPreset, linksChanged, shareFor, shareGoal } from 
 import { usePlan } from "./PlanPrompt";
 import type { CardSpec } from "./shareCard";
 import { recap } from "@/lib/recap";
+import { draft, dropDraft, keepDraft } from "@/lib/drafts";
 import { GOAL_TEMPLATES, REWARD_TEMPLATES, asGoal } from "@/lib/templates";
 import s from "./app.module.css";
 
@@ -1358,8 +1359,12 @@ export function GoalDialog({
   onSave: (g: Goal, steps: string[], listId: string | null) => void;
 }) {
   const editing = !!initial;
+  // Closed by accident (Esc, a tap outside)? It opens again where you left off, until it's saved (lib/drafts.ts).
+  const draftKey = `goal:${initial?.id ?? `new:${list ?? ""}:${preset?.title ?? ""}`}`;
+  const [saved] = useState(() => draft<{ g: Goal; steps: string[]; stage: Stage }>(draftKey));
   const [g, setG] = useState<Goal>(
     () =>
+      saved?.g ??
       initial ?? {
         t: "goal",
         id: uid(),
@@ -1371,11 +1376,14 @@ export function GoalDialog({
         ...preset,
       },
   );
-  const [steps, setSteps] = useState(["", "", ""]);
+  const [steps, setSteps] = useState(() => saved?.steps ?? ["", "", ""]);
   // A different example each time, to help picture it.
   const [hints] = useState(() => [WHY[Math.floor(Math.random() * WHY.length)], BECOME[Math.floor(Math.random() * BECOME.length)]]);
   const order: Stage[] = editing ? ["goal", "why", "plan"] : ["kind", "goal", "pause", "why", "plan", "steps"];
-  const [stage, setStage] = useState<Stage>(editing || preset?.kind ? "goal" : "kind");
+  const [stage, setStage] = useState<Stage>(() =>
+    saved?.stage && saved.stage !== "pause" ? saved.stage : editing || preset?.kind ? "goal" : "kind",
+  );
+  useEffect(() => keepDraft(draftKey, { g, steps, stage }), [draftKey, g, steps, stage]);
   const at = order.indexOf(stage);
   const next = () => setStage(order[Math.min(at + 1, order.length - 1)]);
   const back = () => setStage(order[Math.max(at - 1, 0)]);
@@ -1407,7 +1415,8 @@ export function GoalDialog({
     setG((x) => ({ ...x, [k]: e.target.value || undefined }));
   const ready = !!g.title.trim() && ((g.kind !== "target" && g.kind !== "daily") || g.target !== undefined);
   const listId = g.list ?? list ?? lists[0]?.id ?? "";
-  const save = () =>
+  const save = () => {
+    dropDraft(draftKey);
     onSave(
       {
         ...g,
@@ -1422,6 +1431,7 @@ export function GoalDialog({
       steps.map((x) => x.trim()).filter(Boolean),
       listId || null,
     );
+  };
   const num = (k: "start" | "target", placeholder: string, label: string) => (
     <input className={s.gdNum} inputMode="decimal" value={g[k] ?? ""} onChange={putNum(k)} placeholder={placeholder} aria-label={label} />
   );
@@ -2098,8 +2108,10 @@ function RewardDialog({
   onSave: (r: Reward) => void;
   onDelete: () => void;
 }) {
-  const [title, setTitle] = useState(reward.title);
-  const [cost, setCost] = useState(String(reward.cost));
+  const key = `reward:${reward.id}`;
+  const [title, setTitle] = useState(() => draft<{ title: string }>(key)?.title ?? reward.title);
+  const [cost, setCost] = useState(() => draft<{ cost: string }>(key)?.cost ?? String(reward.cost));
+  useEffect(() => keepDraft(key, { title, cost }), [key, title, cost]);
   const c = Math.round(+cost);
   const ok = !!title.trim() && c >= 1 && c <= 100_000;
   return (
@@ -2110,7 +2122,10 @@ function RewardDialog({
         className={s.goalForm}
         onSubmit={(e) => {
           e.preventDefault();
-          if (ok) onSave({ ...reward, title: title.trim(), cost: c });
+          if (ok) {
+            dropDraft(key);
+            onSave({ ...reward, title: title.trim(), cost: c });
+          }
         }}
       >
         <label className={s.goalField}>
@@ -2142,7 +2157,7 @@ function RewardDialog({
           <button
             type="button"
             className={`${s.ghost} ${s.danger}`}
-            onClick={onDelete}
+            onClick={() => (dropDraft(key), onDelete())}
           >
             <Trash2 size={15} strokeWidth={2.5} aria-hidden /> Delete
           </button>

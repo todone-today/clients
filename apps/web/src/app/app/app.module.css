@@ -4062,24 +4062,37 @@ input.stick[data-custom][aria-invalid="true"] {
   display: grid;
   gap: 0.35rem;
 }
+/* One box, like a message bar: the text, then the attach and add buttons inside its right end. */
 .noteRow {
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 0.4rem;
+  gap: 0.3rem;
   align-items: end;
-}
-.noteRow textarea {
-  padding: 0.5rem 0.6rem;
-  font: inherit;
-  font-size: 0.92rem;
-  color: var(--ink);
-  resize: vertical;
+  padding: 0.3rem;
   background: var(--raise);
   border: 2.5px solid var(--ink);
 }
+.noteRow:focus-within {
+  box-shadow: 4px 4px 0 var(--fill);
+}
+.noteRow textarea {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.4rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  resize: none;
+  field-sizing: content; /* grows with what's typed */
+  max-height: 12rem;
+  background: transparent;
+  border: 0;
+}
 .noteRow textarea:focus-visible {
   outline: none;
-  box-shadow: 4px 4px 0 var(--fill);
+}
+.noteRow .noteIcon {
+  box-shadow: none;
+  border-width: 2px;
 }
 .noteIcon {
   display: grid;
@@ -9480,4 +9493,59 @@ input.askRowTitle:focus-visible {
 .menu > span {
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* A task's details, compact: each a sticker with its icon inside on the left (its name shows on hover), wrapping
+   four to a row on a wide panel. */
+.panelFields {
+  grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+  gap: 0.55rem;
+}
+.panelFields label,
+.panelFields .panelField {
+  position: relative;
+  display: block;
+}
+.panelFields label > span,
+.panelFields .panelField > span {
+  position: absolute;
+  top: 50%;
+  left: 0.55rem;
+  z-index: 1;
+  display: flex;
+  color: var(--black);
+  translate: 0 -50%;
+}
+.panelFields label > span {
+  pointer-events: none;
+}
+.panelFields input,
+.panelFields .panelSelect > button {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.4rem 0.5rem 0.4rem 2rem;
+}
+.panelFields input:focus-visible,
+.panelFields .panelSelect > button:hover,
+.panelFields .panelSelect > button[aria-expanded="true"] {
+  transform: none;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+/* The note box: no inner box of its own, it's the bar that has the edge. */
+.noteForm .noteRow textarea {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.noteForm .noteRow textarea:focus-visible {
+  box-shadow: none;
+}
+.noteForm .noteRow {
+  align-items: end;
+  background: #fff;
+  border: var(--key);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.noteForm .noteRow:focus-within {
+  box-shadow: 5px 5px 0 var(--fill);
 }

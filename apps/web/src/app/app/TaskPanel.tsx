@@ -3,8 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bell,
+  CalendarDays,
   Check,
+  Clock,
+  Dumbbell,
+  Flag,
+  Repeat,
   Send,
+  Target,
   Download,
   Lock,
   LockOpen,
@@ -57,6 +63,7 @@ import { useGoalItems } from "./goalStore";
 import { useLists } from "@/lib/store";
 import { type Goal } from "@todone/sdk/goals";
 import { authClient } from "@/lib/auth-client";
+import { draft, keepDraft } from "@/lib/drafts";
 
 const REPEATS = [
   "every day",
@@ -300,9 +307,13 @@ export function TaskPanel({
           {shared ? <LockOpen size={16} strokeWidth={2.5} aria-hidden /> : <Lock size={16} strokeWidth={2.5} aria-hidden />}
         </span>
 
+        {/* Day, time, how long, effort, priority, repeat, goal: compact stickers, each marked by its icon. */}
         <div className={s.panelFields}>
           <label>
-            <span>Day</span>
+            <span data-tip="Day">
+              <CalendarDays size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Day</i>
+            </span>
             <input
               type="date"
               value={task.due ?? ""}
@@ -316,7 +327,10 @@ export function TaskPanel({
             />
           </label>
           <label>
-            <span>Time</span>
+            <span data-tip="Time">
+              <Clock size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Time</i>
+            </span>
             <input
               type="time"
               step={900}
@@ -328,7 +342,10 @@ export function TaskPanel({
             />
           </label>
           <label>
-            <span>How long</span>
+            <span data-tip="How long">
+              <Timer size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">How long</i>
+            </span>
             <input
               key={`est${task.est}`}
               defaultValue={task.est ? fmtMinutes(task.est) : ""}
@@ -344,7 +361,10 @@ export function TaskPanel({
             />
           </label>
           <div className={s.panelField}>
-            <span>Effort</span>
+            <span data-tip="Effort">
+              <Dumbbell size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Effort</i>
+            </span>
             <Select
               className={s.panelSelect}
               label="Effort"
@@ -365,7 +385,10 @@ export function TaskPanel({
             />
           </div>
           <div className={s.panelField}>
-            <span>Priority</span>
+            <span data-tip="Priority">
+              <Flag size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Priority</i>
+            </span>
             <Select
               className={s.panelSelect}
               label="Priority"
@@ -382,7 +405,10 @@ export function TaskPanel({
             />
           </div>
           <div className={s.panelField}>
-            <span>Repeat</span>
+            <span data-tip="Repeat">
+              <Repeat size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Repeat</i>
+            </span>
             <Select
               className={s.panelSelect}
               label="Repeat"
@@ -401,7 +427,10 @@ export function TaskPanel({
             />
           </div>
           <div className={s.panelField}>
-            <span>Goal</span>
+            <span data-tip="Goal">
+              <Target size={15} strokeWidth={2.5} aria-hidden />
+              <i className="sr-only">Goal</i>
+            </span>
             <Select
               className={s.panelSelect}
               label="Goal"
@@ -718,7 +747,9 @@ function Notes({
   shared: boolean;
 }) {
   const me = authClient.useSession().data?.user.name || "You";
-  const [text, setText] = useState("");
+  // What's typed survives closing the task by accident (lib/drafts.ts).
+  const [text, setTextNow] = useState(() => draft<string>(`note:${task.id}`) ?? "");
+  const setText = (v: string) => (setTextNow(v), keepDraft(`note:${task.id}`, v));
   const [files, setFiles] = useState<FileRef[]>([]);
   const [busy, setBusy] = useState(0);
   const [err, setErr] = useState("");
@@ -765,46 +796,7 @@ function Notes({
           Only you and your team see these; they stay end-to-end encrypted.
         </p>
       )}
-      {notes.length > 0 && (
-        <ol className={s.kept}>
-          {notes.map((h, i) => (
-            <li
-              key={i}
-              data-mine={h.who === me || undefined}
-              style={
-                {
-                  "--fill":
-                    h.who === me
-                      ? "var(--lime)"
-                      : h.who === "Anonymous" || /^Guest \d/.test(h.who)
-                        ? "var(--pink)"
-                        : "var(--cyan)",
-                } as React.CSSProperties
-              }
-            >
-              <header className={s.keptHead}>
-                <b>{h.who}</b>
-                <time>
-                  {new Date(h.at).toLocaleString(undefined, {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </time>
-              </header>
-              {h.text && <p>{h.text}</p>}
-              {h.files?.map((f) => (
-                <Media
-                  key={f.id}
-                  file={f}
-                  load={async () => openPrivate(f, await workspaceKey())}
-                />
-              ))}
-            </li>
-          ))}
-        </ol>
-      )}
+      {/* The box to add one sits on top; the notes follow, newest first. */}
       <form
         className={s.noteForm}
         onDrop={(e) => {
@@ -893,6 +885,46 @@ function Notes({
           </p>
         )}
       </form>
+      {notes.length > 0 && (
+        <ol className={s.kept}>
+          {[...notes].reverse().map((h, i) => (
+            <li
+              key={i}
+              data-mine={h.who === me || undefined}
+              style={
+                {
+                  "--fill":
+                    h.who === me
+                      ? "var(--lime)"
+                      : h.who === "Anonymous" || /^Guest \d/.test(h.who)
+                        ? "var(--pink)"
+                        : "var(--cyan)",
+                } as React.CSSProperties
+              }
+            >
+              <header className={s.keptHead}>
+                <b>{h.who}</b>
+                <time>
+                  {new Date(h.at).toLocaleString(undefined, {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </time>
+              </header>
+              {h.text && <p>{h.text}</p>}
+              {h.files?.map((f) => (
+                <Media
+                  key={f.id}
+                  file={f}
+                  load={async () => openPrivate(f, await workspaceKey())}
+                />
+              ))}
+            </li>
+          ))}
+        </ol>
+      )}
     </section>
   );
 }
