@@ -1272,6 +1272,7 @@ export function Rewards({ ai }: { ai: boolean }) {
   const { items } = useGoalItems();
   const me = useMe();
   const [picking, setPicking] = useState(false);
+  const [history, setHistory] = useState(false); // everything earned and claimed, in a dialog
   // A template adds the reward, priced in tasks like yours (tap it to change); "my own" goes to the bar to type it.
   const fill = (t?: { title: string; size: number }) => {
     setPicking(false);
@@ -1483,7 +1484,6 @@ export function Rewards({ ai }: { ai: boolean }) {
               <ul className={s.rewardGrid}>{saving.map(card)}</ul>
             </>
           )}
-          <Claimed spends={mine.filter((w) => w.spend)} rewards={rewards} />
         </div>
         <aside className={s.rewardSide}>
           <section className={s.rewardNew}>
@@ -1521,6 +1521,17 @@ export function Rewards({ ai }: { ai: boolean }) {
                   </li>
                 ))}
               </ol>
+              {mine.length > 5 && (
+                <button className={s.link} onClick={() => setHistory(true)}>
+                  See all {mine.length}
+                </button>
+              )}
+              {history && (
+                <Modal label="XP history" onClose={() => setHistory(false)}>
+                  <h2 className="display">History</h2>
+                  <History wins={mine} rewards={rewards} />
+                </Modal>
+              )}
             </section>
           )}
         </aside>
@@ -1537,13 +1548,15 @@ export function Rewards({ ai }: { ai: boolean }) {
   );
 }
 
-// What you've claimed, newest first: straight from the XP log, so it always matches your balance (and syncs with it).
+// Everything earned and claimed, newest first, by month: straight from the XP log, so it always matches your balance.
 const PAGE = 8;
-function Claimed({ spends, rewards }: { spends: Win[]; rewards: Reward[] }) {
-  // A page at a time: the newest 8, then 10 more each time you ask.
+function History({ wins, rewards }: { wins: Win[]; rewards: Reward[] }) {
+  // A page at a time: the newest ones, then more each time you ask.
   const [count, setCount] = useState(PAGE);
-  if (!spends.length) return null;
+  if (!wins.length) return null;
+  const spends = wins.filter((w) => w.spend);
   const spent = spends.reduce((n, w) => n - w.xp, 0);
+  const earned = wins.reduce((n, w) => n + (w.spend ? 0 : w.xp), 0);
   const when = (t: number) => {
     const d = new Date(t);
     const days = Math.round(
@@ -1566,19 +1579,18 @@ function Claimed({ spends, rewards }: { spends: Win[]; rewards: Reward[] }) {
       month: "long",
       year: "numeric",
     });
-  const shown = spends.slice(0, count);
+  const shown = wins.slice(0, count);
   const groups: [string, Win[]][] = [];
   for (const w of shown) {
     const m = month(w.at);
     if (groups.at(-1)?.[0] === m) groups.at(-1)![1].push(w);
     else groups.push([m, [w]]);
   }
-  const left = spends.length - shown.length;
+  const left = wins.length - shown.length;
   return (
     <section className={s.claimedBox}>
-      <h2 className={s.sideHead}>Claimed</h2>
       <p className={s.claimedSum}>
-        <b>{spends.length}</b> reward{spends.length === 1 ? "" : "s"} enjoyed ·{" "}
+        <b>{earned}</b> XP earned · <b>{spends.length}</b> reward{spends.length === 1 ? "" : "s"} enjoyed ·{" "}
         <b>{spent}</b> XP spent
       </p>
       {groups.map(([m, ws]) => (
@@ -1588,30 +1600,33 @@ function Claimed({ spends, rewards }: { spends: Win[]; rewards: Reward[] }) {
             {ws.map((w) => (
               <li
                 key={w.id}
-                // The same colour as the reward's card, while it's still there.
+                // A claim in the colour of its reward's card; what you earned, on cream.
                 style={
                   {
-                    "--fill": fillFor(
-                      rewards.find((r) => r.title === w.title)?.id ?? w.title,
-                    ),
+                    "--fill": w.spend
+                      ? fillFor(rewards.find((r) => r.title === w.title)?.id ?? w.title)
+                      : "#fff8ef",
                   } as React.CSSProperties
                 }
               >
-                <Gift size={16} strokeWidth={2.5} aria-hidden />
+                {w.spend ? <Gift size={16} strokeWidth={2.5} aria-hidden /> : <Zap size={16} strokeWidth={2.5} aria-hidden />}
                 <span>{w.title}</span>
                 <time dateTime={new Date(w.at).toISOString()}>
                   {when(w.at)}
                 </time>
-                <b>{w.xp} XP</b>
+                <b>
+                  {w.xp > 0 ? "+" : ""}
+                  {w.xp} XP
+                </b>
               </li>
             ))}
           </ol>
         </div>
       ))}
-      {spends.length > PAGE && (
+      {wins.length > PAGE && (
         <p className={s.claimedMore}>
           <span>
-            Showing {shown.length} of {spends.length}
+            Showing {shown.length} of {wins.length}
           </span>
           {left > 0 && (
             <button className={s.link} onClick={() => setCount((n) => n + 10)}>

@@ -9,7 +9,8 @@ import s from "./app.module.css";
 const MAX = 5000;
 
 // "Send feedback": a bug, an idea or anything else, saved with the page it came from.
-export function Feedback() {
+// `className`: the button's look where it sits (the Account page uses a plain button).
+export function Feedback({ className }: { className?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [kind, setKind] = useState("bug");
   const [body, setBody] = useState("");
@@ -22,7 +23,7 @@ export function Feedback() {
 
   return (
     <>
-      <button className={s.feedbackLink} onClick={() => dialog.current?.showModal()} data-tip="Send feedback">
+      <button className={className ?? s.feedbackLink} onClick={() => dialog.current?.showModal()}>
         <MessageSquare size={14} strokeWidth={2.5} aria-hidden /> <span className={s.label}>Send feedback</span>
       </button>
       <dialog ref={dialog} className={s.aiDialog} aria-labelledby="fb-title" onClose={close}>

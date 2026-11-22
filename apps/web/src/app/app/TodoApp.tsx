@@ -68,7 +68,7 @@ import { useUnread } from "./unread";
 import { useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
-import { InstallPrompt } from "./InstallPrompt";
+import { InstallSheet } from "./InstallSheet";
 import { PullRefresh } from "./PullRefresh";
 import { useSwipeNav } from "./swipeDrawer";
 import { Search } from "./Search";
@@ -490,7 +490,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
       <Welcome />
       <PlanPrompt />
-      {!demo && !intro && !touring && <InstallPrompt />}
+      {!demo && !intro && !touring && <InstallSheet />}
       {!demo && <PullRefresh />}
       {intro && userId && (
         <Intro

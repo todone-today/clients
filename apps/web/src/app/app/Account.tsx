@@ -65,7 +65,6 @@ export function Account() {
         >
           <LogOut size={16} strokeWidth={2.5} aria-hidden /> Sign out
         </button>
-        <Feedback />
       </div>
 
       <section className={s.integration}>
@@ -164,6 +163,12 @@ export function Account() {
         )}
       </section>
       {err && <p className={s.err}>{err}</p>}
+      {/* At the foot of the page: a bug, an idea, anything. */}
+      <section className={s.integration}>
+        <h2>Feedback</h2>
+        <p>Found a bug, or wish todone did something? Tell us; we read every one.</p>
+        <Feedback className={s.ghost} />
+      </section>
       <p className={s.fine}>
         todone v{process.env.NEXT_PUBLIC_VERSION}
         {process.env.NEXT_PUBLIC_COMMIT ? ` (${process.env.NEXT_PUBLIC_COMMIT})` : ""} ·{" "}

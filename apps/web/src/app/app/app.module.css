@@ -6245,41 +6245,6 @@ body[data-drag="task"] .listGoal {
   color: var(--ink);
 }
 
-/* "Put todone on your home screen", on phones in the browser: a butter strip pinned above the bottom tabs. */
-.installBar {
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: calc(4.6rem + env(safe-area-inset-bottom));
-  z-index: 120;
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 0.7rem;
-  align-items: center;
-  padding: 0.75rem 0.8rem;
-  color: var(--black);
-  background: var(--butter);
-  border: var(--key);
-  box-shadow: 4px 4px 0 var(--black);
-  --ink: var(--black);
-  --ink-2: #4a4540;
-  animation: planIn 0.35s var(--ease);
-}
-.installBar p {
-  font-size: 0.85rem;
-  line-height: 1.3;
-}
-.installBar .btn {
-  padding: 0.5em 0.9em;
-}
-.installClose {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  color: var(--black);
-}
-
 /* All lists: a sticker per list, in its colour, with its open tasks. */
 .allGrid {
   display: grid;
@@ -8642,5 +8607,122 @@ input.askRowTitle:focus-visible {
   }
   .goalPillBar {
     width: 2.5rem;
+  }
+}
+
+/* Install and reminders, on phones (InstallSheet.tsx): a sheet from the bottom, in thumb reach. */
+.sheet {
+  width: 100vw;
+  max-width: 100vw;
+  max-height: 88dvh;
+  margin: auto 0 0;
+  padding: 0;
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
+  background: var(--butter);
+  border: 0;
+  border-top: var(--key);
+  box-shadow: 0 -6px 0 var(--black);
+}
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+.sheet[open] {
+  animation: sheetUp 0.28s var(--ease) both;
+}
+.sheetBody {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.1rem 1.1rem calc(1rem + env(safe-area-inset-bottom));
+}
+.sheetBody header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.sheetBody h2 {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+.sheetBody > .link {
+  justify-self: center;
+  min-height: 2.75rem;
+  color: var(--black);
+}
+.sheetLead {
+  line-height: 1.4;
+}
+.sheetSteps {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  counter-reset: step;
+}
+.sheetSteps li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+  counter-increment: step;
+}
+.sheetSteps li::before {
+  content: counter(step);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-weight: 900;
+  font-size: 0.8rem;
+  background: var(--lime);
+  border: 2px solid var(--black);
+}
+.sheetNotify {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 2px dashed rgb(11 11 11 / 0.25);
+}
+.sheetNotify p {
+  display: flex;
+  align-items: start;
+  gap: 0.45rem;
+  line-height: 1.4;
+}
+.sheetNotify p svg {
+  flex: none;
+  margin-top: 0.2rem;
+}
+.sheetNotify p[data-on] {
+  font-weight: 800;
+}
+.sheetNotify .ghost {
+  justify-self: start;
+  color: var(--black);
+  border-color: var(--black);
+}
+@keyframes sheetUp {
+  from {
+    translate: 0 100%;
+  }
+}
+@media (min-width: 761px) {
+  /* Previewed on a computer (?pwa=ios): a phone-wide sheet in the middle of the bottom. */
+  .sheet {
+    width: 26rem;
+    margin: auto auto 0;
+    border: var(--key);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] {
+    animation: none;
   }
 }
