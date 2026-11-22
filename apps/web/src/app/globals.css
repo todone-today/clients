@@ -240,7 +240,7 @@ img {
   box-shadow: var(--lift-sm);
   rotate: -2deg;
 }
-/* Beside the pointer while dragging (src/lib/drag.ts): what letting go there will do. */
+/* Beside the pointer while dragging (src/lib/drag.ts): what letting go there will do, as a sticker. */
 .drag-tip {
   position: fixed;
   top: 0;
@@ -251,12 +251,15 @@ img {
   overflow: hidden;
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--lime);
+  /* A sticker like the rest of the app's: butter, dark ink and edge, slightly askew, the same in Day and Night. */
+  color: var(--black);
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
-  background: var(--black);
-  border: 2px solid var(--lime);
+  background: var(--butter);
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  rotate: -2deg;
 }
 .drag-tip[hidden] {
   display: none;

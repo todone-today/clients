@@ -1,91 +1,94 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { ArrowUp, Mic, Plus, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Mic, Plus, Sparkles } from "lucide-react";
 import s from "./app.module.css";
 
-// Ask todone's way in from anywhere: a bar at the bottom of the page. Typing and sending, or the mic, hands over to
-// the Ask todone dialog (AiImport), which does the work and shows what it found to review.
+// The one bar at the foot of each page (lists, Brainstorm, Goals, Rewards, the calendar): type and press Enter to add
+// the page's own thing as typed; ✨ hands the words to Ask todone (the AiImport dialog) to work out; the mic says it
+// to Ask todone instead. Each page has its own words and, for Ask todone, its own focus.
 export const ASK_EVENT = "todone:ask";
-// `ideas`: asked from Brainstorm, so what it finds lands there as idea cards (IDEAS_EVENT) instead of in lists.
-export type Ask = ({ text: string } | { voice: true }) & { ideas?: true };
+// `mode`: asked from Brainstorm (what it finds lands there as idea cards, IDEAS_EVENT), Goals or Rewards (it suggests
+// those only). `open`: just open the dialog, nothing typed yet.
+export type Focus = "ideas" | "goals" | "rewards";
+export type Ask = ({ text: string } | { voice: true } | { open: true }) & { mode?: Focus };
 export const IDEAS_EVENT = "todone:ideas";
 const ask = (detail: Ask) => dispatchEvent(new CustomEvent<Ask>(ASK_EVENT, { detail }));
 
-// A phone (the layout's own breakpoint), kept current as the window changes.
-const PHONE = "(max-width: 760px)";
-const usePhone = () =>
-  useSyncExternalStore(
-    (cb) => {
-      const m = matchMedia(PHONE);
-      m.addEventListener("change", cb);
-      return () => m.removeEventListener("change", cb);
-    },
-    () => matchMedia(PHONE).matches,
-    () => false,
-  );
+export type Place = "list" | "ideas" | "goals" | "rewards" | "calendar";
+const WORDS: Record<Place, { add: string; ai: string; plain: string; label: string; mode?: Focus }> = {
+  list: { add: "Add the task", ai: "Add a task, or ✨ to ask todone", plain: "Add a task…", label: "New task" },
+  ideas: { add: "Add the idea", ai: "Add an idea, or ✨ to brain dump", plain: "Add an idea… (paste a list to add many)", label: "New idea", mode: "ideas" },
+  goals: { add: "Add the goal", ai: "Name a goal, or ✨ for ideas", plain: "Name a goal…", label: "New goal", mode: "goals" },
+  rewards: { add: "Add the reward", ai: "Name a treat, or ✨ for ideas", plain: "Name a treat…", label: "New reward", mode: "rewards" },
+  calendar: { add: "Add it for today", ai: "Add for today, or ✨ to plan", plain: "Add a task for today…", label: "New task for today" },
+};
 
-// `onAdd`: on a phone the bar is also where tasks are added (the box at the top of the list is hidden there, out
-// of thumb reach): a switch picks plain "Task" (added as typed) or "Ask" (Ask todone). `ai` false: Task only.
-export function AskBar({ ideas, onAdd, ai = true }: { ideas?: boolean; onAdd?: (title: string) => void; ai?: boolean }) {
+export function AskBar({
+  place,
+  ai,
+  onAdd,
+  onPaste,
+}: {
+  place: Place;
+  ai: boolean;
+  onAdd: (text: string) => void;
+  onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void; // e.g. a pasted list becoming many ideas
+}) {
   const [text, setText] = useState("");
-  const phone = usePhone();
-  const [mode, setMode] = useState<"task" | "ask">("task");
-  const adding = !!onAdd && phone && (mode === "task" || !ai);
-  const more = ideas ? ({ ideas: true } as const) : {};
-  if (!ai && !adding) return null;
+  const w = WORDS[place];
+  const mode = w.mode ? { mode: w.mode } : {};
   return (
     <form
-      data-tour={ideas ? undefined : "ask"}
+      data-tour="ask"
       className={s.askBar}
-      data-mode={adding ? "task" : "ask"}
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim()) return;
-        if (adding) onAdd(text.trim());
-        else ask({ text, ...more });
+        onAdd(text.trim());
         setText("");
       }}
     >
-      {onAdd && phone && ai ? (
-        <button
-          type="button"
-          className={s.askMode}
-          onClick={() => setMode(adding ? "ask" : "task")}
-          aria-label={adding ? "Adding a task. Switch to Ask todone" : "Asking todone. Switch to adding a task"}
-        >
-          {adding ? <Plus size={16} strokeWidth={3} aria-hidden /> : <Sparkles size={16} strokeWidth={2.5} aria-hidden />}
-          {adding ? "Task" : "Ask"}
-        </button>
-      ) : adding ? (
-        <Plus size={18} strokeWidth={3} aria-hidden className={s.askSpark} />
-      ) : (
-        <Sparkles size={18} strokeWidth={2.5} aria-hidden className={s.askSpark} />
-      )}
       <label htmlFor="ask-bar" className="sr-only">
-        {adding ? "New task" : ideas ? "Brain dump: say or type it, todone turns it into idea cards" : "Tell todone what you need to do"}
+        {w.label}
       </label>
       <input
         id="ask-bar"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={adding ? "Add a task…" : ideas ? "Brain dump, any language. Say it or type it…" : "Tell todone what you need to do…"}
+        onPaste={onPaste}
+        placeholder={ai ? w.ai : w.plain}
         autoComplete="off"
-        enterKeyHint={adding ? "done" : "send"}
-        maxLength={adding ? 500 : 50000}
+        enterKeyHint="done"
+        maxLength={50000}
       />
-      {!adding && (
-        <button type="button" className={s.askMic} onClick={() => ask({ voice: true, ...more })} aria-label="Speak instead">
-          <Mic size={18} strokeWidth={2.5} />
-        </button>
+      {ai && (
+        <>
+          <button
+            type="button"
+            className={s.askMic}
+            onClick={() => ask({ voice: true, ...mode })}
+            aria-label="Say it to todone"
+            data-tip="Say it"
+          >
+            <Mic size={18} strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            className={s.askAi}
+            onClick={() => {
+              ask(text.trim() ? { text, ...mode } : { open: true, ...mode });
+              setText("");
+            }}
+            aria-label="Ask todone"
+            data-tip="Ask todone to work it out"
+          >
+            <Sparkles size={18} strokeWidth={2.5} />
+          </button>
+        </>
       )}
-      <button
-        type="submit"
-        className={s.askGo}
-        disabled={!text.trim()}
-        aria-label={adding ? "Add the task" : ideas ? "Make ideas" : "Make my lists"}
-      >
-        {adding ? <Plus size={18} strokeWidth={3} /> : <ArrowUp size={18} strokeWidth={3} />}
+      <button type="submit" className={s.askGo} disabled={!text.trim()} aria-label={w.add} data-tip={w.add}>
+        <Plus size={18} strokeWidth={3} />
       </button>
     </form>
   );

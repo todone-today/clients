@@ -33,6 +33,7 @@ import { ListIcon, listColor } from "./listIcon";
 import { type Suggested, suggest, suggested } from "@/lib/onboard";
 import { Tip } from "./Tip";
 import { GoalTemplates, RewardTemplates } from "./Templates";
+import { AskBar } from "./AskBar";
 import { GOAL_TEMPLATES, REWARD_TEMPLATES, asGoal } from "@/lib/templates";
 import s from "./app.module.css";
 
@@ -210,7 +211,7 @@ export function ListGoals({ list }: { list: List }) {
 
 // Goals: why each one matters, how it's going, the next step, and the if-then plan. Outcome goals have milestones
 // (their linked tasks); habits count the weeks you showed up. Nothing here ever "fails".
-export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
+export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: boolean }) {
   const { lists, update } = useLists();
   const { items } = useGoalItems();
   // `true` for a blank goal, or a suggestion to start from.
@@ -358,6 +359,8 @@ export function Goals({ onOpen }: { onOpen: (listId: string) => void }) {
           </ul>
         </>
       )}
+      {/* The bar: name a goal (the dialog opens to finish it), or ask todone to suggest some. */}
+      <AskBar place="goals" ai={ai} onAdd={(title) => setMaking({ title })} />
       {picking && (
         <GoalTemplates
           taken={goals.map((g) => g.title)}
@@ -1304,7 +1307,7 @@ const IDEAS = [
   ["A weekend away", 100, "var(--cyan)"],
 ] as const;
 
-export function Rewards() {
+export function Rewards({ ai }: { ai: boolean }) {
   const { lists } = useLists();
   const { items } = useGoalItems();
   const me = useMe();
@@ -1680,6 +1683,14 @@ export function Rewards() {
           )}
         </aside>
       </div>
+      {/* The bar: name a treat (priced at about ten tasks; tap it to change), or ask todone for ideas. */}
+      <AskBar
+        place="rewards"
+        ai={ai}
+        onAdd={(title) =>
+          changeGoals(lists, (xs) => [...xs, { t: "reward", id: uid() + uid(), title: title.slice(0, 80), cost: perTask * 10 }])
+        }
+      />
     </>
   );
 }

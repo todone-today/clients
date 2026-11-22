@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Feedback } from "./Feedback";
 import { useRouter } from "next/navigation";
 import { Download, KeyRound, LogOut } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
@@ -64,6 +65,7 @@ export function Account() {
         >
           <LogOut size={16} strokeWidth={2.5} aria-hidden /> Sign out
         </button>
+        <Feedback />
       </div>
 
       <section className={s.integration}>

@@ -51,7 +51,6 @@ export function Brainstorm({
   const board = lists.find((l) => l.kind === "ideas");
   const targets = lists.filter((l) => !l.kind);
   const ideas = board?.tasks ?? [];
-  const [draft, setDraft] = useState("");
   const [said, setSaid] = useState("");
   const [binned, setBinned] = useState<{ before: Task[]; title: string } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
@@ -203,38 +202,6 @@ export function Brainstorm({
           {said}
         </p>
       )}
-      <form
-        className={s.add}
-        onSubmit={(e) => {
-          e.preventDefault();
-          const t = draft.trim();
-          if (!t) return;
-          addIdeas([{ id: uid(), title: t, done: false, sub: [] }]);
-          setDraft("");
-        }}
-      >
-        <label className="sr-only" htmlFor="new-idea">
-          New idea
-        </label>
-        <input
-          id="new-idea"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          // A pasted list becomes one idea per line.
-          onPaste={(e) => {
-            const lines = ideaLines(e.clipboardData.getData("text"));
-            if (lines.length < 2) return;
-            e.preventDefault();
-            addIdeas(lines.map((title) => ({ id: uid(), title, done: false, sub: [] })));
-          }}
-          placeholder="What if… (paste a list to add many)"
-          maxLength={500}
-          autoComplete="off"
-        />
-        <button className="btn" style={{ "--fill": "var(--pink)" } as React.CSSProperties} disabled={!draft.trim()}>
-          Add idea
-        </button>
-      </form>
 
       {ideas.length ? (
         <ul className={s.board} ref={glide}>
@@ -262,11 +229,22 @@ export function Brainstorm({
       ) : (
         <div className={s.empty}>
           <p className="display">Blank page.</p>
-          <p>Type anything above{ai ? ", or say it below" : ""}. Nothing here is a commitment until you make it a task.</p>
+          <p>Type anything in the bar below{ai ? ", or say it" : ""}. Nothing here is a commitment until you make it a task.</p>
         </div>
       )}
-      {/* Ask todone, in the same place as on a list: thinking out loud is what Brainstorm is for. */}
-      {ai && <AskBar ideas />}
+      {/* The bar, in the same place as on a list: type an idea, or think out loud to Ask todone. */}
+      <AskBar
+        place="ideas"
+        ai={!!ai}
+        onAdd={(t) => addIdeas([{ id: uid(), title: t, done: false, sub: [] }])}
+        // A pasted list becomes one idea per line.
+        onPaste={(e) => {
+          const lines = ideaLines(e.clipboardData.getData("text"));
+          if (lines.length < 2) return;
+          e.preventDefault();
+          addIdeas(lines.map((title) => ({ id: uid(), title, done: false, sub: [] })));
+        }}
+      />
     </>
   );
 }

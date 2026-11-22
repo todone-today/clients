@@ -12,6 +12,7 @@ import {
   goalNote,
   matches,
 } from "@/lib/templates";
+import { Select } from "@/components/Select";
 import s from "./app.module.css";
 
 // Sticker colours, one per area, so a glance tells the areas apart.
@@ -64,6 +65,17 @@ function Picker<T extends { title: string; area: string }>({
         <span className="sr-only">Search templates</span>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search: water, save, read…" />
       </label>
+      {!q && (
+        // Phones: the areas as one dropdown (a long row of chips would need sideways scrolling).
+        <div className={s.tplAreaPick}>
+          <Select
+            label="Area"
+            value={area ?? ""}
+            options={[{ value: "", label: "All areas" }, ...areas.map((a) => ({ value: a, label: a }))]}
+            onChange={(v) => setArea(v || null)}
+          />
+        </div>
+      )}
       {!q && (
         <div className={s.tplAreas} role="group" aria-label="Areas">
           <button aria-pressed={!area} onClick={() => setArea(null)}>

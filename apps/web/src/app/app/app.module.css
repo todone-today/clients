@@ -1706,6 +1706,7 @@
   color: var(--ink-2);
 }
 .askMic,
+.askAi,
 .askGo {
   display: grid;
   flex: none;
@@ -1723,10 +1724,15 @@
 .askGo {
   background: var(--lime);
 }
+/* Ask todone: the words go to the AI instead of straight onto the page. */
+.askAi {
+  background: var(--peri);
+}
 .askGo:disabled {
   opacity: 0.45;
 }
 .askMic:hover,
+.askAi:hover,
 .askGo:not(:disabled):hover {
   translate: -1px -1px;
   box-shadow: 2px 2px 0 var(--ink);
@@ -2738,8 +2744,8 @@
 /* Wider screens: the sticker panel is out on the right while a task is held, so the bin stays above it and,
    floating, sits just left of it. */
 @media (min-width: 761px) {
+  /* Raised, but kept where it sits (top right of the list): a held card never sends it elsewhere. */
   :global(body.is-dragging) .bin:not([data-float]) {
-    position: relative;
     z-index: 140;
   }
   .bin[data-float] {
@@ -3303,8 +3309,10 @@
   align-items: center;
   gap: 0.4rem;
   justify-self: start;
+  justify-content: center;
+  width: 2.5rem; /* just the lock (or open lock); its tooltip says which */
   height: 2.5rem;
-  padding: 0 0.75rem;
+  padding: 0;
   font-size: 0.8rem;
   font-weight: 800;
   text-align: left;
@@ -3469,9 +3477,10 @@ input.stick[data-custom][aria-invalid="true"] {
     display: grid;
     gap: 0.4rem;
   }
+  /* Folded too, All lists and the Bin sit at the foot of the rail. */
   .shell[data-slim] .sideTools {
     display: flex;
-    flex: none;
+    flex: 1;
     flex-direction: column;
     align-items: center;
   }
@@ -7673,12 +7682,14 @@ input.askRowTitle:focus-visible {
 .tplSearch:focus-within {
   box-shadow: 4px 4px 0 var(--lime);
 }
+/* The areas wrap onto as many rows as they need: everything in view, nothing to scroll sideways. */
 .tplAreas {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  scrollbar-width: thin;
+}
+.tplAreaPick {
+  display: none;
 }
 .tplAreas button {
   flex: none;
@@ -8149,5 +8160,13 @@ input.askRowTitle:focus-visible {
   .panelActions .panelClose {
     width: 2.2rem;
     height: 2.2rem;
+  }
+}
+@media (max-width: 760px) {
+  .tplAreas {
+    display: none;
+  }
+  .tplAreaPick {
+    display: grid;
   }
 }

@@ -79,7 +79,6 @@ import { AllLists } from "./AllLists";
 import { AskBar } from "./AskBar";
 import { Brainstorm, ideaToTask } from "./Brainstorm";
 import { CalendarView } from "./CalendarView";
-import { Feedback } from "./Feedback";
 import { Integrations } from "./Integrations";
 import { VerifyBanner } from "./VerifyBanner";
 import {
@@ -715,6 +714,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             </span>
           </button>
           <AiImport
+            trigger={!askAi}
             lists={sorted}
             ai={askAi}
             current={list?.id ?? null}
@@ -728,7 +728,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           <button className={`${s.ghost} ${s.phoneOnly}`} onClick={steps}>
             <Info size={16} strokeWidth={2.5} aria-hidden /> Take the tour
           </button>
-          {!demo && <Feedback />}
         </div>
       </aside>
 
@@ -761,17 +760,32 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       <main className={s.main}>
         {panel === "calendar" ? (
           lists && (
-            <CalendarView
-              lists={lists.filter((l) => !l.kind)}
-              update={update}
-              onOpen={open}
-              share={demo ? undefined : shareCalendar}
-            />
+            <>
+              <CalendarView
+                lists={lists.filter((l) => !l.kind)}
+                update={update}
+                onOpen={open}
+                share={demo ? undefined : shareCalendar}
+              />
+              {/* The bar: a task for today, into the list last open; or ask todone to plan the week. */}
+              {list && (
+                <AskBar
+                  place="calendar"
+                  ai={askAi}
+                  onAdd={(title) =>
+                    update(list.id, (l) => ({
+                      ...l,
+                      tasks: [{ id: uid(), title, done: false, created: Date.now(), sub: [], due: todayISO() }, ...l.tasks],
+                    }))
+                  }
+                />
+              )}
+            </>
           )
         ) : panel === "goals" ? (
-          lists && <Goals onOpen={open} />
+          lists && <Goals onOpen={open} ai={askAi} />
         ) : panel === "rewards" ? (
-          lists && <Rewards />
+          lists && <Rewards ai={askAi} />
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} ai={askAi} />
         ) : panel === "all" ? (
@@ -874,11 +888,11 @@ function Privacy({ list, update }: { list: List; update: Update }) {
         className={s.privacy}
         data-plain={plain || undefined}
         aria-expanded={open}
+        aria-label={plain ? "Not encrypted" : "Encrypted"}
         onClick={() => (setOpen(!open), setSure(false))}
-        data-tip={open ? undefined : plain ? "Integrations can read this list" : "Only you can read this list"}
+        data-tip={open ? undefined : plain ? "Not encrypted: integrations can read this list" : "Encrypted: only you can read this list"}
       >
-        {plain ? <LockOpen size={14} strokeWidth={2.5} aria-hidden /> : <Lock size={14} strokeWidth={2.5} aria-hidden />}
-        {plain ? "Not encrypted" : "Encrypted"}
+        {plain ? <LockOpen size={18} strokeWidth={2.5} aria-hidden /> : <Lock size={18} strokeWidth={2.5} aria-hidden />}
       </button>
       {open && (
         <div className={s.privacyCard} role="dialog" aria-label="Encryption">
@@ -956,7 +970,6 @@ function ListView({
     known.clear();
     for (const t of list.tasks) for (const x of [t, ...t.sub]) known.add(x.id);
   });
-  const [draft, setDraft] = useState("");
   const [renaming, setRenaming] = useState(false);
   // Deleting a list always asks first (it can't be undone); linked goals go too by default, or stay, unlinked.
   const [asking, setAsking] = useState(false);
@@ -1422,34 +1435,6 @@ function ListView({
       )}
       <div className={s.listBody} data-stickers={pinned ? "pinned" : "auto"}>
         <div>
-          <form
-            className={s.add}
-            data-tour="add"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!draft.trim()) return;
-              addTask(draft.trim());
-              setDraft("");
-            }}
-          >
-            <label className="sr-only" htmlFor="new-task">
-              New task
-            </label>
-            <input
-              id="new-task"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Add a task, press enter"
-              autoComplete="off"
-            />
-            <button
-              className="btn"
-              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-              disabled={!draft.trim()}
-            >
-              Add
-            </button>
-          </form>
 
           {list.tasks.length > 0 && (
             <div className={s.boardBar} data-tour="filters">
@@ -1554,10 +1539,10 @@ function ListView({
           ) : (
             <div className={s.empty}>
               <p className="display">Nothing here.</p>
-              <p>Add the first task above. Enjoy the quiet while it lasts.</p>
+              <p>Add the first task in the bar below. Enjoy the quiet while it lasts.</p>
             </div>
           )}
-          <AskBar ai={ai} onAdd={addTask} />
+          <AskBar place="list" ai={ai} onAdd={addTask} />
         </div>
         <Stickers
           active={!!selected || picked.size > 0}

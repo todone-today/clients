@@ -33,12 +33,14 @@ const SAYS: Record<Phase, string> = {
 // before anything is added. Or use your own AI: copy a prompt, paste its answer. A .md file works too.
 // `ai`: this server can answer itself (not in the demo, and only with a Gemini key set up).
 export function AiImport({
+  trigger = true,
   lists,
   current,
   ai,
   onAdd,
   onAppend,
 }: {
+  trigger?: boolean; // its own button in the sidebar (without Ask todone; with it, the bar opens this instead)
   lists: List[];
   current: string | null;
   ai: boolean;
@@ -83,7 +85,14 @@ export function AiImport({
     rewards: items.flatMap((i) => (i.t === "reward" ? [i.title] : [])),
     ...(open ? { open } : {}),
     // Brainstorm wants idea cards only; with lists shared, it's changing them: either way no goals, rewards or questions.
-    ...(ideasMode.current ? { mode: "ideas" as const } : open ? { mode: "change" as const } : {}),
+    // Asked from Goals or Rewards: suggest those only.
+    ...(ideasMode.current
+      ? { mode: "ideas" as const }
+      : focus.current
+        ? { mode: focus.current }
+        : open
+          ? { mode: "change" as const }
+          : {}),
     // The AI remembers nothing between asks: each one carries the conversation so far and any questions still
     // waiting, so a follow-up (typed or spoken) carries on instead of starting over and asking the same again.
     ...(said.trim() && !ideasMode.current && !fresh ? { earlier: said.slice(-2000) } : {}),
@@ -131,6 +140,7 @@ export function AiImport({
   const halt = () => {
     turn.current++; // an answer still on its way for what was stopped is ignored when it lands
     ideasMode.current = false;
+    focus.current = null;
     const r = rec.current;
     rec.current = null; // its onstop sees it was cancelled
     r?.stream.getTracks().forEach((t) => t.stop());
@@ -205,6 +215,7 @@ export function AiImport({
   // Asked from Brainstorm: everything it found goes there as idea cards, and the dialog closes. Otherwise the
   // results open as steps to review.
   const ideasMode = useRef(false);
+  const focus = useRef<"goals" | "rewards" | null>(null); // the page it was asked from
   const answeredOnce = useRef(false);
   const turn = useRef(0);
   const lastAsk = useRef(""); // the words of the ask on its way (typed, or what the transcriber heard)
@@ -441,13 +452,14 @@ export function AiImport({
   fromBar.current = (a: Ask) => {
     if (!ai) return;
     halt();
-    ideasMode.current = !!a.ideas;
+    ideasMode.current = a.mode === "ideas";
+    focus.current = a.mode === "goals" || a.mode === "rewards" ? a.mode : null;
     setTab("ask");
     open();
     if ("text" in a) {
       setWords(a.text);
       askText(a.text);
-    } else record();
+    } else if ("voice" in a) record();
   };
   useEffect(() => {
     const on = (e: Event) => fromBar.current((e as CustomEvent<Ask>).detail);
@@ -457,9 +469,11 @@ export function AiImport({
 
   return (
     <div className={s.import}>
-      <button className={s.ghost} data-tour="ai" onClick={open} data-tip={ai ? "Ask todone" : "Import with AI"}>
-        <Sparkles size={16} strokeWidth={2.5} aria-hidden /> <span className={s.label}>{ai ? "Ask todone" : "Import with AI"}</span>
-      </button>
+      {trigger && (
+        <button className={s.ghost} data-tour="ai" onClick={open} data-tip={ai ? "Ask todone" : "Import with AI"}>
+          <Sparkles size={16} strokeWidth={2.5} aria-hidden /> <span className={s.label}>{ai ? "Ask todone" : "Import with AI"}</span>
+        </button>
+      )}
 
       <dialog ref={dialog} className={s.aiDialog} data-board={found || undefined} aria-labelledby="ai-title" onClose={close}>
         <div className={s.aiHead}>
