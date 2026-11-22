@@ -8170,3 +8170,245 @@ input.askRowTitle:focus-visible {
     display: grid;
   }
 }
+
+/* The goal on one page (Goals.tsx GoalDialog). */
+.gd {
+  display: grid;
+  gap: 0.85rem;
+}
+.gdTitle {
+  width: 100%;
+  padding: 0.2rem 0;
+  font: 900 clamp(1.6rem, 5vw, 2.1rem) / 1.05 var(--display);
+  text-transform: uppercase;
+  color: var(--black);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid var(--black);
+  outline: none;
+}
+.gdTitle::placeholder {
+  color: rgb(11 11 11 / 0.35);
+}
+.gdKinds {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.gdKinds button {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  padding: 0.5rem 0.55rem;
+  text-align: left;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+  transition:
+    transform 0.15s var(--ease),
+    background 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.gdKinds button b {
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+.gdKinds button small {
+  font-size: 0.7rem;
+  color: #4a4540;
+}
+.gdKinds button[aria-checked="true"] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+  transform: translate(-1px, -2px) rotate(-1deg);
+}
+.gdSentence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  animation: gdIn 0.28s var(--ease) both;
+}
+.gdSentence small {
+  font-weight: 700;
+  color: #4a4540;
+}
+.gdNum,
+.gdUnit,
+.gdDate {
+  padding: 0.3rem 0.45rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.gdNum {
+  width: 5.5rem;
+}
+.gdUnit {
+  width: 6.5rem;
+}
+.gdTimes {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+.gdTimes button {
+  width: 2rem;
+  height: 2rem;
+  font-weight: 900;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+  transition: transform 0.12s var(--ease);
+}
+.gdTimes button[aria-checked="true"] {
+  background: var(--lime);
+  transform: translateY(-2px);
+  box-shadow: 2px 2px 0 var(--black);
+}
+.gdPreview {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  max-width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+  color: var(--black);
+  background: var(--fill, var(--cyan));
+  border: var(--key);
+  box-shadow: var(--lift-sm);
+  rotate: -0.6deg;
+}
+.gdPreview b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gdList {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.gdMore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  font-size: 0.85rem;
+  border-top: 2px dashed rgb(11 11 11 / 0.25);
+}
+.gdThink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.gdThink[data-on] {
+  background: var(--peri);
+  font-variant-numeric: tabular-nums;
+}
+.gdExtra {
+  background: rgb(255 255 255 / 0.55);
+  border: 2px solid var(--black);
+}
+.gdExtra > button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  color: var(--black);
+}
+.gdOptional {
+  padding: 0.05rem 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--butter);
+  border: 1.5px solid var(--black);
+  rotate: -2deg;
+}
+.gdChevron {
+  margin-left: auto;
+  transition: rotate 0.2s var(--ease);
+}
+.gdExtra[data-open] .gdChevron {
+  rotate: 180deg;
+}
+/* Folds open by growing its row from nothing to its height. */
+.gdBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s var(--ease);
+}
+.gdExtra[data-open] .gdBody {
+  grid-template-rows: 1fr;
+}
+.gdBody > div {
+  display: grid;
+  gap: 0.45rem;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0.7rem;
+}
+.gdExtra[data-open] .gdBody > div {
+  padding-bottom: 0.7rem;
+}
+.gdBody input,
+.gdBody textarea {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.gdBody small {
+  font-size: 0.78rem;
+  color: #4a4540;
+}
+.gdIf {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  font-weight: 800;
+}
+@keyframes gdIn {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+@media (max-width: 760px) {
+  .gdKinds {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gdSentence {
+    animation: none;
+  }
+  .gdBody,
+  .gdChevron,
+  .gdKinds button,
+  .gdTimes button {
+    transition: none;
+  }
+}

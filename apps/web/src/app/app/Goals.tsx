@@ -4,10 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
+  ChevronDown,
+  Droplet,
+  Flag,
   Gift,
   Plus,
+  Repeat,
   Sparkles,
   Target,
+  Timer,
   Trash2,
   X,
   Zap,
@@ -933,7 +938,15 @@ function Reflect({
   );
 }
 
-// A new goal in four short steps (only the first is needed): the wish, why, the obstacle and plan, first steps.
+// A goal on one page: what you want and how it's measured, read as a sentence, with a live preview of the card it
+// makes; Save is ready as soon as that's there. Then three optional parts, folded until wanted: why it matters, the
+// if-then plan for when it gets hard, and first steps. Wanting to think it through? A short timer holds the space.
+const KINDS = [
+  ["target", "Reach a number", "68 kg, ₹50,000", Target],
+  ["habit", "Show up", "Gym 3× a week", Repeat],
+  ["daily", "A daily amount", "8 glasses a day", Droplet],
+  ["outcome", "Get somewhere", "Milestones, by a date", Flag],
+] as const;
 export function GoalDialog({
   lists,
   list,
@@ -945,11 +958,10 @@ export function GoalDialog({
   lists: List[];
   list?: string;
   initial?: Goal; // editing this goal rather than making one
-  preset?: Partial<Goal>; // a new goal started from a suggestion
+  preset?: Partial<Goal>; // a new goal started from a template or the bar
   onClose: () => void;
   onSave: (g: Goal, steps: string[], listId: string | null) => void;
 }) {
-  const [step, setStep] = useState(0);
   const editing = !!initial;
   const [g, setG] = useState<Goal>(
     () =>
@@ -957,37 +969,34 @@ export function GoalDialog({
         t: "goal",
         id: uid(),
         title: "",
-        kind: "target",
+        kind: "habit",
+        perWeek: 3,
         created: Date.now(),
         ...(list ? { list } : {}),
         ...preset,
       },
   );
   const [steps, setSteps] = useState(["", "", ""]);
-  const [listId, setListId] = useState(
-    initial?.list ?? list ?? lists[0]?.id ?? "",
-  );
-  const putNum =
-    (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value.replace(",", ".");
-      setG((x) => ({
-        ...x,
-        [k]: v === "" || !Number.isFinite(+v) ? undefined : +v,
-      }));
-    };
-  const put =
-    (k: keyof Goal) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setG((x) => ({ ...x, [k]: e.target.value || undefined }));
-  const ready =
-    !!g.title.trim() &&
-    ((g.kind !== "target" && g.kind !== "daily") || g.target !== undefined);
-  const titles = [
-    "What do you want?",
-    "Why does it matter?",
-    "What could get in the way?",
-    "First steps",
-  ];
+  // Which optional parts are open: any that already say something, when editing.
+  const [open, setOpen] = useState(() => ({
+    why: !!(initial?.why || initial?.become),
+    plan: !!(initial?.obstacle || initial?.plan),
+    steps: false,
+  }));
+  const [think, setThink] = useState<number | null>(null); // seconds of thinking time left
+  useEffect(() => {
+    if (!think) return;
+    const t = setTimeout(() => setThink((n) => (n ? n - 1 : n)), 1000);
+    return () => clearTimeout(t);
+  }, [think]);
+  const putNum = (k: "start" | "target") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value.replace(",", ".");
+    setG((x) => ({ ...x, [k]: v === "" || !Number.isFinite(+v) ? undefined : +v }));
+  };
+  const put = (k: keyof Goal) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setG((x) => ({ ...x, [k]: e.target.value || undefined }));
+  const ready = !!g.title.trim() && ((g.kind !== "target" && g.kind !== "daily") || g.target !== undefined);
+  const listId = g.list ?? list ?? lists[0]?.id ?? "";
   const save = () =>
     onSave(
       {
@@ -996,299 +1005,209 @@ export function GoalDialog({
         // Only the fields this kind uses.
         by: g.kind === "outcome" || g.kind === "target" ? g.by || undefined : undefined,
         perWeek: g.kind === "habit" ? (g.perWeek ?? 3) : undefined,
-        unit:
-          g.kind === "target" || g.kind === "daily"
-            ? g.unit?.trim() || undefined
-            : undefined,
+        unit: g.kind === "target" || g.kind === "daily" ? g.unit?.trim() || undefined : undefined,
         start: g.kind === "target" ? g.start : undefined,
-        target:
-          g.kind === "target" || g.kind === "daily" ? g.target : undefined,
+        target: g.kind === "target" || g.kind === "daily" ? g.target : undefined,
       },
       steps.map((x) => x.trim()).filter(Boolean),
       listId || null,
     );
+  const num = (k: "start" | "target", placeholder: string, label: string) => (
+    <input className={s.gdNum} inputMode="decimal" value={g[k] ?? ""} onChange={putNum(k)} placeholder={placeholder} aria-label={label} />
+  );
+  const unit = (placeholder: string) => (
+    <input className={s.gdUnit} value={g.unit ?? ""} onChange={put("unit")} maxLength={20} placeholder={placeholder} aria-label="Unit" />
+  );
+  const by = <input className={s.gdDate} type="date" value={g.by ?? ""} min={todayISO()} onChange={put("by")} aria-label="By when (optional)" />;
   return (
     <Modal label={editing ? "Edit goal" : "New goal"} onClose={onClose}>
-      <p className={s.goalStep}>
-        {editing ? "Edit goal · " : ""}Step {step + 1} of 4
-        {step > 0 && " · optional"}
-      </p>
-      <h2 className="display">{titles[step]}</h2>
       <form
-        className={s.goalForm}
+        className={s.gd}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!ready) return;
-          if (step < 3 && !editing) setStep(step + 1);
-          else save();
+          if (ready) save();
         }}
       >
-        {step === 0 && (
-          <>
-            <label className={s.goalField}>
-              <span>The goal</span>
-              <input
-                value={g.title}
-                onChange={(e) => setG((x) => ({ ...x, title: e.target.value }))}
-                maxLength={120}
-                placeholder="Run a 5K, ship the app, read 12 books…"
-                autoFocus
-                required
-              />
-            </label>
-            <div
-              className={s.goalKinds}
-              role="radiogroup"
-              aria-label="Kind of goal"
+        <p className={s.goalStep}>{editing ? "Edit goal" : "New goal"}</p>
+        <input
+          className={s.gdTitle}
+          value={g.title}
+          onChange={(e) => setG((x) => ({ ...x, title: e.target.value }))}
+          maxLength={120}
+          placeholder="What do you want?"
+          aria-label="The goal"
+          autoFocus={!g.title}
+          required
+        />
+        <div className={s.gdKinds} role="radiogroup" aria-label="How it's measured">
+          {KINDS.map(([k, name, hint, Icon]) => (
+            <button key={k} type="button" role="radio" aria-checked={g.kind === k} onClick={() => setG((x) => ({ ...x, kind: k }))}>
+              <Icon size={18} strokeWidth={2.5} aria-hidden />
+              <b>{name}</b>
+              <small>{hint}</small>
+            </button>
+          ))}
+        </div>
+        {/* The numbers, read as a sentence for the kind picked. */}
+        <p className={s.gdSentence} key={g.kind}>
+          {g.kind === "target" ? (
+            <>
+              Reach {num("target", "68", "The goal")} {unit("kg")}, from {num("start", "74", "Where you are")}, by {by}
+              <small>(optional)</small>
+            </>
+          ) : g.kind === "habit" ? (
+            <>
+              Show up
+              <span className={s.gdTimes} role="radiogroup" aria-label="Times a week">
+                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={(g.perWeek ?? 3) === n}
+                    aria-label={n === 7 ? "Every day" : `${n} times a week`}
+                    onClick={() => setG((x) => ({ ...x, perWeek: n }))}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </span>
+              {(g.perWeek ?? 3) === 7 ? "every day" : "× a week"}
+            </>
+          ) : g.kind === "daily" ? (
+            <>
+              {num("target", "8", "A day")} {unit("glasses")} every day
+            </>
+          ) : (
+            <>
+              Get there by {by} <small>(optional)</small>
+            </>
+          )}
+        </p>
+        {/* What it'll look like among your goals, as you type. */}
+        <div className={s.gdPreview} aria-hidden style={{ "--fill": fillFor(g.id) } as React.CSSProperties}>
+          <Target size={14} strokeWidth={2.75} />
+          <b>{g.title.trim() || "Your goal"}</b>
+          <span className={s.goalKind}>{kindLabel(g)}</span>
+        </div>
+        {lists.length > 0 && (
+          <div className={s.gdList}>
+            <span>On the list</span>
+            <Select
+              label="List"
+              value={g.list ?? ""}
+              options={[{ value: "", label: "No list" }, ...lists.map((l) => ({ value: l.id, label: l.name }))]}
+              onChange={(v) => setG((x) => ({ ...x, list: v || undefined }))}
+            />
+          </div>
+        )}
+
+        <div className={s.gdMore}>
+          <p>
+            <b>Optional</b> · add any of these now or later
+          </p>
+          {think === null ? (
+            <button
+              type="button"
+              className={s.gdThink}
+              onClick={() => {
+                setThink(120);
+                setOpen({ why: true, plan: true, steps: true });
+              }}
             >
-              {(
-                [
-                  ["target", "Reach a number", "Weigh 68 kg, save ₹50,000"],
-                  ["habit", "Show up", "Gym 5× a week, read most days"],
-                  [
-                    "daily",
-                    "A daily amount",
-                    "140 g protein, 8 glasses of water",
-                  ],
-                  [
-                    "outcome",
-                    "Get somewhere",
-                    "Ship the app: milestones by a date",
-                  ],
-                ] as const
-              ).map(([k, name, hint]) => (
-                <button
-                  key={k}
-                  type="button"
-                  role="radio"
-                  aria-checked={g.kind === k}
-                  onClick={() => setG((x) => ({ ...x, kind: k }))}
-                >
-                  <b>{name}</b>
-                  <small>{hint}</small>
-                </button>
-              ))}
-            </div>
-            {g.kind === "target" ? (
-              <div className={s.goalNums}>
-                <label className={s.goalField}>
-                  <span>Unit</span>
-                  <input
-                    value={g.unit ?? ""}
-                    onChange={put("unit")}
-                    maxLength={20}
-                    placeholder="kg"
-                  />
-                </label>
-                <label className={s.goalField}>
-                  <span>Where you are</span>
-                  <input
-                    inputMode="decimal"
-                    value={g.start ?? ""}
-                    onChange={putNum("start")}
-                    placeholder="74"
-                  />
-                </label>
-                <label className={s.goalField}>
-                  <span>The goal</span>
-                  <input
-                    inputMode="decimal"
-                    value={g.target ?? ""}
-                    onChange={putNum("target")}
-                    placeholder="68"
-                    required
-                  />
-                </label>
-                <label className={s.goalField}>
-                  <span>By when (optional)</span>
-                  <input type="date" value={g.by ?? ""} min={todayISO()} onChange={put("by")} />
-                </label>
-              </div>
-            ) : g.kind === "daily" ? (
-              <div className={s.goalNums}>
-                <label className={s.goalField}>
-                  <span>A day</span>
-                  <input
-                    inputMode="decimal"
-                    value={g.target ?? ""}
-                    onChange={putNum("target")}
-                    placeholder="140"
-                    required
-                  />
-                </label>
-                <label className={s.goalField}>
-                  <span>Unit</span>
-                  <input
-                    value={g.unit ?? ""}
-                    onChange={put("unit")}
-                    maxLength={20}
-                    placeholder="g"
-                  />
-                </label>
-              </div>
-            ) : g.kind === "outcome" ? (
-              <label className={s.goalField}>
-                <span>By when (optional)</span>
-                <input
-                  type="date"
-                  value={g.by ?? ""}
-                  min={todayISO()}
-                  onChange={put("by")}
-                />
-              </label>
-            ) : (
-              <div className={s.goalField}>
-                <span>How often</span>
-                <Select
-                  label="Times a week"
-                  value={String(g.perWeek ?? 3)}
-                  options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({
-                    value: String(n),
-                    label: n === 7 ? "Every day" : `${n}× a week`,
-                  }))}
-                  onChange={(v) => setG((x) => ({ ...x, perWeek: +v }))}
-                />
-              </div>
-            )}
-            {lists.length > 0 && (
-              <div className={s.goalField}>
-                <span>Part of which list</span>
-                <Select
-                  label="List"
-                  value={g.list ?? ""}
-                  options={[
-                    { value: "", label: "No list" },
-                    ...lists.map((l) => ({ value: l.id, label: l.name })),
-                  ]}
-                  onChange={(v) => {
-                    setG((x) => ({ ...x, list: v || undefined }));
-                    if (v) setListId(v);
-                  }}
-                />
-              </div>
-            )}
-          </>
-        )}
-        {step === 1 && (
-          <>
-            <label className={s.goalField}>
-              <span>Why it matters to you</span>
-              <textarea
-                value={g.why ?? ""}
-                onChange={put("why")}
-                maxLength={1000}
-                rows={3}
-                autoFocus
-                placeholder="So I have energy for my kids…"
-              />
-            </label>
-            <label className={s.goalField}>
-              <span>Who you want to become</span>
-              <input
-                value={g.become ?? ""}
-                onChange={put("become")}
-                maxLength={300}
-                placeholder="Someone who finishes what they start"
-              />
-            </label>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <label className={s.goalField}>
-              <span>What could get in the way</span>
-              <input
-                value={g.obstacle ?? ""}
-                onChange={put("obstacle")}
-                maxLength={500}
-                autoFocus
-                placeholder="I'm too tired after work"
-              />
-            </label>
-            <label className={s.goalField}>
-              <span>Then I&apos;ll…</span>
-              <input
-                value={g.plan ?? ""}
-                onChange={put("plan")}
-                maxLength={500}
-                placeholder="do the 10-minute version"
-              />
-            </label>
-            <p className={s.goalHint}>
-              Deciding now what you&apos;ll do then makes it far more likely you
-              will.
-            </p>
-          </>
-        )}
-        {step === 3 && (
-          <>
-            <p className={s.goalHint}>
-              {g.kind === "habit"
-                ? `This becomes a task that repeats ${habitRule(g.perWeek ?? 3)}; change how often in its panel. Keep it small enough to do on a bad day.`
-                : "Make the first one tiny: something you could do in 5 minutes."}
-            </p>
+              <Timer size={14} strokeWidth={2.75} aria-hidden /> Think it through · 2 min
+            </button>
+          ) : (
+            <button type="button" className={s.gdThink} data-on onClick={() => setThink(null)} aria-live="polite">
+              <Timer size={14} strokeWidth={2.75} aria-hidden />
+              {think ? `${Math.floor(think / 60)}:${String(think % 60).padStart(2, "0")} to think` : "Time's up: save when ready"}
+            </button>
+          )}
+        </div>
+        <Extra
+          title="Why it matters"
+          open={open.why}
+          filled={!!(g.why || g.become)}
+          onToggle={() => setOpen((o) => ({ ...o, why: !o.why }))}
+        >
+          <textarea value={g.why ?? ""} onChange={put("why")} maxLength={1000} rows={2} placeholder="So I have energy for my kids…" aria-label="Why it matters to you" />
+          <input value={g.become ?? ""} onChange={put("become")} maxLength={300} placeholder="Who you want to become: someone who finishes what they start" aria-label="Who you want to become" />
+        </Extra>
+        <Extra
+          title="If it gets hard"
+          open={open.plan}
+          filled={!!(g.obstacle || g.plan)}
+          onToggle={() => setOpen((o) => ({ ...o, plan: !o.plan }))}
+        >
+          <div className={s.gdIf}>
+            <span>If</span>
+            <input value={g.obstacle ?? ""} onChange={put("obstacle")} maxLength={500} placeholder="I'm too tired after work" aria-label="What could get in the way" />
+            <span>then I&apos;ll</span>
+            <input value={g.plan ?? ""} onChange={put("plan")} maxLength={500} placeholder="do the 10-minute version" aria-label="Then I'll" />
+          </div>
+          <small>Deciding now what you&apos;ll do then makes it far more likely you will.</small>
+        </Extra>
+        {!editing && (
+          <Extra
+            title={g.kind === "habit" ? "Make it a repeating task" : "First steps"}
+            open={open.steps}
+            filled={steps.some((x) => x.trim())}
+            onToggle={() => setOpen((o) => ({ ...o, steps: !o.steps }))}
+          >
             {(g.kind === "habit" ? steps.slice(0, 1) : steps).map((v, i) => (
               <input
                 key={i}
-                className={s.goalStepInput}
                 value={v}
                 maxLength={500}
-                autoFocus={i === 0}
-                placeholder={
-                  g.kind === "habit"
-                    ? g.title || "Go to the gym"
-                    : ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]
-                }
+                placeholder={g.kind === "habit" ? g.title || "Go to the gym" : ["Put on running shoes", "Walk 10 minutes", "Run 1 km"][i]}
                 aria-label={g.kind === "habit" ? "The habit" : `Step ${i + 1}`}
-                onChange={(e) =>
-                  setSteps((xs) =>
-                    xs.map((x, j) => (j === i ? e.target.value : x)),
-                  )
-                }
+                onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? e.target.value : x)))}
               />
             ))}
-            {lists.length > 0 && (
-              <div className={s.goalField}>
-                <span>Add them to</span>
-                <Select
-                  label="List"
-                  value={listId}
-                  options={lists.map((l) => ({ value: l.id, label: l.name }))}
-                  onChange={setListId}
-                />
-              </div>
-            )}
-          </>
+            <small>
+              {g.kind === "habit"
+                ? `It repeats ${habitRule(g.perWeek ?? 3)}${lists.length ? ` on ${lists.find((l) => l.id === listId)?.name ?? "your list"}` : ""}. Small enough for a bad day.`
+                : `Tiny is good: the first could take 5 minutes.${lists.length ? ` They go on ${lists.find((l) => l.id === listId)?.name ?? "your list"}.` : ""}`}
+            </small>
+          </Extra>
         )}
+
         <div className={s.tools}>
-          {step > 0 && (
-            <button
-              type="button"
-              className={s.ghost}
-              onClick={() => setStep(step - 1)}
-            >
-              Back
-            </button>
-          )}
-          {editing && step < 3 && (
-            <button
-              type="button"
-              className={s.ghost}
-              onClick={() => setStep(step + 1)}
-            >
-              Next: {titles[step + 1].toLowerCase()}
-            </button>
-          )}
-          <button
-            className="btn"
-            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            disabled={!ready}
-          >
-            {editing ? "Save" : step < 3 ? "Next" : "Save goal"}
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!ready}>
+            {editing ? "Save" : "Save goal"}
           </button>
         </div>
       </form>
     </Modal>
+  );
+}
+
+// An optional part of the goal: a sticker that says so, folding open below itself (animated, unless motion is off).
+function Extra({
+  title,
+  open,
+  filled,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  filled: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={s.gdExtra} data-open={open || undefined}>
+      <button type="button" aria-expanded={open} onClick={onToggle}>
+        {filled ? <Check size={16} strokeWidth={3} aria-hidden /> : <Plus size={16} strokeWidth={3} aria-hidden />}
+        <b>{title}</b>
+        <span className={s.gdOptional}>Optional</span>
+        <ChevronDown size={16} strokeWidth={2.75} aria-hidden className={s.gdChevron} />
+      </button>
+      <div className={s.gdBody} inert={!open}>
+        <div>{children}</div>
+      </div>
+    </section>
   );
 }
 
