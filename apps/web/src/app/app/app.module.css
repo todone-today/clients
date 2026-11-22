@@ -8815,3 +8815,75 @@ input.askRowTitle:focus-visible {
     outline-offset: 3px;
   }
 }
+
+/* Share cards (ShareSheet.tsx): the icon on a goal card, and the sheet with the card's preview. */
+.goalShare {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.goalShare:hover {
+  background: var(--lime);
+}
+.shareSheet {
+  display: grid;
+  gap: 0.8rem;
+  width: min(26rem, calc(100vw - 1.5rem));
+}
+.shareSheet:not([open]) {
+  display: none;
+}
+.shareHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.shareHead h2 {
+  font-size: 2rem;
+}
+.shareHead .panelClose {
+  position: static;
+}
+.sharePreview {
+  display: grid;
+  place-items: center;
+  max-height: 58dvh;
+  overflow: hidden;
+}
+.sharePreview canvas {
+  width: auto;
+  max-width: 100%;
+  max-height: 58dvh;
+  border: 2px solid var(--black);
+  box-shadow: var(--lift-sm);
+}
+.sharePreview[data-format="square"] canvas {
+  max-height: 22rem;
+}
+/* See-through: a checkerboard shows what's transparent. */
+.sharePreview[data-overlay] canvas {
+  background: repeating-conic-gradient(#d9d2c4 0 25%, #f3eadb 0 50%) 0 0 / 16px 16px;
+}
+.shareOpts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.shareOverlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.shareOverlay input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--lime);
+}

@@ -1,0 +1,99 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Check, Download, Share2, X } from "lucide-react";
+import { usage } from "@/lib/usage";
+import { type CardFormat, type CardSpec, cardBlob, drawCard } from "./shareCard";
+import s from "./app.module.css";
+
+// A card to share: a preview, Story or square, see-through for laying over a photo (progress cards), then the
+// phone's share sheet (WhatsApp, Instagram…) or Save. Made on this device; nothing is uploaded.
+export function ShareSheet({ spec: first, name, onClose }: { spec: CardSpec; name: string; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [format, setFormat] = useState<CardFormat>("story");
+  const [overlay, setOverlay] = useState(false);
+  const [said, setSaid] = useState("");
+  const spec: CardSpec = first.kind === "progress" ? { ...first, overlay } : first;
+  useEffect(() => {
+    if (!ref.current?.open) ref.current?.showModal();
+    usage({ name: "share_sheet_opened", kind: first.kind });
+  }, [first.kind]);
+  useEffect(() => {
+    if (canvas.current) drawCard(canvas.current, spec, format);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [format, overlay]);
+
+  const file = async () => {
+    const b = canvas.current && (await cardBlob(canvas.current));
+    return b ? new File([b], `todone-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "card"}.png`, { type: "image/png" }) : null;
+  };
+  const save = async () => {
+    const f = await file();
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    Object.assign(document.createElement("a"), { href: url, download: f.name }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    usage({ name: "share_card_exported", kind: first.kind, via: "save" });
+    setSaid("Saved");
+  };
+  const share = async () => {
+    const f = await file();
+    if (!f) return;
+    if (navigator.canShare?.({ files: [f] })) {
+      await navigator.share({ files: [f] }).then(
+        () => (usage({ name: "share_card_exported", kind: first.kind, via: "share" }), setSaid("Shared")),
+        () => {},
+      );
+    } else await save(); // this browser can't hand images to other apps: save it instead
+  };
+  const canShare = typeof navigator !== "undefined" && "share" in navigator;
+
+  return (
+    <dialog ref={ref} className={`${s.goalDialog} ${s.shareSheet}`} aria-label="Share" onClose={onClose}>
+      <header className={s.shareHead}>
+        <h2 className="display">Show it off</h2>
+        <button className={s.panelClose} onClick={() => ref.current?.close()} aria-label="Close" data-tip="Close" data-tip-end>
+          <X size={18} strokeWidth={2.75} />
+        </button>
+      </header>
+      <div className={s.sharePreview} data-format={format} data-overlay={(spec.kind === "progress" && overlay) || undefined}>
+        <canvas ref={canvas} aria-label={`${name}: a card to share`} role="img" />
+      </div>
+      <div className={s.shareOpts}>
+        <div className={s.seg} role="group" aria-label="Shape">
+          {(
+            [
+              ["story", "Story"],
+              ["square", "Square"],
+            ] as const
+          ).map(([k, label]) => (
+            <button key={k} aria-pressed={format === k} onClick={() => setFormat(k)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {first.kind === "progress" && (
+          <label className={s.shareOverlay}>
+            <input type="checkbox" checked={overlay} onChange={(e) => setOverlay(e.target.checked)} /> See-through, for a photo
+          </label>
+        )}
+      </div>
+      <div className={s.tools}>
+        <button className={s.ghost} onClick={save}>
+          <Download size={16} strokeWidth={2.5} aria-hidden /> Save image
+        </button>
+        {canShare && (
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={share}>
+            <Share2 size={16} strokeWidth={2.5} aria-hidden /> Share
+          </button>
+        )}
+      </div>
+      {said && (
+        <p className={s.panelHint} role="status">
+          <Check size={14} strokeWidth={3} aria-hidden /> {said}
+        </p>
+      )}
+    </dialog>
+  );
+}

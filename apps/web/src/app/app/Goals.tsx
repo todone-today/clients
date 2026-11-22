@@ -10,6 +10,7 @@ import {
   Gift,
   Plus,
   Repeat,
+  Share2,
   Sparkles,
   Target,
   Timer,
@@ -39,6 +40,9 @@ import { type Suggested, suggest, suggested } from "@/lib/onboard";
 import { Tip } from "./Tip";
 import { GoalTemplates, RewardTemplates } from "./Templates";
 import { AskBar } from "./AskBar";
+import { ShareSheet } from "./ShareSheet";
+import type { CardSpec } from "./shareCard";
+import { recap } from "@/lib/recap";
 import { GOAL_TEMPLATES, REWARD_TEMPLATES, asGoal } from "@/lib/templates";
 import s from "./app.module.css";
 
@@ -263,6 +267,8 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
   // `true` for a blank goal, or a suggestion to start from.
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false); // the templates, before the dialog
+  const [recapping, setRecapping] = useState(false); // this week's recap card
+  const me = useMe();
   const goals = items.filter((i): i is Goal => i.t === "goal");
   // Drag a goal onto another to put it before or after it.
   const dropGoal = useDrop("goals", {
@@ -346,6 +352,9 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
           >
             <Plus size={16} strokeWidth={2.75} aria-hidden /> New goal
           </button>
+          <button className={s.ghost} onClick={() => setRecapping(true)}>
+            <Share2 size={15} strokeWidth={2.5} aria-hidden /> My week
+          </button>
         </div>
       </div>
       {!goals.length && <GoalStart onPick={(p) => setMaking(p)} onBrowse={() => setPicking(true)} />}
@@ -404,6 +413,19 @@ export function Goals({ onOpen, ai }: { onOpen: (listId: string) => void; ai: bo
             ))}
           </ul>
         </>
+      )}
+      {recapping && (
+        <ShareSheet
+          spec={{
+            kind: "recap",
+            r: recap(
+              items.filter((i): i is Win => i.t === "win" && (i.by ?? undefined) === me),
+              new Date(),
+            ),
+          }}
+          name="My week"
+          onClose={() => setRecapping(false)}
+        />
       )}
       {/* The bar: name a goal (the dialog opens to finish it), or ask todone to suggest some. */}
       <AskBar place="goals" ai={ai} onAdd={(title) => setMaking({ title })} />
@@ -492,6 +514,7 @@ function GoalCard({
   const [reflecting, setReflecting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false); // asking what happens to its tasks
+  const [sharing, setSharing] = useState<CardSpec | null>(null);
   const p = goalProgress(goal, tasks, items);
   // Its tasks (a repeating one made from it, or ones linked to it), by list.
   const mine = (t: Task) => t.goal === goal.id;
@@ -593,6 +616,14 @@ function GoalCard({
       )}
 
       <footer>
+        <button
+          className={s.goalShare}
+          onClick={() => setSharing(goalCard(goal, p))}
+          aria-label={`Share ${goal.title}`}
+          data-tip="Show it off"
+        >
+          <Share2 size={15} strokeWidth={2.5} aria-hidden />
+        </button>
         {goal.kind === "outcome" && !goal.done && (
           <button
             className={`btn ${s.claim}`}
@@ -664,11 +695,74 @@ function GoalCard({
               ...(reflection ? { reflection } : {}),
             }));
             setReflecting(false);
+            // Reached: the moment to show it off.
+            setSharing(goalCard({ ...goal, done: Date.now() }, p));
           }}
         />
       )}
+      {sharing && <ShareSheet spec={sharing} name={goal.title} onClose={() => setSharing(null)} />}
     </li>
   );
+}
+
+// A goal as a share card: reached, a "done" card with the weeks it took as a grid; still going, its progress the way
+// its kind counts it.
+function goalCard(goal: Goal, p: Progress): CardSpec {
+  const fill = fillFor(goal.id);
+  const unit = goal.unit ? ` ${goal.unit}` : "";
+  const active = p.weeks.filter((w) => w.n > 0).length;
+  if (goal.done)
+    return {
+      kind: "win",
+      eyebrow: "Goal reached",
+      title: goal.title,
+      line: `${active} active week${active === 1 ? "" : "s"}${p.total ? ` · ${p.done} of ${p.total} steps` : ""}`,
+      grid: p.weeks.map((w) => w.n),
+      fill,
+    };
+  if (goal.kind === "target")
+    return {
+      kind: "progress",
+      title: goal.title,
+      big: `${Math.round(p.towards * 100)}%`,
+      label: `of the way to ${fmt(goal.target ?? 0)}${unit}`,
+      frac: p.towards,
+      sub: `${p.current === undefined ? "Just started" : `${fmt(p.current)}${unit} now`}${goal.by ? ` · by ${shortDay(goal.by)}` : ""}`,
+      fill,
+      overlay: false,
+    };
+  if (goal.kind === "daily")
+    return {
+      kind: "progress",
+      title: goal.title,
+      big: fmt(p.today),
+      label: `${goal.unit || "done"} today`,
+      frac: goal.target ? p.today / goal.target : 0,
+      sub: `Every day: ${fmt(goal.target ?? 0)}${unit} · hit ${p.daysHit} day${p.daysHit === 1 ? "" : "s"} this week`,
+      fill,
+      overlay: false,
+    };
+  if (goal.kind === "habit")
+    return {
+      kind: "progress",
+      title: goal.title,
+      big: `${p.thisWeek}/${goal.perWeek ?? 1}`,
+      label: "this week",
+      frac: p.thisWeek / (goal.perWeek ?? 1),
+      sub: `Showed up ${active} of the last ${p.weeks.length} weeks`,
+      fill,
+      overlay: false,
+    };
+  return {
+    kind: "progress",
+    title: goal.title,
+    big: `${p.done}/${p.total}`,
+    label: "steps done",
+    frac: p.total ? p.done / p.total : 0,
+    sub: goal.by ? `By ${shortDay(goal.by)}` : "One step at a time",
+    fill,
+    overlay: false,
+  };
 }
 
 type Progress = ReturnType<typeof goalProgress>;
@@ -1273,6 +1367,7 @@ export function Rewards({ ai }: { ai: boolean }) {
   const me = useMe();
   const [picking, setPicking] = useState(false);
   const [history, setHistory] = useState(false); // everything earned and claimed, in a dialog
+  const [sharingClaim, setSharingClaim] = useState(""); // a claimed treat, as a card
   // A template adds the reward, priced in tasks like yours (tap it to change); "my own" goes to the bar to type it.
   const fill = (t?: { title: string; size: number }) => {
     setPicking(false);
@@ -1320,7 +1415,7 @@ export function Rewards({ ai }: { ai: boolean }) {
           ],
     );
     setClaimed(r.title);
-    setTimeout(() => setClaimed(""), 2500);
+    setTimeout(() => setClaimed(""), 8000); // long enough to tap "Show it off"
   };
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const ready = rewards.filter((r) => xp >= r.cost);
@@ -1449,8 +1544,28 @@ export function Rewards({ ai }: { ai: boolean }) {
       {claimed && (
         <p className={s.goalCheer} role="status">
           <Gift size={20} strokeWidth={2.5} aria-hidden /> Enjoy: {claimed}. You
-          earned it.
+          earned it.{" "}
+          <button className={s.link} onClick={() => setSharingClaim(claimed)}>
+            Show it off
+          </button>
         </p>
+      )}
+      {sharingClaim && (
+        <ShareSheet
+          spec={(() => {
+            const week = recap(mine, new Date());
+            return {
+              kind: "win" as const,
+              eyebrow: "Treat earned",
+              title: sharingClaim,
+              line: `${week.done} thing${week.done === 1 ? "" : "s"} done this week paid for it.`,
+              grid: week.perDay,
+              fill: "var(--pink)",
+            };
+          })()}
+          name={sharingClaim}
+          onClose={() => setSharingClaim("")}
+        />
       )}
       {editingReward && (
         <RewardDialog

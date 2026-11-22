@@ -9,7 +9,10 @@ export type UsageEvent =
   | { name: "task_created"; via: "typed" | "ask" | "idea"; n?: number }
   | { name: "task_done" }
   | { name: "list_created" }
-  | { name: "ask_used"; via: "typed" | "voice" };
+  | { name: "ask_used"; via: "typed" | "voice" }
+  // Share cards (the card's kind, and whether it went to the share sheet or was saved: never what's on it).
+  | { name: "share_sheet_opened"; kind: "win" | "progress" | "recap" }
+  | { name: "share_card_exported"; kind: "win" | "progress" | "recap"; via: "share" | "save" };
 
 export function usage({ name, ...props }: UsageEvent) {
   if (!KEY || typeof window === "undefined") return;
