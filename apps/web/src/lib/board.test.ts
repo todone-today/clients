@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { board } from "./board.ts";
-import { parse } from "@todone/sdk/tasks";
+import { ALL, type View, board } from "./board.ts";
+import { type Task, parse } from "@todone/sdk/tasks";
 
 const ts = parse(
   "- [ ] b late 📅 2026-10-30\n- [x] a done\n- [ ] c today ⏱ 2h 📅 2026-10-31\n- [ ] d\n  - [ ] step late 📅 2026-10-01\n- [ ] e ⏱ 15m\n",
@@ -57,4 +57,19 @@ test("a pasted list becomes one idea per line, without list marks", async () => 
     "Gym",
     "plain line",
   ]);
+});
+
+test("views: status, when and priority, and a note shows if one of its steps fits", () => {
+  const ts = [
+    { id: "1", title: "a", done: true, sub: [] },
+    { id: "2", title: "b", done: false, due: "2026-11-02", at: "09:00", pri: 1, sub: [] },
+    { id: "3", title: "c", done: false, due: "2026-11-20", sub: [] },
+    { id: "4", title: "d", done: false, sub: [{ id: "5", title: "e", done: false, due: "2026-10-31", sub: [] }] },
+  ] as Task[];
+  const v = (o: Partial<View>): View => ({ ...ALL, id: "v", ...o });
+  assert.equal(names(board(ts, ALL, "mine", "2026-10-31")), "abcd");
+  assert.equal(names(board(ts, v({ status: "open", when: "week" }), "mine", "2026-10-31")), "bd");
+  assert.equal(names(board(ts, v({ when: "timed" }), "mine", "2026-10-31")), "b");
+  assert.equal(names(board(ts, v({ high: true }), "mine", "2026-10-31")), "b");
+  assert.equal(names(board(ts, v({ status: "done" }), "mine", "2026-10-31")), "a");
 });

@@ -1167,7 +1167,7 @@ function LogHistory({ goal, p }: { goal: Goal; p: Progress }) {
   );
 }
 
-function Modal({
+export function Modal({
   label,
   onClose,
   children,

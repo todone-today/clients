@@ -40,7 +40,8 @@ import { Confetti } from "@/components/Confetti";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
-import { SHOWS, SORTS, type Show, type Sort, board } from "@/lib/board";
+import { ALL, SORTS, type Sort, type View, board } from "@/lib/board";
+import { Views } from "./Views";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
@@ -1083,7 +1084,8 @@ function ListView({
     if (focus) setSelected(focus.id);
   }
   const me = authClient.useSession().data?.user.id;
-  const [show, setShow] = useState<Show>("open");
+  const [show, setShow] = useState<View>(ALL); // the view the board shows (Views.tsx)
+  const DONE: View = { ...ALL, id: "done", name: "Done", status: "done" };
   // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held. A pin
   // lasts while you're on this list: it folds again on a refresh or another list.
   const [pinned, setPinned] = useState(false);
@@ -1524,18 +1526,8 @@ function ListView({
 
           {list.tasks.length > 0 && (
             <div className={s.boardBar} data-tour="filters">
-              <div className={s.seg} role="group" aria-label="Show">
-                {SHOWS.map(([k, name]) => (
-                  <button
-                    key={k}
-                    aria-pressed={show === k}
-                    onClick={() => setShow(k)}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-              {show === "done" && list.tasks.some((t) => t.done) && (
+              <Views view={show} onView={setShow} tasks={list.tasks} today={today} nowMin={nowMin} />
+              {show.status === "done" && list.tasks.some((t) => t.done) && (
                 // Finished tasks (and their steps) go to the Bin for 7 days; the undo bar can put them back.
                 <button
                   className={s.clearDone}
@@ -1561,8 +1553,8 @@ function ListView({
                     <SquareCheckBig size={15} strokeWidth={2.5} aria-hidden /> Select
                   </button>
                 )}
-                <span aria-hidden>Sort</span>
                 <Select
+                  className={s.sortPick}
                   label="Sort"
                   value={sort}
                   options={SORTS.map(([value, label]) => ({ value, label }))}
@@ -1601,27 +1593,27 @@ function ListView({
                 );
                 return gap.place === "before" ? [slot, note] : [note, slot];
               })}
-              {show === "open" && list.tasks.some((t) => waiting(t, today) && !upcoming(t, today)) && (
+              {show.status === "open" && list.tasks.some((t) => waiting(t, today) && !upcoming(t, today)) && (
                 <li className={s.noMatch}>
                   {(() => {
                     const n = list.tasks.filter((t) => waiting(t, today) && !upcoming(t, today)).length;
                     return `${n} repeating task${n === 1 ? " comes" : "s come"} back on ${n === 1 ? "its" : "their"} day. `;
                   })()}
-                  <button className={s.link} onClick={() => setShow("all")}>
+                  <button className={s.link} onClick={() => setShow(ALL)}>
                     Show
                   </button>
                 </li>
               )}
               {!board(list.tasks, show, sort, today, nowMin).length &&
                 !list.tasks.some((t) => waiting(t, today)) &&
-                (show === "open" && c.all > 0 && c.done === c.all ? (
+                (show.status !== "done" && c.all > 0 && c.done === c.all ? (
                   // Everything on the list is ticked: say so, properly, instead of "nothing here".
                   <li className={s.listDone} role="status">
                     <Confetti />
                     <p className="display">All done.</p>
                     <p>
                       Every task on {list.name} is ticked. Add the next one in the bar below, or{" "}
-                      <button className={s.link} onClick={() => setShow("done")}>
+                      <button className={s.link} onClick={() => setShow(DONE)}>
                         look back at what you did
                       </button>
                       .
@@ -1630,7 +1622,7 @@ function ListView({
                 ) : (
                   <li className={s.noMatch}>
                     No tasks here.{" "}
-                    <button className={s.link} onClick={() => setShow("all")}>
+                    <button className={s.link} onClick={() => setShow(ALL)}>
                       Show all
                     </button>
                   </li>

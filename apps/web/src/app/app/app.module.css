@@ -9195,3 +9195,88 @@ input.askRowTitle:focus-visible {
   margin-top: 0.5rem;
   overflow: auto;
 }
+
+/* The board's views: tabs in one bordered bar, then a + to make another. */
+.views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+.views > button {
+  min-height: 2.25rem;
+  padding: 0 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+.views > button[aria-selected="true"] {
+  color: var(--black);
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.views > .viewAdd {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  padding: 0;
+  border-style: dashed;
+}
+.viewForm {
+  display: grid;
+  gap: 1rem;
+}
+.viewForm h2 {
+  padding-right: 3rem;
+  font-size: 2rem;
+}
+.viewField {
+  display: grid;
+  gap: 0.4rem;
+}
+.viewField > span {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.viewChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.viewChips button {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.viewChips button[aria-checked="true"] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+}
+/* Select and Sort, on the right of the views: the same height and keyline as the tabs. */
+.sortBy .selectBtn,
+.sortPick > button {
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+.sortPick {
+  width: auto;
+}
+@media (pointer: coarse) {
+  .views > button,
+  .sortBy .selectBtn,
+  .sortPick > button {
+    min-height: 2.75rem;
+  }
+  .views > .viewAdd {
+    width: 2.75rem;
+  }
+}
