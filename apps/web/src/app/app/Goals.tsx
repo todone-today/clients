@@ -137,6 +137,20 @@ export function ListGoals({ list }: { list: List }) {
   const [making, setMaking] = useState<boolean | Partial<Goal>>(false);
   const [picking, setPicking] = useState(false);
   const [logging, setLogging] = useState<string | null>(null); // the goal whose log box is open
+  // The log box closes on a tap anywhere outside its goal, or on Esc.
+  useEffect(() => {
+    if (!logging) return;
+    const away = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.(`[data-goal-box="${logging}"]`)) setLogging(null);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setLogging(null);
+    addEventListener("pointerdown", away);
+    addEventListener("keydown", esc);
+    return () => {
+      removeEventListener("pointerdown", away);
+      removeEventListener("keydown", esc);
+    };
+  }, [logging]);
   const [viewing, setViewing] = useState<Goal | null>(null);
   // Drop tasks on a goal's note to link them to it: they become its milestones (or count toward the habit).
   const dropOnGoal = useDrop("goal-notes", {
@@ -175,7 +189,7 @@ export function ListGoals({ list }: { list: List }) {
         return (
           // One line per goal. Tapping it logs: a habit checks in for today, a number or amount opens the log box,
           // milestones (ticked as tasks) show the goal. The eye shows the goal here; the arrow goes to it in Goals.
-          <div key={g.id} className={s.goalPillBox}>
+          <div key={g.id} className={s.goalPillBox} data-goal-box={g.id}>
             <div
               className={s.goalPill}
               {...dropOnGoal(g.id)}
