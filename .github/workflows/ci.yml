@@ -51,27 +51,44 @@ jobs:
           vercel deploy --prod --yes --token="$VERCEL_TOKEN"
 
   deploy-app:
-    # main -> app.todone.today on Fly.io (todone-app: the static app plus Caddy, which passes /api to todone-api).
-    # Skipped until FLY_API_TOKEN is set. NEXT_PUBLIC_* are public keys, kept as repository variables.
+    # main -> app.todone.today: the app built as static files and copied to the VPS, where the server repo's Caddy
+    # serves them next to the API (/root/todone/app-static). Build files are kept, not deleted, so a page still open
+    # from the last version finds its files. Skipped until VPS_SSH_KEY is set. NEXT_PUBLIC_* are public keys, kept as
+    # repository variables.
     if: github.event_name == 'push'
     needs: [web]
     runs-on: ubuntu-latest
     env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_HOST_KEY: ${{ secrets.VPS_HOST_KEY }}
+      VPS: ${{ vars.VPS_HOST }}
     defaults:
       run:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-        if: env.FLY_API_TOKEN != ''
-      - name: Deploy to Fly
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Build and copy to the VPS
+        env:
+          TARGET: app
+          GIT_SHA: ${{ github.sha }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
         run: |
-          if [ -z "$FLY_API_TOKEN" ]; then
-            echo "::warning::FLY_API_TOKEN secret is not set; skipping the app's deploy"
+          if [ -z "$VPS_SSH_KEY" ]; then
+            echo "::warning::VPS_SSH_KEY secret is not set; skipping the app's deploy"
             exit 0
           fi
-          flyctl deploy --config fly/fly.toml --dockerfile fly/Dockerfile --remote-only \
-            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
-            --build-arg NEXT_PUBLIC_POSTHOG_KEY="${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}" \
-            --build-arg GIT_SHA="${GITHUB_SHA}"
+          npm ci
+          npx next build
+          rm -rf out-app/landing out-app/onboarding.mp4 out-app/onboarding.jpg
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+          # Build files first (new ones beside the old), then the pages that point at them.
+          rsync -az out-app/_next/ root@"$VPS":/root/todone/app-static/_next/
+          rsync -az --delete --exclude /_next/ out-app/ root@"$VPS":/root/todone/app-static/

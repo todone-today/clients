@@ -6,8 +6,8 @@ const { version } = JSON.parse(readFileSync(new URL("./package.json", import.met
 // One codebase, two builds:
 // - the website (todone.today, on Vercel): landing pages, docs, and pages shared by link. Its route files are
 //   page.tsx, layout.tsx…
-// - the app (TARGET=app: app.todone.today, on Fly.io): your lists, as static files Caddy serves next to the API
-//   (fly/). Its route files are page.app.tsx, layout.app.tsx, manifest.app.ts, so each build sees only its own.
+// - the app (TARGET=app: app.todone.today, on the VPS): your lists, as static files the server repo's Caddy serves
+//   next to the API. Its route files are page.app.tsx and layout.app.tsx, so each build sees only its own.
 const app = process.env.TARGET === "app";
 const dev = process.env.NODE_ENV !== "production";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.todone.today";
@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
     : { cacheComponents: true, partialPrefetching: true }),
   skipTrailingSlashRedirect: true, // PostHog's /ingest calls end in a slash
   ...(app
-    ? {} // the app's headers are in fly/Caddyfile
+    ? {} // the app's headers are in the server repo's Caddyfile
     : {
         // Browser hardening for every page: no framing (clickjacking), no MIME sniffing, HTTPS only, a tight
         // referrer, no camera or location, and the microphone only for todone's own pages.
