@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef } from "react";
 import {
   Anchor,
   Bike,
@@ -133,62 +133,59 @@ export const ListIcon = ({
     "aria-hidden": true,
   });
 
-// The icon in a list's header: click it to choose another.
-export function IconPick({
+// The icons to choose from, as a small card at (x, y) on screen (the sidebar opens it by the list you clicked).
+// Closes on a pick, a click elsewhere, or Esc.
+export function IconGrid({
   id,
   name,
   icon,
+  at,
   onPick,
+  onClose,
 }: {
   id: string;
   name: string;
   icon?: string;
+  at: { x: number; y: number };
   onPick: (icon: string) => void;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const current = iconName(id, name, icon);
   useEffect(() => {
-    if (!open) return;
-    const away = (e: PointerEvent) =>
-      !box.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    addEventListener("pointerdown", away);
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && onClose();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    // On the next tick, so the click that opened it doesn't close it.
+    const t = setTimeout(() => addEventListener("pointerdown", away));
     addEventListener("keydown", esc);
     return () => {
+      clearTimeout(t);
       removeEventListener("pointerdown", away);
       removeEventListener("keydown", esc);
     };
-  }, [open]);
+  }, [onClose]);
   return (
-    <div className={s.iconPick} ref={box}>
-      <button
-        className={s.iconNow}
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-label="Choose this list's icon"
-        title="Choose an icon"
-      >
-        <ListIcon id={id} name={name} icon={icon} size={22} />
-      </button>
-      {open && (
-        <div className={s.iconGrid} role="listbox" aria-label="List icons">
-          {Object.entries(ICONS).map(([key, Icon]) => (
-            <button
-              key={key}
-              role="option"
-              aria-selected={current === key}
-              aria-label={key}
-              onClick={() => {
-                onPick(key);
-                setOpen(false);
-              }}
-            >
-              <Icon size={18} strokeWidth={2.5} aria-hidden />
-            </button>
-          ))}
-        </div>
-      )}
+    <div
+      ref={box}
+      className={s.iconGrid}
+      role="listbox"
+      aria-label={`Icon for ${name}`}
+      style={{ position: "fixed", top: at.y, left: at.x }}
+    >
+      {Object.entries(ICONS).map(([key, Icon]) => (
+        <button
+          key={key}
+          role="option"
+          aria-selected={current === key}
+          aria-label={key}
+          onClick={() => {
+            onPick(key);
+            onClose();
+          }}
+        >
+          <Icon size={18} strokeWidth={2.5} aria-hidden />
+        </button>
+      ))}
     </div>
   );
 }

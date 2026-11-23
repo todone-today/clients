@@ -7,7 +7,7 @@ import { setTour, tourDue } from "@/lib/onboard";
 import { Intro } from "./Intro";
 import { Training } from "./Training";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Target,
   ListChecks,
@@ -67,7 +67,7 @@ import { changeGoals, useGoalItems } from "./goalStore";
 import { api } from "@/lib/api";
 import { fold, reconcile, type Goal, type GoalItem } from "@todone/sdk/goals";
 import { GOAL_PRESET, type GoalPreset, joinGoal, linksChanged, shareFor, takeInvite, useGoalLinks } from "./goalLinks";
-import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
+import { IconGrid, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
@@ -219,6 +219,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [drawer, setDrawer] = useState(false);
   // Desktop: the sidebar can fold away for more room for notes; remembered in this browser.
   const [slim, setSlim] = useState(false);
+  // The icon picker, opened by clicking the list you're on in the sidebar (where on screen it shows).
+  const [iconFor, setIconFor] = useState<{ id: string; x: number; y: number } | null>(null);
+  const closeIcons = useCallback(() => setIconFor(null), []);
   useEffect(() => {
     try {
       const saved = localStorage.getItem("todone:slim");
@@ -814,10 +817,16 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                     className={s.listBtn}
                     aria-current={!panel && l.id === list?.id}
                     style={{ "--list": listColor(l.id) } as React.CSSProperties}
-                    onClick={() => open(l.id)}
+                    onClick={(e) => {
+                      // The list you're on, clicked again: choose its icon.
+                      if (!panel && l.id === list?.id) {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setIconFor({ id: l.id, x: r.left, y: r.bottom + 6 });
+                      } else open(l.id);
+                    }}
                     {...dropOnList(l.id)}
                     {...draggable({ kind: "list", id: l.id }, l.name)}
-                    data-tip={l.name}
+                    data-tip={!panel && l.id === list?.id ? "Choose an icon" : l.name}
                   >
                     <span>
                       <ListIcon id={l.id} name={l.name} icon={l.icon} />{" "}
@@ -830,6 +839,31 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             })}
           </ul>
         )}
+        {/* Folded to icons: a + under the lists opens the sidebar on "New list". */}
+        <button
+          className={`${s.listBtn} ${s.newListPlus}`}
+          onClick={() => {
+            toggleSlim();
+            setTimeout(() => document.getElementById("new-list")?.focus(), 250);
+          }}
+          aria-label="New list"
+          data-tip="New list"
+        >
+          <Plus size={18} strokeWidth={2.75} aria-hidden />
+        </button>
+        {iconFor && lists?.find((l) => l.id === iconFor.id) && (() => {
+          const l = lists.find((x) => x.id === iconFor.id)!;
+          return (
+            <IconGrid
+              id={l.id}
+              name={l.name}
+              icon={l.icon}
+              at={iconFor}
+              onPick={(icon) => update(l.id, (x) => ({ ...x, icon }))}
+              onClose={closeIcons}
+            />
+          );
+        })()}
         <div className={s.sideTools}>
           <NewList
             onAdd={(name) => open(add(name))}
@@ -1439,12 +1473,7 @@ function ListView({
         {/* First row: the list's icon, its lock and its name. Click the name to rename; Enter or clicking away saves,
             Esc cancels. */}
         <div className={s.nameRow} style={{ "--list": listColor(list.id) } as React.CSSProperties}>
-          <IconPick
-            id={list.id}
-            name={list.name}
-            icon={list.icon}
-            onPick={(icon) => update(list.id, (l) => ({ ...l, icon }))}
-          />
+          {/* The lock, a little sticker on the name's corner: click it for the encryption switch. */}
           <Privacy list={list} update={update} />
         {renaming ? (
           <>

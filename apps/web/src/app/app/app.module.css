@@ -3504,7 +3504,7 @@ input.stick[data-custom][aria-invalid="true"] {
     padding: 1rem 0.55rem;
     overflow-x: hidden;
   }
-  .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools),
+  .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools, .newListPlus),
   .shell[data-slim] .sideTools > :not(.binBtn, .allBtn, .sortBtn, .import, .feedbackLink),
   .shell[data-slim] .side .label,
   .shell[data-slim] .side .open {
@@ -10902,4 +10902,66 @@ input.askRowTitle:focus-visible {
    actions parked beside each task on a phone, a card thrown off the side. Clipped, so sticky bits still stick. */
 .main {
   overflow-x: clip;
+}
+
+/* Folded sidebar: + under the lists, for a new list (it opens the sidebar). Hidden when the sidebar is open, where
+   "New list" itself is. */
+.newListPlus {
+  display: none;
+}
+.shell[data-slim] .newListPlus {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--ink-2);
+  border: 2px dashed var(--hair);
+}
+.shell[data-slim] .newListPlus:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+/* The list's lock: a little tilted sticker on the corner of its name (like a task's). */
+.nameRow {
+  position: relative;
+}
+.nameRow > .privacyBox {
+  position: absolute;
+  top: -0.85rem;
+  left: -1rem;
+  z-index: 3;
+}
+.nameRow > .privacyBox > .privacy {
+  width: 2.1rem;
+  height: 2.1rem;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  rotate: -12deg;
+}
+.nameRow > .privacyBox > .privacy[data-plain] {
+  background: var(--butter);
+}
+
+/* Phones, adding: the bar opens at the top, under the top bar, where the on-screen keyboard can never cover it
+   (the bottom of the screen is the keyboard's, and phones don't reliably say how tall it is). The page dims a little
+   behind it. */
+@media (max-width: 760px) {
+  body[data-adding] .dock,
+  body[data-adding][data-kb] .dock {
+    top: calc(env(safe-area-inset-top) + 4.4rem);
+    bottom: auto;
+    z-index: 80;
+  }
+  body[data-adding] .dock .askBar {
+    animation: addDown 0.22s var(--ease) both;
+    box-shadow: var(--lift), 0 0 0 100vmax rgb(11 11 11 / 0.35);
+  }
+}
+@keyframes addDown {
+  from {
+    translate: 0 -1.5rem;
+    opacity: 0;
+  }
 }
