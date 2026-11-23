@@ -41,7 +41,7 @@ export default function Cookies() {
             <td>
               <code>better-auth.state</code> and similar
             </td>
-            <td>Protects a GitHub or Google sign-in while it happens.</td>
+            <td>Protects a Google or Discord sign-in while it happens.</td>
             <td>Minutes</td>
           </tr>
         </tbody>

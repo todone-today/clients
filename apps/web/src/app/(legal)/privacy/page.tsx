@@ -246,7 +246,7 @@ export default function Privacy() {
           each payment for tax law. Your lists never go anywhere near billing.
         </li>
         <li>
-          Google, GitHub or Discord, if you sign in with them: they confirm who you are and share your name, email and
+          Google or Discord, if you sign in with them: they confirm who you are and share your name, email and
           picture. They never see your lists, which stay locked with your unlock passphrase. Google again if you connect
           Google Calendar.
         </li>

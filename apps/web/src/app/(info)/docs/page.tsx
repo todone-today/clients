@@ -36,7 +36,7 @@ export default function Docs() {
       <h1 className="display">Guide</h1>
       <p className={s.lead}>
         Everything todone does, in one page. Want to try it?{" "}
-        <Link href={`${APP}/?new=1`}>Sign up free</Link>: it takes a minute, with Google, GitHub or Discord.
+        <Link href={`${APP}/?new=1`}>Sign up free</Link>: it takes a minute, with Google or Discord.
       </p>
       <nav aria-label="On this page">
         <ul>
@@ -50,8 +50,8 @@ export default function Docs() {
 
       <h2 id="start">Getting started</h2>
       <p>
-        <Link href={`${APP}/login`}>Make an account</Link> with your email, Google,
-        GitHub or Discord. Your first visit asks two things: what you want
+        <Link href={`${APP}/login`}>Make an account</Link> with your email, Google
+        or Discord. Your first visit asks two things: what you want
         more of in life, and what&apos;s on your plate now. Ask todone turns
         your answers into your first list and some ideas in Brainstorm (skip
         it to start with an empty list). A four-step tour follows; take it
