@@ -9807,3 +9807,150 @@ input.askRowTitle:focus-visible {
 .panelFields label:focus-within > b {
   display: none;
 }
+
+/* ---------- Install gate (phones, in the browser): the app is installed first ---------- */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow-y: auto;
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  background: var(--butter);
+}
+.gateBody {
+  display: grid;
+  gap: 1rem;
+  max-width: 26rem;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: calc(1.5rem + env(safe-area-inset-top)) 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+  align-content: center;
+}
+.gateBody h1 {
+  font-size: clamp(2.4rem, 11vw, 3.2rem);
+  line-height: 0.95;
+}
+.gateLead {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.gateGo {
+  --fill: var(--lime);
+  min-height: 3.2rem;
+  font-size: 1.1rem;
+}
+.gateSkip {
+  justify-self: center;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+}
+.gate .sheetSteps li {
+  cursor: pointer;
+  transition:
+    background 0.25s var(--ease),
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+.gate .sheetSteps li[data-on] {
+  background: var(--lime);
+  box-shadow: 3px 3px 0 var(--black);
+  transform: translate(-2px, -2px);
+}
+/* The little phone acting out the step being shown. */
+.gatePhone {
+  justify-self: center;
+  width: 9.5rem;
+  height: 12rem;
+  padding: 0.45rem;
+  background: var(--black);
+  border-radius: 1.4rem;
+  box-shadow: 5px 5px 0 rgb(11 11 11 / 0.35);
+}
+.gateScreen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #fff8ef;
+  border-radius: 1rem;
+}
+.gateBar {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.6rem;
+  font-style: normal;
+  font-weight: 700;
+  background: #ece3d3;
+}
+.gateBar[data-top] {
+  inset: 0 0 auto;
+}
+.gateBar [data-hot],
+.gateMenu [data-hot] {
+  border-radius: 0.3rem;
+  animation: gateTap 1.2s var(--ease) infinite;
+}
+.gateMenu {
+  position: absolute;
+  inset: auto 0.35rem 2.2rem;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: #fff;
+  border: 1.5px solid var(--black);
+  border-radius: 0.5rem;
+  animation: gdIn 0.3s var(--ease) both;
+}
+.gateMenu:not([data-ios]) {
+  inset: 2.1rem 0.35rem auto auto;
+  width: 7rem;
+}
+.gateMenu span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.35rem;
+}
+.gateMenu span[data-hot] {
+  background: var(--lime);
+}
+.gateIcon {
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  background: var(--lime);
+  border: 1.5px solid var(--black);
+  border-radius: 0.5rem;
+}
+@keyframes gateTap {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(212 240 74 / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(181 214 30 / 0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gateBar [data-hot],
+  .gateMenu [data-hot] {
+    animation: none;
+    outline: 2px solid var(--black);
+  }
+}

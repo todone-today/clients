@@ -72,6 +72,7 @@ import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
+import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
 import { useSwipeNav } from "./swipeDrawer";
 import { Search } from "./Search";
@@ -152,6 +153,8 @@ const count = (ts: Task[], today = todayISO()) => {
 
 // `demo`: the app on sample lists with no account (todone.today/demo); changes stay in this tab.
 export function TodoApp({ demo = false }: { demo?: boolean }) {
+  // Phones in the browser: the app is installed first (or let in for this visit), so the gate shows instead.
+  const gate = useInstallGate();
   const router = useRouter();
   const {
     data: session,
@@ -577,6 +580,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setTouring(false);
     if (userId) setTour(userId, false);
   };
+  if (gate && !demo) return gate;
   return (
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
       <Welcome />
