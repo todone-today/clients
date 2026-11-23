@@ -3621,7 +3621,7 @@ input.stick[data-custom][aria-invalid="true"] {
   .panelBack {
     animation: fadeIn 0.15s ease both;
   }
-  .panel {
+  .panelFrame {
     animation: popIn 0.28s var(--ease) both;
   }
 }
@@ -10105,5 +10105,53 @@ input.askRowTitle:focus-visible {
   .focusTools :global(.btn) {
     justify-content: center;
     padding-inline: 0.5rem;
+  }
+}
+
+/* The task panel in a frame, so its encryption sticker can sit across the top-left corner (outside the scrolling
+   panel), turned 45°. On a phone the panel fills the screen: the sticker sits small at the top instead. */
+.panelFrame {
+  position: relative;
+  width: min(42rem, 100%);
+}
+.panelFrame > .panel {
+  width: 100%;
+}
+.privacyTag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  translate: -50% -50%;
+  rotate: -45deg;
+  pointer-events: none;
+}
+.privacyTag[data-shared] {
+  background: var(--butter);
+}
+@media (max-width: 640px) {
+  .panelFrame {
+    width: 100%;
+  }
+  .privacyTag {
+    top: 0.7rem;
+    left: 1rem;
+    translate: none;
+    rotate: -4deg;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.62rem;
   }
 }

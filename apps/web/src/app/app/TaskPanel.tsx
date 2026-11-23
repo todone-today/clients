@@ -187,6 +187,12 @@ export function TaskPanel({
       className={s.panelBack}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
+      <div className={s.panelFrame}>
+        {/* Encrypted or not, said on a little sticker slapped across the corner of the task. */}
+        <span className={s.privacyTag} data-shared={shared || undefined} role="note">
+          {shared ? <LockOpen size={13} strokeWidth={2.75} aria-hidden /> : <Lock size={13} strokeWidth={2.75} aria-hidden />}
+          {shared ? "Shared, not encrypted" : "End-to-end encrypted"}
+        </span>
       <aside
         className={s.panel}
         role="dialog"
@@ -310,25 +316,6 @@ export function TaskPanel({
         </header>
 
         {!top && <p className={s.panelHint}>A step of a task.</p>}
-        {/* Encrypted or not, as a lock or an open lock; the tooltip says which. */}
-        <span
-          className={s.privacyLine}
-          data-shared={shared || undefined}
-          role="img"
-          tabIndex={0}
-          aria-label={
-            shared ? "Not encrypted: shared by link" : "End-to-end encrypted"
-          }
-          data-tip={
-            shared ? "Not encrypted: shared by link" : "End-to-end encrypted"
-          }
-        >
-          {shared ? (
-            <LockOpen size={16} strokeWidth={2.5} aria-hidden />
-          ) : (
-            <Lock size={16} strokeWidth={2.5} aria-hidden />
-          )}
-        </span>
 
         {/* Day, time, how long, effort, priority, repeat, goal: compact stickers, each marked by its icon. */}
         <div className={s.panelFields}>
@@ -587,6 +574,7 @@ export function TaskPanel({
           />
         )}
       </aside>
+      </div>
     </div>
   );
 }
