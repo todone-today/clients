@@ -245,7 +245,7 @@ export function ListGoals({ list }: { list: List }) {
       </button>
       {viewing && (
         // The goal as it is on the Goals page, without leaving this list.
-        <Modal label={viewing.title} onClose={() => setViewing(null)}>
+        <Modal label={viewing.title} onClose={() => setViewing(null)} bare>
           <ul className={s.goalGrid}>
             <GoalCard
               goal={items.find((i): i is Goal => i.t === "goal" && i.id === viewing.id) ?? viewing}
@@ -1227,10 +1227,12 @@ export function Modal({
   label,
   onClose,
   children,
+  bare,
 }: {
   label: string;
   onClose: () => void;
   children: React.ReactNode;
+  bare?: boolean; // a card that is its own window (no yellow frame round it), the × just off its corner
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -1240,6 +1242,7 @@ export function Modal({
     <dialog
       ref={ref}
       className={s.goalDialog}
+      data-bare={bare || undefined}
       aria-label={label}
       onClose={onClose}
     >
