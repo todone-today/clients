@@ -925,9 +925,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         ) : panel === "members" && orgId ? (
           <Members key={orgId} />
         ) : panel === "integrations" ? (
-          <Integrations key={orgId} />
+          <Integrations key={orgId} onBack={() => show("account")} />
         ) : panel === "account" ? (
-          <Account />
+          <Account onIntegrations={() => show("integrations")} />
 
         ) : !lists ? null : list ? (
           <ListView

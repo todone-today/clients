@@ -10,6 +10,7 @@ import { forget } from "@/lib/store";
 import { type KeyState, keyState, recoverPassphrase, setupWithPassphrase, unlockWithSecret } from "@/lib/vault";
 import s from "@/app/login/login.module.css";
 import { PasswordInput } from "@/components/PasswordInput";
+import { SITE } from "@/lib/urls";
 
 // Signed in, but this browser doesn't hold your keys yet. What opens them depends on the account:
 // - "setup": just signed up with Google, GitHub or Discord, so you choose an unlock passphrase (it encrypts your
@@ -118,8 +119,8 @@ export function Unlock({ userId, email, onDone }: { userId: string; email: strin
           )}
           {setup && (
             <p className={s.fine}>
-              By continuing you confirm you&apos;re 18 or older and agree to the <Link href="/terms">Terms</Link> and{" "}
-              <Link href="/privacy">Privacy Policy</Link>.
+              By continuing you confirm you&apos;re 18 or older and agree to the <Link href={`${SITE}/terms`}>Terms</Link> and{" "}
+              <Link href={`${SITE}/privacy`}>Privacy Policy</Link>.
             </p>
           )}
           {err && (

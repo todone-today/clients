@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy, KeyRound, Plug, Plus, Settings, UserMinus } from "lucide-react";
+import { Copy, KeyRound, Plus, Settings, UserMinus } from "lucide-react";
 import { Select } from "@/components/Select";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -65,14 +65,6 @@ export function Workspaces({
           <Settings size={16} strokeWidth={2.5} /> Team settings
         </button>
       )}
-      <button
-        className={s.ghost}
-        aria-pressed={panel === "integrations"}
-        onClick={() => onPanel(panel === "integrations" ? null : "integrations")}
-        data-tour="integrations"
-      >
-        <Plug size={16} strokeWidth={2.5} /> Integrations
-      </button>
       {creating && (
         <form
           className={s.newList}

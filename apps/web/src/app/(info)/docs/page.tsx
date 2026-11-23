@@ -243,7 +243,7 @@ export default function Docs() {
 
       <h2 id="integrations">Integrations</h2>
       <p>
-        Each workspace has its own, under <b>Integrations</b>:
+        Each workspace has its own: open <b>Account</b> (your picture, top right), then <b>Open integrations</b>.
       </p>
       <ul>
         <li>

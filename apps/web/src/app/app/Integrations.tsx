@@ -52,7 +52,7 @@ const ago = (t: number) => {
 };
 
 // One dropdown of services; each shows how it connects and which way it syncs.
-export function Integrations() {
+export function Integrations({ onBack }: { onBack: () => void }) {
   const [st, setSt] = useState<State | null>(null);
   const [pick, setPick] = useState<Key | null>(null);
   const [msg, setMsg] = useState("");
@@ -119,6 +119,9 @@ export function Integrations() {
   return (
     <>
       <div className={s.listHead}>
+        <button className={s.link} onClick={onBack}>
+          ← Account
+        </button>
         <h1 className={`display ${s.title}`}>Integrations</h1>
         <p className={s.progress}>
           {off

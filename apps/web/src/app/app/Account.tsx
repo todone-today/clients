@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Feedback } from "./Feedback";
 import { useRouter } from "next/navigation";
-import { Download, KeyRound, LogOut } from "lucide-react";
+import { ArrowRight, Download, KeyRound, LogOut, Plug } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { toCSV } from "@todone/sdk/export";
@@ -13,9 +13,11 @@ import { exportData } from "./actions";
 import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from "@/lib/vault";
 import { Billing } from "./Billing";
 import { save } from "@/lib/export";
+import { SITE } from "@/lib/urls";
 import s from "./app.module.css";
 
-export function Account() {
+// Your account and settings. Integrations (Google Calendar, Notion…) belong to the workspace, and open from here.
+export function Account({ onIntegrations }: { onIntegrations: () => void }) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [hasPassword, setHasPassword] = useState(true);
@@ -68,6 +70,14 @@ export function Account() {
       </div>
 
       <section className={s.integration}>
+        <h2>Integrations</h2>
+        <p>Google Calendar, Notion, Obsidian and more, for this workspace.</p>
+        <button className={s.ghost} onClick={onIntegrations}>
+          <Plug size={16} strokeWidth={2.5} aria-hidden /> Open integrations <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
+        </button>
+      </section>
+
+      <section className={s.integration}>
         <h2>Your name</h2>
         <form
           className={s.add}
@@ -87,7 +97,7 @@ export function Account() {
           </button>
         </form>
         <p>
-          To change your email, write to us. <Link href="/privacy">Privacy Policy</Link> · <Link href="/terms">Terms</Link>
+          To change your email, write to us. <Link href={`${SITE}/privacy`}>Privacy Policy</Link> · <Link href={`${SITE}/terms`}>Terms</Link>
         </p>
       </section>
 
@@ -172,7 +182,7 @@ export function Account() {
       <p className={s.fine}>
         todone v{process.env.NEXT_PUBLIC_VERSION}
         {process.env.NEXT_PUBLIC_COMMIT ? ` (${process.env.NEXT_PUBLIC_COMMIT})` : ""} ·{" "}
-        <Link href="/changelog">What&rsquo;s new</Link>
+        <Link href={`${SITE}/changelog`}>What&rsquo;s new</Link>
       </p>
     </>
   );
