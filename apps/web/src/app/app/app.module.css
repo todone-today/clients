@@ -10708,3 +10708,78 @@ input.askRowTitle:focus-visible {
   height: 26vh;
   background: linear-gradient(to top, var(--go), transparent);
 }
+
+/* Phones, Instagram-style: one rounded floating bar, five icons evenly spaced, no labels. Lists, Calendar, a round +
+   in the middle (straight to the add bar), Goals, Rewards. The page you're on sits in a soft pill of its colour. */
+.tabs .tabAdd {
+  display: none;
+}
+@media (max-width: 760px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: center;
+    justify-items: center;
+    padding: 0.35rem 0.5rem;
+    border-radius: 999px;
+  }
+  .tabs .tabName {
+    display: none;
+  }
+  .tabs button,
+  .tabs[data-small] button {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    min-height: 2.9rem;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    box-shadow: none;
+    outline: none;
+    transform: none;
+  }
+  .tabs button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .tabs button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .tabs button[aria-pressed="true"] {
+    color: var(--black);
+    background: var(--tab);
+    outline: none;
+    transform: none;
+    box-shadow: none;
+  }
+  .tabs .tabAdd {
+    display: grid;
+    width: 3.1rem;
+    height: 3.1rem;
+    min-height: 0;
+    color: var(--black);
+    background: var(--lime);
+    border: 2.5px solid var(--black);
+    box-shadow: 2px 2px 0 var(--black);
+  }
+  .tabs .tabAdd:active {
+    translate: 1px 1px;
+    box-shadow: 1px 1px 0 var(--black);
+  }
+}
+/* Computers: the top bar's tabs are plain outlines; only the page you're on is in its colour. */
+@media (min-width: 761px) {
+  .tabs button:not([aria-pressed="true"]) {
+    color: var(--ink);
+    background: transparent;
+    border-color: var(--hair);
+    box-shadow: none;
+  }
+  .tabs button:not([aria-pressed="true"]):hover {
+    border-color: var(--ink);
+  }
+}

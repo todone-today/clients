@@ -7,7 +7,7 @@ import { setTour, tourDue } from "@/lib/onboard";
 import { Intro } from "./Intro";
 import { Training } from "./Training";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   Target,
   ListChecks,
@@ -584,6 +584,13 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setTouring(false);
     if (userId) setTour(userId, false);
   };
+  // The tab bar's +: the add bar of the page you're on, ready to type into (on a page without one, Lists' bar).
+  const addNew = () => {
+    const bar = document.getElementById("ask-bar");
+    if (bar) return bar.focus();
+    setPanel(null);
+    setTimeout(() => document.getElementById("ask-bar")?.focus(), 250);
+  };
   if (gate && !demo) return gate;
   return (
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
@@ -645,23 +652,31 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <nav className={s.tabs} aria-label="Views" data-small={small || undefined}>
           {(
             [
-              [null, "Lists", ListChecks],
-              ["calendar", "Calendar", CalendarDays],
-              ["goals", "Goals", Target],
-              ["rewards", "Rewards", Gift],
+              [null, "Lists", ListChecks, "var(--butter)"],
+              ["calendar", "Calendar", CalendarDays, "var(--cyan)"],
+              ["goals", "Goals", Target, "var(--lime)"],
+              ["rewards", "Rewards", Gift, "var(--pink)"],
             ] as const
-          ).map(([p, name, Icon]) => (
-            <button
-              key={name}
-              aria-pressed={panel === p}
-              onClick={() => setPanel(p)}
-              data-tour={p ?? "lists-tab"}
-              aria-label={name}
-              data-tip={name}
-            >
-              <Icon size={16} strokeWidth={2.5} aria-hidden />{" "}
-              <span className={s.tabName}>{name}</span>
-            </button>
+          ).map(([p, name, Icon, tab], i) => (
+            <Fragment key={name}>
+              {/* Phones: a round + in the middle, Instagram-style: straight to the add bar to type a task. */}
+              {i === 2 && (
+                <button className={s.tabAdd} onClick={addNew} aria-label="Add a task">
+                  <Plus size={24} strokeWidth={3} aria-hidden />
+                </button>
+              )}
+              <button
+                aria-pressed={panel === p}
+                onClick={() => setPanel(p)}
+                data-tour={p ?? "lists-tab"}
+                aria-label={name}
+                data-tip={name}
+                style={{ "--tab": tab } as React.CSSProperties}
+              >
+                <Icon size={16} strokeWidth={2.5} aria-hidden />{" "}
+                <span className={s.tabName}>{name}</span>
+              </button>
+            </Fragment>
           ))}
         </nav>
         <p className={s.local} role="status">
