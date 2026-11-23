@@ -3,7 +3,11 @@ import Link from "next/link";
 import { NAME } from "@/lib/brand";
 import s from "../legal.module.css";
 
-export const metadata: Metadata = { title: "Cookie Policy" };
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  alternates: { canonical: "/cookies" },
+  description: "The few cookies todone uses, all needed to sign you in. No tracking cookies, so no banner.",
+};
 
 // Only what the app needs to work, so there's nothing to opt in or out of and no banner.
 export default function Cookies() {

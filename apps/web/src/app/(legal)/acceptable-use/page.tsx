@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { CONTACT, NAME } from "@/lib/brand";
 import s from "../legal.module.css";
 
-export const metadata: Metadata = { title: "Acceptable Use Policy" };
+export const metadata: Metadata = {
+  title: "Acceptable Use Policy",
+  alternates: { canonical: "/acceptable-use" },
+  description: "What you can't use todone for.",
+};
 
 export default function AcceptableUse() {
   return (

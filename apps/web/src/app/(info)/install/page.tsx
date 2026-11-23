@@ -5,6 +5,7 @@ import s from "../../(legal)/legal.module.css";
 export const metadata: Metadata = {
   title: "Get todone on your phone",
   description: "Install todone on iPhone, Android or your computer, and turn on reminders.",
+  alternates: { canonical: "/install" },
 };
 
 // No app store needed: todone installs from the browser, works offline, and sends reminders once installed.

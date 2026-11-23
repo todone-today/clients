@@ -979,14 +979,28 @@ const PLACES = [
 
 export function Hardware() {
   const [at, setAt] = useState(0);
+  // three.js is big: it loads once the section is about to scroll into view, not with the page.
+  const stage = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && (setNear(true), io.disconnect()), { rootMargin: "600px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const [, name, shot, title, line] = PLACES[at];
   const goal = GOALS.find((g) => g.key === PLACES[at][0])!;
   return (
     <div className={s.hwStudio}>
-      <figure className={s.hwStage} role="tabpanel" aria-label={name}>
-        <Device3D key={PLACES[at][0]} place={PLACES[at][0] as "desk" | "fridge" | "bag"} label={shot.alt} />
-        <figcaption className={s.conceptTag}>Concept, not a product · drag to turn</figcaption>
-      </figure>
+      <div ref={stage} className={s.hwStage} role="tabpanel" aria-label={name}>
+        {near ? (
+          <Device3D key={PLACES[at][0]} place={PLACES[at][0] as "desk" | "fridge" | "bag"} label={shot.alt} />
+        ) : (
+          <div className="device3d" />
+        )}
+        <p className={s.conceptTag}>Concept, not a product · drag to turn</p>
+      </div>
       <div className={s.hwSide}>
         <div className={s.places} role="tablist" aria-label="Where it lives">
           {PLACES.map(([k, label, , where], i) => (

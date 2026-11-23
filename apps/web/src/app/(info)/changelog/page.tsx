@@ -4,6 +4,7 @@ import s from "../../(legal)/legal.module.css";
 export const metadata: Metadata = {
   title: "Changelog",
   description: "What's new in todone.",
+  alternates: { canonical: "/changelog" },
 };
 
 // Newest first. Add an entry when something people notice ships; keep it in their words, not the code's.

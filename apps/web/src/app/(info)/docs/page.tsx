@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Guide",
   description:
     "How todone works: lists, stickers, the calendar, teams and integrations.",
+  alternates: { canonical: "/docs" },
 };
 
 const SECTIONS = [

@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     "Sticky-note to-dos, a calendar, goals and Ask todone, which turns your day into tasks in any language. End-to-end encrypted, and it works offline.",
   // Added to an iPhone's Home Screen it opens as its own app, named todone (the icon is app/apple-icon.png).
   appleWebApp: { capable: true, title: NAME },
+  robots: { index: false, follow: false }, // the website (todone.today) is what search engines should find
   // The app on a phone's home screen (public/manifest.webmanifest), which iOS needs before it allows push.
   manifest: "/manifest.webmanifest",
 };

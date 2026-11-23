@@ -3,7 +3,11 @@ import { Suspense } from "react";
 import { History } from "./History";
 import { Status } from "./Status";
 
-export const metadata: Metadata = { title: "Status", description: "Is todone up?" };
+export const metadata: Metadata = {
+  title: "Status",
+  description: "Is todone up?",
+  alternates: { canonical: "/status" },
+};
 
 export default function StatusPage() {
   return (

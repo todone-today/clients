@@ -3,7 +3,11 @@ import Link from "next/link";
 import { CONTACT, NAME, OPERATOR, REPO } from "@/lib/brand";
 import s from "../legal.module.css";
 
-export const metadata: Metadata = { title: "Terms & Conditions" };
+export const metadata: Metadata = {
+  title: "Terms & Conditions",
+  alternates: { canonical: "/terms" },
+  description: "The terms for using todone.",
+};
 
 export default function Terms() {
   return (

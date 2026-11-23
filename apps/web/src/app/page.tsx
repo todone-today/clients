@@ -9,6 +9,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { JsonLd } from "@/components/JsonLd";
 import { GithubMark } from "@/components/GithubMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LEGAL_DOCS, REPO } from "@/lib/brand";
@@ -41,6 +42,7 @@ const ISSUES = `${REPO}/clients/issues/new/choose`;
 export default function Home() {
   return (
     <>
+      <JsonLd />
       <header className={s.nav}>
         <Link href="/" aria-label="todone home" className={s.mark}>
           <Logo size={30} />

@@ -43,6 +43,13 @@
 		}
 	}
 
+	# The app isn't for search engines (the website is): nothing here gets indexed.
+	handle /robots.txt {
+		respond "User-agent: *
+Disallow: /
+"
+	}
+
 	handle {
 		root * {$SITE_ROOT:/srv}
 		# Build files carry their content's hash in the name: kept forever. Pages and the service worker: always

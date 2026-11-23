@@ -3,7 +3,11 @@ import Link from "next/link";
 import { CONTACT, NAME } from "@/lib/brand";
 import s from "../legal.module.css";
 
-export const metadata: Metadata = { title: "Refund & Cancellation Policy" };
+export const metadata: Metadata = {
+  title: "Refund & Cancellation Policy",
+  alternates: { canonical: "/refunds" },
+  description: "How cancelling and refunds work for todone Plus.",
+};
 
 export default function Refunds() {
   return (

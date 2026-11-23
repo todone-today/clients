@@ -3,7 +3,11 @@ import Link from "next/link";
 import { CONTACT, NAME, OPERATOR } from "@/lib/brand";
 import s from "../legal.module.css";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  alternates: { canonical: "/privacy" },
+  description: "What todone collects, why, and your rights. Your lists are end-to-end encrypted: we can't read them.",
+};
 
 // Also the notice India's Digital Personal Data Protection Act, 2023 asks for: what we collect, why,
 // people's rights, and whom to complain to.
