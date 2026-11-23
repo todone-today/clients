@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { addDays, shiftMonths } from "@todone/sdk/calendar";
+import { addDays, shiftMonths, weekStart } from "@todone/sdk/calendar";
 import { draggable, useDrop } from "@/lib/drag";
 import {
   EFFORTS,
@@ -14,9 +14,10 @@ import s from "./app.module.css";
 const WHEN: [string, string, (today: string) => Partial<Task>][] = [
   ["today", "Today", (d) => ({ due: d })],
   ["tomorrow", "Tomorrow", (d) => ({ due: addDays(d, 1) })],
-  ["week", "Next week", (d) => ({ due: addDays(d, 7) })],
-  ["month", "Next month", (d) => ({ due: shiftMonths(d, 1) })],
-  ["year", "Next year", (d) => ({ due: shiftMonths(d, 12) })],
+  // By the end of: this week (Sunday), this month (its last day), this year (31 December).
+  ["week", "This week", (d) => ({ due: addDays(weekStart(d), 6) })],
+  ["month", "This month", (d) => ({ due: addDays(shiftMonths(`${d.slice(0, 7)}-01`, 1), -1) })],
+  ["year", "This year", (d) => ({ due: `${d.slice(0, 4)}-12-31` })],
 ];
 const PRI: [string, string, (today: string) => Partial<Task>][] = [
   ["p1", "High", () => ({ pri: 1 })],
