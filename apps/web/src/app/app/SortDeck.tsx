@@ -185,6 +185,45 @@ export function SortDeck({
   const going = heading && pull >= 1 ? SWIPE[heading] : null; // let go now and it goes here
   const aim = heading ? SWIPE[heading] : practicing ? LESSONS[lesson].choice : null; // the label that lights up
 
+  // Letting go: thrown if it went far enough, a tap (two quick ones are done) if it barely moved, else back it goes.
+  // Also called when the phone loses the touch (a finger off the screen's edge, a system gesture): the card never
+  // stays stranded.
+  const release = () => {
+    if (!start.current) return;
+    const moved = drag && Math.hypot(drag.x, drag.y) > 10;
+    start.current = null;
+    if (going) return choose(going);
+    setDrag(null);
+    if (moved) return;
+    const now = Date.now();
+    if (now - lastTap.current < 320) {
+      lastTap.current = 0;
+      choose("done");
+    } else lastTap.current = now;
+  };
+  const cancel = () => {
+    start.current = null;
+    setDrag(null);
+  };
+  // A touch that ends anywhere (not just on the card) ends the drag.
+  const ends = useRef({ release, cancel });
+  useEffect(() => {
+    ends.current = { release, cancel };
+  });
+  useEffect(() => {
+    const up = () => ends.current.release();
+    const off = () => ends.current.cancel();
+    addEventListener("pointerup", up);
+    addEventListener("pointercancel", off);
+    addEventListener("blur", off);
+    return () => {
+      removeEventListener("pointerup", up);
+      removeEventListener("pointercancel", off);
+      removeEventListener("blur", off);
+    };
+  }, []);
+
+
   // What a card shows: why it's here, the task, its list and steps.
   const face = (c: Card) => (
     <>
@@ -293,24 +332,23 @@ export function SortDeck({
                   } as React.CSSProperties
                 }
                 onPointerDown={(e) => {
-                  if ((e.target as Element).closest("button")) return;
+                  if ((e.target as Element).closest("button") || start.current) return;
                   start.current = { x: e.clientX, y: e.clientY };
-                  e.currentTarget.setPointerCapture(e.pointerId);
+                  e.currentTarget.setPointerCapture?.(e.pointerId);
                 }}
-                onPointerMove={(e) => start.current && setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y })}
-                onPointerUp={() => {
-                  const moved = drag && Math.hypot(drag.x, drag.y) > 10;
-                  start.current = null;
-                  if (going) return choose(going);
-                  setDrag(null);
-                  if (moved) return;
-                  const now = Date.now();
-                  if (now - lastTap.current < 320) {
-                    lastTap.current = 0;
-                    choose("done");
-                  } else lastTap.current = now;
+                onPointerMove={(e) => {
+                  if (!start.current) return;
+                  // Kept mostly on screen while held: at most about half the screen in any direction.
+                  const cx = innerWidth * 0.55;
+                  const cy = innerHeight * 0.4;
+                  setDrag({
+                    x: Math.max(-cx, Math.min(cx, e.clientX - start.current.x)),
+                    y: Math.max(-cy, Math.min(cy, e.clientY - start.current.y)),
+                  });
                 }}
-                onPointerCancel={() => ((start.current = null), setDrag(null))}
+                onPointerUp={release}
+                onPointerCancel={cancel}
+                onLostPointerCapture={() => start.current && release()}
               >
                 {face(card)}
                 {/* Where it's going, unmissable: the card fills with that place's colour and its name grows across it. */}

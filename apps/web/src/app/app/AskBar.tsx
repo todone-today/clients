@@ -48,6 +48,11 @@ export function AskBar({
     <form
       data-tour="ask"
       className={s.askBar}
+      // Phones: the bar shows only while adding (the tab bar's + opens it); it goes once you leave it empty.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null) && !text.trim() && !talk.on)
+          delete document.body.dataset.adding;
+      }}
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim()) return;

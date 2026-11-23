@@ -10783,3 +10783,32 @@ input.askRowTitle:focus-visible {
     border-color: var(--ink);
   }
 }
+
+/* Phones: the add bar stays out of the way of the tab bar until the round + brings it up (body[data-adding]), focused;
+   it goes again when left empty. A list's Bin shows only while a task is being dragged. */
+@media (max-width: 760px) {
+  body:not([data-adding]) .dock .askBar,
+  body:not([data-adding]) .dock > .askBar {
+    display: none;
+  }
+  body:not(.is-dragging) .dock.askDock .bin {
+    display: none;
+  }
+  body[data-adding] .dock .askBar {
+    animation: sheetUp 0.22s var(--ease) both;
+  }
+  .dockSpot {
+    margin-top: 0.5rem;
+  }
+}
+/* Sorting on a phone: the area round the card is all for throwing it: no page scroll, text selection or long-press
+   menu starting there. */
+.sortArena {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sortCard {
+  -webkit-touch-callout: none;
+}

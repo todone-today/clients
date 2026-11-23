@@ -586,6 +586,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   };
   // The tab bar's +: the add bar of the page you're on, ready to type into (on a page without one, Lists' bar).
   const addNew = () => {
+    document.body.dataset.adding = "1"; // phones: the add bar comes up (it's tucked away otherwise)
     const bar = document.getElementById("ask-bar");
     if (bar) return bar.focus();
     setPanel(null);
