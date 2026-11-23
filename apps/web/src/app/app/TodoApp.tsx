@@ -33,6 +33,7 @@ import {
   CheckCheck,
   SquareCheckBig,
   X,
+  Layers,
   LayoutGrid,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -73,6 +74,7 @@ import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
 import { Dock } from "./Dock";
+import { SortDeck, toSort } from "./SortDeck";
 import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
 import { useSwipeNav } from "./swipeDrawer";
@@ -619,6 +621,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
                 ? "Bin"
                 : panel === "all"
                   ? "All lists"
+                  : panel === "sort"
+                    ? "Sort"
                 : panel === "integrations"
                   ? "Integrations"
                   : panel === "account"
@@ -814,6 +818,18 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             taken={(n) => !!lists?.some((l) => l.name === n)}
             full={plan.gated && (lists?.filter((l) => !l.kind).length ?? 0) >= plan.listLimit}
           />
+          {/* Sort: late and undated tasks from every list, one card at a time (SortDeck.tsx). */}
+          <button
+            className={`${s.listBtn} ${s.ideasBtn} ${s.sortBtn}`}
+            aria-current={panel === "sort"}
+            onClick={() => show("sort")}
+            data-tip="Sort tasks into days"
+          >
+            <span>
+              <Layers size={16} strokeWidth={2.5} aria-hidden /> <span className={s.label}>Sort</span>
+            </span>
+            <span className={s.open}>{toSort(sorted, todayISO()) || ""}</span>
+          </button>
           <button
             className={`${s.listBtn} ${s.ideasBtn} ${s.allBtn}`}
             aria-current={panel === "all"}
@@ -918,6 +934,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
           lists && <Rewards ai={askAi} />
         ) : panel === "ideas" ? (
           lists && <Brainstorm lists={lists} add={add} update={update} ai={askAi} />
+        ) : panel === "sort" ? (
+          lists && <SortDeck key={orgId} lists={sorted} update={update} onDone={() => show(null)} />
         ) : panel === "all" ? (
           lists && <AllLists lists={sorted} update={update} onOpen={open} />
         ) : panel === "bin" ? (

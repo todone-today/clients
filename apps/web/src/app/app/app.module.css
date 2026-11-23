@@ -3505,7 +3505,7 @@ input.stick[data-custom][aria-invalid="true"] {
     overflow-x: hidden;
   }
   .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools),
-  .shell[data-slim] .sideTools > :not(.binBtn, .allBtn, .import, .feedbackLink),
+  .shell[data-slim] .sideTools > :not(.binBtn, .allBtn, .sortBtn, .import, .feedbackLink),
   .shell[data-slim] .side .label,
   .shell[data-slim] .side .open {
     display: none;
@@ -10185,5 +10185,191 @@ input.askRowTitle:focus-visible {
   }
   .calDays .day {
     min-height: 4.5rem;
+  }
+}
+
+/* ---------- Sort: one card at a time ---------- */
+.sortBtn {
+  margin-top: auto;
+}
+.sortBtn + .allBtn {
+  margin-top: 0;
+}
+.sortPage {
+  display: grid;
+  justify-items: center;
+}
+.sortPage > .listHead {
+  justify-self: stretch;
+}
+.deck {
+  position: relative;
+  display: grid;
+  width: min(30rem, 100%);
+  margin: 0.5rem 0 1.5rem;
+}
+.deckNext,
+.sortCard {
+  grid-area: 1 / 1;
+}
+.deckNext {
+  z-index: 0;
+  background: var(--fill);
+  border: var(--key);
+  filter: saturate(0.6) brightness(0.92);
+  rotate: 3deg;
+  translate: 0.6rem 0.6rem;
+}
+.sortCard {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  min-height: min(26rem, 55dvh);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  color: var(--black);
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  background: var(--fill);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -1deg;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    translate 0.25s var(--ease),
+    rotate 0.25s var(--ease);
+  animation: gdIn 0.25s var(--ease) both;
+}
+.sortCard[data-dragging] {
+  cursor: grabbing;
+  transition: none;
+}
+.sortCard h2 {
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+}
+.sortWhy {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #fff8ef;
+  border: 2px solid var(--black);
+}
+.sortMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-weight: 800;
+}
+.sortHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4a4540;
+}
+/* The stamp a drag shows, like the apps it borrows from: where the card will go if you let go. */
+.sortStamp {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--display);
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--lime);
+  border: 3px solid var(--black);
+  rotate: 12deg;
+}
+.sortCard[data-dir="left"] .sortStamp {
+  right: auto;
+  left: 1.25rem;
+  rotate: -12deg;
+  background: #fff8ef;
+}
+.sortCard[data-dir="up"] .sortStamp {
+  background: var(--butter);
+}
+.sortCard[data-dir="down"] .sortStamp {
+  background: var(--cyan);
+}
+.sortButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(40rem, 100%);
+}
+.sortButtons :global(.btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 3rem;
+}
+.sortSmall {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+.sortSmall:disabled {
+  opacity: 0.35;
+}
+.sortEnd {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  margin-top: 3rem;
+  text-align: center;
+}
+.sortEnd > .display {
+  font-size: clamp(2.4rem, 8vw, 4rem);
+}
+.sortEnd > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+@media (max-width: 760px) {
+  .sortCard {
+    min-height: min(20rem, 42dvh);
+  }
+  .sortButtons {
+    display: grid;
+    grid-template-columns: 3rem 1fr 1fr 3rem;
+  }
+  .sortButtons :global(.btn) {
+    justify-content: center;
+    padding-inline: 0.4rem;
+  }
+  /* Undo and Later on the left, Done on the right; the day buttons two by two between. */
+  .sortButtons > :nth-child(1) { grid-area: 1 / 1; }
+  .sortButtons > :nth-child(2) { grid-area: 2 / 1; }
+  .sortButtons > :nth-child(3) { grid-area: 1 / 2; }
+  .sortButtons > :nth-child(4) { grid-area: 1 / 3; }
+  .sortButtons > :nth-child(5) { grid-area: 2 / 2; }
+  .sortButtons > :nth-child(6) { grid-area: 2 / 3; }
+  .sortButtons > :nth-child(7) { grid-area: 1 / 4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sortCard {
+    animation: none;
+    transition: none;
   }
 }
