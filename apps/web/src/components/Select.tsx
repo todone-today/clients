@@ -29,7 +29,9 @@ export function Select({
   const box = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const current = options.find((o) => o.value === value);
+  // Nothing chosen and a placeholder given: the placeholder shows (e.g. "Priority"), and the list still offers "None".
+  const empty = value === "" && !!placeholder;
+  const current = empty ? undefined : options.find((o) => o.value === value);
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +79,7 @@ export function Select({
   };
 
   return (
-    <div className={`${s.select} ${className ?? ""}`} ref={box}>
+    <div className={`${s.select} ${className ?? ""}`} ref={box} data-empty={empty || undefined}>
       <button
         ref={button}
         type="button"

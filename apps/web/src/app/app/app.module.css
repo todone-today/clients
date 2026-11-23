@@ -9740,3 +9740,64 @@ input.askRowTitle:focus-visible {
     transition: none;
   }
 }
+
+/* A task's details, calm when empty: a dashed outline with the field's name in plain words ("Add a day",
+   "Priority"), like the other "add" chips. Once set, the sticker fills with its colour. Date and time open their
+   picker from anywhere on the field, with no browser icon or dd/mm/yyyy mask showing. */
+.panelFields input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.panelFields label {
+  cursor: pointer;
+}
+.panelFields [data-empty] input,
+.panelFields .panelSelect[data-empty] > button {
+  color: var(--ink-2);
+  background: transparent;
+  border: 2px dashed var(--ink-2);
+  box-shadow: none;
+}
+.panelFields [data-empty] input::placeholder {
+  color: var(--ink-2);
+  opacity: 1;
+}
+.panelFields [data-empty] > span,
+.panelFields .panelField:has(.panelSelect[data-empty]) > span {
+  color: var(--ink-2);
+}
+.panelFields [data-empty] input:hover,
+.panelFields [data-empty] input:focus-visible,
+.panelFields .panelSelect[data-empty] > button:hover,
+.panelFields .panelSelect[data-empty] > button[aria-expanded="true"] {
+  color: var(--ink);
+  border-style: solid;
+  border-color: var(--ink);
+  box-shadow: none;
+}
+.panelFields [data-empty] input::-webkit-datetime-edit {
+  opacity: 0;
+}
+.panelFields [data-empty] input:focus-visible::-webkit-datetime-edit {
+  opacity: 1;
+}
+.panelFields label > b {
+  position: absolute;
+  top: 50%;
+  left: 2rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  text-transform: none;
+  letter-spacing: 0;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+.panelFields label:focus-within > b {
+  display: none;
+}

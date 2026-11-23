@@ -199,7 +199,11 @@ export function TaskPanel({
         onDrop={(e) => {
           if (!e.dataTransfer.files.length) return;
           e.preventDefault();
-          dispatchEvent(new CustomEvent<File[]>(NOTE_FILES, { detail: Array.from(e.dataTransfer.files) }));
+          dispatchEvent(
+            new CustomEvent<File[]>(NOTE_FILES, {
+              detail: Array.from(e.dataTransfer.files),
+            }),
+          );
         }}
       >
         <header className={s.panelHead}>
@@ -243,14 +247,20 @@ export function TaskPanel({
                   className={s.panelClose}
                   onClick={async () => {
                     if (!shareToken) return;
-                    await navigator.clipboard.writeText(`${location.origin}/t/${shareToken}`).catch(() => {});
+                    await navigator.clipboard
+                      .writeText(`${location.origin}/t/${shareToken}`)
+                      .catch(() => {});
                     setCopied(true);
                   }}
                   disabled={!shareToken}
                   aria-label={copied ? "Link copied" : "Copy link"}
                   data-tip={copied ? "Link copied" : "Copy link"}
                 >
-                  {copied ? <Check size={19} strokeWidth={3} /> : <Share2 size={19} strokeWidth={2.5} />}
+                  {copied ? (
+                    <Check size={19} strokeWidth={3} />
+                  ) : (
+                    <Share2 size={19} strokeWidth={2.5} />
+                  )}
                 </button>
                 <button
                   className={s.panelClose}
@@ -265,7 +275,11 @@ export function TaskPanel({
             ) : (
               <button
                 className={s.panelClose}
-                onClick={() => (gated ? needsPlan("Sharing comes with Plus.") : setAsking(true))}
+                onClick={() =>
+                  gated
+                    ? needsPlan("Sharing comes with Plus.")
+                    : setAsking(true)
+                }
                 disabled={!!busy}
                 aria-label={gated ? "Share (needs Plus)" : "Share"}
                 data-tip={gated ? "Share (needs Plus)" : "Share"}
@@ -301,19 +315,31 @@ export function TaskPanel({
           data-shared={shared || undefined}
           role="img"
           tabIndex={0}
-          aria-label={shared ? "Not encrypted: shared by link" : "End-to-end encrypted"}
-          data-tip={shared ? "Not encrypted: shared by link" : "End-to-end encrypted"}
+          aria-label={
+            shared ? "Not encrypted: shared by link" : "End-to-end encrypted"
+          }
+          data-tip={
+            shared ? "Not encrypted: shared by link" : "End-to-end encrypted"
+          }
         >
-          {shared ? <LockOpen size={16} strokeWidth={2.5} aria-hidden /> : <Lock size={16} strokeWidth={2.5} aria-hidden />}
+          {shared ? (
+            <LockOpen size={16} strokeWidth={2.5} aria-hidden />
+          ) : (
+            <Lock size={16} strokeWidth={2.5} aria-hidden />
+          )}
         </span>
 
         {/* Day, time, how long, effort, priority, repeat, goal: compact stickers, each marked by its icon. */}
         <div className={s.panelFields}>
-          <label>
+          <label
+            data-empty={!task.due || undefined}
+            style={{ "--tone": "var(--butter)" } as React.CSSProperties}
+          >
             <span data-tip="Day">
               <CalendarDays size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">Day</i>
             </span>
+            {!task.due && <b aria-hidden>Add a day</b>}
             <input
               type="date"
               value={task.due ?? ""}
@@ -326,22 +352,30 @@ export function TaskPanel({
               }
             />
           </label>
-          <label>
-            <span data-tip="Time">
-              <Clock size={15} strokeWidth={2.5} aria-hidden />
-              <i className="sr-only">Time</i>
-            </span>
-            <input
-              type="time"
-              step={900}
-              disabled={!task.due}
-              value={task.at ?? ""}
-              onChange={(e) =>
-                edit((t) => ({ ...t, at: e.target.value || undefined }))
-              }
-            />
-          </label>
-          <label>
+          {task.due && (
+            <label
+              data-empty={!task.at || undefined}
+              style={{ "--tone": "var(--butter)" } as React.CSSProperties}
+            >
+              <span data-tip="Time">
+                <Clock size={15} strokeWidth={2.5} aria-hidden />
+                <i className="sr-only">Time</i>
+              </span>
+              {!task.at && <b aria-hidden>Add a time</b>}
+              <input
+                type="time"
+                step={900}
+                value={task.at ?? ""}
+                onChange={(e) =>
+                  edit((t) => ({ ...t, at: e.target.value || undefined }))
+                }
+              />
+            </label>
+          )}
+          <label
+            data-empty={!task.est || undefined}
+            style={{ "--tone": "var(--cyan)" } as React.CSSProperties}
+          >
             <span data-tip="How long">
               <Timer size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">How long</i>
@@ -349,7 +383,7 @@ export function TaskPanel({
             <input
               key={`est${task.est}`}
               defaultValue={task.est ? fmtMinutes(task.est) : ""}
-              placeholder="45m"
+              placeholder="How long?"
               onBlur={(e) => {
                 const m = e.target.value.trim()
                   ? parseMinutes(e.target.value)
@@ -360,7 +394,10 @@ export function TaskPanel({
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
             />
           </label>
-          <div className={s.panelField}>
+          <div
+            className={s.panelField}
+            style={{ "--tone": "var(--orange)" } as React.CSSProperties}
+          >
             <span data-tip="Effort">
               <Dumbbell size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">Effort</i>
@@ -368,6 +405,7 @@ export function TaskPanel({
             <Select
               className={s.panelSelect}
               label="Effort"
+              placeholder="Effort"
               value={task.effort ?? ""}
               options={[
                 { value: "", label: "None" },
@@ -384,7 +422,10 @@ export function TaskPanel({
               }
             />
           </div>
-          <div className={s.panelField}>
+          <div
+            className={s.panelField}
+            style={{ "--tone": "var(--pink)" } as React.CSSProperties}
+          >
             <span data-tip="Priority">
               <Flag size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">Priority</i>
@@ -392,6 +433,7 @@ export function TaskPanel({
             <Select
               className={s.panelSelect}
               label="Priority"
+              placeholder="Priority"
               value={String(task.pri ?? "")}
               options={[
                 { value: "", label: "None" },
@@ -404,7 +446,10 @@ export function TaskPanel({
               }
             />
           </div>
-          <div className={s.panelField}>
+          <div
+            className={s.panelField}
+            style={{ "--tone": "var(--lime)" } as React.CSSProperties}
+          >
             <span data-tip="Repeat">
               <Repeat size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">Repeat</i>
@@ -412,6 +457,7 @@ export function TaskPanel({
             <Select
               className={s.panelSelect}
               label="Repeat"
+              placeholder="Repeat"
               value={task.rep ?? ""}
               options={[
                 { value: "", label: "Never" },
@@ -426,7 +472,10 @@ export function TaskPanel({
               onChange={(v) => edit((t) => ({ ...t, rep: v || undefined }))}
             />
           </div>
-          <div className={s.panelField}>
+          <div
+            className={s.panelField}
+            style={{ "--tone": "var(--peri)" } as React.CSSProperties}
+          >
             <span data-tip="Goal">
               <Target size={15} strokeWidth={2.5} aria-hidden />
               <i className="sr-only">Goal</i>
@@ -434,6 +483,7 @@ export function TaskPanel({
             <Select
               className={s.panelSelect}
               label="Goal"
+              placeholder="Goal"
               value={
                 task.goal && goals.some((g) => g.id === task.goal)
                   ? task.goal
@@ -709,13 +759,13 @@ function SharedPart({
   return (
     <>
       {err && (
-          <p className={s.err} role="alert">
-            {err}{" "}
-            <button className={s.ghost} onClick={retry}>
-              Try again
-            </button>
-          </p>
-        )}
+        <p className={s.err} role="alert">
+          {err}{" "}
+          <button className={s.ghost} onClick={retry}>
+            Try again
+          </button>
+        </p>
+      )}
       {view && view.files.length > 0 && (
         <section className={s.panelSection}>
           <h3>Attachments</h3>
@@ -749,8 +799,13 @@ function Notes({
 }) {
   const me = authClient.useSession().data?.user.name || "You";
   // What's typed survives closing the task by accident (lib/drafts.ts).
-  const [text, setTextNow] = useState(() => draft<string>(`note:${task.id}`) ?? "");
-  const setText = (v: string) => (setTextNow(v), keepDraft(`note:${task.id}`, v));
+  const [text, setTextNow] = useState(
+    () => draft<string>(`note:${task.id}`) ?? "",
+  );
+  const setText = (v: string) => (
+    setTextNow(v),
+    keepDraft(`note:${task.id}`, v)
+  );
   const [files, setFiles] = useState<FileRef[]>([]);
   const [busy, setBusy] = useState(0);
   const [err, setErr] = useState("");
