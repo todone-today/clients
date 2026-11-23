@@ -22,6 +22,10 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # The app (app.todone.today): the same code, built as static files.
+      - run: npm run build
+        env:
+          TARGET: app
 
   deploy:
     # main -> production at todone.today. The database is migrated by the server repo's deploy.
@@ -45,3 +49,29 @@ jobs:
           fi
           npm i -g vercel@57
           vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+
+  deploy-app:
+    # main -> app.todone.today on Fly.io (todone-app: the static app plus Caddy, which passes /api to todone-api).
+    # Skipped until FLY_API_TOKEN is set. NEXT_PUBLIC_* are public keys, kept as repository variables.
+    if: github.event_name == 'push'
+    needs: [web]
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: env.FLY_API_TOKEN != ''
+      - name: Deploy to Fly
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::warning::FLY_API_TOKEN secret is not set; skipping the app's deploy"
+            exit 0
+          fi
+          flyctl deploy --config fly/fly.toml --dockerfile fly/Dockerfile --remote-only \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
+            --build-arg NEXT_PUBLIC_POSTHOG_KEY="${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}" \
+            --build-arg GIT_SHA="${GITHUB_SHA}"
