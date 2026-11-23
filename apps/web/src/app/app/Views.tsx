@@ -1,9 +1,9 @@
 "use client";
 
-// The board's views: "All", and any the person saved (a name and the rules it filters by: done or not, date, time,
-// priority, effort, how long). One tab
-// each, and a + to make another. Tap a chosen view again to change or delete it. Kept in this browser.
-import { useState } from "react";
+// The board's views: "All" and "Open" (always there), and any the person saved (a name and the rules it filters by:
+// done or not, date, time, priority, effort, how long). One tab each, and a + to make another. Tap a chosen view
+// again to change or delete it; drag a tab (or Alt+arrow) to move it. Kept in this browser, in the order shown.
+import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { EFFORTS, type Effort, type Task, uid } from "@todone/sdk/tasks";
 import { ALL, type View, WHENS, board } from "@/lib/board";
@@ -11,12 +11,18 @@ import { Modal } from "./Goals";
 import s from "./app.module.css";
 
 const KEY = "todone:views";
+const OPEN: View = { id: "open", name: "Open", status: "open", when: "any" };
+const BUILT_IN = [ALL, OPEN];
+const builtIn = (id: string) => BUILT_IN.some((b) => b.id === id);
+// Saved views, with All and Open in their places (added at the front if missing; a saved "Open" makes way for the real one).
 const load = (): View[] => {
+  let vs: View[] = [];
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+    vs = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+  } catch {}
+  vs = vs.filter((v) => builtIn(v.id) || v.name.trim().toLowerCase() !== "open" || v.status !== "open");
+  const missing = BUILT_IN.filter((b) => !vs.some((v) => v.id === b.id));
+  return [...missing, ...vs.map((v) => BUILT_IN.find((b) => b.id === v.id) ?? v)];
 };
 
 export function Views({
@@ -32,25 +38,69 @@ export function Views({
   today: string;
   nowMin: number;
 }) {
-  const [views, setViews] = useState<View[]>(() => (typeof localStorage === "undefined" ? [] : load()));
+  const [views, setViews] = useState<View[]>(() => (typeof localStorage === "undefined" ? BUILT_IN : load()));
   const [editing, setEditing] = useState<View | null>(null);
+  const [held, setHeld] = useState<string | null>(null); // the tab being dragged
+  const drag = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null);
   const keep = (vs: View[]) => {
     setViews(vs);
     try {
       localStorage.setItem(KEY, JSON.stringify(vs));
     } catch {}
   };
+  const moveTo = (id: string, to: number) => {
+    const from = views.findIndex((v) => v.id === id);
+    if (from < 0 || to < 0 || to >= views.length || from === to) return views;
+    const vs = [...views];
+    vs.splice(to, 0, vs.splice(from, 1)[0]);
+    return vs;
+  };
   // A view shown for a moment (e.g. "Done", from "look back at what you did") gets a tab while it's on.
-  const tabs = [ALL, ...views, ...(view.id !== ALL.id && !views.some((v) => v.id === view.id) ? [view] : [])];
+  const tabs = [...views, ...(!views.some((v) => v.id === view.id) ? [view] : [])];
+  const mine = (id: string) => views.some((x) => x.id === id);
   return (
     <>
-      <div className={s.views} role="tablist" aria-label="Views">
+      <div className={s.views} role="tablist" aria-label="Views (drag to reorder)">
         {tabs.map((v) => (
           <button
             key={v.id}
             role="tab"
+            data-view={v.id}
+            data-held={held === v.id || undefined}
             aria-selected={view.id === v.id}
-            onClick={() => (view.id === v.id && views.some((x) => x.id === v.id) ? setEditing(v) : onView(v))}
+            onPointerDown={(e) => {
+              if (!mine(v.id) || e.button) return;
+              drag.current = { id: v.id, x: e.clientX, y: e.clientY, moved: false };
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              const d = drag.current;
+              if (!d) return;
+              if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) return;
+              d.moved = true;
+              setHeld(d.id);
+              // Over another tab: this one takes its place, and the rest shift along.
+              const over = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.closest<HTMLElement>("[data-view]");
+              const to = views.findIndex((x) => x.id === over?.dataset.view);
+              if (to >= 0) setViews(moveTo(d.id, to));
+            }}
+            onPointerUp={() => {
+              if (drag.current?.moved) keep(views);
+              setHeld(null);
+            }}
+            onPointerCancel={() => ((drag.current = null), setHeld(null))}
+            onKeyDown={(e) => {
+              if (!e.altKey || !mine(v.id) || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+              e.preventDefault();
+              keep(moveTo(v.id, views.findIndex((x) => x.id === v.id) + (e.key === "ArrowLeft" ? -1 : 1)));
+            }}
+            onClick={() => {
+              const dragged = drag.current?.moved;
+              drag.current = null;
+              if (dragged) return;
+              if (view.id === v.id && mine(v.id) && !builtIn(v.id)) setEditing(v);
+              else onView(v);
+            }}
           >
             {v.name}
           </button>

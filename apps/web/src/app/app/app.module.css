@@ -9251,6 +9251,17 @@ input.askRowTitle:focus-visible {
   background: var(--lime);
   box-shadow: 3px 3px 0 var(--ink);
 }
+.views > button[data-view] {
+  touch-action: pan-y; /* a sideways drag moves the tab; up and down still scrolls */
+  user-select: none;
+  -webkit-user-select: none;
+}
+.views > button[data-held] {
+  cursor: grabbing;
+  opacity: 0.6;
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+}
 .views > .viewAdd {
   display: grid;
   place-items: center;
