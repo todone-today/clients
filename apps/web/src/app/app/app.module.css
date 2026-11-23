@@ -10122,22 +10122,16 @@ input.askRowTitle:focus-visible {
   top: 0;
   left: 0;
   z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.75rem;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
   color: var(--black);
   background: var(--lime);
   border: 2px solid var(--black);
   box-shadow: 3px 3px 0 var(--black);
-  translate: -50% -50%;
-  rotate: -45deg;
-  pointer-events: none;
+  translate: -45% -45%;
+  rotate: -12deg;
 }
 .privacyTag[data-shared] {
   background: var(--butter);
@@ -10147,12 +10141,11 @@ input.askRowTitle:focus-visible {
     width: 100%;
   }
   .privacyTag {
-    top: 0.7rem;
-    left: 1rem;
+    top: 0.6rem;
+    left: 0.7rem;
     translate: none;
-    rotate: -4deg;
-    padding: 0.15rem 0.5rem;
-    font-size: 0.62rem;
+    width: 1.8rem;
+    height: 1.8rem;
   }
 }
 
@@ -10243,7 +10236,7 @@ input.askRowTitle:focus-visible {
   transition:
     translate 0.25s var(--ease),
     rotate 0.25s var(--ease);
-  animation: gdIn 0.25s var(--ease) both;
+  animation: sortRise 0.38s var(--ease) both;
 }
 .sortCard[data-dragging] {
   cursor: grabbing;
@@ -10269,16 +10262,6 @@ input.askRowTitle:focus-visible {
   gap: 0.75rem;
   font-weight: 800;
 }
-.sortHint {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-  margin-top: auto;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #4a4540;
-}
 /* The stamp a drag shows, like the apps it borrows from: where the card will go if you let go. */
 .sortStamp {
   position: absolute;
@@ -10293,17 +10276,21 @@ input.askRowTitle:focus-visible {
   border: 3px solid var(--black);
   rotate: 12deg;
 }
-.sortCard[data-dir="left"] .sortStamp {
+.sortStamp[data-for="skip"] {
   right: auto;
   left: 1.25rem;
   rotate: -12deg;
   background: #fff8ef;
 }
-.sortCard[data-dir="up"] .sortStamp {
-  background: var(--butter);
-}
-.sortCard[data-dir="down"] .sortStamp {
+.sortStamp[data-for="week"] {
   background: var(--cyan);
+}
+.sortStamp[data-for="month"] {
+  background: var(--peri);
+}
+/* While dragging, the card leans toward its fate: Later greys out as it goes. */
+.sortCard[data-to="skip"] {
+  filter: grayscale(0.7) brightness(0.95);
 }
 .sortButtons {
   display: flex;
@@ -10350,26 +10337,151 @@ input.askRowTitle:focus-visible {
   .sortCard {
     min-height: min(20rem, 42dvh);
   }
+  /* Phones: the four choices two by two. */
   .sortButtons {
     display: grid;
-    grid-template-columns: 3rem 1fr 1fr 3rem;
+    grid-template-columns: 1fr 1fr;
   }
   .sortButtons :global(.btn) {
     justify-content: center;
-    padding-inline: 0.4rem;
   }
-  /* Undo and Later on the left, Done on the right; the day buttons two by two between. */
-  .sortButtons > :nth-child(1) { grid-area: 1 / 1; }
-  .sortButtons > :nth-child(2) { grid-area: 2 / 1; }
-  .sortButtons > :nth-child(3) { grid-area: 1 / 2; }
-  .sortButtons > :nth-child(4) { grid-area: 1 / 3; }
-  .sortButtons > :nth-child(5) { grid-area: 2 / 2; }
-  .sortButtons > :nth-child(6) { grid-area: 2 / 3; }
-  .sortButtons > :nth-child(7) { grid-area: 1 / 4; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sortCard {
     animation: none;
     transition: none;
+  }
+}
+
+/* A sorted card leaves the way it was sent, stamped: Today off to the right, This week up, This month down, Later
+   greyed out off to the left. It starts wherever the drag let go. The next card rises from the deck meanwhile. */
+.sortFly {
+  z-index: 2;
+  pointer-events: none;
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0.3);
+  animation-fill-mode: both;
+}
+.sortFly .sortStamp {
+  animation: sortStampIn 0.18s var(--ease) both;
+}
+.sortFly[data-fly="today"] {
+  animation-name: flyRight;
+}
+.sortFly[data-fly="week"] {
+  animation-name: flyUp;
+}
+.sortFly[data-fly="month"] {
+  animation-name: flyDown;
+}
+.sortFly[data-fly="skip"] {
+  animation-name: flyLater;
+}
+@keyframes flyRight {
+  from {
+    translate: var(--fx) var(--fy);
+    rotate: var(--fr);
+  }
+  to {
+    translate: 130% calc(var(--fy) - 3rem);
+    rotate: 22deg;
+    opacity: 0;
+  }
+}
+@keyframes flyUp {
+  from {
+    translate: var(--fx) var(--fy);
+    rotate: var(--fr);
+  }
+  to {
+    translate: var(--fx) -120%;
+    rotate: -6deg;
+    scale: 0.9;
+    opacity: 0;
+  }
+}
+@keyframes flyDown {
+  from {
+    translate: var(--fx) var(--fy);
+    rotate: var(--fr);
+  }
+  to {
+    translate: var(--fx) 110%;
+    rotate: 7deg;
+    scale: 0.9;
+    opacity: 0;
+  }
+}
+@keyframes flyLater {
+  from {
+    translate: var(--fx) var(--fy);
+    rotate: var(--fr);
+    filter: grayscale(0.4);
+  }
+  35% {
+    filter: grayscale(1) brightness(0.85);
+  }
+  to {
+    translate: -130% calc(var(--fy) + 2rem);
+    rotate: -18deg;
+    filter: grayscale(1) brightness(0.7);
+    opacity: 0;
+  }
+}
+@keyframes sortStampIn {
+  from {
+    scale: 1.8;
+    opacity: 0;
+  }
+}
+@keyframes sortRise {
+  from {
+    translate: 0.6rem 0.6rem;
+    rotate: 3deg;
+    scale: 0.96;
+    filter: saturate(0.6) brightness(0.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sortFly {
+    animation: fadeOut 0.2s linear both !important;
+  }
+  .sortCard {
+    animation: none;
+  }
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+.sortTip {
+  margin: -0.5rem 0 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+/* Done: the card swells, stamped, and lifts away. */
+.sortStamp[data-for="done"] {
+  background: var(--lime);
+  rotate: -8deg;
+}
+.sortFly[data-fly="done"] {
+  animation-name: flyDone;
+  animation-timing-function: var(--ease);
+}
+@keyframes flyDone {
+  from {
+    translate: var(--fx) var(--fy);
+    rotate: var(--fr);
+  }
+  30% {
+    scale: 1.06;
+    rotate: 0deg;
+  }
+  to {
+    translate: 0 -2rem;
+    scale: 0.7;
+    opacity: 0;
   }
 }

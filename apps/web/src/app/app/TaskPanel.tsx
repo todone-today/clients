@@ -184,10 +184,15 @@ export function TaskPanel({
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className={s.panelFrame}>
-        {/* Encrypted or not, said on a little sticker slapped across the corner of the task. */}
-        <span className={s.privacyTag} data-shared={shared || undefined} role="note">
-          {shared ? <LockOpen size={13} strokeWidth={2.75} aria-hidden /> : <Lock size={13} strokeWidth={2.75} aria-hidden />}
-          {shared ? "Shared, not encrypted" : "End-to-end encrypted"}
+        {/* Encrypted or not, as a lock (or an open lock) on a little sticker on the task's corner. */}
+        <span
+          className={s.privacyTag}
+          data-shared={shared || undefined}
+          role="img"
+          aria-label={shared ? "Shared, not encrypted" : "End-to-end encrypted"}
+          title={shared ? "Shared, not encrypted" : "End-to-end encrypted"}
+        >
+          {shared ? <LockOpen size={16} strokeWidth={2.75} aria-hidden /> : <Lock size={16} strokeWidth={2.75} aria-hidden />}
         </span>
       <aside
         className={s.panel}

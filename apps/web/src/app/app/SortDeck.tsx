@@ -1,27 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, Check, RotateCcw, SkipForward } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { type List, type Task, relDue, tick, todayISO, waiting } from "@todone/sdk/tasks";
+import { authClient } from "@/lib/auth-client";
 import { addDays, shiftMonths, weekStart } from "@todone/sdk/calendar";
 import { mapTask } from "@/lib/store";
-import { authClient } from "@/lib/auth-client";
 import { listColor } from "./listIcon";
 import s from "./app.module.css";
 
 // Sort your tasks one card at a time, the way dating apps sort people: from every list, the late ones first, then the
-// ones with no day, then a few others at random. Swipe right for today, up for tomorrow, down for this week, left to
-// leave it as it is; or tap a button (or use the arrow keys). Each choice saves at once and can be undone.
+// ones with no day, then a few others at random. Four choices, as buttons along the bottom: Today, This week, This
+// month, Later (leave it as it is). Or swipe: right today, up this week, down this month, left later; or the arrow
+// keys. Done: double-tap the card on a phone, or Space on a keyboard. Each choice saves at once (Backspace undoes it).
 type Card = { list: List; task: Task; why: "late" | "undated" | "planned" };
-type Choice = "today" | "tomorrow" | "week" | "month" | "done" | "skip";
-const DAY: Record<Exclude<Choice, "done" | "skip">, (d: string) => string> = {
+type Choice = "today" | "week" | "month" | "skip" | "done";
+const DAY: Record<Exclude<Choice, "skip" | "done">, (d: string) => string> = {
   today: (d) => d,
-  tomorrow: (d) => addDays(d, 1),
   week: (d) => addDays(weekStart(d), 6), // by Sunday
   month: (d) => addDays(shiftMonths(`${d.slice(0, 7)}-01`, 1), -1), // by its last day
 };
-const SWIPE: Record<string, Choice> = { right: "today", up: "tomorrow", down: "week", left: "skip" };
-const STAMP: Partial<Record<Choice, string>> = { today: "Today", tomorrow: "Tomorrow", week: "This week", skip: "Later" };
+const SWIPE: Record<string, Choice> = { right: "today", up: "week", down: "month", left: "skip" };
+const STAMP: Record<Choice, string> = { today: "Today", week: "This week", month: "This month", skip: "Later", done: "Done ✓" };
 
 const shuffle = <T,>(xs: T[]) => {
   const a = [...xs];
@@ -61,7 +61,11 @@ export function SortDeck({
   const [at, setAt] = useState(0);
   const [log, setLog] = useState<{ card: Card; before: Task; choice: Choice }[]>([]);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
+  // Cards on their way out: each flies off the way it was sent (Later greys out and slides away), from wherever the
+  // drag left it, while the next one rises from the deck.
+  const [flying, setFlying] = useState<{ id: number; card: Card; choice: Choice; from: { x: number; y: number } }[]>([]);
   const start = useRef<{ x: number; y: number } | null>(null);
+  const lastTap = useRef(0); // a second tap soon after the first, without a drag, means done
 
   const card = deck[at];
   // The live task (it may have changed since the deck was dealt).
@@ -74,6 +78,9 @@ export function SortDeck({
     else if (choice !== "skip")
       update(card.list.id, (l) => ({ ...l, tasks: mapTask(l.tasks, card.task.id, (t) => ({ ...t, due: DAY[choice](today) })) }));
     setLog((x) => [...x, { card, before, choice }]);
+    const id = Date.now() + Math.random();
+    setFlying((f) => [...f, { id, card, choice, from: drag ?? { x: 0, y: 0 } }]);
+    setTimeout(() => setFlying((f) => f.filter((x) => x.id !== id)), 520);
     setAt((n) => n + 1);
     setDrag(null);
   };
@@ -86,7 +93,7 @@ export function SortDeck({
     setAt((n) => n - 1);
   };
 
-  // Arrow keys: → today, ↑ tomorrow, ↓ this week, ← later; Enter done; Backspace undoes.
+  // Arrow keys: → today, ↑ this week, ↓ this month, ← later; Space done; Backspace undoes.
   const keys = useRef({ choose, undo });
   useEffect(() => {
     keys.current = { choose, undo };
@@ -94,10 +101,13 @@ export function SortDeck({
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if ((e.target as Element | null)?.closest?.("input, textarea, select")) return;
-      const c = { ArrowRight: "today", ArrowUp: "tomorrow", ArrowDown: "week", ArrowLeft: "skip", Enter: "done" }[e.key] as
+      const c = { ArrowRight: "today", ArrowUp: "week", ArrowDown: "month", ArrowLeft: "skip", " ": "done" }[e.key] as
         | Choice
         | undefined;
-      if (c) keys.current.choose(c);
+      if (c) {
+        if (e.key === " ") (document.activeElement as HTMLElement | null)?.blur?.(); // not also a press of a focused button
+        keys.current.choose(c);
+      }
       else if (e.key === "Backspace") keys.current.undo();
       else return;
       e.preventDefault();
@@ -117,6 +127,48 @@ export function SortDeck({
   const heading = dir(drag);
   const stamp = heading ? STAMP[SWIPE[heading]] : null;
 
+  // What a card shows: why it's here, the task, its list and steps.
+  const face = (c: Card) => (
+    <>
+      <p className={s.sortWhy}>
+        {c.why === "late" ? relDue(c.task.due!, today) : c.why === "undated" ? "No day yet" : relDue(c.task.due!, today)}
+      </p>
+      <h2 className="display">{live(c).title}</h2>
+      <p className={s.sortMeta}>
+        <span>{c.list.name}</span>
+        {c.task.sub.length > 0 && (
+          <span>
+            {c.task.sub.filter((x) => x.done).length}/{c.task.sub.length} steps
+          </span>
+        )}
+      </p>
+    </>
+  );
+  const flyers = (
+    <>
+              {flying.map((f) => (
+                <article
+                  key={f.id}
+                  className={`${s.sortCard} ${s.sortFly}`}
+                  data-fly={f.choice}
+                  aria-hidden
+                  style={
+                    {
+                      "--fill": listColor(f.card.list.id),
+                      "--fx": `${f.from.x}px`,
+                      "--fy": `${f.from.y}px`,
+                      "--fr": `${f.from.x / 18}deg`,
+                    } as React.CSSProperties
+                  }
+                >
+                  <b className={s.sortStamp} data-for={f.choice}>
+                    {STAMP[f.choice]}
+                  </b>
+                  {face(f.card)}
+                </article>
+              ))}
+    </>
+  );
   const sorted = log.filter((x) => x.choice !== "skip").length;
   return (
     <div className={s.sortPage}>
@@ -137,6 +189,7 @@ export function SortDeck({
               className={s.sortCard}
               data-dragging={drag ? true : undefined}
               data-dir={heading ?? undefined}
+              data-to={heading ? SWIPE[heading] : undefined}
               style={
                 {
                   "--fill": listColor(card.list.id),
@@ -152,56 +205,48 @@ export function SortDeck({
               onPointerMove={(e) => start.current && setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y })}
               onPointerUp={() => {
                 const h = dir(drag);
+                const moved = drag && Math.hypot(drag.x, drag.y) > 10;
                 start.current = null;
-                if (h) choose(SWIPE[h]);
-                else setDrag(null);
+                if (h) return choose(SWIPE[h]);
+                setDrag(null);
+                if (moved) return;
+                const now = Date.now();
+                if (now - lastTap.current < 320) {
+                  lastTap.current = 0;
+                  choose("done");
+                } else lastTap.current = now;
               }}
               onPointerCancel={() => ((start.current = null), setDrag(null))}
             >
-              {stamp && <b className={s.sortStamp}>{stamp}</b>}
-              <p className={s.sortWhy}>
-                {card.why === "late" ? relDue(card.task.due!, today) : card.why === "undated" ? "No day yet" : relDue(card.task.due!, today)}
-              </p>
-              <h2 className="display">{live(card).title}</h2>
-              <p className={s.sortMeta}>
-                <span>{card.list.name}</span>
-                {card.task.sub.length > 0 && (
-                  <span>
-                    {card.task.sub.filter((x) => x.done).length}/{card.task.sub.length} steps
-                  </span>
-                )}
-              </p>
-              <p className={s.sortHint} aria-hidden>
-                <ArrowRight size={14} strokeWidth={3} /> today · <ArrowUp size={14} strokeWidth={3} /> tomorrow ·{" "}
-                <ArrowDown size={14} strokeWidth={3} /> this week · <ArrowLeft size={14} strokeWidth={3} /> later
-              </p>
+              {stamp && heading && (
+                <b className={s.sortStamp} data-for={SWIPE[heading]}>
+                  {stamp}
+                </b>
+              )}
+              {face(card)}
             </article>
+            {flyers}
           </div>
 
+          <p className={s.sortTip}>Done already? Double-tap the card (Space on a keyboard).</p>
           <div className={s.sortButtons}>
-            <button className={s.sortSmall} onClick={undo} disabled={!log.length} aria-label="Undo" data-tip="Undo">
-              <RotateCcw size={20} strokeWidth={2.5} />
-            </button>
-            <button className={s.sortSmall} onClick={() => choose("skip")} aria-label="Later: leave it as it is" data-tip="Later">
-              <SkipForward size={20} strokeWidth={2.5} />
-            </button>
-            <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={() => choose("today")}>
-              Today
-            </button>
-            <button className="btn" style={{ "--fill": "var(--butter)" } as React.CSSProperties} onClick={() => choose("tomorrow")}>
-              Tomorrow
-            </button>
-            <button className="btn" style={{ "--fill": "var(--cyan)" } as React.CSSProperties} onClick={() => choose("week")}>
-              This week
-            </button>
-            <button className="btn" style={{ "--fill": "var(--peri)" } as React.CSSProperties} onClick={() => choose("month")}>
-              <CalendarDays size={16} strokeWidth={2.5} aria-hidden /> This month
-            </button>
-            <button className={s.sortSmall} onClick={() => choose("done")} aria-label="Already done" data-tip="Done">
-              <Check size={20} strokeWidth={3} />
-            </button>
+            {(
+              [
+                ["today", "Today", "var(--lime)"],
+                ["week", "This week", "var(--cyan)"],
+                ["month", "This month", "var(--peri)"],
+                ["skip", "Later", "#fff8ef"],
+              ] as const
+            ).map(([c, name, fill]) => (
+              <button key={c} className="btn" style={{ "--fill": fill } as React.CSSProperties} onClick={() => choose(c)}>
+                {name}
+              </button>
+            ))}
           </div>
         </>
+      ) : flying.length ? (
+        // The last card on its way out, before "All sorted".
+        <div className={s.deck}>{flyers}</div>
       ) : (
         <div className={s.sortEnd}>
           <p className="display">{deck.length ? "All sorted." : "Nothing to sort."}</p>
