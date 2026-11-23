@@ -17,6 +17,13 @@
   font-size: 1.9rem;
   text-decoration: none;
 }
+.markHome {
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
 .local {
   margin-left: auto;
   text-align: right;
@@ -3480,6 +3487,10 @@ input.stick[data-custom][aria-invalid="true"] {
 @media (min-width: 761px) {
   .shell[data-slim] {
     grid-template-columns: 4.25rem 1fr;
+  }
+  /* The logo lines up with the rail's icons below it. */
+  .shell[data-slim] > .top {
+    padding-left: 0.75rem;
   }
   .shell[data-slim] > .side {
     align-items: center;

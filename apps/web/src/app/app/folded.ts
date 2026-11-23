@@ -2,24 +2,16 @@
 
 import { useState } from "react";
 
-// Which tasks have their steps folded away, remembered on this device (a view choice, not part of the list).
-const FOLD_KEY = "todone:folded";
+// A task's steps start folded. Opening them lasts while you're on that list: a refresh or another list folds them
+// all again (foldAll), so every list opens tidy.
+const opened = new Set<string>();
+export const foldAll = () => opened.clear();
 export function useFolded(id: string) {
-  const [on, set] = useState(() => {
-    try {
-      return (JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]).includes(id);
-    } catch {
-      return false;
-    }
-  });
+  const [on, set] = useState(() => !opened.has(id));
   const save = (v: boolean) => {
     set(v);
-    try {
-      const all = new Set(JSON.parse(localStorage.getItem(FOLD_KEY) ?? "[]") as string[]);
-      if (v) all.add(id);
-      else all.delete(id);
-      localStorage.setItem(FOLD_KEY, JSON.stringify([...all].slice(-500)));
-    } catch {}
+    if (v) opened.delete(id);
+    else opened.add(id);
   };
   return [on, save] as const;
 }

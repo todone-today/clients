@@ -68,7 +68,7 @@ import { fold, reconcile, type Goal, type GoalItem } from "@todone/sdk/goals";
 import { GOAL_PRESET, type GoalPreset, joinGoal, linksChanged, shareFor, takeInvite, useGoalLinks } from "./goalLinks";
 import { IconPick, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
-import { useFolded } from "./folded";
+import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
@@ -627,10 +627,10 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Logo size={26} />
           </Link>
         ) : (
-          // Signed in, the logo is just the brand; the Lists tab is the way home.
-          <span className={s.mark}>
+          // Signed in, the logo goes home: back to the lists board.
+          <button type="button" className={`${s.mark} ${s.markHome}`} onClick={() => show(null)} aria-label="Go to your lists">
             <Logo size={26} />
-          </span>
+          </button>
         )}
         <nav className={s.tabs} aria-label="Views" data-small={small || undefined}>
           {(
@@ -1094,14 +1094,27 @@ function ListView({
   const [show, setShow] = useState<View>(ALL); // the view the board shows (Views.tsx)
   const DONE: View = { ...ALL, id: "done", name: "Done", status: "done" };
   // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held. A pin
-  // lasts while you're on this list: it folds again on a refresh or another list.
+  // lasts while you're on this list: it folds again on a refresh or another list (and so do opened steps).
+  useEffect(() => foldAll, []); // leaving the board (calendar, bin…) folds opened steps too
   const [pinned, setPinned] = useState(false);
   const [pinnedOn, setPinnedOn] = useState(list.id);
   if (pinnedOn !== list.id) {
     setPinnedOn(list.id);
     setPinned(false);
+    foldAll();
   }
   const pin = (on: boolean) => setPinned(on);
+  // Pinned, a press anywhere outside the panel (and its tab) tucks it away again.
+  useEffect(() => {
+    if (!pinned) return;
+    const away = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (t?.closest(`.${s.stickers}, .${s.stickTab}, dialog`)) return;
+      setPinned(false);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [pinned]);
   const [sort, setSort] = useState<Sort>("mine");
   const [picked, setPicked] = useState<Set<string>>(new Set()); // Ctrl/Cmd-click selection
   // Select mode (the Select button; phones have no Ctrl key and a long press drags): every tap picks.
