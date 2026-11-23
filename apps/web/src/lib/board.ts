@@ -1,4 +1,4 @@
-import { type Task, doneToday, lateBy, upcoming, waiting } from "@todone/sdk/tasks";
+import { type Effort, type Task, doneToday, lateBy, upcoming, waiting } from "@todone/sdk/tasks";
 
 // Filtering and sorting the board. A note counts for a filter if it or one of its steps does.
 export type Show = "all" | "open" | "done" | "today" | "late" | "undated";
@@ -18,18 +18,30 @@ export const SORTS: [Sort, string][] = [
   ["pri", "Priority"],
   ["name", "A–Z"],
 ];
-// A view: a named filter someone saved ("Due this week", "Urgent"), shown as a tab above the board.
-export type When = "any" | "today" | "late" | "week" | "undated" | "dated" | "timed";
-export type View = { id: string; name: string; status: "all" | "open" | "done"; when: When; high?: boolean };
+// A view: a named filter someone saved ("Due this week", "Urgent"), shown as a tab above the board. Every rule but
+// status is optional: a view with none shows everything.
+export type When = "any" | "today" | "late" | "week" | "undated" | "dated" | "between" | "timed"; // "timed": older views
+export type View = {
+  id: string;
+  name: string;
+  status: "all" | "open" | "done";
+  when: When;
+  from?: string; // "between": YYYY-MM-DD, either end may be open
+  to?: string;
+  pri?: number[]; // any of these priorities; 0 = none set
+  effort?: (Effort | "none")[];
+  time?: "timed" | "untimed"; // has a time of day, or not
+  est?: number; // takes at most this many minutes
+  high?: boolean; // older views: same as pri [1]
+};
 export const ALL: View = { id: "all", name: "All", status: "all", when: "any" };
 export const WHENS: [When, string][] = [
-  ["any", "Any day"],
   ["today", "Today"],
   ["late", "Late"],
   ["week", "Next 7 days"],
   ["dated", "Has a date"],
-  ["timed", "Has a time"],
   ["undated", "No date"],
+  ["between", "Between dates"],
 ];
 const addDays = (iso: string, n: number) => {
   const d = new Date(`${iso}T12:00:00`);
@@ -40,17 +52,22 @@ const addDays = (iso: string, n: number) => {
 export function fits(v: View, t: Task, today: string, nowMin = 0) {
   if (v.status === "open" && t.done) return false;
   if (v.status === "done" && !t.done) return false;
-  if (v.high && (t.pri ?? 4) > 1) return false;
-  const week = addDays(today, 7);
+  const pri = v.pri?.length ? v.pri : v.high ? [1] : null;
+  if (pri && !pri.includes(t.pri ?? 0)) return false;
+  if (v.effort?.length && !v.effort.includes(t.effort ?? "none")) return false;
+  if (v.time && (v.time === "timed") !== !!t.at) return false;
+  if (v.est && !(t.est && t.est <= v.est)) return false;
   switch (v.when) {
     case "today":
       return t.due === today;
     case "late":
       return lateBy(t, today, nowMin) !== null;
     case "week":
-      return !!t.due && t.due >= today && t.due <= week;
+      return !!t.due && t.due >= today && t.due <= addDays(today, 7);
     case "dated":
       return !!t.due;
+    case "between":
+      return !!t.due && (!v.from || t.due >= v.from) && (!v.to || t.due <= v.to);
     case "timed":
       return !!t.at;
     case "undated":

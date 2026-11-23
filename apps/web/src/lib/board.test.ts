@@ -72,4 +72,9 @@ test("views: status, when and priority, and a note shows if one of its steps fit
   assert.equal(names(board(ts, v({ when: "timed" }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ high: true }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ status: "done" }), "mine", "2026-10-31")), "a");
+  assert.equal(names(board(ts, v({ pri: [1] }), "mine", "2026-10-31")), "b");
+  assert.equal(names(board(ts, v({ pri: [0], status: "open" }), "mine", "2026-10-31")), "cd");
+  assert.equal(names(board(ts, v({ when: "between", from: "2026-11-01", to: "2026-11-10" }), "mine", "2026-10-31")), "b");
+  assert.equal(names(board(ts, v({ when: "between", from: "2026-11-10" }), "mine", "2026-10-31")), "c");
+  assert.equal(names(board(ts, v({ time: "untimed", status: "open" }), "mine", "2026-10-31")), "cd");
 });
