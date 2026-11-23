@@ -9,8 +9,15 @@ export const sentryOptions = {
   sendDefaultPii: false,
   tracesSampleRate: 0,
   beforeBreadcrumb: () => null,
-  // Microsoft's email link scanners (Outlook Safe Links, Bing) throw this when they open our links; not our code.
-  ignoreErrors: [/Object Not Found Matching Id/],
+  // Not our code: Microsoft's email link scanners (Outlook Safe Links, Bing) opening our links; a dropped connection
+  // ("Load failed" in Safari), which the request's own code already tells the person about; wallet extensions
+  // (MetaMask) that inject scripts into every page and report their own failures.
+  ignoreErrors: [
+    /Object Not Found Matching Id/,
+    /^(TypeError: )?(Load failed|Failed to fetch|NetworkError when attempting to fetch resource)/,
+    /MetaMask/,
+  ],
+  denyUrls: [/^(chrome|moz|safari(-web)?)-extension:\/\//, /\/scripts\/inpage\.js/],
   beforeSend(event: ErrorEvent) {
     delete event.request;
     delete event.user;
