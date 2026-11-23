@@ -10053,3 +10053,57 @@ input.askRowTitle:focus-visible {
     margin-top: 1.25rem;
   }
 }
+
+/* Focus, tidied: the card and its notes side by side at one height (each scrolls inside if it must); on the card,
+   the task up top, the clock in the middle, the buttons along the bottom. On a phone, notes go below. */
+.focusIcons {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: auto;
+}
+.focusIcons .focusIcon {
+  margin-right: 0;
+}
+.focusTools {
+  padding-top: 0.5rem;
+}
+@media (min-width: 761px) {
+  .focus[data-notes] {
+    grid-template-columns: minmax(0, 44rem) minmax(19rem, 25rem);
+    grid-template-rows: min(38rem, calc(100dvh - 6rem));
+    align-items: stretch;
+    place-content: center;
+    gap: 1.75rem;
+  }
+  .focus[data-notes] .focusCard {
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    align-content: space-between;
+  }
+  .focus[data-notes] .focusNotes {
+    max-height: none;
+    min-height: 0;
+  }
+}
+/* Beside the clock, notes are a column of equal stickers, not a chat. */
+.focusNotes .kept li {
+  width: auto;
+  max-width: none;
+  justify-self: stretch;
+}
+.focusNotes .kept {
+  padding: 0.2rem 0.4rem 0.4rem;
+}
+@media (max-width: 760px) {
+  /* Phones: the two small icons, then Pause and Done side by side, each half the remaining width. */
+  .focusTools {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .focusTools :global(.btn) {
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+}

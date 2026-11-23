@@ -233,20 +233,28 @@ export function Focus({
 
         {finished === null && (
           <div className={s.focusTools}>
-            <button
-              className={s.focusIcon}
-              onClick={() => {
-                setSound(!sound);
-                try {
-                  localStorage.setItem(SOUND, sound ? "0" : "1");
-                } catch {}
-              }}
-              aria-pressed={sound}
-              aria-label={sound ? "Tick-tock on" : "Tick-tock off"}
-              data-tip={sound ? "Tick-tock on" : "Tick-tock off"}
-            >
-              {sound ? <Volume2 size={20} strokeWidth={2.5} aria-hidden /> : <VolumeX size={20} strokeWidth={2.5} aria-hidden />}
-            </button>
+            {/* The quiet ones on the left (sound, start over); the two that matter on the right. */}
+            <div className={s.focusIcons}>
+              <button
+                className={s.focusIcon}
+                onClick={() => {
+                  setSound(!sound);
+                  try {
+                    localStorage.setItem(SOUND, sound ? "0" : "1");
+                  } catch {}
+                }}
+                aria-pressed={sound}
+                aria-label={sound ? "Tick-tock on" : "Tick-tock off"}
+                data-tip={sound ? "Tick-tock on" : "Tick-tock off"}
+              >
+                {sound ? <Volume2 size={20} strokeWidth={2.5} aria-hidden /> : <VolumeX size={20} strokeWidth={2.5} aria-hidden />}
+              </button>
+              {elapsed >= 1000 && (
+                <button className={s.focusIcon} onClick={reset} aria-label="Reset the clock" data-tip="Start the clock over">
+                  <RotateCcw size={20} strokeWidth={2.5} aria-hidden />
+                </button>
+              )}
+            </div>
             <button className="btn" onClick={toggle} style={{ "--fill": "var(--butter)" } as React.CSSProperties}>
               {since === null ? <Play size={18} strokeWidth={2.75} aria-hidden /> : <Pause size={18} strokeWidth={2.75} aria-hidden />}
               {since === null ? "Resume" : "Pause"}
@@ -254,11 +262,6 @@ export function Focus({
             <button className="btn" onClick={finish} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
               <Check size={18} strokeWidth={3} aria-hidden /> {task.done ? "Finish" : "Done"}
             </button>
-            {elapsed >= 1000 && (
-              <button className={s.focusIcon} onClick={reset} aria-label="Reset the clock" data-tip="Start the clock over">
-                <RotateCcw size={20} strokeWidth={2.5} aria-hidden />
-              </button>
-            )}
           </div>
         )}
       </div>
