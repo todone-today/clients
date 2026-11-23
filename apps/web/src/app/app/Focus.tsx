@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, NotebookPen, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { Check, Pause, Play, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
 import { type Task, fmtMinutes, tick, todayISO } from "@todone/sdk/tasks";
 import { Confetti } from "@/components/Confetti";
 import { authClient } from "@/lib/auth-client";
@@ -11,6 +11,23 @@ import s from "./app.module.css";
 // Focus: one task across the whole tab, with a running clock (and a soft tick-tock, if you like). The minutes go onto the
 // task's "spent" time (⏳ on its card) when you finish or step out, so you learn how long things really take.
 const SOUND = "todone:focus-sound";
+// Where each task's focus clock stood when you stepped out: it picks up from there next time (Reset starts over).
+// `ms` is the clock; `counted` the minutes of it already added to the task's time spent, so none count twice.
+type Saved = { ms: number; counted: number };
+const SAVED = (id: string) => `todone:focus:${id}`;
+const readSaved = (id: string): Saved => {
+  try {
+    const v = JSON.parse(localStorage.getItem(SAVED(id)) ?? "null") as Saved | null;
+    if (v && typeof v.ms === "number" && typeof v.counted === "number") return v;
+  } catch {}
+  return { ms: 0, counted: 0 };
+};
+const writeSaved = (id: string, v: Saved | null) => {
+  try {
+    if (v) localStorage.setItem(SAVED(id), JSON.stringify(v));
+    else localStorage.removeItem(SAVED(id));
+  } catch {}
+};
 const clock = (ms: number) => {
   const t = Math.floor(ms / 1000);
   const h = Math.floor(t / 3600);
@@ -60,12 +77,13 @@ export function Focus({
   edit: (f: (t: Task) => Task | null) => void;
   onTick: () => void;
   onExit: () => void;
-  notes?: React.ReactNode; // the task's notes, a tap away on the right (below, on a phone)
+  notes?: React.ReactNode; // the task's notes, always beside the clock (below it, on a phone)
 }) {
-  const [noting, setNoting] = useState(false);
   const me = authClient.useSession().data?.user.id;
   // Elapsed time is banked time plus the current run, so a throttled background tab still counts right.
-  const [banked, setBanked] = useState(0);
+  const [start] = useState(() => readSaved(task.id));
+  const saved = useRef<Saved>(start);
+  const [banked, setBanked] = useState(start.ms);
   const [since, setSince] = useState<number | null>(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
   const [sound, setSound] = useState(() => {
@@ -117,20 +135,33 @@ export function Focus({
     }
     setNow(Date.now());
   };
+  // Adds the minutes not yet counted to the task's time spent.
   const keep = () => {
-    const m = focusMinutes(elapsed);
-    if (m) edit((t) => ({ ...t, spent: (t.spent ?? 0) + m }));
+    const m = focusMinutes(elapsed) - saved.current.counted;
+    if (m > 0) edit((t) => ({ ...t, spent: (t.spent ?? 0) + m }));
+    saved.current = { ms: elapsed, counted: Math.max(saved.current.counted, focusMinutes(elapsed)) };
   };
   const leave = () => {
     if (finished !== null) return; // already counted; it closes by itself
     keep();
+    writeSaved(task.id, saved.current); // next time, the clock carries on from here
     onExit();
+  };
+  // Start the clock over (the time so far stays counted on the task).
+  const reset = () => {
+    keep();
+    saved.current = { ms: 0, counted: 0 };
+    writeSaved(task.id, null);
+    setBanked(0);
+    setSince(Date.now());
+    setNow(Date.now());
   };
   const finish = () => {
     if (finished !== null) return;
     setFinished(elapsed);
     setSince(null);
     keep();
+    writeSaved(task.id, null);
     if (!task.done) onTick();
     setTimeout(onExit, 2200);
   };
@@ -157,7 +188,7 @@ export function Focus({
   const step = (id: string) => edit((t) => tick([t], id, todayISO(), me)[0] ?? t);
 
   return createPortal(
-    <div className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`} data-notes={noting || undefined}>
+    <div className={s.focus} role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`} data-notes={notes ? true : undefined}>
       {finished !== null && <Confetti />}
       <div className={s.focusCard} style={{ "--fill": fill ?? "var(--butter)" } as React.CSSProperties}>
         <p className={s.focusKicker}>{finished !== null ? "Done" : since === null ? "Paused" : "Focusing on"}</p>
@@ -223,21 +254,15 @@ export function Focus({
             <button className="btn" onClick={finish} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
               <Check size={18} strokeWidth={3} aria-hidden /> {task.done ? "Finish" : "Done"}
             </button>
-            {notes && (
-              <button
-                className={s.focusIcon}
-                aria-pressed={noting}
-                aria-label={noting ? "Hide notes" : "Notes"}
-                data-tip={noting ? "Hide notes" : "Notes"}
-                onClick={() => setNoting(!noting)}
-              >
-                <NotebookPen size={20} strokeWidth={2.5} aria-hidden />
+            {elapsed >= 1000 && (
+              <button className={s.focusIcon} onClick={reset} aria-label="Reset the clock" data-tip="Start the clock over">
+                <RotateCcw size={20} strokeWidth={2.5} aria-hidden />
               </button>
             )}
           </div>
         )}
       </div>
-      {noting && notes && <aside className={s.focusNotes}>{notes}</aside>}
+      {notes && <aside className={s.focusNotes}>{notes}</aside>}
       {finished === null && (
         <button className={s.focusExit} onClick={leave} aria-label="Step out (keeps the time)" data-tip="Step out, time kept">
           <X size={22} strokeWidth={2.75} aria-hidden />
