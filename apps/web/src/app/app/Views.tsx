@@ -4,7 +4,7 @@
 // done or not, date, priority, effort, how long). One tab each, and a + to make another. Tap a chosen view
 // again to change or delete it; drag a tab (or Alt+arrow) to move it. Kept in this browser, in the order shown.
 import { useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Check, Plus, Trash2, X } from "lucide-react";
 import { EFFORTS, type Effort, type Task, uid } from "@todone/sdk/tasks";
 import { ALL, type View, WHENS, board } from "@/lib/board";
 import { Modal } from "./Goals";
@@ -209,8 +209,12 @@ function ViewEditor({
       ))}
     </div>
   );
+  // Any number of these; "Any" (nothing picked) clears them.
   const many = <T,>(label: string, options: [T, string][], value: T[] | undefined, pick: (x: T[]) => void) => (
     <div className={s.viewChips} role="group" aria-label={label}>
+      <button type="button" role="checkbox" aria-checked={!value?.length} onClick={() => pick([])}>
+        Any
+      </button>
       {options.map(([x, name]) => {
         const has = !!value?.includes(x);
         return (
@@ -326,12 +330,12 @@ function ViewEditor({
         </p>
         <div className={s.gdFoot}>
           {!isNew && (
-            <button type="button" className={s.link} onClick={onDelete}>
-              Delete view
+            <button type="button" className={s.viewDelete} onClick={onDelete}>
+              <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
             </button>
           )}
-          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!v.name.trim()}>
-            Save view
+          <button className={`btn ${s.viewSave}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!v.name.trim()}>
+            <Check size={18} strokeWidth={3} aria-hidden /> Save
           </button>
         </div>
       </form>

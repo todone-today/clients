@@ -10485,3 +10485,35 @@ input.askRowTitle:focus-visible {
     opacity: 0;
   }
 }
+
+/* The view editor's foot: Delete small and red on the left, Save compact with a check on the right. */
+.viewDelete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  background: #c62828;
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.viewDelete:hover {
+  background: #a51f1f;
+}
+.viewSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+}
+/* Chips a little tighter, so the date choices fit in two rows. */
+.viewForm .viewChips button {
+  min-height: 2.3rem;
+  padding: 0 0.65rem;
+  font-size: 0.82rem;
+}

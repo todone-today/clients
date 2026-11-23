@@ -20,7 +20,18 @@ export const SORTS: [Sort, string][] = [
 ];
 // A view: a named filter someone saved ("Due this week", "Urgent"), shown as a tab above the board. Every rule but
 // status is optional: a view with none shows everything.
-export type When = "any" | "today" | "late" | "week" | "undated" | "dated" | "between" | "timed"; // "timed": older views
+export type When =
+  | "any"
+  | "today"
+  | "tomorrow"
+  | "thisweek" // Monday to Sunday, this week
+  | "week" // the next 7 days
+  | "month" // this calendar month
+  | "late"
+  | "undated"
+  | "dated"
+  | "between"
+  | "timed"; // "timed": older views
 export type View = {
   id: string;
   name: string;
@@ -37,8 +48,11 @@ export type View = {
 export const ALL: View = { id: "all", name: "All", status: "all", when: "any" };
 export const WHENS: [When, string][] = [
   ["today", "Today"],
-  ["late", "Late"],
+  ["tomorrow", "Tomorrow"],
+  ["thisweek", "This week"],
   ["week", "Next 7 days"],
+  ["month", "This month"],
+  ["late", "Late"],
   ["dated", "Has a date"],
   ["undated", "No date"],
   ["between", "Between dates"],
@@ -61,8 +75,16 @@ export function fits(v: View, t: Task, today: string, nowMin = 0) {
       return t.due === today;
     case "late":
       return lateBy(t, today, nowMin) !== null;
+    case "tomorrow":
+      return t.due === addDays(today, 1);
+    case "thisweek": {
+      const monday = addDays(today, -((new Date(`${today}T12:00:00`).getDay() + 6) % 7));
+      return !!t.due && t.due >= monday && t.due <= addDays(monday, 6);
+    }
     case "week":
       return !!t.due && t.due >= today && t.due <= addDays(today, 7);
+    case "month":
+      return !!t.due && t.due.slice(0, 7) === today.slice(0, 7);
     case "dated":
       return !!t.due;
     case "between":

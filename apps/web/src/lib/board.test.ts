@@ -77,5 +77,10 @@ test("views: status, when and priority, and a note shows if one of its steps fit
   assert.equal(names(board(ts, v({ pri: [0], status: "open" }), "mine", "2026-10-31")), "cd");
   assert.equal(names(board(ts, v({ when: "between", from: "2026-11-01", to: "2026-11-10" }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ when: "between", from: "2026-11-10" }), "mine", "2026-10-31")), "c");
+  // Saturday 31 October: tomorrow is 1 Nov, this week runs Mon 26 Oct to Sun 1 Nov, this month is October.
+  assert.equal(names(board(ts, v({ when: "tomorrow" }), "mine", "2026-10-31")), "");
+  assert.equal(names(board(ts, v({ when: "tomorrow" }), "mine", "2026-11-01")), "b");
+  assert.equal(names(board(ts, v({ when: "thisweek" }), "mine", "2026-10-31")), "d");
+  assert.equal(names(board(ts, v({ when: "month" }), "mine", "2026-11-05")), "bc");
   assert.equal(names(board(ts, v({ time: "untimed", status: "open" }), "mine", "2026-10-31")), "bcd");
 });
