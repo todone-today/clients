@@ -10244,7 +10244,7 @@ input.askRowTitle:focus-visible {
     rotate 0.25s var(--ease);
   animation: sortRise 0.38s var(--ease) both;
 }
-.sortCard[data-dragging] {
+.sortCard[data-held] {
   cursor: grabbing;
   transition: none;
 }
@@ -10312,18 +10312,34 @@ input.askRowTitle:focus-visible {
 .sortEnd {
   display: grid;
   justify-items: center;
-  gap: 0.8rem;
-  margin-top: 3rem;
+  gap: 1rem;
+  margin-top: 4rem;
   text-align: center;
 }
 .sortEnd > .display {
   font-size: clamp(2.4rem, 8vw, 4rem);
 }
-.sortEnd > div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.6rem;
+.sortEndIcon {
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  color: var(--black);
+  background: var(--lime);
+  border: var(--key);
+  box-shadow: var(--lift);
+  rotate: -6deg;
+  animation: sortDone 0.5s var(--ease) both;
+}
+@keyframes sortDone {
+  from {
+    scale: 0.4;
+    rotate: -30deg;
+    opacity: 0;
+  }
+  60% {
+    scale: 1.12;
+  }
 }
 @media (max-width: 760px) {
   .sortCard {
@@ -10629,4 +10645,62 @@ input.askRowTitle:focus-visible {
   .sortTarget[data-side="left"] {
     left: 0.6rem;
   }
+}
+
+/* While dragging: the card fills with where it's heading (stronger the further it goes) and that place's name, with
+   its arrow, grows across it; past the point of no return it's at full strength. That screen edge glows too. */
+.sortCard[data-aim="today"] { --go: var(--lime); }
+.sortCard[data-aim="week"] { --go: var(--cyan); }
+.sortCard[data-aim="month"] { --go: var(--peri); }
+.sortCard[data-aim="skip"] { --go: #b9b3aa; }
+.sortGo {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.4rem;
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 9vw, 3.6rem);
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--black);
+  background: color-mix(in srgb, var(--go) calc(min(1, 0.35 + var(--pull) * 0.75) * 100%), transparent);
+  scale: calc(0.8 + var(--pull) * 0.2);
+  pointer-events: none;
+}
+.sortGo[data-sure] {
+  outline: 4px solid var(--black);
+  outline-offset: -10px;
+}
+.sortGlow {
+  position: fixed;
+  z-index: 5;
+  pointer-events: none;
+  opacity: calc(var(--pull) * 0.9);
+}
+.sortGlow[data-for="today"] { --go: var(--lime); }
+.sortGlow[data-for="week"] { --go: var(--cyan); }
+.sortGlow[data-for="month"] { --go: var(--peri); }
+.sortGlow[data-for="skip"] { --go: #b9b3aa; }
+.sortGlow[data-side="right"] {
+  inset: 0 0 0 auto;
+  width: 28vw;
+  background: linear-gradient(to left, var(--go), transparent);
+}
+.sortGlow[data-side="left"] {
+  inset: 0 auto 0 0;
+  width: 28vw;
+  background: linear-gradient(to right, var(--go), transparent);
+}
+.sortGlow[data-side="up"] {
+  inset: 0 0 auto 0;
+  height: 26vh;
+  background: linear-gradient(to bottom, var(--go), transparent);
+}
+.sortGlow[data-side="down"] {
+  inset: auto 0 0 0;
+  height: 26vh;
+  background: linear-gradient(to top, var(--go), transparent);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check } from "lucide-react";
 import { type List, type Task, relDue, tick, todayISO, waiting } from "@todone/sdk/tasks";
 import { authClient } from "@/lib/auth-client";
 import { addDays, shiftMonths, weekStart } from "@todone/sdk/calendar";
@@ -22,6 +22,7 @@ const DAY: Record<Exclude<Choice, "skip" | "done">, (d: string) => string> = {
   month: (d) => addDays(shiftMonths(`${d.slice(0, 7)}-01`, 1), -1), // by its last day
 };
 const SWIPE: Record<string, Choice> = { right: "today", up: "week", down: "month", left: "skip" };
+const ARROW = { today: ArrowRight, week: ArrowUp, month: ArrowDown, skip: ArrowLeft } as const;
 const STAMP: Record<Choice, string> = { today: "Today", week: "This week", month: "This month", skip: "Later", done: "Done ✓" };
 
 const shuffle = <T,>(xs: T[]) => {
@@ -258,6 +259,8 @@ export function SortDeck({
               </button>
             </p>
           )}
+          {/* That edge of the screen glows in the colour of where the card is heading. */}
+          {heading && <i className={s.sortGlow} data-side={heading} data-for={SWIPE[heading]} style={{ "--pull": pull } as React.CSSProperties} aria-hidden />}
           {/* Where each throw goes, around the card: the one it's heading for lights up. */}
           <div className={s.sortArena} data-aim={aim ?? undefined} data-going={going ?? undefined}>
             {(
@@ -277,12 +280,14 @@ export function SortDeck({
               <article
                 key={card.task.id}
                 className={s.sortCard}
-                data-dragging={drag ? true : undefined}
+                data-held={drag ? true : undefined}
                 data-to={going ?? undefined}
                 data-wrong={wrong || undefined}
+                data-aim={heading ? SWIPE[heading] : undefined}
                 style={
                   {
                     "--fill": practicing ? "var(--butter)" : listColor(card.list.id),
+                    "--pull": pull,
                     translate: drag ? `${drag.x}px ${drag.y}px` : undefined,
                     rotate: drag ? `${drag.x / 18}deg` : undefined,
                   } as React.CSSProperties
@@ -307,12 +312,18 @@ export function SortDeck({
                 }}
                 onPointerCancel={() => ((start.current = null), setDrag(null))}
               >
-                {going && (
-                  <b className={s.sortStamp} data-for={going}>
-                    {STAMP[going]}
-                  </b>
-                )}
                 {face(card)}
+                {/* Where it's going, unmissable: the card fills with that place's colour and its name grows across it. */}
+                {heading && SWIPE[heading] !== "done" && (() => {
+                  const c = SWIPE[heading] as keyof typeof ARROW;
+                  const Icon = ARROW[c];
+                  return (
+                    <span className={s.sortGo} data-for={c} data-sure={going ? true : undefined} aria-hidden>
+                      <Icon size={44} strokeWidth={3.5} />
+                      {STAMP[c]}
+                    </span>
+                  );
+                })()}
               </article>
               {flyers}
             </div>
@@ -333,18 +344,13 @@ export function SortDeck({
         </div>
       ) : (
         <div className={s.sortEnd}>
+          <span className={s.sortEndIcon} aria-hidden>
+            <Check size={44} strokeWidth={3.5} />
+          </span>
           <p className="display">{deck.length ? "All sorted." : "Nothing to sort."}</p>
-          <p>{deck.length ? "Every late and undated task has a day now. Clear head, clear list." : "No late tasks, nothing without a day. Nice."}</p>
-          <div>
-            {log.length > 0 && (
-              <button className="btn" onClick={undo}>
-                <RotateCcw size={16} strokeWidth={2.5} aria-hidden /> Undo the last one
-              </button>
-            )}
-            <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={onDone}>
-              Back to my lists
-            </button>
-          </div>
+          <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={onDone}>
+            Back to my lists
+          </button>
         </div>
       )}
     </div>
