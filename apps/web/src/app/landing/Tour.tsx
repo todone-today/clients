@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play, RotateCcw } from "lucide-react";
 import s from "./landing.module.css";
+import { APP } from "@/lib/urls";
 
 // The onboarding video (apps/video renders it), as a sticker-framed player. Nothing downloads until Play; the
 // chapters jump straight to a part, the one playing fills up as it goes, and the end offers the next step.
@@ -70,7 +71,7 @@ export function Tour() {
           <div className={s.tourEnd}>
             <p className="display">Your turn.</p>
             <div>
-              <Link href="/app?new=1" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+              <Link href={`${APP}/?new=1`} className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
                 Start a list <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
               </Link>
               <button type="button" className="btn" onClick={() => play(0)}>

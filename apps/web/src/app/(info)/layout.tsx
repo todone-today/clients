@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import s from "../(legal)/legal.module.css";
+import { APP } from "@/lib/urls";
 
 // The guide, changelog and status pages: the same quiet reading layout as the policies.
 const PAGES = [
@@ -8,7 +9,7 @@ const PAGES = [
   ["/install", "Get the app"],
   ["/changelog", "Changelog"],
   ["/status", "Status"],
-  ["/app?new=1", "Sign up free"],
+  [`${APP}/?new=1`, "Sign up free"],
 ] as const;
 
 export default function InfoLayout({ children }: { children: React.ReactNode }) {

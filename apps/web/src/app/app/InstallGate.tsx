@@ -62,7 +62,7 @@ export function useInstallGate(): React.ReactNode {
     setSkipped(true);
   };
   const copy = async () => {
-    await navigator.clipboard.writeText(location.origin + "/app").catch(() => {});
+    await navigator.clipboard.writeText(location.origin + "/").catch(() => {});
     setCopied(true);
   };
 

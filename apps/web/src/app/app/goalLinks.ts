@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { type Goal, type GoalItem, goalProgress, togetherShare } from "@todone/sdk/goals";
 import type { Task } from "@todone/sdk/tasks";
 import { api } from "@/lib/api";
+import { SITE } from "@/lib/urls";
 
 export type Mode = "view" | "challenge";
 export type Mine = {
@@ -21,7 +22,7 @@ export function shareFor(goal: string) {
   const t = latest?.together.find((x) => x.slug === slug);
   return t ? togetherShare(t.active, t.boost) : 0;
 }
-export const goalLink = (slug: string) => `${location.origin}/g/${slug}`;
+export const goalLink = (slug: string) => `${SITE}/g/${slug}`;
 
 // The readable copy of one goal: only what the public page shows.
 export function snapshotOf(goal: Goal, tasks: Task[], items: GoalItem[]) {

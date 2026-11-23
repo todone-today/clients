@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Printer } from "lucide-react";
 import { api } from "@/lib/api";
 import { Logo } from "@/components/Logo";
@@ -22,7 +22,7 @@ type R = {
 const rupees = (p: number) => `₹${(p / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function Receipt() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const [r, setR] = useState<R | null>(null);
   const [err, setErr] = useState("");
   useEffect(() => {

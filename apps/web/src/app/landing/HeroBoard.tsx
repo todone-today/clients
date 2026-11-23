@@ -9,6 +9,7 @@ import { useGlide } from "@/lib/glide";
 import { fmtMinutes, relDue, repeatLabel, todayISO, type Task } from "@todone/sdk/tasks";
 import { sticker } from "../app/Stickers";
 import s from "./landing.module.css";
+import { APP } from "@/lib/urls";
 
 // The first screen is a working board: the app's own stickers dropped onto notes do exactly what they do in
 // todone (drag one, or pick one and then click a note), notes tick off, and dragging a note up or down opens a
@@ -122,7 +123,7 @@ export function HeroBoard() {
             offline.
           </p>
           <div className={s.ctas}>
-            <Link href="/app?new=1" className={`btn ${s.primary}`}>
+            <Link href={`${APP}/?new=1`} className={`btn ${s.primary}`}>
               Sign up free today <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Link>
             <a href="#tour" className={s.watch}>

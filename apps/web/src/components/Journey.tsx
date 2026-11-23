@@ -71,7 +71,7 @@ export function Journey() {
     parts.forEach((el) => io.observe(el));
     // Which sign-up button people press, and in which part of the page.
     const click = (e: MouseEvent) => {
-      const a = (e.target as Element).closest?.("a[href*='new=1'], a[href='/app']");
+      const a = (e.target as Element).closest?.("a[href*='new=1'], a[href^='https://app.'], a[href='/app']");
       if (!a) return;
       const part = parts.find((p) => p.contains(a));
       posthog.capture("signup_cta", { text: a.textContent?.trim() ?? "", section: part ? partName(part, parts.indexOf(part)) : "nav" });

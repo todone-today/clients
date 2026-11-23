@@ -142,7 +142,7 @@ export function Members() {
   const [renaming, setRenaming] = useState(false);
   if (!o || !me) return null;
   const manager = me.role === "owner" || me.role === "admin";
-  const link = (id: string) => `${location.origin}/invite/${id}`;
+  const link = (id: string) => `${location.origin}/invite?id=${encodeURIComponent(id)}`;
   const run = async (p: Promise<{ error: { message?: string; status?: number } | null }>) => {
     const r = await p;
     // Out of room on the owner's plan (seats or Plus's 6 people): offer the plans.

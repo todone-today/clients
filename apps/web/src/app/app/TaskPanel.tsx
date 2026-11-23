@@ -58,6 +58,7 @@ import { needsPlan, usePlan } from "./PlanPrompt";
 import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { Focus } from "./Focus";
+import { SITE } from "@/lib/urls";
 import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
 import { useLists } from "@/lib/store";
@@ -172,7 +173,7 @@ export function TaskPanel({
       edit((t) => ({ ...t, share: id, files: undefined }));
       // Copy straight away. Some browsers refuse after a wait; then the Copy link button is right there.
       const copied = await navigator.clipboard
-        .writeText(`${location.origin}/t/${token}`)
+        .writeText(`${SITE}/t/${token}`)
         .then(
           () => true,
           () => false,
@@ -248,7 +249,7 @@ export function TaskPanel({
                   onClick={async () => {
                     if (!shareToken) return;
                     await navigator.clipboard
-                      .writeText(`${location.origin}/t/${shareToken}`)
+                      .writeText(`${SITE}/t/${shareToken}`)
                       .catch(() => {});
                     setCopied(true);
                   }}
@@ -1037,11 +1038,11 @@ function SaveAs({ task, goal }: { task: Task; goal?: string }) {
             ),
         )?.name,
         open: `${location.origin}/app?task=${task.id}`,
-        site: location.origin,
+        site: SITE,
       };
       if (task.share) {
         const v = await shareView(task.share);
-        x.page = `${location.origin}/t/${v.token}`;
+        x.page = `${SITE}/t/${v.token}`;
         x.files = v.task.files ?? task.files;
         x.talk = v.comments.map((c) => ({
           who: c.who,

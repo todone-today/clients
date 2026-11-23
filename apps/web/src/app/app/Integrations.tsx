@@ -27,6 +27,7 @@ import {
   syncNow,
 } from "./integration-actions";
 import s from "./app.module.css";
+import { SITE } from "@/lib/urls";
 
 type State = Awaited<ReturnType<typeof getIntegrations>>;
 type Key =
@@ -597,7 +598,7 @@ function SharedViews() {
               className={s.ghost}
               onClick={() =>
                 navigator.clipboard.writeText(
-                  `${location.origin}/calendar/${sh.token}`,
+                  `${SITE}/calendar/${sh.token}`,
                 )
               }
             >

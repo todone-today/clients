@@ -31,6 +31,7 @@ import { useFolded } from "./folded";
 import { TaskPanel } from "./TaskPanel";
 import { Tip } from "./Tip";
 import s from "./app.module.css";
+import { SITE } from "@/lib/urls";
 
 type View = "day" | "week" | "month" | "year";
 type Item = { list: List; task: Task };
@@ -477,7 +478,7 @@ export function CalendarView({
               const r = await share(view, at);
               if ("error" in r) return setShared(r.error);
               await navigator.clipboard.writeText(
-                `${location.origin}/calendar/${r.token}`,
+                `${SITE}/calendar/${r.token}`,
               );
               setShared(
                 `Copied a read-only link to ${title}. It shows only this ${view}. Stop sharing it any time in Integrations.`,

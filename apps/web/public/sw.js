@@ -18,7 +18,7 @@ self.addEventListener("notificationclick", (e) => {
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((ws) => {
       // An open app opens the task in place (no reload); otherwise a new tab opens on it.
-      const app = ws.find((w) => new URL(w.url).pathname === "/app");
+      const app = ws.find((w) => ["/", "/app"].includes(new URL(w.url).pathname));
       if (app && task) return app.focus().then((w) => w.postMessage({ task }));
       const open = app ?? ws.find((w) => w.url.startsWith(self.location.origin));
       return open ? open.focus().then((w) => w.navigate(url.href)) : self.clients.openWindow(url.href);
@@ -26,34 +26,41 @@ self.addEventListener("notificationclick", (e) => {
   );
 });
 
-// Offline: pages come from the network when it's there (a copy is kept), else from that copy;
-// Next's build files never change under a name, so they're served from the cache once fetched.
+// Pages open from the copy kept here at once, and a fresh copy is fetched behind them for next time (the app's pages
+// are the same static files for everyone, with no data in them, so a copy is always safe to show). The first visit,
+// or a page not kept yet, comes from the network. Next's build files never change under a name, so they're served
+// from the cache once fetched.
 // ponytail: old build files are never evicted; bump CACHE (or prune on activate) if the cache grows too big.
-const CACHE = "todone-v1";
+const CACHE = "todone-v2";
 // Cloned now, before the page starts reading the body.
 const keep = (key, res) => {
   const copy = res.clone();
   caches.open(CACHE).then((c) => c.put(key, copy));
 };
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (e) =>
+  e.waitUntil(
+    caches
+      .keys()
+      .then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  ),
+);
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   const url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
   if (req.mode === "navigate") {
+    const fresh = fetch(req).then((res) => {
+      if (res.ok && !res.redirected) keep(url.pathname, res);
+      return res;
+    });
+    e.waitUntil(fresh.catch(() => {}));
     e.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res.ok) keep(url.pathname, res);
-          return res;
-        })
-        .catch(() =>
-          caches
-            .match(url.pathname)
-            .then((hit) => hit || caches.match("/app"))
-            .then((hit) => hit || Response.error()),
-        ),
+      caches
+        .match(url.pathname)
+        .then((hit) => hit || fresh)
+        .catch(() => caches.match("/").then((hit) => hit || Response.error())),
     );
   } else if (url.pathname.startsWith("/_next/static/")) {
     e.respondWith(

@@ -31,6 +31,7 @@ import {
   type Billing,
 } from "@/lib/landing";
 import s from "./landing.module.css";
+import { APP } from "@/lib/urls";
 
 // The landing page's hands-on pieces: every section can be poked, and each behaves the way todone does.
 
@@ -814,7 +815,7 @@ export function Pay({
 }) {
   return (
     <a
-      href={`/app?plan=${plan}`}
+      href={`${APP}/?plan=${plan}`}
       className="btn"
       style={{ "--fill": fill } as React.CSSProperties}
     >
@@ -939,7 +940,7 @@ export function Pricing() {
                   Choose {p.name}
                 </Pay>
               ) : (
-                <a href="/app?new=1" className="btn">
+                <a href={`${APP}/?new=1`} className="btn">
                   Start free
                 </a>
               )}

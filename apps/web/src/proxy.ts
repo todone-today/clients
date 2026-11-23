@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 import { proxyHeaders } from "@/lib/server";
 
 export function proxy(request: NextRequest) {
@@ -16,11 +15,8 @@ export function proxy(request: NextRequest) {
     headers.delete("authorization");
     return NextResponse.next({ request: { headers } });
   }
-  // Optimistic check only: the server verifies the session on every call.
-  if (getSessionCookie(request)) return NextResponse.next();
-  const login = new URL("/login", request.url);
-  login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search); // e.g. /app?plan=plus-year
-  return NextResponse.redirect(login);
+  return NextResponse.next();
 }
 
-export const config = { matcher: ["/app/:path*", "/api/:path*", "/ingest/:path*"] };
+// The website only (the app is static, at app.todone.today; signing in happens there).
+export const config = { matcher: ["/api/:path*", "/ingest/:path*"] };

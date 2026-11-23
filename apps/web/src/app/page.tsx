@@ -34,6 +34,7 @@ import { Tour } from "./landing/Tour";
 import { Journey } from "@/components/Journey";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
+import { APP } from "@/lib/urls";
 
 const ISSUES = `${REPO}/clients/issues/new/choose`;
 
@@ -56,7 +57,7 @@ export default function Home() {
         </nav>
         <div className={s.end}>
           <ThemeToggle tile={s.tile} />
-          <Link href="/app" className="btn">
+          <Link href={APP} className="btn">
             Open the app
           </Link>
         </div>
@@ -77,7 +78,7 @@ export default function Home() {
             Type it or say it in Hindi, German, French, English, or a mix. todone works out what you actually need to do and writes the to-dos in English, with the details filled in. You check it before anything is added.
           </p>
           <AskDemo />
-          <Link href="/app?new=1" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+          <Link href={`${APP}/?new=1`} className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
             Try it free
           </Link>
         </section>
@@ -168,7 +169,7 @@ export default function Home() {
               </li>
             </ul>
             <Link
-              href="/app?new=1"
+              href={`${APP}/?new=1`}
               className="btn"
               style={{ "--fill": "var(--butter)" } as React.CSSProperties}
             >
@@ -418,7 +419,7 @@ export default function Home() {
             <span className={s.slab}>Tick it off.</span>
           </p>
           <Link
-            href="/app?new=1"
+            href={`${APP}/?new=1`}
             className="btn"
             style={{ "--fill": "var(--butter)" } as React.CSSProperties}
           >

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import s from "../../login/login.module.css";
+import s from "../login/login.module.css";
 
 export function Accept() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const { data: session, isPending } = authClient.useSession();
   const [invite, setInvite] = useState<{ organizationName: string; email: string } | null>(null);
   const [err, setErr] = useState("");
@@ -20,7 +20,7 @@ export function Accept() {
     });
   }, [id, session]);
 
-  const signIn = `/login?next=${encodeURIComponent(`/invite/${id}`)}`;
+  const signIn = `/login?next=${encodeURIComponent(`/invite?id=${id}`)}`;
   return (
     <main className={s.page}>
       <div className={`sticker ${s.card}`}>

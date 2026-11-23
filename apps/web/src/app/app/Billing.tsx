@@ -152,7 +152,7 @@ export function Billing() {
                   {rupees(x.amount)}
                   {x.refunded ? ` · refunded ${rupees(x.refunded)}` : ""}
                 </b>
-                <a href={`/app/receipt/${x.id}`} target="_blank" rel="noopener">
+                <a href={`/app/receipt?id=${encodeURIComponent(x.id)}`} target="_blank" rel="noopener">
                   <Receipt size={14} strokeWidth={2.5} aria-hidden /> {x.invoice_no}
                 </a>
               </li>
