@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usage as counted } from "@/lib/usage";
 import { ArrowRight, ArrowUp, Check, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
-import { api, PLAN_EVENT } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useDictation } from "@/lib/dictate";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
 import { authClient } from "@/lib/auth-client";
 import { toBin, update, useLists } from "@/lib/store";
@@ -17,7 +18,6 @@ import s from "./app.module.css";
 
 const newId = () => uid() + uid();
 const weekday = () => new Date().toLocaleDateString("en", { weekday: "long" });
-const MAX_SECONDS = 300;
 
 type Phase = "idle" | "recording" | "sending" | "queued" | "transcribing" | "thinking";
 const SAYS: Record<Phase, string> = {
@@ -52,10 +52,10 @@ export function AiImport({
   const { lists: everything } = useLists();
   const { items } = useGoalItems();
   const [tab, setTab] = useState<"ask" | "paste">("ask");
+  const [promptText, setPromptText] = useState(""); // Use your own AI's prompt, made when it's unfolded
+  const [kind, setKind] = useState<"ideas" | "goals" | "rewards" | null>(null); // the page it was asked from (the refs below go with requests)
   const [words, setWords] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [secs, setSecs] = useState(0);
-  const [transcript, setTranscript] = useState("");
   const [usage, setUsage] = useState<{ used: number; limit: number | null } | null>(null);
   const [answer, setAnswer] = useState(""); // a pasted answer (Use your own AI)
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -71,8 +71,6 @@ export function AiImport({
   const [copied, setCopied] = useState(false);
   const [today, setToday] = useState(""); // read when the dialog opens, not while the page renders
   const [err, setErr] = useState("");
-  const rec = useRef<MediaRecorder | null>(null);
-  const job = useRef<string | null>(null);
   const asking = ai && tab === "ask";
 
   // `fresh`: the same ask again with lists now shared, so the conversation so far isn't sent as "already planned".
@@ -156,15 +154,10 @@ export function AiImport({
     turn.current++; // an answer still on its way for what was stopped is ignored when it lands
     ideasMode.current = false;
     focus.current = null;
-    const r = rec.current;
-    rec.current = null; // its onstop sees it was cancelled
-    r?.stream.getTracks().forEach((t) => t.stop());
-    if (r?.state === "recording") r.stop();
-    if (job.current) api("DELETE", `/ai/jobs/${job.current}`).catch(() => {});
-    job.current = null;
+    setKind(null);
+    talk.stop();
     setAnswer("");
     setWords("");
-    setTranscript("");
     setPhase("idle");
     setErr("");
   };
@@ -249,18 +242,6 @@ export function AiImport({
     dispatchEvent(new CustomEvent<Task[]>(IDEAS_EVENT, { detail: ideas }));
     close();
   };
-  const answered = (r: { result: string; used?: number; limit?: number | null }, add = true) => {
-    // Spoken while its questions waited: that was the answer (the job carried them), so the plan is made again.
-    if (add && qs.length && !ideasMode.current) {
-      answeredOnce.current = true;
-      add = false;
-      setQs([]);
-    }
-    land(r.result, add, shared?.refs);
-    setWords("");
-    setPhase("idle");
-    if (r.used !== undefined) setUsage({ used: r.used, limit: r.limit ?? null });
-  };
   const askText = async (text = words, add = true, open = shared, fresh = false) => {
     if (!text.trim()) return;
     setErr("");
@@ -302,87 +283,26 @@ export function AiImport({
       if (mine === turn.current) failed(e);
     }
   };
-  type JobView = { status: Phase | "ready" | "failed"; transcript?: string; result?: string; error?: string; used?: number; limit?: number };
-  const poll = async (id: string) => {
-    for (;;) {
-      if (job.current !== id) return; // closed, or started again
-      const j = await api<JobView>("GET", `/ai/jobs/${id}`);
-      if (j.transcript) setTranscript((lastAsk.current = j.transcript));
-      if (j.status === "ready" && j.result) {
-        const heard = j.transcript ?? "";
-        setSaid((x) => (x ? `${x}\n${heard}` : heard));
-        return answered({ result: j.result, used: j.used, limit: j.limit });
-      }
-      if (j.status === "failed") throw new Error(j.error ?? "That didn't work. Try again.");
-      setPhase(j.status as Phase);
-      await new Promise((r) => setTimeout(r, 1500));
-    }
+  // Speak: the words show in the box as you talk (lib/dictate.ts), after anything already typed there.
+  const before = useRef("");
+  const talk = useDictation((t) => setWords(before.current && t ? `${before.current} ${t}` : before.current || t));
+  const listening = talk.on;
+  const record = () => {
+    before.current = words.trim();
+    void talk.start();
   };
-  const send = async (blob: Blob) => {
-    setPhase("sending");
-    try {
-      const r = await fetch("/api/ai/voice", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": blob.type || "audio/webm", "x-context": encodeURIComponent(JSON.stringify(context())) },
-        body: blob,
-      });
-      const data = await r.json().catch(() => null);
-      if (r.status === 402) dispatchEvent(new CustomEvent(PLAN_EVENT, { detail: data?.error }));
-      if (!r.ok) throw new Error(data?.error ?? "Couldn't send the recording.");
-      job.current = data.id;
-      counted({ name: "ask_used", via: "voice" });
-      await poll(data.id);
-    } catch (e) {
-      failed(e);
-    }
-  };
-  const record = async () => {
-    setErr("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const type = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4"].find((t) => MediaRecorder.isTypeSupported(t));
-      const r = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), audioBitsPerSecond: 24_000 });
-      const parts: Blob[] = [];
-      r.ondataavailable = (e) => {
-        if (e.data.size) parts.push(e.data);
-      };
-      r.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        if (rec.current !== r) return; // cancelled
-        rec.current = null;
-        send(new Blob(parts, { type: (r.mimeType || "audio/webm").split(";")[0] }));
-      };
-      rec.current = r;
-      r.start(1000);
-      setSecs(0);
-      setPhase("recording");
-    } catch {
-      setErr("No microphone. Allow it for this site, or type instead.");
-    }
-  };
-  const stop = () => {
-    if (rec.current?.state === "recording") rec.current.stop();
-  };
-  // The recording clock, and its 5-minute cap.
-  useEffect(() => {
-    if (phase !== "recording") return;
-    const t = setInterval(() => setSecs((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [phase]);
-  useEffect(() => {
-    if (secs >= MAX_SECONDS) stop();
-  }, [secs]);
+  const stop = talk.stop;
+  const secs = talk.secs;
   // How long it has been working (sending, transcribing, thinking), shown beside what it's doing.
   const [waited, setWaited] = useState(0);
   useEffect(() => {
-    if (phase === "idle" || phase === "recording") return;
+    if (phase === "idle") return;
     const t = setInterval(() => setWaited((n) => n + 1), 1000);
     return () => (clearInterval(t), setWaited(0));
   }, [phase]);
   const doing =
     phase === "thinking"
-      ? ideasMode.current
+      ? kind === "ideas"
         ? "Making idea cards…"
         : shared
           ? `Working on ${shared.open.map((l) => `“${l.name}”`).join(", ")}…`
@@ -468,18 +388,21 @@ export function AiImport({
   };
   // The bar at the bottom of the page (AskBar) asks here: words to answer straight away, or the mic.
   const fromBar = useRef<(a: Ask) => void>(() => {});
-  fromBar.current = (a: Ask) => {
-    if (!ai) return;
-    halt();
-    ideasMode.current = a.mode === "ideas";
-    focus.current = a.mode === "goals" || a.mode === "rewards" ? a.mode : null;
-    setTab("ask");
-    open();
-    if ("text" in a) {
-      setWords(a.text);
-      askText(a.text);
-    } else if ("voice" in a) record();
-  };
+  useEffect(() => {
+    fromBar.current = (a: Ask) => {
+      if (!ai) return;
+      halt();
+      ideasMode.current = a.mode === "ideas";
+      focus.current = a.mode === "goals" || a.mode === "rewards" ? a.mode : null;
+      setKind(a.mode ?? null);
+      setTab("ask");
+      open();
+      if ("text" in a) {
+        setWords(a.text);
+        askText(a.text);
+      }
+    };
+  });
   useEffect(() => {
     const on = (e: Event) => fromBar.current((e as CustomEvent<Ask>).detail);
     addEventListener(ASK_EVENT, on);
@@ -535,7 +458,7 @@ export function AiImport({
                   placeholder={busy ? SAYS[phase] : "Ask again or add more…"}
                   aria-label="Ask again or add more"
                 />
-                {phase === "recording" ? (
+                {listening ? (
                   <button type="button" className={s.askMic} data-on onClick={stop} aria-label={`Stop recording, ${clock}`}>
                     <Square size={14} strokeWidth={3} />
                   </button>
@@ -544,7 +467,7 @@ export function AiImport({
                     <Mic size={18} strokeWidth={2.5} />
                   </button>
                 )}
-                <button className={s.askGo} disabled={busy || !words.trim()} aria-label="Add more">
+                <button className={s.askGo} disabled={busy || listening || !words.trim()} aria-label="Add more">
                   <ArrowUp size={18} strokeWidth={3} />
                 </button>
               </form>
@@ -557,12 +480,12 @@ export function AiImport({
                   id="ai-words"
                   rows={6}
                   value={words}
-                  disabled={busy}
+                  disabled={busy || listening}
                   onChange={(e) => setWords(e.target.value)}
                   placeholder="Type or talk, in any language: “Call Rahul tomorrow at 5, kal tak content approve karwana hai, gym 4 times a week, and a movie night as my reward.”"
                 />
                 <div className={s.aiInto}>
-                  {phase === "recording" ? (
+                  {listening ? (
                     <button className="btn" style={{ "--fill": "var(--hot)" } as React.CSSProperties} onClick={stop}>
                       <Square size={14} strokeWidth={3} /> Stop · {clock}
                     </button>
@@ -575,9 +498,16 @@ export function AiImport({
                     className="btn"
                     style={{ "--fill": "var(--lime)" } as React.CSSProperties}
                     onClick={() => askText()}
-                    disabled={busy || !words.trim()}
+                    disabled={busy || listening || !words.trim()}
                   >
-                    <Sparkles size={16} strokeWidth={2.5} /> Make my lists
+                    <Sparkles size={16} strokeWidth={2.5} />{" "}
+                    {kind === "ideas"
+                      ? "Add my ideas"
+                      : kind === "goals"
+                        ? "Make my goals"
+                        : kind === "rewards"
+                          ? "Make my rewards"
+                          : "Make my lists"}
                   </button>
                 </div>
               </>
@@ -587,15 +517,9 @@ export function AiImport({
               <Working doing={doing} waited={waited} onStop={halt} hearing={phase !== "thinking"} />
             ) : (
               <p className={s.aiStatus} role="status">
-                {phase === "recording" && <i className={s.recDot} aria-hidden />}
-                {SAYS[phase]}
+                {listening && <i className={s.recDot} aria-hidden />}
+                {listening ? SAYS.recording : SAYS[phase]}
               </p>
-            )}
-            {transcript && (
-              <details className={s.aiHeard}>
-                <summary>What todone heard</summary>
-                <p>{transcript}</p>
-              </details>
             )}
             {shared && (
               <p className={s.aiHeard} role="status">
@@ -622,9 +546,12 @@ export function AiImport({
                 {copied ? <Check size={18} strokeWidth={3} /> : <Copy size={18} strokeWidth={2.5} />} {copied ? "Copied" : "Copy prompt"}
               </button>
               {/* The prompt itself, for the curious: folded away. */}
-              <details className={s.aiPrompt}>
+              <details
+                className={s.aiPrompt}
+                onToggle={(e) => e.currentTarget.open && today && setPromptText(planPrompt({ ...context(), today }))}
+              >
                 <summary>See what it says</summary>
-                <pre className={s.code}>{today && planPrompt({ ...context(), today })}</pre>
+                <pre className={s.code}>{promptText}</pre>
               </details>
             </li>
             <li>
@@ -685,7 +612,7 @@ export function AiImport({
             close();
           }}
         />
-        {err && <p className={s.err}>{err}</p>}
+        {(err || talk.err) && <p className={s.err}>{err || talk.err}</p>}
         {needs.length > 0 && (
           <Consent
             names={needs.map((l) => l.name)}

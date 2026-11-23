@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Mic, Plus, Sparkles } from "lucide-react";
+import { useRef, useState } from "react";
+import { Mic, Plus, Sparkles, Square } from "lucide-react";
+import { useDictation } from "@/lib/dictate";
 import s from "./app.module.css";
 
 // The one bar at the foot of each page (lists, Brainstorm, Goals, Rewards, the calendar): type and press Enter to add
-// the page's own thing as typed; ✨ hands the words to Ask todone (the AiImport dialog) to work out; the mic says it
-// to Ask todone instead. Each page has its own words and, for Ask todone, its own focus.
+// the page's own thing as typed; ✨ hands the words to Ask todone (the AiImport dialog) to work out; the mic types
+// what you say into the bar, as you say it (lib/dictate.ts). Each page has its own words and, for Ask todone, its own focus.
 export const ASK_EVENT = "todone:ask";
 // `mode`: asked from Brainstorm (what it finds lands there as idea cards, IDEAS_EVENT), Goals or Rewards (it suggests
 // those only). `open`: just open the dialog, nothing typed yet.
 export type Focus = "ideas" | "goals" | "rewards";
-export type Ask = ({ text: string } | { voice: true } | { open: true }) & { mode?: Focus };
+export type Ask = ({ text: string } | { open: true }) & { mode?: Focus };
 export const IDEAS_EVENT = "todone:ideas";
 const ask = (detail: Ask) => dispatchEvent(new CustomEvent<Ask>(ASK_EVENT, { detail }));
 
@@ -36,6 +37,8 @@ export function AskBar({
   onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void; // e.g. a pasted list becoming many ideas
 }) {
   const [text, setText] = useState("");
+  const before = useRef("");
+  const talk = useDictation((t) => setText(before.current && t ? `${before.current} ${t}` : before.current || t));
   const w = WORDS[place];
   const mode = w.mode ? { mode: w.mode } : {};
   return (
@@ -57,6 +60,7 @@ export function AskBar({
         value={text}
         onChange={(e) => setText(e.target.value)}
         onPaste={onPaste}
+        readOnly={talk.on}
         placeholder={ai ? w.ai : w.plain}
         autoComplete="off"
         enterKeyHint="done"
@@ -64,15 +68,24 @@ export function AskBar({
       />
       {ai && (
         <>
-          <button
-            type="button"
-            className={s.askMic}
-            onClick={() => ask({ voice: true, ...mode })}
-            aria-label="Say it to todone"
-            data-tip="Say it"
-          >
-            <Mic size={18} strokeWidth={2.5} />
-          </button>
+          {talk.on ? (
+            <button type="button" className={s.askMic} data-on onClick={talk.stop} aria-label="Stop listening" data-tip="Stop">
+              <Square size={14} strokeWidth={3} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={s.askMic}
+              onClick={() => {
+                before.current = text.trim();
+                void talk.start();
+              }}
+              aria-label="Speak instead of typing"
+              data-tip={talk.err || "Speak"}
+            >
+              <Mic size={18} strokeWidth={2.5} />
+            </button>
+          )}
           <button
             type="button"
             className={s.askAi}
