@@ -1,0 +1,60 @@
+"use client";
+
+import { useEffect } from "react";
+import s from "./app.module.css";
+
+// Phones: the dialogs that open as sheets from the bottom (s.goalDialog: Your week, sharing, goals, views…) close by
+// dragging them down, from the grab bar or anywhere while the sheet is scrolled to its top. They follow the finger,
+// go if pulled far (or flicked), and spring back otherwise. On a computer they're centred dialogs with a ×.
+export function useSheetSwipe() {
+  useEffect(() => {
+    if (!matchMedia("(max-width: 760px)").matches) return;
+    let sheet: HTMLDialogElement | null = null;
+    let y0 = 0;
+    let t0 = 0;
+    let dy = 0;
+    const down = (e: TouchEvent) => {
+      const d = (e.target as Element | null)?.closest?.("dialog[open]") as HTMLDialogElement | null;
+      if (!d || !d.classList.contains(s.goalDialog) || d.scrollTop > 0) return;
+      if ((e.target as Element).closest("input, textarea, select, [contenteditable=true], [role=slider]")) return;
+      sheet = d;
+      y0 = e.touches[0].clientY;
+      t0 = Date.now();
+      dy = 0;
+    };
+    const move = (e: TouchEvent) => {
+      if (!sheet) return;
+      dy = Math.max(0, e.touches[0].clientY - y0);
+      if (dy > 0 && sheet.scrollTop <= 0) {
+        sheet.style.transition = "none";
+        sheet.style.translate = `0 ${dy}px`;
+        e.preventDefault(); // the page mustn't scroll (or pull to refresh) behind it
+      }
+    };
+    const up = () => {
+      const d = sheet;
+      sheet = null;
+      if (!d) return;
+      const fast = dy / Math.max(1, Date.now() - t0) > 0.6; // a flick
+      d.style.transition = "translate 0.2s ease";
+      if (dy > 120 || (fast && dy > 40)) {
+        d.style.translate = "0 100%";
+        setTimeout(() => {
+          d.close();
+          d.style.translate = "";
+          d.style.transition = "";
+        }, 180);
+      } else d.style.translate = "";
+    };
+    addEventListener("touchstart", down, { passive: true });
+    addEventListener("touchmove", move, { passive: false });
+    addEventListener("touchend", up);
+    addEventListener("touchcancel", up);
+    return () => {
+      removeEventListener("touchstart", down);
+      removeEventListener("touchmove", move);
+      removeEventListener("touchend", up);
+      removeEventListener("touchcancel", up);
+    };
+  }, []);
+}

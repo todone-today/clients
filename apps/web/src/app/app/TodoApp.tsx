@@ -74,6 +74,7 @@ import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
 import { Dock } from "./Dock";
+import { useSheetSwipe } from "./sheetSwipe";
 import { SortDeck, toSort } from "./SortDeck";
 import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
@@ -157,6 +158,7 @@ const count = (ts: Task[], today = todayISO()) => {
 export function TodoApp({ demo = false }: { demo?: boolean }) {
   // Phones in the browser: the app is installed first (or let in for this visit), so the gate shows instead.
   const gate = useInstallGate();
+  useSheetSwipe(); // phones: sheets close by dragging them down
   const router = useRouter();
   const {
     data: session,

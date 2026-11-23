@@ -9722,6 +9722,10 @@ input.askRowTitle:focus-visible {
     box-shadow: none;
     animation: sheetUp 0.28s var(--ease) both;
   }
+  /* Closed by dragging down (sheetSwipe.ts), so no × on a phone. */
+  .goalDialog .panelClose {
+    display: none;
+  }
   .goalDialog::before {
     content: "";
     position: absolute;
