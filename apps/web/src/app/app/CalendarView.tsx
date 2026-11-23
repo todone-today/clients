@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Share2, Trash2 } from "lucide-react";
+import { CalendarX, Check, ChevronDown, ChevronLeft, ChevronRight, Plus, Share2, SquareArrowOutUpRight, Trash2 } from "lucide-react";
 import { Select } from "@/components/Select";
 import {
   addDays,
@@ -23,6 +23,7 @@ import {
   fmtMinutes,
   tick,
   todayISO,
+  uid,
   waiting,
 } from "@todone/sdk/tasks";
 import { Diamond, needsPlan, usePlan } from "./PlanPrompt";
@@ -277,6 +278,25 @@ export function CalendarView({
   const openList = opened && lists.find((l) => l.id === opened.listId);
   const openItem = openList && openList.tasks.flatMap((t) => [t, ...t.sub]).find((t) => t.id === opened.id);
 
+  // Right-click (or long-press on a phone): on a task, open, tick, move or delete it; on a day or a time, add one there.
+  const [menu, setMenu] = useState<{ x: number; y: number; it?: Item; day?: string; time?: string } | null>(null);
+  const onMenu = (e: React.MouseEvent) => {
+    if (!update) return;
+    const el = e.target as HTMLElement;
+    const key = el.closest<HTMLElement>("[data-key]")?.dataset.key;
+    const it = key ? all.find((x) => keyOf(x) === key) : undefined;
+    const spotEl = el.closest<HTMLElement>("[data-drop]");
+    const [spot, day] = (spotEl?.dataset.drop?.split("|")[1] ?? "").split(":");
+    if (!it && !["day", "all", "col"].includes(spot)) return;
+    e.preventDefault();
+    const time = !it && spot === "col" && spotEl ? toClock(minuteAt({ x: e.clientX, y: e.clientY, el: spotEl })) : undefined;
+    setMenu({ x: e.clientX, y: e.clientY, it, day, time });
+  };
+  const addOn = (title: string, listId: string, day: string, time?: string) => {
+    const t: Task = { id: uid(), title, done: false, created: Date.now(), sub: [], due: day, ...(time ? { at: time } : {}) };
+    update?.(listId, (l) => ({ ...l, tasks: [t, ...l.tasks] }));
+  };
+
   const chip = (it: Item, withTime: boolean) => (
     <div
       key={it.task.id}
@@ -496,7 +516,7 @@ export function CalendarView({
         )}
       </div>
 
-      <div className={s.planner} data-tray={!!update}>
+      <div className={s.planner} data-tray={!!update} onContextMenu={onMenu}>
         {view === "year" ? (
           <div className={s.year}>
             {Array.from(
@@ -615,7 +635,142 @@ export function CalendarView({
         )}
       </div>
     </div>
+    {menu && update && (
+      <CalMenu
+        {...menu}
+        lists={lists}
+        only={only}
+        today={today}
+        onClose={() => setMenu(null)}
+        onOpen={(it) => setOpened({ listId: it.list.id, id: it.task.id })}
+        onTick={(it) => update(it.list.id, (l) => ({ ...l, tasks: tick(l.tasks, it.task.id, today, me) }))}
+        onMove={move}
+        onBin={(it) => binIt(withPicked(it))}
+        onAdd={addOn}
+      />
+    )}
     </>
+  );
+}
+
+// The calendar's right-click menu, where the click was. On a task: open, tick, move to today / tomorrow / next week,
+// take its date off, delete. On a day (or a time in the day and week views): type a task, pick its list, add it.
+function CalMenu({
+  x,
+  y,
+  it,
+  day,
+  time,
+  lists,
+  only,
+  today,
+  onClose,
+  onOpen,
+  onTick,
+  onMove,
+  onBin,
+  onAdd,
+}: {
+  x: number;
+  y: number;
+  it?: Item;
+  day?: string;
+  time?: string;
+  lists: List[];
+  only: string;
+  today: string;
+  onClose: () => void;
+  onOpen: (it: Item) => void;
+  onTick: (it: Item) => void;
+  onMove: (it: Item, patch: Partial<Task>) => void;
+  onBin: (it: Item) => void;
+  onAdd: (title: string, listId: string, day: string, time?: string) => void;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const [title, setTitle] = useState("");
+  const [listId, setListId] = useState(only !== "all" ? only : (lists[0]?.id ?? ""));
+  // Kept on screen: it opens left or up when there's no room right or below.
+  const [pos, setPos] = useState({ left: x, top: y });
+  useEffect(() => {
+    const r = box.current?.getBoundingClientRect();
+    if (r) setPos({ left: Math.max(8, Math.min(x, innerWidth - r.width - 8)), top: Math.max(8, Math.min(y, innerHeight - r.height - 8)) });
+    const away = (e: Event) => !box.current?.contains(e.target as Node) && onClose();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    addEventListener("pointerdown", away, true);
+    addEventListener("keydown", esc);
+    addEventListener("scroll", onClose, true);
+    return () => {
+      removeEventListener("pointerdown", away, true);
+      removeEventListener("keydown", esc);
+      removeEventListener("scroll", onClose, true);
+    };
+  }, [x, y, onClose]);
+  const act = (f: () => void) => () => {
+    f();
+    onClose();
+  };
+  const when = day ? `${label(day, { weekday: "short", month: "short", day: "numeric" })}${time ? ` at ${time}` : ""}` : "";
+  return (
+    <div ref={box} className={s.calMenu} role="menu" style={{ left: pos.left, top: pos.top }} onContextMenu={(e) => e.preventDefault()}>
+      {it ? (
+        <>
+          <p className={s.calMenuHead}>{it.task.title}</p>
+          <button role="menuitem" onClick={act(() => onOpen(it))}>
+            <SquareArrowOutUpRight size={16} strokeWidth={2.5} aria-hidden /> Open
+          </button>
+          <button role="menuitem" onClick={act(() => onTick(it))} disabled={waiting(it.task, today)}>
+            <Check size={16} strokeWidth={3} aria-hidden /> {it.task.done ? "Not done" : "Done"}
+          </button>
+          <hr />
+          {(
+            [
+              ["Today", today],
+              ["Tomorrow", addDays(today, 1)],
+              ["Next week", addDays(today, 7)],
+            ] as const
+          ).map(([name, d]) => (
+            <button key={name} role="menuitem" onClick={act(() => onMove(it, { due: d }))} disabled={it.task.due === d}>
+              <ChevronRight size={16} strokeWidth={2.5} aria-hidden /> {name}
+            </button>
+          ))}
+          {it.task.due && (
+            <button role="menuitem" onClick={act(() => onMove(it, { due: undefined, at: undefined }))}>
+              <CalendarX size={16} strokeWidth={2.5} aria-hidden /> No date
+            </button>
+          )}
+          <hr />
+          <button role="menuitem" data-danger onClick={act(() => onBin(it))}>
+            <Trash2 size={16} strokeWidth={2.5} aria-hidden /> Delete
+          </button>
+        </>
+      ) : (
+        day && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!title.trim() || !listId) return;
+              onAdd(title.trim(), listId, day, time);
+              onClose();
+            }}
+          >
+            <p className={s.calMenuHead}>New task · {when}</p>
+            <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?" aria-label="Task" />
+            {lists.length > 1 && (
+              <select value={listId} onChange={(e) => setListId(e.target.value)} aria-label="List">
+                {lists.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!title.trim()}>
+              <Plus size={16} strokeWidth={3} aria-hidden /> Add
+            </button>
+          </form>
+        )
+      )}
+    </div>
   );
 }
 

@@ -9954,3 +9954,75 @@ input.askRowTitle:focus-visible {
     outline: 2px solid var(--black);
   }
 }
+
+/* The calendar's right-click menu: a small sticker where you clicked. */
+.calMenu {
+  position: fixed;
+  z-index: 300; /* above the add bar and the tray */
+  display: grid;
+  gap: 0.15rem;
+  width: 17rem;
+  padding: 0.4rem;
+  color: var(--black);
+  background: #fff8ef;
+  border: var(--key);
+  box-shadow: var(--lift);
+  animation: gdIn 0.15s var(--ease) both;
+  --ink: var(--black);
+  --ink-2: #4a4540;
+}
+.calMenu > button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  color: var(--black);
+  background: none;
+  border: 0;
+}
+.calMenu > button:hover:not(:disabled),
+.calMenu > button:focus-visible {
+  background: var(--butter);
+  outline: none;
+}
+.calMenu > button:disabled {
+  opacity: 0.4;
+}
+.calMenu > button[data-danger] {
+  color: #b3261e;
+}
+.calMenu hr {
+  margin: 0.2rem 0;
+  border: 0;
+  border-top: 2px dashed rgb(11 11 11 / 0.2);
+}
+.calMenuHead {
+  padding: 0.3rem 0.6rem 0.4rem;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #4a4540;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.calMenu form {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.2rem;
+}
+.calMenu form input,
+.calMenu form select {
+  min-height: 2.6rem;
+  padding: 0 0.6rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
