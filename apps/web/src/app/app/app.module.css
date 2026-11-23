@@ -10026,3 +10026,30 @@ input.askRowTitle:focus-visible {
   background: #fff;
   border: 2px solid var(--black);
 }
+
+/* The add bar's one place on every page (Dock.tsx): fixed to the bottom of the screen, as wide as the page's column.
+   Above the tab bar on a phone. Its spot in the page keeps room for it at the end. */
+.dockSpot {
+  flex: none;
+  margin-top: 2rem;
+}
+.dock {
+  position: fixed;
+  bottom: 1.25rem;
+  z-index: 40;
+}
+.dock .askBar {
+  position: static;
+  margin: 0;
+}
+.dock.askDock {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .dock {
+    bottom: calc(5.1rem + env(safe-area-inset-bottom));
+  }
+  .dockSpot {
+    margin-top: 1.25rem;
+  }
+}

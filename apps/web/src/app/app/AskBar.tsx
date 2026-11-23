@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Mic, Plus, Sparkles, Square } from "lucide-react";
 import { useDictation } from "@/lib/dictate";
+import { Dock } from "./Dock";
 import s from "./app.module.css";
 
 // The one bar at the foot of each page (lists, Brainstorm, Goals, Rewards, the calendar): type and press Enter to add
@@ -30,7 +31,9 @@ export function AskBar({
   ai,
   onAdd,
   onPaste,
+  docked = true,
 }: {
+  docked?: boolean; // false: it sits in a dock of its own (a list's, with the Bin)
   place: Place;
   ai: boolean;
   onAdd: (text: string) => void;
@@ -41,7 +44,7 @@ export function AskBar({
   const talk = useDictation((t) => setText(before.current && t ? `${before.current} ${t}` : before.current || t));
   const w = WORDS[place];
   const mode = w.mode ? { mode: w.mode } : {};
-  return (
+  const bar = (
     <form
       data-tour="ask"
       className={s.askBar}
@@ -105,4 +108,5 @@ export function AskBar({
       </button>
     </form>
   );
+  return docked ? <Dock>{bar}</Dock> : bar;
 }

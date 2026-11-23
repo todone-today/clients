@@ -72,6 +72,7 @@ import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
+import { Dock } from "./Dock";
 import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
 import { useSwipeNav } from "./swipeDrawer";
@@ -1657,7 +1658,7 @@ function ListView({
             </div>
           )}
           {/* The bar, with the Bin just above its right end: where your hands already are. */}
-          <div className={s.askDock}>
+          <Dock className={s.askDock}>
         {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click it to delete the whole list (asks first). */}
             <button
               className={s.bin}
@@ -1672,8 +1673,8 @@ function ListView({
               <Trash2 size={28} strokeWidth={2.5} />
               <span>Bin</span>
             </button>
-            <AskBar place="list" ai={ai} onAdd={addTask} />
-          </div>
+            <AskBar place="list" ai={ai} onAdd={addTask} docked={false} />
+          </Dock>
         </div>
         <Stickers
           active={!!selected || picked.size > 0}
