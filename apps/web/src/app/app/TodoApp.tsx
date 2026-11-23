@@ -592,7 +592,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     document.body.dataset.adding = "1"; // phones: the add bar comes up (it's tucked away otherwise)
     const bar = document.getElementById("ask-bar");
     if (bar) return bar.focus();
-    setPanel(null);
+    show(null);
     setTimeout(() => document.getElementById("ask-bar")?.focus(), 250);
   };
   if (gate && !demo) return gate;
@@ -671,7 +671,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
               )}
               <button
                 aria-pressed={panel === p}
-                onClick={() => setPanel(p)}
+                onClick={() => show(p)}
                 data-tour={p ?? "lists-tab"}
                 aria-label={name}
                 data-tip={name}

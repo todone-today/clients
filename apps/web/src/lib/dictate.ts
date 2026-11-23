@@ -50,8 +50,10 @@ export function useDictation(onWords: (text: string) => void) {
   }, [on]);
   useEffect(() => () => end.current(), []); // closing the page mid-sentence stops the mic
 
-  const viaSystem = (Sys: new () => Rec, emit: (t: string) => void) => {
+  // `instead`: the device refused to listen before hearing a word (an iPhone home-screen app, no network…): use todone's.
+  const viaSystem = (Sys: new () => Rec, emit: (t: string) => void, instead: () => void) => {
     let wanted = true;
+    let moved = false;
     let before = ""; // words from earlier rounds: the system stops after a pause, and starts again here
     let now = "";
     let r: Rec;
@@ -67,6 +69,10 @@ export function useDictation(onWords: (text: string) => void) {
       r.onerror = (e) => {
         if (e.error === "no-speech" || e.error === "aborted") return;
         wanted = false;
+        if (e.error !== "not-allowed" && e.error !== "audio-capture" && !before && !now) {
+          moved = true;
+          return instead();
+        }
         setErr(
           e.error === "not-allowed" || e.error === "service-not-allowed"
             ? "No microphone. Allow it for this site, or type instead."
@@ -76,12 +82,18 @@ export function useDictation(onWords: (text: string) => void) {
       r.onend = () => {
         before = `${before} ${now}`.trim();
         now = "";
+        if (moved) return;
         if (wanted) round();
         else setOn(false);
       };
       r.start();
     };
-    round();
+    try {
+      round();
+    } catch {
+      moved = true;
+      return instead();
+    }
     end.current = () => {
       wanted = false;
       r.stop();
@@ -183,14 +195,17 @@ export function useDictation(onWords: (text: string) => void) {
     const g = ++gen.current;
     const emit = (t: string) => g === gen.current && say.current(t);
     emit("");
-    const Sys = System();
-    try {
-      if (Sys) viaSystem(Sys, emit);
-      else await viaServer(emit);
-    } catch {
-      setErr("No microphone. Allow it for this site, or type instead.");
-      setOn(false);
-    }
+    // Apple's recognizer doesn't run in an app added to the iPhone home screen; todone's does.
+    const homeScreen = (navigator as { standalone?: boolean }).standalone === true;
+    const Sys = homeScreen ? undefined : System();
+    const server = () =>
+      viaServer(emit).catch(() => {
+        if (g !== gen.current) return;
+        setErr("No microphone. Allow it for this site, or type instead.");
+        setOn(false);
+      });
+    if (Sys) viaSystem(Sys, emit, () => void server());
+    else await server();
   };
   const stop = () => end.current();
   return { on, err, secs, start, stop };

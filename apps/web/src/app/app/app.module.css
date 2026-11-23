@@ -10890,8 +10890,11 @@ input.askRowTitle:focus-visible {
   }
   :global(body.is-dragging) .binRow .bin {
     position: fixed;
+    top: auto; /* never also pinned to the top (the floating rule): that stretched it down half the screen */
     right: 1rem;
-    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    width: 9rem;
+    height: 5.5rem;
     z-index: 70;
     display: grid;
     background: var(--ground);
@@ -10963,5 +10966,13 @@ input.askRowTitle:focus-visible {
   from {
     translate: 0 -1.5rem;
     opacity: 0;
+  }
+}
+
+/* Phones: a task opens full screen (nothing of the page peeking out below a short task). */
+@media (max-width: 640px) {
+  .panelFrame,
+  .panelFrame > .panel {
+    min-height: 100dvh;
   }
 }
