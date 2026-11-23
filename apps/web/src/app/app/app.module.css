@@ -10194,6 +10194,9 @@ input.askRowTitle:focus-visible {
 .sortPage {
   display: grid;
   justify-items: center;
+  /* Cards thrown off the side must not widen the page (a phone would scroll sideways): clipped, not scrolled. */
+  overflow-x: clip;
+  overflow-clip-margin: 0;
 }
 .sortPage > .listHead {
   justify-self: stretch;
@@ -10295,20 +10298,6 @@ input.askRowTitle:focus-visible {
 .sortCard[data-to="skip"] {
   filter: grayscale(0.7) brightness(0.95);
 }
-.sortButtons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 0.6rem;
-  width: min(40rem, 100%);
-}
-.sortButtons :global(.btn) {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 3rem;
-}
 .sortSmall {
   display: grid;
   place-items: center;
@@ -10339,14 +10328,6 @@ input.askRowTitle:focus-visible {
 @media (max-width: 760px) {
   .sortCard {
     min-height: min(20rem, 42dvh);
-  }
-  /* Phones: the four choices two by two. */
-  .sortButtons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-  .sortButtons :global(.btn) {
-    justify-content: center;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -10458,12 +10439,6 @@ input.askRowTitle:focus-visible {
     opacity: 0;
   }
 }
-.sortTip {
-  margin: -0.5rem 0 0.9rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--ink-2);
-}
 /* Done: the card swells, stamped, and lifts away. */
 .sortStamp[data-for="done"] {
   background: var(--lime);
@@ -10532,4 +10507,126 @@ input.askRowTitle:focus-visible {
 }
 .calMenuSelect > ul {
   z-index: 2;
+}
+
+/* Where each throw goes, written around the card: This week above, Today right, This month below, Later left. The
+   one the card heads for lights up and grows; past the point of no return it pulses. */
+.sortArena {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(44rem, 100%);
+  padding: 3.25rem 5.5rem;
+}
+.sortTarget {
+  position: absolute;
+  z-index: 0;
+  padding: 0.35rem 0.8rem;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-2);
+  border: 2px dashed var(--hair);
+  transition:
+    color 0.15s,
+    background 0.15s,
+    border-color 0.15s,
+    scale 0.15s var(--ease);
+}
+.sortTarget[data-side="up"] {
+  top: 0.4rem;
+  left: 50%;
+  translate: -50% 0;
+}
+.sortTarget[data-side="down"] {
+  bottom: 0.4rem;
+  left: 50%;
+  translate: -50% 0;
+}
+.sortTarget[data-side="right"] {
+  top: 50%;
+  right: 0;
+  translate: 0 -50%;
+}
+.sortTarget[data-side="left"] {
+  top: 50%;
+  left: 0;
+  translate: 0 -50%;
+}
+.sortTarget[data-on] {
+  color: var(--black);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  scale: 1.12;
+}
+.sortTarget[data-side="right"][data-on] {
+  background: var(--lime);
+}
+.sortTarget[data-side="up"][data-on] {
+  background: var(--cyan);
+}
+.sortTarget[data-side="down"][data-on] {
+  background: var(--peri);
+}
+.sortTarget[data-side="left"][data-on] {
+  background: #d9d4cc;
+}
+.sortArena[data-going] .sortTarget[data-on] {
+  animation: sortPulse 0.6s var(--ease) infinite alternate;
+}
+@keyframes sortPulse {
+  to {
+    scale: 1.25;
+  }
+}
+/* Practice: what to do now, said the way this device does it. */
+.sortLesson {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  margin-bottom: 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: center;
+}
+.sortLesson .link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.sortLesson[data-wrong],
+.sortCard[data-wrong] {
+  animation: sortShake 0.4s var(--ease);
+}
+@keyframes sortShake {
+  20%,
+  60% {
+    translate: -8px 0;
+  }
+  40%,
+  80% {
+    translate: 8px 0;
+  }
+}
+@media (max-width: 760px) {
+  .sortArena {
+    padding: 2.75rem 0.25rem;
+  }
+  /* On a phone the side labels sit flat on the card's left and right edges, inside the screen. */
+  .sortTarget {
+    z-index: 3;
+    font-size: 0.95rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--ground);
+  }
+  .sortTarget[data-side="right"] {
+    right: 0.6rem;
+  }
+  .sortTarget[data-side="left"] {
+    left: 0.6rem;
+  }
 }
