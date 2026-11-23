@@ -41,7 +41,7 @@ import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
 import { Select } from "@/components/Select";
 import { ALL, SORTS, type Sort, type View, board } from "@/lib/board";
-import { Views } from "./Views";
+import { Views, lastView, rememberView } from "./Views";
 import { type At, draggable, placeOn, useDrop } from "@/lib/drag";
 import { useGlide } from "@/lib/glide";
 import { binSound } from "@/lib/sound";
@@ -1091,7 +1091,16 @@ function ListView({
     if (focus) setSelected(focus.id);
   }
   const me = authClient.useSession().data?.user.id;
-  const [show, setShow] = useState<View>(ALL); // the view the board shows (Views.tsx)
+  const [show, setShowState] = useState<View>(ALL); // the view the board shows (Views.tsx)
+  const setShow = (v: View) => {
+    setShowState(v);
+    rememberView(list.id, v.id);
+  };
+  // Opening a list (or coming back to it): the view last picked there.
+  useEffect(() => {
+    const v = lastView(list.id);
+    void Promise.resolve().then(() => setShowState(v));
+  }, [list.id]);
   const DONE: View = { ...ALL, id: "done", name: "Done", status: "done" };
   // The sticker panel (wider screens): tucked away unless pinned, sliding in while a task is picked or held. A pin
   // lasts while you're on this list: it folds again on a refresh or another list (and so do opened steps).

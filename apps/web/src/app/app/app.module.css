@@ -3485,6 +3485,12 @@ input.stick[data-custom][aria-invalid="true"] {
   vertical-align: -3px;
 }
 @media (min-width: 761px) {
+  /* The logo and the sidebar sit close to the window's left edge, open or folded, lined up with each other. */
+  .shell > .top,
+  .shell > .side,
+  .shell .verifyBar {
+    padding-left: 1.25rem;
+  }
   .shell[data-slim] {
     grid-template-columns: 4.25rem 1fr;
   }

@@ -25,6 +25,23 @@ const load = (): View[] => {
   return [...missing, ...vs.map((v) => BUILT_IN.find((b) => b.id === v.id) ?? v)];
 };
 
+// Each list opens on the view last picked there (All if none, or if that view is gone).
+const LAST = "todone:list-view";
+export function lastView(list: string): View {
+  try {
+    const id = (JSON.parse(localStorage.getItem(LAST) ?? "{}") as Record<string, string>)[list];
+    return load().find((v) => v.id === id) ?? ALL;
+  } catch {
+    return ALL;
+  }
+}
+export function rememberView(list: string, view: string) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LAST) ?? "{}") as Record<string, string>;
+    localStorage.setItem(LAST, JSON.stringify({ ...all, [list]: view }));
+  } catch {}
+}
+
 export function Views({
   view,
   onView,
