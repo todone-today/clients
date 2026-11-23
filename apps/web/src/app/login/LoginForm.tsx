@@ -28,7 +28,10 @@ function ProviderMark({ p }: { p: keyof typeof PROVIDER }) {
 // Only same-site paths, so the login page can't be used to bounce people elsewhere.
 const safeNext = () => {
   const n = new URLSearchParams(location.search).get("next") ?? "";
-  return n.startsWith("/") && !n.startsWith("//") ? n : "/app";
+  if (!n.startsWith("/")) return "/app";
+  // Resolved like the browser would ("/\\evil.example" and tabs included); kept only if it stays on this site.
+  const u = new URL(n, location.origin);
+  return u.origin === location.origin ? u.pathname + u.search + u.hash : "/app";
 };
 
 // Your password never leaves this page: it unlocks your keys here, and the server only gets a hash derived from it
@@ -168,7 +171,8 @@ export function LoginForm({
         )}
         <label>
           <span>Email</span>
-          <input name="email" type="email" required autoComplete="email" />
+          {/* "username": what password managers (Apple Passwords, Bitwarden, 1Password) pair with the password. */}
+          <input name="email" type="email" required autoComplete="username" />
         </label>
         {mode !== "reset" && (
           <label>
@@ -204,7 +208,7 @@ export function LoginForm({
           <label className={s.agree}>
             <input type="checkbox" name="agree" required />
             <span>
-              I&apos;m 18 or older and agree to the <Link href="/terms">Terms</Link> and{" "}
+              I&apos;m 13 or older (with a parent&apos;s OK if under 18) and agree to the <Link href="/terms">Terms</Link> and{" "}
               <Link href="/privacy">Privacy Policy</Link>.
             </span>
           </label>

@@ -315,9 +315,9 @@ export default function Privacy() {
 
       <h2>Children</h2>
       <p>
-        {NAME} is for people 18 and over. We don&apos;t knowingly collect data
-        from children; if you think a child has made an account, write to us and
-        we&apos;ll delete it.
+        {NAME} is for people 13 and over; under 18, with a parent or guardian&apos;s
+        agreement. We don&apos;t knowingly collect data from children under 13; if you
+        think one has made an account, write to us and we&apos;ll delete it.
       </p>
 
       <h2>Security</h2>

@@ -87,6 +87,17 @@ export function Unlock({ userId, email, onDone }: { userId: string; email: strin
             }
           })}
         >
+          {/* The account this password belongs to, for password managers (they fill and save by username). */}
+          <input
+            type="email"
+            name="username"
+            autoComplete="username"
+            value={email}
+            readOnly
+            tabIndex={-1}
+            aria-hidden
+            className="sr-only"
+          />
           <h1 className="display">{setup ? "Lock your lists" : recovering ? "New passphrase" : "Unlock your lists"}</h1>
           <p className={s.fine}>
             {setup
@@ -119,7 +130,7 @@ export function Unlock({ userId, email, onDone }: { userId: string; email: strin
           )}
           {setup && (
             <p className={s.fine}>
-              By continuing you confirm you&apos;re 18 or older and agree to the <Link href={`${SITE}/terms`}>Terms</Link> and{" "}
+              By continuing you confirm you&apos;re 13 or older (with a parent&apos;s OK if under 18) and agree to the <Link href={`${SITE}/terms`}>Terms</Link> and{" "}
               <Link href={`${SITE}/privacy`}>Privacy Policy</Link>.
             </p>
           )}

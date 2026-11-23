@@ -20,8 +20,8 @@ export default function Terms() {
 
       <h2>Who can use it</h2>
       <p>
-        You must be 18 or older and able to make a binding contract. If you use {NAME} for an organisation, you confirm you
-        may agree to these terms for it.
+        You must be 13 or older. If you&apos;re under 18, a parent or guardian must agree to these terms for you, and
+        they make any payments. If you use {NAME} for an organisation, you confirm you may agree to these terms for it.
       </p>
 
       <h2>Your account</h2>
