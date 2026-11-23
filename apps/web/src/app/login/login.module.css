@@ -182,3 +182,20 @@
   flex: 1;
   border-top: 2px dashed rgb(11 11 11 / 0.25);
 }
+
+/* The app's sign-in (app.todone.today/login): a wall of stickers behind the card, the middle left calm for it. */
+.wall {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #0b0b0b url("/sign-in-stickers.webp") center / cover no-repeat;
+}
+:root:has(.wall) .dialog::backdrop {
+  background: rgb(11 11 11 / 0.2);
+  backdrop-filter: none;
+}
+@media (max-width: 640px) {
+  .wall {
+    background-position: 6% center; /* the stickers on the left, not the calm middle */
+  }
+}
