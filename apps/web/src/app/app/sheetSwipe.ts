@@ -58,3 +58,27 @@ export function useSheetSwipe() {
     };
   }, []);
 }
+
+// Phones: the on-screen keyboard covers the bottom of the page, and things fixed there (the add bar) end up behind
+// it. Its height is measured from the visible viewport and given to CSS as --kb (with body[data-kb] while it's up),
+// so the add bar can sit just above it.
+export function useKeyboardInset() {
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const fit = () => {
+      const kb = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
+      document.documentElement.style.setProperty("--kb", `${kb}px`);
+      if (kb > 80) document.body.dataset.kb = "1";
+      else delete document.body.dataset.kb;
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+      delete document.body.dataset.kb;
+    };
+  }, []);
+}

@@ -205,6 +205,15 @@ export function SortDeck({
     start.current = null;
     setDrag(null);
   };
+  // While a card is held, the page itself mustn't move under the finger: Safari on iPhone can still pan or zoom it
+  // despite touch-action, so touch moves are cancelled outright (the card follows pointer events, not these).
+  useEffect(() => {
+    const hold = (e: TouchEvent) => {
+      if (start.current) e.preventDefault();
+    };
+    addEventListener("touchmove", hold, { passive: false });
+    return () => removeEventListener("touchmove", hold);
+  }, []);
   // A touch that ends anywhere (not just on the card) ends the drag.
   const ends = useRef({ release, cancel });
   useEffect(() => {

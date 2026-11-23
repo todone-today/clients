@@ -73,8 +73,7 @@ import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
-import { Dock } from "./Dock";
-import { useSheetSwipe } from "./sheetSwipe";
+import { useKeyboardInset, useSheetSwipe } from "./sheetSwipe";
 import { SortDeck, toSort } from "./SortDeck";
 import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
@@ -159,6 +158,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   // Phones in the browser: the app is installed first (or let in for this visit), so the gate shows instead.
   const gate = useInstallGate();
   useSheetSwipe(); // phones: sheets close by dragging them down
+  useKeyboardInset(); // phones: the add bar sits above the on-screen keyboard
   const router = useRouter();
   const {
     data: session,
@@ -1581,6 +1581,24 @@ function ListView({
       )}
       <div className={s.listBody} data-stickers={pinned ? "pinned" : "auto"}>
         <div>
+          {/* The Bin, big, top right of the board (beside the stickers): drop tasks (or a date sticker) on it to delete
+              them, with undo; click it to delete the whole list (it asks first). On a phone it comes up only while a
+              task is being dragged. */}
+          <div className={s.binRow}>
+            <button
+              className={s.bin}
+              data-tour="bin"
+              data-bin
+              {...binDrop("bin")}
+              onClick={() => setAsking(true)}
+              aria-label="Delete list, or drop tasks here to delete them"
+              data-tip="Bin: drop tasks here, or click to delete this list"
+              data-tip-end
+            >
+              <Trash2 size={28} strokeWidth={2.5} />
+              <span>Bin</span>
+            </button>
+          </div>
 
           {list.tasks.length > 0 && (
             <div className={s.boardBar} data-tour="filters">
@@ -1692,24 +1710,8 @@ function ListView({
               <p>Add the first task in the bar below. Enjoy the quiet while it lasts.</p>
             </div>
           )}
-          {/* The bar, with the Bin just above its right end: where your hands already are. */}
-          <Dock className={s.askDock}>
-        {/* The bin: drop tasks (or a date sticker) to delete them, with undo; click it to delete the whole list (asks first). */}
-            <button
-              className={s.bin}
-              data-tour="bin"
-              data-bin
-              {...binDrop("bin")}
-              onClick={() => setAsking(true)}
-              aria-label="Delete list, or drop tasks here to delete them"
-              data-tip="Bin: drop tasks here, or click to delete this list"
-              data-tip-end
-            >
-              <Trash2 size={28} strokeWidth={2.5} />
-              <span>Bin</span>
-            </button>
-            <AskBar place="list" ai={ai} onAdd={addTask} docked={false} />
-          </Dock>
+          {/* The bar to add a task, in the same place on every page. */}
+          <AskBar place="list" ai={ai} onAdd={addTask} />
         </div>
         <Stickers
           active={!!selected || picked.size > 0}

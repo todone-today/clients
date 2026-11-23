@@ -10198,6 +10198,7 @@ input.askRowTitle:focus-visible {
 .sortPage {
   display: grid;
   justify-items: center;
+  touch-action: pan-y; /* the page scrolls up and down only, never sideways */
   /* Cards thrown off the side must not widen the page (a phone would scroll sideways): clipped, not scrolled. */
   overflow-x: clip;
   overflow-clip-margin: 0;
@@ -10839,4 +10840,66 @@ input.askRowTitle:focus-visible {
     background: var(--ground);
     border-top: 3px solid var(--black);
   }
+}
+
+/* Phones: the tab bar a little further off the bottom edge; the add bar above it, or, while the keyboard is up,
+   just above the keyboard (useKeyboardInset gives its height as --kb). */
+@media (max-width: 760px) {
+  .tabs {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+  .dock {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+  body[data-kb] .dock {
+    bottom: calc(var(--kb, 0px) + 0.5rem);
+  }
+  body[data-kb] .tabs {
+    visibility: hidden; /* behind the keyboard anyway */
+  }
+}
+
+/* The list's Bin: big again, top right of the board above Select and My order, beside the stickers. */
+.binRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+.binRow .bin,
+:global(body.is-dragging) .binRow .bin {
+  position: static;
+  width: 11rem;
+  min-height: 5.5rem;
+  gap: 0.2rem;
+  padding: 0.6rem;
+}
+.binRow .bin > span {
+  display: block;
+}
+.binRow .bin > svg {
+  width: 28px;
+  height: 28px;
+}
+@media (max-width: 760px) {
+  /* A phone: out of the way until a task is picked up, then a big target above the tab bar. */
+  .binRow {
+    margin: 0;
+  }
+  .binRow .bin {
+    display: none;
+  }
+  :global(body.is-dragging) .binRow .bin {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    z-index: 70;
+    display: grid;
+    background: var(--ground);
+  }
+}
+
+/* Nothing in the page area may make it wider than the screen (a phone would let a swipe pan it sideways): the swipe
+   actions parked beside each task on a phone, a card thrown off the side. Clipped, so sticky bits still stick. */
+.main {
+  overflow-x: clip;
 }
