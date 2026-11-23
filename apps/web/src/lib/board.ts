@@ -30,7 +30,7 @@ export type View = {
   to?: string;
   pri?: number[]; // any of these priorities; 0 = none set
   effort?: (Effort | "none")[];
-  time?: "timed" | "untimed"; // has a time of day, or not
+  time?: "timed" | "untimed"; // older views only: times of day are gone, so this is ignored
   est?: number; // takes at most this many minutes
   high?: boolean; // older views: same as pri [1]
 };
@@ -55,7 +55,6 @@ export function fits(v: View, t: Task, today: string, nowMin = 0) {
   const pri = v.pri?.length ? v.pri : v.high ? [1] : null;
   if (pri && !pri.includes(t.pri ?? 0)) return false;
   if (v.effort?.length && !v.effort.includes(t.effort ?? "none")) return false;
-  if (v.time && (v.time === "timed") !== !!t.at) return false;
   if (v.est && !(t.est && t.est <= v.est)) return false;
   switch (v.when) {
     case "today":
@@ -68,8 +67,8 @@ export function fits(v: View, t: Task, today: string, nowMin = 0) {
       return !!t.due;
     case "between":
       return !!t.due && (!v.from || t.due >= v.from) && (!v.to || t.due <= v.to);
-    case "timed":
-      return !!t.at;
+    case "timed": // older views: times of day are gone
+      return true;
     case "undated":
       return !t.due;
     default:

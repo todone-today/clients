@@ -104,7 +104,6 @@ import {
   type Task,
   fmtMinutes,
   lateBy,
-  lateLabel,
   moveTasks,
   relDue,
   repeatLabel,
@@ -1988,15 +1987,11 @@ function TaskRow({
           {task.due ? (
             <button
               className={`${s.chip} ${late !== null ? s.late : s.due}`}
-              onClick={() =>
-                edit((t) => ({ ...t, due: undefined, at: undefined }))
-              }
+              onClick={() => edit((t) => ({ ...t, due: undefined }))}
               aria-label={`Remove date ${relDue(task.due, today)}`}
               title="Remove date"
             >
-              {late !== null && late !== Infinity
-                ? `${lateLabel(late)} · ${task.at}`
-                : `${relDue(task.due, today)}${task.at ? ` ${task.at}` : ""}`}
+              {relDue(task.due, today)}
             </button>
           ) : null}
         </span>

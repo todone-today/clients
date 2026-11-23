@@ -7,13 +7,10 @@ import {
   addDays,
   addMonths,
   label,
-  lanes,
   monthCells,
-  toClock,
-  toMinutes,
   weekStart,
 } from "@todone/sdk/calendar";
-import { type At, draggable, useDrop } from "@/lib/drag";
+import { draggable, useDrop } from "@/lib/drag";
 import { mapTask, toBin, unbin } from "@/lib/store";
 import { binSound } from "@/lib/sound";
 import { authClient } from "@/lib/auth-client";
@@ -38,8 +35,6 @@ type View = "day" | "week" | "month" | "year";
 type Item = { list: List; task: Task };
 type Drop = (arg: string) => object;
 const VIEWS: View[] = ["day", "week", "month", "year"];
-const HOUR = 48; // px per hour in the day and week grids
-const SNAP = 15; // minutes a dropped task snaps to
 
 // Every dated task on a Google-Calendar-style grid. With `update` it is also the planner:
 // tick tasks off, and drag them between days, onto times, or back to the "To plan" tray.
@@ -149,55 +144,18 @@ export function CalendarView({
       its.length > 1 ? `${its.length} tasks` : it.task.title,
     );
   };
-  // Drop spots: "day:<date>" keeps the time, "all:<date>" clears it, "col:<date>" sets it from where it lands,
-  // "tray" unschedules. Read-only calendars (the shared page) take no drops.
-  // While a task is dragged over the hour grid, a ghost block shows where it lands and for how long.
-  const [ghost, setGhost] = useState<{
-    day: string;
-    start: number;
-    est: number;
-  } | null>(null);
-  const minuteAt = (at: At) => {
-    const y = at.y - at.el.getBoundingClientRect().top;
-    return Math.max(
-      0,
-      Math.min(24 * 60 - SNAP, Math.round(((y / HOUR) * 60) / SNAP) * SNAP),
-    );
-  };
+  // Drop spots: "day:<date>" gives it that day, "tray-date" takes its date off. Read-only calendars (the shared page)
+  // take no drops. Tasks have days, not times of day.
   const dropAt = useDrop("cal", {
     accept: (p) => !!update && p.kind === "task",
-    where: (p, arg, at) => {
-      const [spot, d] = arg.split(":");
-      if (spot !== "col" || p.kind !== "task") return (setGhost(null), "");
-      const est =
-        all.find((x) => x.list.id === p.listId && x.task.id === p.id)?.task
-          .est || 30;
-      const start = minuteAt(at);
-      setGhost((g) =>
-        g?.day === d && g.start === start ? g : { day: d, start, est },
-      );
-      return "";
-    },
-    leave: () => setGhost(null),
-    drop: (p, arg, at) => {
+    drop: (p, arg) => {
       const it =
         p.kind === "task" &&
         all.find((x) => x.list.id === p.listId && x.task.id === p.id);
       if (!it) return;
       const its = withPicked(it);
       const [spot, d] = arg.split(":");
-      const patch =
-        arg === "tray"
-          ? { at: undefined }
-          : arg === "tray-date"
-            ? { due: undefined, at: undefined }
-            : spot === "day"
-              ? { due: d }
-              : spot === "all"
-                ? { due: d, at: undefined }
-                : spot === "col"
-                  ? { due: d, at: toClock(minuteAt(at)) }
-                  : null;
+      const patch = arg === "tray-date" ? { due: undefined } : spot === "day" ? { due: d } : null;
       if (arg === "bin") binIt(its);
       // One save per list: two saves to the same list in a row would each start from the old tasks.
       else if (patch)
@@ -216,7 +174,6 @@ export function CalendarView({
     month: (n: number) => addMonths(at, n),
     year: (n: number) => addMonths(at, 12 * n),
   }[view];
-  const timed = view === "day" || view === "week"; // views with hours: the tray holds tasks without a time
   const week = Array.from({ length: 7 }, (_, i) => addDays(weekStart(at), i));
   const title = {
     day: () =>
@@ -253,7 +210,7 @@ export function CalendarView({
   const open = dated.filter((it) => !it.task.done);
   const late = open.filter((it) => it.task.due! < today).length;
   const now = inView(today) ? ` ${view === "day" ? "today" : `this ${view}`}` : "";
-  const toPlan = all.filter((it) => !it.task.done && (timed ? !it.task.at : !it.task.due));
+  const toPlan = all.filter((it) => !it.task.done && !it.task.due);
   const summary = [
     `${open.length} planned${now}`,
     dated.length - open.length ? `${dated.length - open.length} done` : "",
@@ -279,7 +236,7 @@ export function CalendarView({
   const openItem = openList && openList.tasks.flatMap((t) => [t, ...t.sub]).find((t) => t.id === opened.id);
 
   // Right-click (or long-press on a phone): on a task, open, tick, move or delete it; on a day or a time, add one there.
-  const [menu, setMenu] = useState<{ x: number; y: number; it?: Item; day?: string; time?: string } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; it?: Item; day?: string } | null>(null);
   const onMenu = (e: React.MouseEvent) => {
     if (!update) return;
     const el = e.target as HTMLElement;
@@ -287,17 +244,16 @@ export function CalendarView({
     const it = key ? all.find((x) => keyOf(x) === key) : undefined;
     const spotEl = el.closest<HTMLElement>("[data-drop]");
     const [spot, day] = (spotEl?.dataset.drop?.split("|")[1] ?? "").split(":");
-    if (!it && !["day", "all", "col"].includes(spot)) return;
+    if (!it && spot !== "day") return;
     e.preventDefault();
-    const time = !it && spot === "col" && spotEl ? toClock(minuteAt({ x: e.clientX, y: e.clientY, el: spotEl })) : undefined;
-    setMenu({ x: e.clientX, y: e.clientY, it, day, time });
+    setMenu({ x: e.clientX, y: e.clientY, it, day });
   };
-  const addOn = (title: string, listId: string, day: string, time?: string) => {
-    const t: Task = { id: uid(), title, done: false, created: Date.now(), sub: [], due: day, ...(time ? { at: time } : {}) };
+  const addOn = (title: string, listId: string, day: string) => {
+    const t: Task = { id: uid(), title, done: false, created: Date.now(), sub: [], due: day };
     update?.(listId, (l) => ({ ...l, tasks: [t, ...l.tasks] }));
   };
 
-  const chip = (it: Item, withTime: boolean) => (
+  const chip = (it: Item) => (
     <div
       key={it.task.id}
       className={s.calTask}
@@ -336,7 +292,6 @@ export function CalendarView({
         title={`${it.task.title} · ${it.list.name}`}
       >
         <span>
-          {withTime && it.task.at ? <b>{it.task.at} </b> : null}
           {it.task.title}
         </span>
         <span>{it.list.name}</span>
@@ -582,41 +537,40 @@ export function CalendarView({
                     </span>
                     {+d.slice(8)}
                   </button>
-                  {items.map((it) => chip(it, true))}
+                  {items.map((it) => chip(it))}
                 </div>
               );
             })}
           </div>
         ) : (
-          <TimeGrid
-            days={view === "day" ? [at] : week}
-            today={today}
-            byDay={byDay}
-            chip={chip}
-            drag={drag}
-            drop={drop}
-            onDay={openDay}
-            onOpen={openTask}
-            picked={picked}
-            resize={update && ((it, est) => move(it, { est }))}
-            ghost={ghost}
-          />
+          // Day and week: a column per day, the day's tasks in it (a day, not a time: no hours).
+          <div className={s.calDays} data-one={view === "day" || undefined}>
+            {(view === "day" ? [at] : week).map((d) => {
+              const items = byDay.get(d) ?? [];
+              return (
+                <div key={d} className={s.day} data-today={d === today} data-empty={!items.length} {...drop(`day:${d}`)}>
+                  <button className={s.dayNum} onClick={() => openDay(d)}>
+                    <span className={s.dayName}>{label(d, { weekday: view === "day" ? "long" : "short" })} </span>
+                    {+d.slice(8)}
+                  </button>
+                  {items.map((it) => chip(it))}
+                  {!items.length && view === "day" && <p className={s.dayRest}>Nothing on this day. Drag one here.</p>}
+                </div>
+              );
+            })}
+          </div>
         )}
         {update && (
           <aside
             className={s.tray}
             aria-label="To plan"
-            {...drop(timed ? "tray" : "tray-date")}
+            {...drop("tray-date")}
           >
             <h3>
               To plan {toPlan.length > 0 && <span className={s.trayCount}>{toPlan.length}</span>}
             </h3>
             <p>
-              {!toPlan.length
-                ? "All planned. Nice."
-                : timed
-                  ? "Drag onto a time. Drop a block back here to take its time off."
-                  : "Drag onto a day. Drop a task back here to take its date off."}
+              {!toPlan.length ? "All planned. Nice." : "Drag onto a day. Drop a task back here to take its date off."}
             </p>
             {/* A step waits under its parent's sticker when the parent is waiting too; it folds like the list's. */}
             {toPlan
@@ -825,216 +779,6 @@ function TrayItem({
         </button>,
       )}
       {!folded && <div className={s.traySteps}>{steps.map((x) => sticker(x))}</div>}
-    </div>
-  );
-}
-
-function TimeGrid({
-  days,
-  today,
-  byDay,
-  chip,
-  drag,
-  drop,
-  onDay,
-  onOpen,
-  picked,
-  resize,
-  ghost,
-}: {
-  days: string[];
-  today: string;
-  byDay: Map<string, Item[]>;
-  chip: (it: Item, withTime: boolean) => React.ReactNode;
-  drag: (it: Item) => object | undefined;
-  drop: Drop;
-  onDay: (d: string) => void;
-  onOpen: (it: Item, e?: React.MouseEvent) => void;
-  picked: Set<string>;
-  resize?: (it: Item, est: number) => void;
-  ghost: { day: string; start: number; est: number } | null;
-}) {
-  // Dragging a block's bottom edge stretches it; the new length becomes the task's estimate.
-  const [stretch, setStretch] = useState<{ id: string; est: number } | null>(
-    null,
-  );
-  const startStretch = (e: React.PointerEvent, it: Item, start: number) => {
-    e.stopPropagation(); // not a move of the whole block
-    e.preventDefault();
-    const y0 = e.clientY;
-    const est0 = it.task.est || 30;
-    const at = (y: number) =>
-      Math.max(
-        SNAP,
-        Math.min(
-          24 * 60 - start,
-          Math.round((est0 + ((y - y0) / HOUR) * 60) / SNAP) * SNAP,
-        ),
-      );
-    let est = est0;
-    const onMove = (ev: PointerEvent) =>
-      setStretch({ id: it.task.id, est: (est = at(ev.clientY)) });
-    const onUp = () => {
-      removeEventListener("pointermove", onMove);
-      removeEventListener("pointerup", onUp);
-      setStretch(null);
-      if (est !== est0) resize?.(it, est);
-    };
-    addEventListener("pointermove", onMove);
-    addEventListener("pointerup", onUp);
-  };
-  const [now, setNow] = useState<number | null>(null);
-  // "All day" shows a few per day (open ones first) so the hours stay in view; "+N more" opens every day.
-  const [allOpen, setAllOpen] = useState(false);
-  const ALL_DAY = 3;
-  const allDay = (d: string) =>
-    (byDay.get(d) ?? [])
-      .filter((it) => !it.task.at)
-      .sort((x, y) => Number(x.task.done) - Number(y.task.done));
-  const folds = days.some((d) => allDay(d).length > ALL_DAY);
-  useEffect(() => {
-    const tick = () =>
-      setNow(new Date().getHours() * 60 + new Date().getMinutes());
-    tick();
-    const t = setInterval(tick, 60_000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Opening a day or week lands on now (today's red line, centred) instead of midnight; other weeks start at 08:00.
-  // Once per view, so scrolling around isn't fought; the header stays pinned above.
-  const grid = useRef<HTMLDivElement>(null);
-  const shownToday = days.includes(today);
-  const placed = now !== null;
-  const first = days[0];
-  useEffect(() => {
-    if (!placed) return;
-    const el = grid.current?.querySelector<HTMLElement>(shownToday ? `.${s.now}` : "[data-hour='8']");
-    el?.scrollIntoView({ block: shownToday ? "center" : "start", behavior: "instant" });
-  }, [placed, shownToday, first]);
-
-  return (
-    <div
-      ref={grid}
-      className={s.tg}
-      style={{ "--days": days.length } as React.CSSProperties}
-    >
-      <div className={s.tgHead}>
-        <div className={s.tgRow}>
-          <span />
-          {days.map((d) => (
-            <button
-              key={d}
-              className={s.tgDay}
-              data-today={d === today}
-              onClick={() => onDay(d)}
-            >
-              {label(d, { weekday: "short" })} <b>{+d.slice(8)}</b>
-            </button>
-          ))}
-        </div>
-        <div className={s.tgRow}>
-          <span className={s.tgLabel}>
-            all day
-            {folds && allOpen && (
-              <button className={s.allMore} onClick={() => setAllOpen(false)}>
-                Show less
-              </button>
-            )}
-          </span>
-          {days.map((d) => {
-            const items = allDay(d);
-            const hidden = allOpen ? 0 : Math.max(0, items.length - ALL_DAY);
-            return (
-              <div key={d} className={s.allDay} {...drop(`all:${d}`)}>
-                {(hidden ? items.slice(0, ALL_DAY) : items).map((it) =>
-                  chip(it, false),
-                )}
-                {hidden > 0 && (
-                  <button
-                    className={s.allMore}
-                    onClick={() => setAllOpen(true)}
-                  >
-                    +{hidden} more
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className={s.tgRow} style={{ height: 24 * HOUR }}>
-        <div className={s.hours}>
-          {Array.from({ length: 23 }, (_, h) => (
-            <span key={h} data-hour={h + 1} style={{ top: (h + 1) * HOUR }}>
-              {toClock((h + 1) * 60)}
-            </span>
-          ))}
-        </div>
-        {days.map((d) => (
-          <div key={d} className={s.col} {...drop(`col:${d}`)}>
-            {d === today && now !== null && (
-              <i className={s.now} style={{ top: (now / 60) * HOUR }} />
-            )}
-            {ghost?.day === d && (
-              <span
-                className={s.ghostBlock}
-                style={{
-                  top: (ghost.start / 60) * HOUR,
-                  height: Math.max((ghost.est / 60) * HOUR - 2, 18),
-                }}
-                aria-hidden
-              >
-                {toClock(ghost.start)}–
-                {toClock(Math.min(24 * 60, ghost.start + ghost.est))}
-              </span>
-            )}
-            {lanes(
-              (byDay.get(d) ?? [])
-                .filter((it) => it.task.at)
-                .map((it) => {
-                  const start = toMinutes(it.task.at!);
-                  const est =
-                    stretch?.id === it.task.id
-                      ? stretch.est
-                      : it.task.est || 30;
-                  return { it, start, end: Math.min(24 * 60, start + est) };
-                }),
-            ).map(({ it, start, end, lane, lanes: n }) => (
-              <button
-                key={it.task.id}
-                className={s.block}
-                data-done={it.task.done}
-                data-key={`${it.list.id}:${it.task.id}`}
-                data-picked={picked.has(`${it.list.id}:${it.task.id}`) || undefined}
-                style={{
-                  top: (start / 60) * HOUR,
-                  height: Math.max(((end - start) / 60) * HOUR - 2, 18),
-                  left: `${(lane / n) * 100}%`,
-                  width: `calc(${100 / n}% - 4px)`,
-                  "--fill": listColor(it.list.id),
-                } as React.CSSProperties}
-                onClick={(e) => onOpen(it, e)}
-                title={`${it.task.at}–${toClock(end)} ${it.task.title} · ${it.list.name}`}
-                {...drag(it)}
-              >
-                <b>{it.task.title}</b>
-                <span>
-                  {it.task.at}–{toClock(end)} · {it.list.name}
-                </span>
-                {resize && (
-                  <i
-                    className={s.stretch}
-                    onPointerDown={(e) => startStretch(e, it, start)}
-                    onClick={(e) => e.stopPropagation()}
-                    aria-hidden
-                    title="Drag to change how long"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

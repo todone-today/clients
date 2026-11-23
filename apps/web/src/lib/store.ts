@@ -30,8 +30,29 @@ let demo = false;
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
 
+// Tasks have a day, never a time of day (since 2026-11-24): an older task's time is dropped as lists load here, and is
+// gone for good the next time its list is saved. Lists without one stay as they are (the same objects).
+function untimed(ts: Task[]): Task[] {
+  // Not a list of tasks (still sealed, or not loaded): left alone.
+  if (!Array.isArray(ts) || !ts.some((t) => t.at || (Array.isArray(t.sub) && t.sub.some((x) => x.at)))) return ts;
+  return ts.map((t) => {
+    const c = { ...t, sub: untimed(t.sub) };
+    delete c.at;
+    return c;
+  });
+}
+const dayOnly = (ls: List[]) => {
+  if (!Array.isArray(ls)) return ls;
+  const out = ls.map((l) => {
+    if (l.kind) return l; // goals, ideas and the bin keep their own items as they are
+    const tasks = untimed(l.tasks);
+    return tasks === l.tasks ? l : { ...l, tasks };
+  });
+  return out.some((l, i) => l !== ls[i]) ? out : ls;
+};
+
 function show(next: List[]) {
-  cache = next;
+  cache = dayOnly(next);
   if (next === server && !demo)
     sealCache(server)
       .then((blob) => blob && localStorage.setItem(SAVED, blob))
@@ -186,7 +207,7 @@ export function update(id: string, f: (l: List) => List | null) {
         id,
         base.version,
         next.name,
-        next.tasks,
+        next.kind ? next.tasks : untimed(next.tasks),
         next.plain,
         next.icon,
       );

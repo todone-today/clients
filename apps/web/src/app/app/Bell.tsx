@@ -44,7 +44,7 @@ export function NotificationBell({
     .filter((c): c is { n: number; it: (typeof items)[number] } => !!c.it);
   const dueToday = items
     .filter(({ t }) => !t.done && t.due === today)
-    .sort((a, b) => (a.t.at ?? "99").localeCompare(b.t.at ?? "99"));
+    .sort((a, b) => (a.t.pri ?? 4) - (b.t.pri ?? 4)); // the most urgent first
   const late = items.filter(
     ({ t }) => !t.done && t.due && t.due < today,
   ).length;
@@ -107,7 +107,6 @@ export function NotificationBell({
                 {dueToday.slice(0, 6).map(({ t, l }) => (
                   <li key={t.id}>
                     <button onClick={() => go(l.id, t.id)}>
-                      <time>{t.at ?? "Any time"}</time>
                       <span>{t.title}</span>
                       <small>{l.name}</small>
                     </button>

@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell,
   CalendarDays,
   Check,
-  Clock,
   Dumbbell,
   Flag,
   Repeat,
@@ -59,7 +57,6 @@ import s from "./app.module.css";
 import { markSeen } from "./unread";
 import { Focus } from "./Focus";
 import { SITE } from "@/lib/urls";
-import { useReminders } from "@/lib/remind";
 import { useGoalItems } from "./goalStore";
 import { useLists } from "@/lib/store";
 import { type Goal } from "@todone/sdk/goals";
@@ -115,7 +112,6 @@ export function TaskPanel({
   }, [copied]);
   const goals = useGoalItems().items.filter((i): i is Goal => i.t === "goal");
   const goal = goals.find((g) => g.id === task.goal);
-  const reminders = useReminders();
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) =>
@@ -331,35 +327,9 @@ export function TaskPanel({
             <input
               type="date"
               value={task.due ?? ""}
-              onChange={(e) =>
-                edit((t) => ({
-                  ...t,
-                  due: e.target.value || undefined,
-                  ...(e.target.value ? {} : { at: undefined }),
-                }))
-              }
+              onChange={(e) => edit((t) => ({ ...t, due: e.target.value || undefined }))}
             />
           </label>
-          {task.due && (
-            <label
-              data-empty={!task.at || undefined}
-              style={{ "--tone": "var(--butter)" } as React.CSSProperties}
-            >
-              <span data-tip="Time">
-                <Clock size={15} strokeWidth={2.5} aria-hidden />
-                <i className="sr-only">Time</i>
-              </span>
-              {!task.at && <b aria-hidden>Add a time</b>}
-              <input
-                type="time"
-                step={900}
-                value={task.at ?? ""}
-                onChange={(e) =>
-                  edit((t) => ({ ...t, at: e.target.value || undefined }))
-                }
-              />
-            </label>
-          )}
           <label
             data-empty={!task.est || undefined}
             style={{ "--tone": "var(--cyan)" } as React.CSSProperties}
@@ -496,25 +466,6 @@ export function TaskPanel({
             {goal.plan}
           </p>
         )}
-        {/* The moment a reminder is obviously useful: the task has a time and this device isn't reminding yet. */}
-        {task.at &&
-          task.due &&
-          task.due >= todayISO() &&
-          !task.done &&
-          reminders.state === "off" && (
-            <p className={s.remindAsk}>
-              <Bell size={15} strokeWidth={2.5} aria-hidden />
-              <span>Want a nudge before {task.at} on this device?</span>
-              <button
-                className={`btn ${s.claim}`}
-                style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-                onClick={reminders.turnOn}
-              >
-                Remind me
-              </button>
-            </p>
-          )}
-
         {shared ? (
           <SharedPart task={task} onToken={setShareToken} />
         ) : (

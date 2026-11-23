@@ -69,12 +69,13 @@ test("views: status, when and priority, and a note shows if one of its steps fit
   const v = (o: Partial<View>): View => ({ ...ALL, id: "v", ...o });
   assert.equal(names(board(ts, ALL, "mine", "2026-10-31")), "abcd");
   assert.equal(names(board(ts, v({ status: "open", when: "week" }), "mine", "2026-10-31")), "bd");
-  assert.equal(names(board(ts, v({ when: "timed" }), "mine", "2026-10-31")), "b");
+  // Times of day are gone: an older view's "Has a time" no longer narrows anything.
+  assert.equal(names(board(ts, v({ when: "timed" }), "mine", "2026-10-31")), "abcd");
   assert.equal(names(board(ts, v({ high: true }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ status: "done" }), "mine", "2026-10-31")), "a");
   assert.equal(names(board(ts, v({ pri: [1] }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ pri: [0], status: "open" }), "mine", "2026-10-31")), "cd");
   assert.equal(names(board(ts, v({ when: "between", from: "2026-11-01", to: "2026-11-10" }), "mine", "2026-10-31")), "b");
   assert.equal(names(board(ts, v({ when: "between", from: "2026-11-10" }), "mine", "2026-10-31")), "c");
-  assert.equal(names(board(ts, v({ time: "untimed", status: "open" }), "mine", "2026-10-31")), "cd");
+  assert.equal(names(board(ts, v({ time: "untimed", status: "open" }), "mine", "2026-10-31")), "bcd");
 });

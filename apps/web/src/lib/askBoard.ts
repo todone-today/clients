@@ -152,7 +152,7 @@ export function changeLabel(c: Change) {
   if (c.op === "delete") return "Delete";
   if (c.op === "move") return `Move to ${c.to}`;
   const s = c.set;
-  return [s.title && `Rename to “${s.title}”`, s.due && `Due ${s.due}`, s.at && `At ${s.at}`, s.pri && ["High", "Medium", "Low"][s.pri - 1] + " priority", s.est && `${s.est}m`, s.effort && `Effort ${s.effort.toUpperCase()}`]
+  return [s.title && `Rename to “${s.title}”`, s.due && `Due ${s.due}`, s.pri && ["High", "Medium", "Low"][s.pri - 1] + " priority", s.est && `${s.est}m`, s.effort && `Effort ${s.effort.toUpperCase()}`]
     .filter(Boolean)
     .join(" · ");
 }

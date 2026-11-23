@@ -57,7 +57,7 @@ function factsOf(t: Task, goal: string | undefined, x: Extra) {
     x.list ? `List: ${x.list}` : "",
     `Status: ${t.done ? `Done${t.doneAt ? `, ${when(t.doneAt)}` : ""}` : "Open"}`,
     t.created ? `Created: ${when(t.created)}` : "",
-    t.due ? `Day: ${t.due}${t.at ? ` ${t.at}` : ""}` : "",
+    t.due ? `Day: ${t.due}` : "",
     t.est ? `How long: ${fmtMinutes(t.est)}` : "",
     t.spent ? `Time spent: ${fmtMinutes(t.spent)}` : "",
     t.pri ? `Priority: ${PRI[t.pri - 1]}` : "",

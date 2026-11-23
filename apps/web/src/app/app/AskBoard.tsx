@@ -53,7 +53,7 @@ export function meta(d: Draft, today: string) {
   const t = d.task;
   return [
     t.pri ? `${PRI[t.pri - 1]} priority` : "",
-    t.due ? relDue(t.due, today) + (t.at ? ` ${t.at}` : "") : "",
+    t.due ? relDue(t.due, today) : "",
     t.est ? mins(t.est) : "",
     t.effort ? `Effort ${t.effort.toUpperCase()}` : "",
   ].filter(Boolean);

@@ -1,7 +1,7 @@
 "use client";
 
 // The board's views: "All" and "Open" (always there), and any the person saved (a name and the rules it filters by:
-// done or not, date, time, priority, effort, how long). One tab each, and a + to make another. Tap a chosen view
+// done or not, date, priority, effort, how long). One tab each, and a + to make another. Tap a chosen view
 // again to change or delete it; drag a tab (or Alt+arrow) to move it. Kept in this browser, in the order shown.
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
@@ -155,10 +155,9 @@ export function Views({
 
 // The rules a view can add, beyond to do / done. None is on at first: a new view shows everything, and each rule
 // added narrows it.
-type Rule = "date" | "time" | "pri" | "effort" | "est";
+type Rule = "date" | "pri" | "effort" | "est";
 const RULES: [Rule, string, (v: View) => boolean, Partial<View>][] = [
   ["date", "Date", (v) => v.when !== "any" && v.when !== "timed", { when: "any", from: undefined, to: undefined }],
-  ["time", "Time", (v) => !!v.time || v.when === "timed", { time: undefined }],
   ["pri", "Priority", (v) => !!v.pri?.length || !!v.high, { pri: undefined, high: undefined }],
   ["effort", "Effort", (v) => !!v.effort?.length, { effort: undefined }],
   ["est", "How long", (v) => !!v.est, { est: undefined }],
@@ -191,10 +190,11 @@ function ViewEditor({
   onSave: (v: View) => void;
   onDelete: () => void;
 }) {
-  // Older views: "Has a time" was a date choice, "High only" a switch. They open as the rules they are now.
+  // Older views: "High only" was a switch, and times of day are gone (a "Has a time" rule is dropped).
   const [v, setV] = useState<View>(() => ({
     ...view,
-    ...(view.when === "timed" ? { when: "any" as const, time: "timed" as const } : {}),
+    ...(view.when === "timed" ? { when: "any" as const } : {}),
+    time: undefined,
     ...(view.high ? { pri: [1], high: undefined } : {}),
   }));
   const [on, setOn] = useState<Rule[]>(() => RULES.filter(([, , has]) => has(v)).map(([k]) => k));
@@ -245,15 +245,6 @@ function ViewEditor({
         )}
       </>
     ),
-    time: one(
-      "Time",
-      [
-        ["timed", "Has a time"],
-        ["untimed", "No time"],
-      ] as [NonNullable<View["time"]>, string][],
-      v.time,
-      (time) => set({ time }),
-    ),
     pri: many("Priority", PRIS, v.pri, (pri) => set({ pri })),
     effort: many(
       "Effort",
@@ -267,7 +258,6 @@ function ViewEditor({
     setOn((o) => [...o, k]);
     // A sensible first pick, so adding a rule already does something.
     if (k === "date") set({ when: "week" });
-    if (k === "time") set({ time: "timed" });
     if (k === "pri") set({ pri: [1] });
     if (k === "est") set({ est: 30 });
   };

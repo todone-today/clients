@@ -10155,3 +10155,35 @@ input.askRowTitle:focus-visible {
     font-size: 0.62rem;
   }
 }
+
+/* Day and week (no hours: tasks have days): a column per day, tall enough to drop into. On a phone the week reads
+   as a list of days, one under another. */
+.calDays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 2px solid var(--hair);
+  border-left: 2px solid var(--hair);
+}
+.calDays .day {
+  min-height: min(60vh, 30rem);
+}
+.calDays[data-one] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.calDays[data-one] .day {
+  gap: 0.6rem;
+  padding: 0.8rem;
+}
+.dayRest {
+  padding: 0.5rem 0.3rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+@media (max-width: 760px) {
+  .calDays {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .calDays .day {
+    min-height: 4.5rem;
+  }
+}

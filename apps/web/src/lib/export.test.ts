@@ -22,7 +22,7 @@ test("a task becomes a readable page that todone can read back", () => {
     { list: "Work", open: "https://todone.today/app?task=a" },
   );
   assert.match(md, /^# Write the launch post\n/);
-  assert.match(md, /- Day: 2026-11-20 09:30/);
+  assert.match(md, /- Day: 2026-11-20\n/);
   assert.match(md, /- Goal: Launch todone/);
   assert.match(md, /- List: Work/);
   assert.match(md, /- Created: 2026-11-14 09:05/);
