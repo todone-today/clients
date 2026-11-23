@@ -710,13 +710,13 @@ function CalMenu({
             <p className={s.calMenuHead}>New task · {when}</p>
             <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?" aria-label="Task" />
             {lists.length > 1 && (
-              <select value={listId} onChange={(e) => setListId(e.target.value)} aria-label="List">
-                {lists.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                className={s.calMenuSelect}
+                label="List"
+                value={listId}
+                options={lists.map((l) => ({ value: l.id, label: l.name }))}
+                onChange={setListId}
+              />
             )}
             <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!title.trim()}>
               <Plus size={16} strokeWidth={3} aria-hidden /> Add

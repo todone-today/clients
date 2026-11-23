@@ -9968,8 +9968,12 @@ input.askRowTitle:focus-visible {
   border: var(--key);
   box-shadow: var(--lift);
   animation: gdIn 0.15s var(--ease) both;
+  /* A light sticker reads like Day in both themes: dark text, dark hairlines, cream fields. */
   --ink: var(--black);
   --ink-2: #4a4540;
+  --hair: rgb(11 11 11 / 0.22);
+  --ground: #fff8ef;
+  --raise: #f3eadb;
 }
 .calMenu > button {
   display: flex;
@@ -10016,8 +10020,7 @@ input.askRowTitle:focus-visible {
   gap: 0.45rem;
   padding: 0.2rem;
 }
-.calMenu form input,
-.calMenu form select {
+.calMenu form input {
   min-height: 2.6rem;
   padding: 0 0.6rem;
   font: inherit;
@@ -10516,4 +10519,17 @@ input.askRowTitle:focus-visible {
   min-height: 2.3rem;
   padding: 0 0.65rem;
   font-size: 0.82rem;
+}
+
+/* The calendar menu's list picker: the app's own dropdown, a white field like the task's name above it. */
+.calMenuSelect > button {
+  min-height: 2.6rem;
+  padding: 0 0.6rem;
+  font-weight: 700;
+  color: var(--black);
+  background: #fff;
+  border: 2px solid var(--black);
+}
+.calMenuSelect > ul {
+  z-index: 2;
 }
