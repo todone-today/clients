@@ -79,6 +79,7 @@ import { useInstallGate } from "./InstallGate";
 import { PullRefresh } from "./PullRefresh";
 import { useSwipeNav } from "./swipeDrawer";
 import { Search } from "./Search";
+import type { Hit } from "@/lib/search";
 import { usage } from "@/lib/usage";
 import { fileFeedback } from "./feedback-inbox";
 import { openPlans } from "./checkout";
@@ -359,6 +360,22 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setFocus(task ? { id: task } : null);
     setPanel(null);
     setDrawer(false);
+  };
+  // A search result picked: a task opens in its list; anything else opens its page, scrolled to it with a short glow.
+  const pick = (h: Hit) => {
+    if (h.kind === "task") return open(h.list.id, h.id);
+    if (h.kind === "list") return open(h.list.id);
+    show(h.kind === "idea" ? "ideas" : h.kind === "goal" ? "goals" : h.kind === "reward" ? "rewards" : "bin");
+    const sel = h.kind === "goal" || h.kind === "reward" ? `#${h.kind}-${CSS.escape(h.id)}` : `[data-id="${CSS.escape(h.id)}"]`;
+    let tries = 0;
+    const seek = () => {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (!el) return void (++tries < 40 && requestAnimationFrame(seek));
+      el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      el.dataset.found = "";
+      setTimeout(() => delete el.dataset.found, 1800);
+    };
+    requestAnimationFrame(seek);
   };
   // A reminder that was clicked: /app?task=… in a new tab, or a message from the service worker into this one.
   // It waits for the lists (the vault may still be locked), then opens the task like a click on it.
@@ -686,7 +703,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         <p className={s.local} role="status">
           {error && <span className={s.err}>{error}</span>}
         </p>
-        {lists && <Search lists={lists} onOpen={open} tile={s.tile} />}
+        {lists && <Search lists={lists} onPick={pick} tile={s.tile} />}
         {!demo && <NotificationBell onOpen={open} />}
         <XpTile onClick={() => show("rewards")} />
         <button

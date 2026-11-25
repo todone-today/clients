@@ -1760,6 +1760,7 @@ export function Rewards({ ai }: { ai: boolean }) {
   const card = (r: Reward) => (
     <li
       key={r.id}
+      id={`reward-${r.id}`}
       {...draggable({ kind: "reward", id: r.id }, r.title)}
       {...dropReward(r.id)}
       onClick={(e) => !onControl(e) && setEditingReward(r)}
