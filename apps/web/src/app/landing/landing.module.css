@@ -3352,3 +3352,55 @@ button.box:hover {
     animation: none;
   }
 }
+/* The glow behind the pinned features: two blurred lights in the showing feature's colour (fading from one colour to
+   the next), drifting across the screen as --p (0 to 1 through the features) grows. Full width, faded top and bottom. */
+@property --glow {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+.pin {
+  isolation: isolate;
+}
+.pinGlow {
+  --glow: var(--fill);
+  position: absolute;
+  z-index: -1;
+  inset: -5rem 0 0;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+  transition: --glow 0.8s var(--ease);
+}
+.pinGlow i {
+  position: absolute;
+  width: 46vw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+  opacity: 0.32;
+  filter: blur(40px);
+  will-change: transform;
+}
+.pinGlow i:first-child {
+  top: -10%;
+  left: -8%;
+  transform: translate(calc(var(--p, 0) * 55vw), calc(var(--p, 0) * 30vh)) scale(calc(1 + var(--p, 0) * 0.4));
+}
+.pinGlow i:last-child {
+  right: -10%;
+  bottom: -15%;
+  width: 38vw;
+  opacity: 0.22;
+  transform: translate(calc(var(--p, 0) * -50vw), calc(var(--p, 0) * -25vh)) rotate(calc(var(--p, 0) * 90deg));
+}
+@media (prefers-reduced-motion: reduce) {
+  .pinGlow i {
+    transform: none !important;
+  }
+  .pinGlow {
+    transition: none;
+  }
+}

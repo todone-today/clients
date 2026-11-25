@@ -28,6 +28,7 @@ export function Features({ items }: { items: Feature[] }) {
       const r = el.getBoundingClientRect();
       const span = el.offsetHeight - innerHeight;
       const p = Math.min(0.999, Math.max(0, -r.top / Math.max(1, span)));
+      el.style.setProperty("--p", String(p)); // the glow drifts with it (CSS), without a re-render per scroll
       setAt(Math.floor(p * items.length));
     };
     on();
@@ -58,6 +59,11 @@ export function Features({ items }: { items: Feature[] }) {
   return (
     <div ref={track} className={s.track} style={{ "--n": items.length } as React.CSSProperties}>
       <div className={s.pin} style={{ "--fill": f.fill } as React.CSSProperties}>
+        {/* Two soft lights in the showing feature's colour, drifting as the page scrolls. */}
+        <div className={s.pinGlow} aria-hidden>
+          <i />
+          <i />
+        </div>
         <div key={`words${at}`} className={s.pinWords} aria-live="polite">
           <h2 className="display">{f.title}</h2>
           {f.line && <p>{f.line}</p>}
