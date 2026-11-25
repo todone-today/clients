@@ -10976,3 +10976,19 @@ input.askRowTitle:focus-visible {
     min-height: 100dvh;
   }
 }
+
+/* Wider screens, stickers tucked away: holding a task slides the panel in over the board's right edge, so the Bin
+   slides left with it and stays in reach, just beside the panel. */
+@media (min-width: 761px) {
+  .binRow {
+    transition: padding-right 0.25s var(--ease);
+  }
+  :global(body[data-drag="task"]) .listBody:not([data-stickers="pinned"]) .binRow {
+    padding-right: 16rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .binRow {
+    transition: none;
+  }
+}
