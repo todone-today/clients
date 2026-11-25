@@ -3,7 +3,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bug,
-  Check,
   Heart,
   Lightbulb,
   Lock,
@@ -85,15 +84,6 @@ export default function Home() {
           </Link>
         </section>
 
-        {/* The onboarding video, for people who'd rather watch first. */}
-        <section id="tour" className={s.tourSection} aria-labelledby="tour-h">
-          <h2 id="tour-h" className="display">
-            See it in 90 seconds.
-          </h2>
-          <p className={s.sub}>Lists, stickers, the calendar, goals, rewards and sharing. Jump to any part.</p>
-          <Tour />
-        </section>
-
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
         <section id="features" className={s.features} aria-label="What todone does">
           <Chapter tag="Steps" title="Big task, small steps." fill="var(--butter)">
@@ -117,7 +107,7 @@ export default function Home() {
             <OfflineDemo />
           </Chapter>
           <Chapter tag="Goals" title="Goals you can feel." fill="var(--peri)">
-            Finish tasks, earn points, treat yourself.
+            Finish tasks, earn karma points, spend them on treats you pick.
             <GoalsDemo />
           </Chapter>
           <Chapter tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
@@ -125,32 +115,9 @@ export default function Home() {
             <ToolsDemo />
           </Chapter>
           <Chapter tag="Phone" title="In your pocket, too." fill="var(--pink)">
-            Add it to your home screen. It works like an app, with notifications.
+            {null}
             <PhoneDemo />
           </Chapter>
-        </section>
-
-        {/* The psychology the features are built on, as a todo list of its own: every line ticked. */}
-        <section id="why-it-works" className={s.mind} aria-labelledby="mind-h">
-          <h2 id="mind-h" className="display">
-            Built to get you doing.
-          </h2>
-          <p className={s.sub}>
-            Small tricks that help you actually finish.
-          </p>
-          <ul className={s.mindNote} data-reveal="note">
-            {MIND.map(([idea, line, feature]) => (
-              <li key={idea}>
-                <span className={s.mindTick} aria-hidden>
-                  <Check size={16} strokeWidth={3.5} />
-                </span>
-                <p>
-                  <b>{idea}</b> {line}
-                </p>
-                <small>{feature}</small>
-              </li>
-            ))}
-          </ul>
         </section>
 
         {/* Why it's different, said once, plainly, beside the real thing. */}
@@ -240,7 +207,7 @@ export default function Home() {
                   "Calendar and planning",
                   "Teams and shared lists",
                   "Share a task by link",
-                  "Goals, XP and rewards",
+                  "Goals, karma points and rewards",
                   "Reminders, even when closed",
                   "Works offline",
                   "Installs on iPhone and Android",
@@ -414,6 +381,15 @@ export default function Home() {
           </div>
         </section>
 
+        {/* The tour video, for people who'd rather watch than read. */}
+        <section id="tour" className={s.tourSection} aria-labelledby="tour-h">
+          <h2 id="tour-h" className="display">
+            See it in 60 seconds.
+          </h2>
+          <p className={s.sub}>Lists, sorting, the calendar, goals, rewards and sharing. Jump to any part.</p>
+          <Tour />
+        </section>
+
         <section className={s.close} data-reveal>
           <p className={`display ${s.big}`}>
             Write it down.
@@ -456,17 +432,6 @@ export default function Home() {
   );
 }
 
-// The ideas behind the features, said plainly, each with where it lives in todone.
-const MIND = [
-  ["Start tiny.", "Break a big task into small steps.", "Steps"],
-  ["Pick a time.", "Tasks with a time get done.", "Calendar"],
-  ["Plan for bad days.", "Decide now what you'll do when it's hard.", "If-then plans"],
-  ["One thing at a time.", "Shut out the rest while you work.", "Focus mode"],
-  ["Reward yourself.", "Earn points, spend them on treats.", "Rewards"],
-  ["Miss a day, keep going.", "No streaks to break.", "Goals"],
-  ["Know your time.", "See how long tasks really take.", "Timer"],
-] as const;
-
 // One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
 function Chapter({
   tag,
@@ -485,7 +450,7 @@ function Chapter({
   return (
     <article className={s.chapter} data-reveal style={{ "--fill": fill } as React.CSSProperties} aria-label={tag}>
       <h2 className="display">{title}</h2>
-      <p>{line}</p>
+      {line && <p>{line}</p>}
       <div className={s.stage} data-wide={wide || undefined}>
         {demo}
       </div>

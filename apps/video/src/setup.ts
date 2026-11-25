@@ -46,3 +46,11 @@ crypto.randomUUID = () => {
 HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
   this.show();
 };
+
+// Nothing in the way of the tour: this week's recap counts as seen, and Sort's practice round as done.
+const monday = new Date();
+monday.setHours(0, 0, 0, 0);
+monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+localStorage.setItem("todone:recap-week", monday.toLocaleDateString("en-CA"));
+localStorage.setItem("todone:sort-trained", "1");
+localStorage.setItem("todone:tips:u_asha", JSON.stringify(["ideas", "calendar", "goals", "rewards"]));

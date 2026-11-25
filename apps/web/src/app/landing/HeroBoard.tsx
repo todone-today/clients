@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { publishHero } from "@/lib/hero-sync";
 import { ArrowRight, Check, Play } from "lucide-react";
 import { draggable, placeOn, useDrop } from "@/lib/drag";
@@ -10,6 +10,7 @@ import { fmtMinutes, relDue, repeatLabel, todayISO, type Task } from "@todone/sd
 import { sticker } from "../app/Stickers";
 import s from "./landing.module.css";
 import { APP } from "@/lib/urls";
+import { carry, useAutoplay, wait } from "./autoplay";
 
 // The first screen is a working board: the app's own stickers dropped onto notes do exactly what they do in
 // todone (drag one, or pick one and then click a note), notes tick off, and dragging a note up or down opens a
@@ -106,8 +107,32 @@ export function HeroBoard() {
   });
   const tickNote = (id: string) => setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, done: !n.done } : n)));
 
+  // Before anyone tries it, the board shows how: two stickers dropped on notes, then a note dragged to the top.
+  const root = useRef<HTMLDivElement>(null);
+  useAutoplay(root, async (alive) => {
+    const el = root.current!;
+    const stick = (label: string) =>
+      [...el.querySelectorAll<HTMLElement>(`.${s.stick}`)].find((b) => b.textContent === label)!;
+    const note = (id: string) => el.querySelector<HTMLElement>(`[data-id="${id}"]`)!;
+    await wait(2400); // the board builds itself first
+    for (const [label, key, id] of [
+      ["Tomorrow", "tomorrow", "trip"],
+      ["High", "p1", "post"],
+    ] as const) {
+      if (!alive()) return;
+      const done = await carry(stick(label), note(id));
+      if (alive()) apply(key, id);
+      done();
+      await wait(900);
+    }
+    if (!alive()) return;
+    const done = await carry(note("run"), note("post"), 1000);
+    if (alive()) setNotes((ns) => [ns.find((n) => n.id === "run")!, ...ns.filter((n) => n.id !== "run")]);
+    done();
+  });
+
   return (
-    <div className={s.hero} data-holding={held ? "" : undefined} data-fresh={fresh || undefined}>
+    <div ref={root} className={s.hero} data-holding={held ? "" : undefined} data-fresh={fresh || undefined}>
       <div className={s.board}>
         <div className={`${s.note} ${s.lead}`}>
           <span className={`${s.box} ${s.leadBox}`} aria-hidden>
@@ -119,8 +144,8 @@ export function HeroBoard() {
             Done right.
           </h1>
           <p>
-            Sticky notes you drag onto a day, a calendar to plan the week, and teams to share it with. And it works
-            offline.
+            Say what&apos;s on your mind and it becomes sticky notes. Pick what&apos;s for today, plan the week, and
+            earn treats for finishing. Private, and it works offline.
           </p>
           <div className={s.ctas}>
             <Link href={`${APP}/?new=1`} className={`btn ${s.primary}`}>

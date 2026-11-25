@@ -19,7 +19,8 @@ export type Step =
   | { at: number; click: Finder; sfx?: SfxName; fake?: boolean } // fake: the cursor clicks; the frame does the rest
   // clicks in and types; then presses Enter (`enter`, the app's own submit) or makes `then`'s edit
   | { at: number; type: string; into: Finder; dur: number; enter?: boolean; then?: EditName; sfx?: SfxName }
-  | { at: number; drag: Finder; to: Finder; edit: EditName; lift?: number; sfx?: SfxName } // lands at `at`
+  // lands at `at`: makes `edit`, or clicks `act` (a control that does what the drop would, like Sort's own buttons)
+  | { at: number; drag: Finder; to: Finder; edit?: EditName; act?: Finder; lift?: number; sfx?: SfxName }
   | { at: number; wait: true; sfx?: SfxName }; // nothing done: the frame changes something (a reply comes in)
 
 export const end = (s: Step) => s.at + ("dur" in s ? s.dur : 0);
@@ -66,7 +67,10 @@ function LiveApp({ pre, steps, typing, after, onReady }: { pre: readonly EditNam
           if (s.then) edit(s.then);
           // The typed text stays in its box unless the app clears it (as the add box does after Enter).
           if (s.then && !s.enter) setValue(el, "");
-        } else if ("drag" in s) edit(s.edit);
+        } else if ("drag" in s) {
+          if (s.edit) edit(s.edit);
+          else (s.act?.() as HTMLElement | null)?.click();
+        }
         await tick();
       }
       if (typing && "into" in typing.step) {
@@ -129,6 +133,19 @@ export function LiveScene({ pre = [], steps, caption, dur, after }: { pre?: read
       {last && f - end(last) < 18 && at.last && <Ring x={mid(at.last).x} y={mid(at.last).y} f={f - end(last)} />}
       <Cursor keys={keys} />
       <Fade f={f} dur={dur} />
+    </AbsoluteFill>
+  );
+}
+
+// The app as it stands after `pre` (and any `steps`), with no cursor or caption: the landing page's screenshots.
+export function Board({ pre, steps = [], w, h, scale }: { pre: readonly EditName[]; steps?: Step[]; w: number; h: number; scale: number }) {
+  const [, remeasure] = useState(0);
+  return (
+    <AbsoluteFill style={{ background: "var(--ground)" }}>
+      <div data-stage style={{ position: "absolute", inset: 0, width: w, height: h, overflow: "hidden", transform: `scale(${scale})`, transformOrigin: "0 0" }}>
+        <LiveApp pre={pre} steps={steps} onReady={() => remeasure((n) => n + 1)} />
+      </div>
+      <style>{`.${app.xpPop}{display:none}`}</style>
     </AbsoluteFill>
   );
 }

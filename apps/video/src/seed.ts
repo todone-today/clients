@@ -44,7 +44,7 @@ function base(): List[] {
     { t: "reward", id: "r-movie", title: "Movie night", cost: 120 },
     { t: "reward", id: "r-book", title: "A new book", cost: 300 },
     { t: "reward", id: "r-away", title: "A weekend away", cost: 1500 },
-    ...[0, 1, 2].map((d): GoalItem => ({ t: "log", id: `l-read-${d}`, goal: "g-read", at: ago(d), value: 1, by: ME.id })),
+    ...[1, 2, 3].map((d): GoalItem => ({ t: "log", id: `l-read-${d}`, goal: "g-read", at: ago(d), value: 1, by: ME.id })),
     ...([[30, 3], [14, 5], [3, 6.5]] as const).map(([d, v]): GoalItem => ({ t: "log", id: `l-run-${d}`, goal: "g-run", at: ago(d), value: v, by: ME.id })),
     ...["Paid the rent", "Fixed the tap", "Sent the photos", "Cleaned the desk", "Called the bank", "Booked the dentist", "Sorted the bills"].map(
       (title, i): GoalItem => ({ t: "win", id: `w-${i}`, title, at: ago(i + 1), xp: 20, by: ME.id }),
@@ -90,7 +90,7 @@ export const EDITS = {
       ls.map((l) => (l.kind === "ideas" ? { ...l, tasks: l.tasks.filter((t) => t.id !== IDEA) } : l)),
     );
   },
-  planned: onTask(FLIGHT, { due: day(1), at: "10:00", est: 90 }),
+  planned: onTask(FLIGHT, { due: day(1) }),
   goal: onGoals((xs) => [...xs, { t: "goal", id: "g-books", title: "Read 12 books", kind: "outcome", list: "list-reading", created: Date.now() }]),
   achieved: onGoals((xs) => xs.map((g) => (g.id === "g-goa" ? { ...g, done: Date.now() } : g))),
   reward: onGoals((xs) => [...xs, { t: "reward", id: "r-pizza", title: "Pizza night", cost: 100 }]),

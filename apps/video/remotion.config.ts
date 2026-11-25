@@ -25,6 +25,8 @@ Config.overrideWebpackConfig((config) => ({
   resolve: {
     ...config.resolve,
     modules: [here("node_modules"), path.join(web, "node_modules"), "node_modules"],
+    // Stylesheets point at files in the web app's public/ by "/name" (the sign-in backdrop).
+    roots: [path.join(web, "public")],
     alias: {
       ...(config.resolve?.alias ?? {}),
       // Order matters: the exact mocks before the "@" folder alias.

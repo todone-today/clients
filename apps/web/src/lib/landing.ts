@@ -17,16 +17,16 @@ const LOOK =
 export const SHOTS = {
   board: {
     src: "/landing/board.jpg",
-    alt: "todone's board: sticky notes with steps, priority, effort and times, the sticker palette, and the Ask todone bar",
+    alt: "todone's board: sticky notes with steps, priority and dates, a goal on the list, and the sticker palette",
     label: "The board on desktop",
     ratio: "16 / 9",
   },
   // The same board on a phone (captured at 390 px wide), shown instead of the desktop shot on small screens.
   boardMobile: {
     src: "/landing/board-mobile.jpg",
-    alt: "todone on a phone: sticky notes with steps and chips for priority, effort and time, and the Ask todone bar above the tabs",
+    alt: "todone on a phone: sticky notes with steps, priority and dates, a goal on the list, and the tab bar with its + button",
     label: "The board on a phone",
-    ratio: "390 / 700",
+    ratio: "390 / 760",
   },
   calendar: {
     src: null,

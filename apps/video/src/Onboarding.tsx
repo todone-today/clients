@@ -9,24 +9,16 @@ import { setTheme } from "./setup";
 import { type EditName, FLIGHT, IDEA, TYPED, day } from "./seed";
 import { Fade, Sfx, inStage, usePop } from "./kit";
 import { type Finder, LiveScene, type Step, button, claim, end, field, note, sideList, sticker, tab } from "./live";
-import { WhyGoals, WhyRewards } from "./scenes/Why";
 
 // ---- Where things are that need more than a selector ------------------------------------------------------------
-const theToggle: Finder = () => inStage("button[aria-label^='Switch to']")[0];
-const trayItem: Finder = () => inStage("button, li, div").reverse().find((el) => el.textContent?.trim().startsWith(TYPED) && el.getBoundingClientRect().width < 400);
-// Tomorrow at 10:00 in the week grid: that day's column, at the 10:00 row.
-const tomorrowAt10: Finder = () => {
-  const n = +day(1).slice(8);
-  const col = inStage("button").find((b) => b.textContent?.replace(/\s+/g, " ").trim().endsWith(` ${n}`));
-  const hour = inStage("span[data-hour='10']")[0];
-  if (!col || !hour) return null;
-  const c = col.getBoundingClientRect();
-  const h = hour.getBoundingClientRect();
-  return { getBoundingClientRect: () => new DOMRect(c.x, h.y, c.width, 24), outerHTML: "" } as unknown as Element;
-};
-const inCard = (label: string, card: string): Finder => () =>
-  inStage("button").find((b) => b.textContent?.trim() === label && b.closest("li")?.textContent?.includes(card));
-const goalKind = (name: string): Finder => () => inStage("button[role='radio']").find((b) => b.textContent?.startsWith(name));
+const inStageText = (sel: string, text: string): Finder => () => inStage(sel).find((b) => b.textContent?.replace(/\s+/g, " ").trim().startsWith(text));
+// The calendar: a task's card, and a day's column (where a drop lands).
+const calTask = (title: string): Finder => () => inStage(`[aria-label='${title}']`)[0];
+const calDay = (d: string): Finder => () => inStage(`[data-drop$='|day:${d}']`)[0];
+// Sort: the card on top, a side's label, and the deck's own buttons (what a throw that way does).
+const sortCard: Finder = () => inStage(`.${app.sortCard}`)[0];
+const sortSide = (side: string): Finder => () => inStage(`.${app.sortTarget}[data-side='${side}']`)[0];
+const sortChoice = (label: string): Finder => () => inStage(".sr-only button").find((b) => b.textContent === label);
 // The task panel scrolled down to its conversation (where the replies come in).
 const toConversation = () => {
   for (const el of inStage(`.${app.panel}, .${app.panel} *`))
@@ -38,133 +30,105 @@ const taskTitle = (id: string): Finder => () => inStage(`[data-id='${id}'] .${ap
 type Scene = { dur: number; caption: string; makes: EditName[]; steps: Step[]; after?: () => void };
 const RAW = {
   create: {
-    dur: 75,
+    dur: 60,
     caption: "Add a task: type it, press Enter",
     makes: ["added"],
-    steps: [{ at: 12, into: field("#new-task"), type: TYPED, dur: 32, then: "added", sfx: "pop" }],
+    steps: [{ at: 10, into: field("#ask-bar"), type: TYPED, dur: 28, then: "added", sfx: "pop" }],
   },
   stickers: {
-    dur: 105,
+    dur: 100,
     caption: "Drop stickers on it: when, priority, repeat",
     makes: ["today", "high", "weekly"],
     steps: [
-      { at: 30, drag: sticker("Today"), to: note(FLIGHT), edit: "today", sfx: "pop" },
-      { at: 62, drag: sticker("High"), to: note(FLIGHT), edit: "high", sfx: "pop" },
-      { at: 94, drag: sticker("Weekly"), to: note("t-water-the-plants"), edit: "weekly", sfx: "pop" },
+      { at: 10, click: field("button[aria-label='Show stickers']"), sfx: "click" },
+      { at: 36, drag: sticker("Today"), to: note(FLIGHT), edit: "today", sfx: "pop" },
+      { at: 64, drag: sticker("High"), to: note(FLIGHT), edit: "high", sfx: "pop" },
+      { at: 92, drag: sticker("Weekly"), to: note("t-water-the-plants"), edit: "weekly", sfx: "pop" },
     ],
   },
   steps: {
-    dur: 65,
+    dur: 55,
     caption: "Drop one note on another: it becomes a step",
     makes: ["step"],
-    steps: [{ at: 44, drag: note("t-pack-the-chargers"), to: note(FLIGHT), edit: "step", lift: 30, sfx: "thud" }],
-  },
-  lists: {
-    dur: 95,
-    caption: "Make as many lists as you like",
-    makes: ["newList"],
-    steps: [
-      { at: 10, into: field("input[placeholder='New list']"), type: "Reading", dur: 20, enter: true, sfx: "pop" },
-      { at: 62, click: sideList("Trip to Goa"), sfx: "click" },
-      { at: 84, click: sideList("Groceries"), sfx: "click" },
-    ],
+    steps: [{ at: 38, drag: note("t-pack-the-chargers"), to: note(FLIGHT), edit: "step", lift: 26, sfx: "thud" }],
   },
   brainstorm: {
-    dur: 90,
-    caption: "Brainstorm freely, then drop an idea into a list",
+    dur: 75,
+    caption: "Jot ideas, then drop one into a list",
     makes: ["idea"],
     steps: [
-      { at: 14, click: sideList("Brainstorm"), sfx: "click" },
-      { at: 74, drag: note(IDEA), to: sideList("This week"), edit: "idea", lift: 32, sfx: "thud" },
+      { at: 10, click: sideList("Brainstorm"), sfx: "click" },
+      { at: 62, drag: note(IDEA), to: sideList("This week"), edit: "idea", lift: 28, sfx: "thud" },
+    ],
+  },
+  sort: {
+    dur: 100,
+    caption: "Sort: throw each card to today, this week or later",
+    makes: [],
+    steps: [
+      { at: 10, click: sideList("Sort"), sfx: "click" },
+      { at: 40, drag: sortCard, to: sortSide("right"), act: sortChoice("Today"), lift: 18, sfx: "whoosh" },
+      { at: 66, drag: sortCard, to: sortSide("up"), act: sortChoice("This week"), lift: 16, sfx: "whoosh" },
+      { at: 92, drag: sortCard, to: sortSide("left"), act: sortChoice("Later"), lift: 16, sfx: "whoosh" },
     ],
   },
   calendar: {
-    dur: 100,
-    caption: "Plan the week: drag tasks onto a time",
+    dur: 85,
+    caption: "Plan the week: drag a task to another day",
     makes: ["planned"],
     steps: [
-      { at: 14, click: tab("Calendar"), sfx: "click" },
-      { at: 80, drag: trayItem, to: tomorrowAt10, edit: "planned", lift: 34, sfx: "thud" },
+      { at: 10, click: tab("Calendar"), sfx: "click" },
+      { at: 26, click: button("Week"), sfx: "click" },
+      { at: 70, drag: calTask(TYPED), to: calDay(day(1)), edit: "planned", lift: 28, sfx: "thud" },
     ],
   },
   goal: {
-    dur: 140,
-    caption: "Set a goal: what, why, and the first steps",
-    makes: ["goal"],
+    dur: 70,
+    caption: "Goals: tap Did it today and watch it fill",
+    makes: [],
     steps: [
-      { at: 8, click: tab("Goals"), sfx: "click" },
-      { at: 22, click: button("New goal"), sfx: "click" },
-      { at: 30, into: field("input[placeholder^='Run a 5K']"), type: "Read 12 books", dur: 20 },
-      { at: 58, click: goalKind("Get somewhere"), sfx: "click" },
-      { at: 66, click: button("Next"), sfx: "click" },
-      { at: 72, into: field("[placeholder^='So I have energy']"), type: "So I read more than I scroll", dur: 22 },
-      { at: 102, click: button("Next"), sfx: "click" },
-      { at: 110, click: button("Next"), sfx: "click" },
-      { at: 122, click: button("Save goal"), sfx: "pop" },
-    ],
-  },
-  reach: {
-    dur: 90,
-    caption: "Reach a goal: mark it achieved",
-    makes: ["achieved"],
-    steps: [
-      { at: 8, click: tab("Goals"), sfx: "click" },
-      { at: 24, click: inCard("Achieved", "Plan the Goa trip"), sfx: "chime" },
-      { at: 34, into: field("dialog[open] textarea"), type: "Booking early helped.", dur: 22 },
-      { at: 68, click: button("Mark achieved"), sfx: "ding" },
+      { at: 10, click: tab("Goals"), sfx: "click" },
+      { at: 44, click: inStageText("button", "Did it today"), sfx: "chime" },
     ],
   },
   rewards: {
-    dur: 125,
-    caption: "Done tasks earn XP: set a reward, then claim it",
-    makes: ["reward", "claimed"],
+    dur: 70,
+    caption: "Finished tasks earn karma points: spend them on a treat",
+    makes: [],
     steps: [
       { at: 8, click: tab("Rewards"), sfx: "click" },
-      { at: 22, into: field("input[placeholder^='Cheat meal']"), type: "Pizza night", dur: 22 },
-      { at: 54, click: button("Add reward"), sfx: "pop" },
-      { at: 92, click: claim("Pizza night"), sfx: "chime" },
+      { at: 46, click: claim("Movie night"), sfx: "chime" },
     ],
   },
   share: {
-    dur: 190,
+    dur: 120,
     after: toConversation,
     caption: "Share a task by link: they reply, no account needed",
     makes: ["shared", "finished"],
     steps: [
       { at: 8, click: sideList("This week"), sfx: "click" },
-      { at: 22, click: taskTitle(FLIGHT), sfx: "click" },
-      { at: 38, click: button("Share"), sfx: "click" },
-      { at: 52, click: button("I Understand"), sfx: "pop" },
-      { at: 78, wait: true, sfx: "ding" },
-      { at: 110, wait: true, sfx: "ding" },
-      { at: 142, wait: true, sfx: "ding" },
-      { at: 166, click: field("button[aria-label='Done']"), sfx: "chime" },
+      { at: 20, click: taskTitle(FLIGHT), sfx: "click" },
+      { at: 34, click: field("button[aria-label='Share']"), sfx: "click" },
+      { at: 46, click: button("I Understand"), sfx: "pop" },
+      { at: 64, wait: true, sfx: "ding" },
+      { at: 84, wait: true, sfx: "ding" },
+      { at: 104, click: field("button[aria-label='Done']"), sfx: "chime" },
     ],
   },
   team: {
-    dur: 100,
+    dur: 80,
     caption: "Plan together: invite people to a team",
     makes: [],
     steps: [
-      { at: 14, click: button("Team settings"), sfx: "click" },
-      { at: 30, into: field("#invite-email"), type: "meera@todone.today", dur: 34 },
-      { at: 76, click: button("Invite"), sfx: "ding", fake: true },
-    ],
-  },
-  theme: {
-    dur: 60,
-    caption: "Day or night: one tap",
-    makes: [],
-    steps: [
-      { at: 8, click: sideList("This week"), sfx: "click" },
-      { at: 30, click: theToggle, sfx: "click", fake: true },
+      { at: 10, click: button("Team settings"), sfx: "click" },
+      { at: 24, into: field("#invite-email"), type: "meera@todone.today", dur: 28 },
+      { at: 62, click: button("Invite"), sfx: "ding", fake: true },
     ],
   },
 } satisfies Record<string, Scene>;
 
-// The pace: every scene well over half again as slow as the frames above (people said it went by too fast to read),
-// and the busier ones (a goal's steps, reaching one, sharing while replies come in) slower still.
-const PACE: Partial<Record<keyof typeof RAW, number>> = { goal: 2, reach: 1.9, share: 2 };
+// The pace: slow enough to read each caption, and the whole tour about a minute.
+const PACE: Partial<Record<keyof typeof RAW, number>> = { share: 1.4 };
 const slower = (sc: Scene, k: number): Scene => ({
   ...sc,
   dur: Math.round(sc.dur * k),
@@ -175,38 +139,25 @@ const slower = (sc: Scene, k: number): Scene => ({
     ...("drag" in st ? { lift: Math.round((st.lift ?? 26) * k) } : {}),
   })),
 });
-const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slower(sc, PACE[n as keyof typeof RAW] ?? 1.7)])) as unknown as {
+const SCENES = Object.fromEntries(Object.entries(RAW).map(([n, sc]) => [n, slower(sc, PACE[n as keyof typeof RAW] ?? 2)])) as unknown as {
   [K in keyof typeof RAW]: Omit<(typeof RAW)[K], "dur" | "steps"> & { dur: number; steps: Step[] };
 };
 
 // ---- Timeline ---------------------------------------------------------------------------------------------------
-const INTRO = 60;
-const OUTRO = 70;
-// Scenes drawn for the video rather than played in the live app: why goals and rewards work. (Ask todone has its
-// own part of the landing page, so the video sticks to the rest of the app.)
-const CUSTOM = {
-  whyGoals: { dur: 185, El: WhyGoals, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "pop" }] },
-  whyRewards: { dur: 185, El: WhyRewards, sfx: [{ at: 26, name: "pop" }, { at: 66, name: "pop" }, { at: 106, name: "chime" }] },
-} as const;
-const ORDER = ["create", "stickers", "steps", "lists", "brainstorm", "calendar", "whyGoals", "goal", "reach", "whyRewards", "rewards", "share", "team", "theme"] as const;
+const INTRO = 45;
+const OUTRO = 60;
+export const ORDER = ["create", "stickers", "steps", "brainstorm", "sort", "calendar", "goal", "rewards", "share", "team"] as const;
 type Name = (typeof ORDER)[number];
-const custom = (k: Name): k is keyof typeof CUSTOM => k in CUSTOM;
-const durOf = (k: Name) => (custom(k) ? CUSTOM[k].dur : SCENES[k].dur);
-const FROM = {} as Record<Name, number>;
+export const FROM = {} as Record<Name, number>;
 const PRE = {} as Record<Name, EditName[]>; // each scene starts from what the ones before it made
 ORDER.reduce(
-  (acc, k) => (
-    (FROM[k] = acc.t),
-    (PRE[k] = acc.made),
-    { t: acc.t + durOf(k), made: [...acc.made, ...(custom(k) ? [] : (SCENES[k] as Scene).makes)] }
-  ),
+  (acc, k) => ((FROM[k] = acc.t), (PRE[k] = acc.made), { t: acc.t + SCENES[k].dur, made: [...acc.made, ...(SCENES[k] as Scene).makes] }),
   { t: INTRO, made: [] as EditName[] },
 );
-const END = FROM.theme + SCENES.theme.dur;
+const END = FROM.team + SCENES.team.dur;
 export const DURATION = END + OUTRO;
-// Night until the toggle is tapped; the team scene is in a team workspace (Home), with Meera invited once Invite is;
-// the shared task's replies arrive at the share scene's waits.
-const NIGHT_UNTIL = FROM.theme + SCENES.theme.steps[1].at;
+// The team scene is in a team workspace (Home), with Meera invited once Invite is; the shared task's replies arrive
+// at the share scene's waits.
 const INVITED_AT = FROM.team + SCENES.team.steps[2].at;
 const REPLY_AT = (SCENES.share.steps as Step[]).filter((s) => "wait" in s).map((s) => FROM.share + s.at);
 
@@ -257,9 +208,7 @@ const Sounds = () => (
     <Sfx at={0} name="whoosh" />
     <Sfx at={14} name="chime" />
     {ORDER.flatMap((k) =>
-      custom(k)
-        ? CUSTOM[k].sfx.map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + s.at} name={s.name} />)
-        : (SCENES[k].steps as Step[]).filter((s) => s.sfx).map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + end(s)} name={s.sfx!} />),
+      (SCENES[k].steps as Step[]).filter((s) => s.sfx).map((s) => <Sfx key={`${k}${s.at}`} at={FROM[k] + end(s)} name={s.sfx!} />),
     )}
     <Sfx at={END} name="whoosh" />
     <Sfx at={END + 12} name="chime" />
@@ -269,7 +218,7 @@ const Sounds = () => (
 // ---- The video --------------------------------------------------------------------------------------------------
 export const Onboarding = () => {
   const frame = useCurrentFrame();
-  setTheme(frame < NIGHT_UNTIL ? "night" : "day");
+  setTheme("night");
   const inTeam = frame >= FROM.team && frame < FROM.team + SCENES.team.dur;
   setTeam(inTeam ? { members: 2, invited: frame >= INVITED_AT ? ["meera@todone.today"] : [] } : null);
   setReplies(REPLY_AT.filter((at) => frame >= at).length);
@@ -279,14 +228,6 @@ export const Onboarding = () => {
         <Intro />
       </Sequence>
       {ORDER.map((k) => {
-        if (custom(k)) {
-          const { El, dur } = CUSTOM[k];
-          return (
-            <Sequence key={k} from={FROM[k]} durationInFrames={dur}>
-              <El dur={dur} />
-            </Sequence>
-          );
-        }
         const sc: Scene = SCENES[k];
         return (
           <Sequence key={k} from={FROM[k]} durationInFrames={sc.dur}>

@@ -22,7 +22,7 @@ const EXAMPLES: Example[] = [
         fill: "var(--lime)",
         notes: [
           { title: "Go to the gym", meta: ["4× a week"], kind: "goal" },
-          { title: "Weekend movie", meta: ["150 XP"], kind: "reward" },
+          { title: "Weekend movie", meta: ["150 points"], kind: "reward" },
         ],
       },
     ],

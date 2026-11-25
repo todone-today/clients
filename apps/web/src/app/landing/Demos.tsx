@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import {
   Bell,
@@ -14,15 +13,16 @@ import {
   Pause,
   Play,
   Popcorn,
+  Send,
   Target,
   Wifi,
   WifiOff,
-  X,
 } from "lucide-react";
 import { Confetti } from "@/components/Confetti";
 import { type Launch, LaunchSpots } from "@/components/LaunchSpots";
-import { siApple, siGooglecalendar, type SimpleIcon } from "simple-icons";
+import { siApple, siGooglecalendar, siGooglechrome, siSafari, type SimpleIcon } from "simple-icons";
 import { draggable, useDrop } from "@/lib/drag";
+import { carry, useAutoplay, wait } from "./autoplay";
 import {
   BILLING,
   GOALS,
@@ -107,132 +107,125 @@ export function StepsDemo() {
   );
 }
 
-// The week strip: drag a block to another day, or pick one and click a day.
+// The week, as the app's calendar shows it: a column of task cards for each day (with the list each one is from), and
+// the tasks still to plan underneath. Drag a card to a day, or tap it and then a day. It shows itself first.
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const BLOCKS = [
-  {
-    id: "standup",
-    title: "Standup",
-    day: 0,
-    top: 1,
-    h: 1,
-    fill: "var(--butter)",
-  },
-  {
-    id: "post",
-    title: "Write the launch post",
-    day: 1,
-    top: 0,
-    h: 3,
-    fill: "var(--cyan)",
-  },
-  {
-    id: "dentist",
-    title: "Dentist",
-    day: 2,
-    top: 2,
-    h: 1,
-    fill: "var(--pink)",
-  },
-  {
-    id: "trip",
-    title: "Plan the trip",
-    day: 3,
-    top: 1,
-    h: 2,
-    fill: "var(--lime)",
-  },
-  {
-    id: "groceries",
-    title: "Groceries",
-    day: 4,
-    top: 3,
-    h: 1,
-    fill: "var(--peri)",
-  },
+const PLAN = 5; // the "To plan" tray, as a day number
+const WEEK = [
+  { id: "standup", title: "Standup", list: "Work", day: 0, fill: "var(--butter)" },
+  { id: "post", title: "Write the launch post", list: "Work", day: 1, fill: "var(--cyan)" },
+  { id: "dentist", title: "Dentist", list: "Home", day: 2, fill: "var(--pink)" },
+  { id: "trip", title: "Plan the trip", list: "Goa trip", day: 3, fill: "var(--lime)" },
+  { id: "groceries", title: "Groceries", list: "Home", day: 4, fill: "var(--peri)" },
+  { id: "bank", title: "Call the bank", list: "Home", day: PLAN, fill: "var(--orange)" },
+  { id: "gift", title: "Buy Maa's gift", list: "Family", day: PLAN, fill: "var(--butter)" },
 ];
 
-const ROWS = 4; // hour rows in each day (landing.module.css .week > div)
 export function WeekDemo() {
-  const [blocks, setBlocks] = useState(BLOCKS);
+  const [tasks, setTasks] = useState(WEEK);
   const [held, setHeld] = useState<string | null>(null);
-  // A block lands in the first free slot of the day (shrinking to an hour if it must); a full day says no. Two
-  // blocks on the same rows would otherwise spill into a second grid column and over the next day.
+  // A moved card goes to the end of its new day.
   const move = (id: string, day: number) => {
-    setBlocks((bs) => {
-      const b = bs.find((x) => x.id === id)!;
-      if (b.day === day) return bs;
-      const taken = new Set(bs.filter((x) => x.day === day).flatMap((x) => Array.from({ length: x.h }, (_, i) => x.top + i)));
-      const fits = (top: number, h: number) => top + h <= ROWS && Array.from({ length: h }, (_, i) => top + i).every((r) => !taken.has(r));
-      for (const h of [b.h, 1]) {
-        const order = [b.top, ...Array.from({ length: ROWS }, (_, i) => i)];
-        const top = order.find((t) => fits(t, h));
-        if (top !== undefined) return bs.map((x) => (x.id === id ? { ...x, day, top, h } : x));
-      }
-      return bs;
+    setTasks((ts) => {
+      const t = ts.find((x) => x.id === id)!;
+      return t.day === day ? ts : [...ts.filter((x) => x.id !== id), { ...t, day }];
     });
     setHeld(null);
   };
   const drop = useDrop("week", {
-    accept: (p) => p.kind === "demo" && blocks.some((b) => b.id === p.id),
+    accept: (p) => p.kind === "demo" && tasks.some((t) => t.id === p.id),
     drop: (p, day) => p.kind === "demo" && move(p.id, Number(day)),
   });
-  return (
-    <div className={s.weekWrap}>
-      <div className={s.week}>
-        {DAYS.map((d, day) => (
-          <div
-            key={d}
-            {...drop(String(day))}
-            onClick={() => held && move(held, day)}
-            data-holding={held ? "" : undefined}
+  const root = useRef<HTMLDivElement>(null);
+  useAutoplay(root, async (alive) => {
+    const card = (id: string) => root.current!.querySelector<HTMLElement>(`[data-card="${id}"]`)!;
+    const day = (n: number) => root.current!.querySelector(`[data-drop="week|${n}"]`)!;
+    for (const [id, to] of [
+      ["bank", 1],
+      ["dentist", 3],
+    ] as const) {
+      await wait(700);
+      if (!alive()) return;
+      const done = await carry(card(id), day(to), 1000);
+      if (alive()) move(id, to);
+      done();
+    }
+  });
+  const column = (day: number, name: string) => (
+    <div
+      key={day}
+      {...drop(String(day))}
+      onClick={() => held && move(held, day)}
+      data-holding={held ? "" : undefined}
+      data-plan={day === PLAN || undefined}
+    >
+      <span>{name}</span>
+      {tasks
+        .filter((t) => t.day === day)
+        .map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            data-card={t.id}
+            className={s.block}
+            style={{ "--fill": t.fill } as React.CSSProperties}
+            aria-pressed={held === t.id}
+            aria-label={`${t.title}, ${day === PLAN ? "not planned yet" : DAYS[day]}. Pick it up, then tap a day.`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setHeld(held === t.id ? null : t.id);
+            }}
+            {...draggable({ kind: "demo", id: t.id }, t.title)}
           >
-            <span>{d}</span>
-            {blocks
-              .filter((b) => b.day === day)
-              .map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  className={s.block}
-                  style={
-                    {
-                      "--fill": b.fill,
-                      gridRow: `${b.top + 2} / span ${b.h}`,
-                      gridColumn: 1,
-                    } as React.CSSProperties
-                  }
-                  aria-pressed={held === b.id}
-                  aria-label={`${b.title}, ${DAYS[b.day]}. Pick it up, then click another day.`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setHeld(held === b.id ? null : b.id);
-                  }}
-                  {...draggable({ kind: "demo", id: b.id }, b.title)}
-                >
-                  {b.title}
-                </button>
-              ))}
-          </div>
+            <b>{t.title}</b>
+            <small>{t.list}</small>
+          </button>
         ))}
-      </div>
-      <p className={s.try}>
-        Drag a block to another day, or tap it and then a day.
-      </p>
+    </div>
+  );
+  return (
+    <div ref={root} className={s.weekWrap}>
+      <div className={s.week}>{DAYS.map((d, i) => column(i, d))}</div>
+      <div className={s.weekPlan}>{column(PLAN, "To plan")}</div>
+      <p className={s.try}>Drag a task to a day, or tap it and then a day.</p>
     </div>
   );
 }
 
-// A shared list where a teammate's tick shows up too.
+// A shared list, live: housemates tick things off and pick up the next, each with a chip saying who did it or who's on
+// it now, and the last thing that happened underneath. It plays once on its own; then it's your turn.
+type Shared = { t: string; by: string; on: string };
+const HOME: Shared[] = [
+  { t: "Milk", by: "A", on: "" },
+  { t: "Rice, 5 kg", by: "", on: "K" },
+  { t: "Diyas for Saturday", by: "", on: "" },
+  { t: "Pay the electricity bill", by: "", on: "" },
+];
+const PLAYS: [number, Partial<Shared>, string][] = [
+  [1, { by: "K", on: "" }, "K ticked off Rice, 5 kg"],
+  [2, { on: "A" }, "A is getting the diyas"],
+  [2, { by: "A", on: "" }, "A ticked off Diyas for Saturday"],
+  [3, { on: "You" }, "Your turn: tick off the bill"],
+];
 export function SharedDemo() {
-  const [items, setItems] = useState([
-    ["Milk", true, "A"],
-    ["Rice, 5 kg", false, ""],
-    ["Diyas for Saturday", false, ""],
-    ["Pay the electricity bill", false, ""],
-  ] as [string, boolean, string][]);
+  const [items, setItems] = useState(HOME);
+  const [news, setNews] = useState("K is getting the rice");
+  const root = useRef<HTMLDivElement>(null);
+  useAutoplay(root, async (alive) => {
+    for (const [i, patch, line] of PLAYS) {
+      await wait(1700);
+      if (!alive()) return;
+      setItems((it) => it.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+      setNews(line);
+    }
+  });
+  const tick = (i: number) => {
+    const x = items[i];
+    setItems((it) => it.map((y, j) => (j === i ? { ...y, by: y.by ? "" : "You", on: "" } : y)));
+    setNews(x.by ? `You put back ${x.t}` : `You ticked off ${x.t}`);
+  };
   return (
-    <div className={s.shared}>
+    <div ref={root} className={s.shared}>
       <span className={s.faces} aria-label="Shared with A, K and you">
         <i>A</i>
         <i>K</i>
@@ -240,27 +233,20 @@ export function SharedDemo() {
       </span>
       <b>Home</b>
       <ul>
-        {items.map(([t, on, who], i) => (
-          <li key={t}>
-            <button
-              type="button"
-              className={s.row}
-              aria-pressed={on}
-              onClick={() =>
-                setItems((it) =>
-                  it.map((x, j) =>
-                    j === i ? [x[0], !x[1], x[1] ? "" : "You"] : x,
-                  ),
-                )
-              }
-            >
-              <Box on={on} />
-              <span data-done={on || undefined}>{t}</span>
-              {on && who && <small>{who}</small>}
+        {items.map((x, i) => (
+          <li key={x.t}>
+            <button type="button" className={s.row} aria-pressed={!!x.by} onClick={() => tick(i)}>
+              <Box on={!!x.by} />
+              <span data-done={x.by ? true : undefined}>{x.t}</span>
+              {x.by && <small>{x.by}</small>}
+              {x.on && <small data-now>{x.on === "You" ? "you, now" : `${x.on} is on it`}</small>}
             </button>
           </li>
         ))}
       </ul>
+      <p className={s.sharedNews} role="status">
+        {news}
+      </p>
     </div>
   );
 }
@@ -347,7 +333,7 @@ type Tool = {
 const TOOLS: Tool[] = [
   {
     name: "Google Calendar",
-    how: "Add your private calendar link in one click: your dated tasks show up as events.",
+    how: "Pick the lists to show and add your private link: their dated tasks show up as events. Lists you keep locked stay out.",
     mark: siGooglecalendar,
   },
   {
@@ -380,7 +366,7 @@ function Mark({ mark }: { mark: Tool["mark"] }) {
   );
 }
 
-// A "Gym" list's goals: log a weigh-in or some protein and watch it fill, then spend the XP on a reward you set.
+// A "Gym" list's goals: log a weigh-in or some protein and watch it fill, then spend the karma points on a reward.
 const MOVIE = 15;
 export function GoalsDemo() {
   const [kg, setKg] = useState(71.5);
@@ -451,8 +437,8 @@ export function GoalsDemo() {
             {claimed
               ? "Claimed. Enjoy the film!"
               : xp >= MOVIE
-                ? `Ready: you have ${xp} XP`
-                : `${xp} of ${MOVIE} XP · log above to earn`}
+                ? `Ready: you have ${xp} karma points`
+                : `${xp} of ${MOVIE} karma points · log above to earn`}
           </small>
         </span>
         <span className={s.goalBar} aria-hidden>
@@ -468,30 +454,52 @@ export function GoalsDemo() {
             setClaims((n) => n + 1);
           }}
         >
-          {claimed ? "Again" : `Claim · ${MOVIE} XP`}
+          {claimed ? "Again" : `Claim · ${MOVIE} points`}
         </button>
       </div>
     </div>
   );
 }
 
-// Getting todone on a phone, in the two taps each takes, and the full guide.
+// Where todone installs, by browser: each one's mark, the devices it works on, and the taps it takes.
+const INSTALLS = [
+  {
+    mark: siSafari,
+    name: "Safari",
+    on: "iPhone, iPad and Mac",
+    how: (
+      <>
+        <i>Share</i> → <i>Add to Home Screen</i> (on a Mac: <i>File</i> → <i>Add to Dock</i>)
+      </>
+    ),
+  },
+  {
+    mark: siGooglechrome,
+    name: "Chrome",
+    on: "Android, Windows, Mac and Chromebook",
+    how: (
+      <>
+        <i>⋮</i> → <i>Install app</i> (on a computer, the install icon in the address bar)
+      </>
+    ),
+  },
+];
 export function PhoneDemo() {
   return (
     <div className={s.phoneDemo}>
       <ol>
-        <li>
-          <b className="display">iPhone</b>
-          <span>
-            Safari → <i>Share</i> → <i>Add to Home Screen</i>
-          </span>
-        </li>
-        <li>
-          <b className="display">Android</b>
-          <span>
-            Chrome → <i>⋮</i> → <i>Install app</i>
-          </span>
-        </li>
+        {INSTALLS.map((b) => (
+          <li key={b.name}>
+            <span className={s.browser}>
+              <svg viewBox="0 0 24 24" width={28} height={28} aria-hidden fill={`#${b.mark.hex}`}>
+                <path d={b.mark.path} />
+              </svg>
+              <b className="display">{b.name}</b>
+            </span>
+            <small>{b.on}</small>
+            <span>{b.how}</span>
+          </li>
+        ))}
       </ol>
       <a href="/install" className="btn" style={{ "--fill": "#fff8ef" } as React.CSSProperties}>
         All the steps
@@ -500,104 +508,55 @@ export function PhoneDemo() {
   );
 }
 
-// Focus mode, small: one task, a clock that runs (fast-forwarded so the demo moves), and Done puts the time on the
-// task's card, the ⏳ chip the app shows.
+// Focus mode, as the app has it: the task, a clock that runs (a minute a second here, so a short visit sees it
+// move), and the task's notes beside it. It starts by itself and jots a note; Done puts the time on the card.
 const clockOf = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-// Focus, as in the app: Start takes over the whole tab (not the screen), one task and a clock, with the time in the
-// tab's title. × or Esc steps out (the time stays, paused), Space pauses, Enter finishes. The clock runs a minute a
-// second here, so a short visit still sees it move.
+const FOCUS_TASK = "Write the launch post";
+const JOT = "Intro done. Screenshots next.";
 export function FocusDemo() {
   const [secs, setSecs] = useState(0);
   const [on, setOn] = useState(false);
-  const [full, setFull] = useState(false);
   const [done, setDone] = useState<number | null>(null);
+  const [draft, setDraft] = useState("");
+  const [notes, setNotes] = useState(["Keep it under 300 words."]);
   useEffect(() => {
     if (!on) return;
     const id = setInterval(() => setSecs((x) => x + 60), 1000);
     return () => clearInterval(id);
   }, [on]);
-  const goal = 25 * 60;
-  const finish = () => {
-    setOn(false);
-    setFull(false);
-    setDone(Math.max(1, Math.round(secs / 60)));
-  };
-  const leave = () => {
-    setOn(false);
-    setFull(false);
-  };
-  // While it fills the tab: the page behind doesn't scroll, the clock is in the title, and the keys work.
-  const keys = useRef({ leave, finish, toggle: () => setOn((x) => !x) });
-  useEffect(() => {
-    keys.current = { leave, finish, toggle: () => setOn((x) => !x) };
+  const root = useRef<HTMLDivElement>(null);
+  useAutoplay(root, async (alive) => {
+    await wait(500);
+    if (!alive()) return;
+    setOn(true);
+    await wait(2200);
+    for (let i = 1; i <= JOT.length; i++) {
+      if (!alive()) return;
+      setDraft(JOT.slice(0, i));
+      await wait(45);
+    }
+    await wait(500);
+    if (!alive()) return;
+    setNotes((n) => [JOT, ...n]);
+    setDraft("");
   });
-  useEffect(() => {
-    if (!full) return;
-    const title = document.title;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") keys.current.leave();
-      else if (e.key === " ") keys.current.toggle();
-      else if (e.key === "Enter") keys.current.finish();
-      else return;
-      e.preventDefault();
-    };
-    addEventListener("keydown", key);
-    return () => {
-      document.title = title;
-      document.body.style.overflow = overflow;
-      removeEventListener("keydown", key);
-    };
-  }, [full]);
-  useEffect(() => {
-    if (full) document.title = `${clockOf(secs)} · Write the launch post`;
-  }, [full, secs]);
+  const goal = 25 * 60;
+  const note = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (draft.trim()) setNotes((n) => [draft.trim(), ...n]);
+    setDraft("");
+  };
 
-  const sheet = (big: boolean) => (
-    <div className={s.focusSheet} data-on={on || undefined} data-big={big || undefined}>
-      <small>{on ? "Focusing on" : secs ? "Paused" : "Focus"}</small>
-      <b className="display">Write the launch post</b>
-      <p className={`display ${s.focusClockDemo}`} role="timer">
-        {clockOf(secs)}
-      </p>
-      <span className={s.focusBarDemo} aria-hidden>
-        <i style={{ transform: `scaleX(${Math.min(1, secs / goal)})` }} />
-      </span>
-      <small>{secs < goal ? `${clockOf(goal - secs)} left of 25m` : "Past the 25m you planned. That's fine."}</small>
-      <div className={s.focusButtons}>
-        <button
-          type="button"
-          className="btn"
-          style={{ "--fill": "var(--butter)" } as React.CSSProperties}
-          onClick={() => {
-            if (!big) setFull(true); // Start (or Resume) from the page opens it across the tab
-            setOn((x) => (big ? !x : true));
-          }}
-        >
-          {on ? <Pause size={16} strokeWidth={2.75} aria-hidden /> : <Play size={16} strokeWidth={2.75} aria-hidden />}
-          {on ? "Pause" : secs ? "Resume" : "Start"}
-        </button>
-        <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} disabled={!secs} onClick={finish}>
-          <Check size={16} strokeWidth={3} aria-hidden /> Done
-        </button>
-      </div>
-      {big && <p className={s.focusKeys}>Space pauses · Enter finishes · Esc steps out, the time kept</p>}
-    </div>
-  );
-
-  return (
-    <div className={s.focusDemo}>
-      {done === null ? (
-        sheet(false)
-      ) : (
+  if (done !== null)
+    return (
+      <div ref={root} className={s.focusDemo}>
         <div className={s.focusAfter}>
           <Confetti />
           <div className={s.focusCardDone}>
             <span className={s.focusTick} aria-hidden>
               <Check size={14} strokeWidth={3.5} />
             </span>
-            <b>Write the launch post</b>
+            <b>{FOCUS_TASK}</b>
             <span className={s.focusChip}>⏳ {done}m</span>
           </div>
           <p>Ticked off, and the time is on the card. Next time you&apos;ll know how long it really takes.</p>
@@ -612,17 +571,61 @@ export function FocusDemo() {
             Again
           </button>
         </div>
-      )}
-      {full &&
-        createPortal(
-          <div className={s.focusFull} role="dialog" aria-modal="true" aria-label="Focus: Write the launch post">
-            {sheet(true)}
-            <button type="button" className={s.focusOut} onClick={leave} aria-label="Step out (keeps the time)">
-              <X size={22} strokeWidth={2.75} aria-hidden /> <span>Step out</span>
-            </button>
-          </div>,
-          document.body,
-        )}
+      </div>
+    );
+  return (
+    <div ref={root} className={s.focusDemo}>
+      <div className={s.focusSheet} data-on={on || undefined}>
+        <small>{on ? "Focusing on" : secs ? "Paused" : "Focus"}</small>
+        <b className="display">{FOCUS_TASK}</b>
+        <p className={`display ${s.focusClockDemo}`} role="timer">
+          {clockOf(secs)}
+        </p>
+        <span className={s.focusBarDemo} aria-hidden>
+          <i style={{ transform: `scaleX(${Math.min(1, secs / goal)})` }} />
+        </span>
+        <small>{secs < goal ? `${clockOf(goal - secs)} left of 25m` : "Past the 25m you planned. That's fine."}</small>
+        <div className={s.focusButtons}>
+          <button
+            type="button"
+            className="btn"
+            style={{ "--fill": "var(--butter)" } as React.CSSProperties}
+            onClick={() => setOn((x) => !x)}
+          >
+            {on ? <Pause size={16} strokeWidth={2.75} aria-hidden /> : <Play size={16} strokeWidth={2.75} aria-hidden />}
+            {on ? "Pause" : secs ? "Resume" : "Start"}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+            disabled={!secs}
+            onClick={() => {
+              setOn(false);
+              setDone(Math.max(1, Math.round(secs / 60)));
+            }}
+          >
+            <Check size={16} strokeWidth={3} aria-hidden /> Done
+          </button>
+        </div>
+      </div>
+      <div className={s.focusNotes}>
+        <small>Notes</small>
+        <form onSubmit={note}>
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a note" aria-label="Add a note" />
+          <button type="submit" aria-label="Add the note" disabled={!draft.trim()}>
+            <Send size={16} strokeWidth={2.5} aria-hidden />
+          </button>
+        </form>
+        <ul>
+          {notes.map((n, i) => (
+            <li key={notes.length - i}>
+              <b>You</b>
+              <span>{n}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
