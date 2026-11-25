@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic, Plus, Sparkles, Square } from "lucide-react";
 import { useDictation } from "@/lib/dictate";
 import { Dock } from "./Dock";
 import s from "./app.module.css";
+
+const drafts: Record<string, string> = {}; // per kind of bar, for this visit
 
 // The one bar at the foot of each page (lists, Brainstorm, Goals, Rewards, the calendar): type and press Enter to add
 // the page's own thing as typed; ✨ hands the words to Ask todone (the AiImport dialog) to work out; the mic types
@@ -39,20 +41,34 @@ export function AskBar({
   onAdd: (text: string) => void;
   onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void; // e.g. a pasted list becoming many ideas
 }) {
-  const [text, setText] = useState("");
+  // What's typed survives the bar closing (tap outside) and coming back (the tab bar's +), even on another page.
+  const [text, setTyped] = useState(() => drafts[place] ?? "");
+  const setText = (t: string) => {
+    drafts[place] = t;
+    setTyped(t);
+  };
   const before = useRef("");
   const talk = useDictation((t) => setText(before.current && t ? `${before.current} ${t}` : before.current || t));
+  const form = useRef<HTMLFormElement>(null);
+  // Phones: the bar is up while adding (the tab bar's + brings it); a tap anywhere else tucks it away again.
+  useEffect(() => {
+    const away = (e: PointerEvent) => {
+      if (!document.body.dataset.adding || talk.on) return;
+      const t = e.target as Element;
+      if (form.current?.contains(t) || t.closest("[data-add-tab]")) return;
+      delete document.body.dataset.adding;
+      (document.activeElement as HTMLElement | null)?.blur();
+    };
+    document.addEventListener("pointerdown", away, true);
+    return () => document.removeEventListener("pointerdown", away, true);
+  }, [talk.on]);
   const w = WORDS[place];
   const mode = w.mode ? { mode: w.mode } : {};
   const bar = (
     <form
+      ref={form}
       data-tour="ask"
       className={s.askBar}
-      // Phones: the bar shows only while adding (the tab bar's + opens it); it goes once you leave it empty.
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null) && !text.trim() && !talk.on)
-          delete document.body.dataset.adding;
-      }}
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim()) return;

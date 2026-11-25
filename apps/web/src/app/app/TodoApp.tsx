@@ -665,7 +665,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
             <Fragment key={name}>
               {/* Phones: a round + in the middle, Instagram-style: straight to the add bar to type a task. */}
               {i === 2 && (
-                <button className={s.tabAdd} onClick={addNew} aria-label="Add a task">
+                <button className={s.tabAdd} onClick={addNew} aria-label="Add a task" data-add-tab>
                   <Plus size={24} strokeWidth={3} aria-hidden />
                 </button>
               )}
