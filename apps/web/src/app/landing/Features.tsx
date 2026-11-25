@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import s from "./landing.module.css";
 
 // What todone does, one feature at a time. Wide screens, the way Apple's product pages do it: the section stays put
-// while you scroll, the words change on the left and the live demo swaps in on the right, with the feature names to
-// jump between. Phones (and the first paint) stack them: a big headline, one line, then the demo.
+// while you scroll, the words change on the left and the live demo swaps in on the right. Phones (and the first
+// paint) stack them: a big headline, one line, then the demo.
 export type Feature = { tag: string; title: string; line?: ReactNode; fill: string; wide?: boolean; demo: ReactNode };
 
 export function Features({ items }: { items: Feature[] }) {
@@ -38,12 +38,6 @@ export function Features({ items }: { items: Feature[] }) {
       removeEventListener("resize", on);
     };
   }, [pinned, items.length]);
-  const jump = (i: number) => {
-    const el = track.current!;
-    const top = el.getBoundingClientRect().top + scrollY;
-    const span = el.offsetHeight - innerHeight;
-    scrollTo({ top: top + ((i + 0.5) / items.length) * span, behavior: "smooth" });
-  };
 
   if (!pinned)
     return (
@@ -64,28 +58,12 @@ export function Features({ items }: { items: Feature[] }) {
   return (
     <div ref={track} className={s.track} style={{ "--n": items.length } as React.CSSProperties}>
       <div className={s.pin} style={{ "--fill": f.fill } as React.CSSProperties}>
-        <div className={s.pinCopy}>
-          <div key={at} className={s.pinWords} aria-live="polite">
-            <h2 className="display">{f.title}</h2>
-            {f.line && <p>{f.line}</p>}
-          </div>
-          <ol className={s.pinTabs} aria-label="Features">
-            {items.map((x, i) => (
-              <li key={x.tag}>
-                <button
-                  type="button"
-                  aria-current={i === at ? "step" : undefined}
-                  style={{ "--fill": x.fill } as React.CSSProperties}
-                  onClick={() => jump(i)}
-                >
-                  {x.tag}
-                </button>
-              </li>
-            ))}
-          </ol>
+        <div key={`words${at}`} className={s.pinWords} aria-live="polite">
+          <h2 className="display">{f.title}</h2>
+          {f.line && <p>{f.line}</p>}
         </div>
         {/* Only the showing demo is mounted: it plays its own short demo each time it comes in. */}
-        <div key={at} className={s.stage} data-pinned aria-label={f.tag}>
+        <div key={`demo${at}`} className={s.stage} data-pinned aria-label={f.tag}>
           {f.demo}
         </div>
       </div>

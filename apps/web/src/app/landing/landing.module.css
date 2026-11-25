@@ -3318,10 +3318,6 @@ button.box:hover {
   margin-inline: auto;
   padding: 2rem var(--gutter);
 }
-.pinCopy {
-  display: grid;
-  gap: 2.5rem;
-}
 .pinWords {
   display: grid;
   gap: 1rem;
@@ -3337,35 +3333,6 @@ button.box:hover {
   max-width: 30rem;
   font-size: clamp(1.1rem, 1.5vw, 1.3rem);
   color: var(--ink-2);
-}
-/* The feature names, like Apple's: a column of pills, the showing one filled in its colour. */
-.pinTabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  list-style: none;
-}
-.pinTabs button {
-  min-height: 2.75rem;
-  padding: 0.45rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  color: var(--ink-2);
-  border: 2px solid var(--hair);
-  border-radius: 999px;
-  transition:
-    background 0.2s var(--ease),
-    color 0.2s var(--ease),
-    border-color 0.2s var(--ease);
-}
-.pinTabs button:hover {
-  color: var(--ink);
-  border-color: var(--ink);
-}
-.pinTabs button[aria-current] {
-  color: var(--black);
-  background: var(--fill);
-  border-color: var(--black);
 }
 .stage[data-pinned] {
   justify-self: center;
