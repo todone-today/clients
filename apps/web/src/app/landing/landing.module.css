@@ -3299,3 +3299,89 @@ button.box:hover {
 .watch:hover {
   text-decoration-thickness: 4px;
 }
+
+/* Wide screens: the features pinned in place while the page scrolls past (Features.tsx). The track is tall (a share
+   of scroll per feature); the pin holds the words and the demo in the middle of the screen. */
+.track {
+  height: calc(var(--n) * 70vh + 100vh);
+}
+.pin {
+  position: sticky;
+  top: 5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  width: 100%;
+  max-width: 84rem;
+  height: calc(100vh - 5rem);
+  margin-inline: auto;
+  padding: 2rem var(--gutter);
+}
+.pinCopy {
+  display: grid;
+  gap: 2.5rem;
+}
+.pinWords {
+  display: grid;
+  gap: 1rem;
+  animation: pinIn 0.5s var(--ease) both;
+}
+.pinWords h2 {
+  max-width: 14ch;
+  font-size: clamp(2.8rem, 4.6vw, 4.6rem);
+  line-height: 0.9;
+  text-wrap: balance;
+}
+.pinWords p {
+  max-width: 30rem;
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+  color: var(--ink-2);
+}
+/* The feature names, like Apple's: a column of pills, the showing one filled in its colour. */
+.pinTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}
+.pinTabs button {
+  min-height: 2.75rem;
+  padding: 0.45rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink-2);
+  border: 2px solid var(--hair);
+  border-radius: 999px;
+  transition:
+    background 0.2s var(--ease),
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+.pinTabs button:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.pinTabs button[aria-current] {
+  color: var(--black);
+  background: var(--fill);
+  border-color: var(--black);
+}
+.stage[data-pinned] {
+  justify-self: center;
+  max-width: 100%;
+  margin-top: 0;
+  animation: pinIn 0.55s var(--ease) both;
+}
+@keyframes pinIn {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pinWords,
+  .stage[data-pinned] {
+    animation: none;
+  }
+}

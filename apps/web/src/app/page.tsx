@@ -31,6 +31,7 @@ import { HeroBoard } from "./landing/HeroBoard";
 import { AskDemo } from "./landing/AskDemo";
 import { Reveal } from "./landing/Reveal";
 import { Tour } from "./landing/Tour";
+import { Features } from "./landing/Features";
 import { Journey } from "@/components/Journey";
 import { Shot } from "./landing/Shot";
 import s from "./landing/landing.module.css";
@@ -82,38 +83,25 @@ export default function Home() {
 
         {/* What it does today, one feature at a time: each gets the screen, a few words, and the real thing to try. */}
         <section id="features" className={s.features} aria-label="What todone does">
-          <Chapter tag="Steps" title="Big task, small steps." fill="var(--butter)">
-            Drop a note on another to make it a step.
-            <StepsDemo />
-          </Chapter>
-          <Chapter tag="Calendar" title="Plan the week by dragging it there." fill="var(--cyan)" wide>
-            Drag tasks onto your week.
-            {SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />}
-          </Chapter>
-          <Chapter tag="Focus" title="Focus mode. Just you and one task." fill="var(--lime)">
-            One task, a timer, nothing else.
-            <FocusDemo />
-          </Chapter>
-          <Chapter tag="Together" title="One list, the whole house." fill="var(--pink)">
-            Share lists with family or your team.
-            <SharedDemo />
-          </Chapter>
-          <Chapter tag="Offline" title="No signal? Keep going." fill="var(--orange)">
-            Works without internet. Syncs when you&apos;re back.
-            <OfflineDemo />
-          </Chapter>
-          <Chapter tag="Goals" title="Goals you can feel." fill="var(--peri)">
-            Finish tasks, earn karma points, spend them on treats you pick.
-            <GoalsDemo />
-          </Chapter>
-          <Chapter tag="Calendars" title="Your calendar, in step." fill="var(--butter)">
-            Your tasks show up in Google, Apple or Outlook.
-            <ToolsDemo />
-          </Chapter>
-          <Chapter tag="Phone" title="In your pocket, too." fill="var(--pink)">
-            {null}
-            <PhoneDemo />
-          </Chapter>
+          <Features
+            items={[
+              { tag: "Steps", title: "Big task, small steps.", fill: "var(--butter)", line: "Drop a note on another to make it a step.", demo: <StepsDemo /> },
+              {
+                tag: "Calendar",
+                title: "Plan the week by dragging it there.",
+                fill: "var(--cyan)",
+                wide: true,
+                line: "Drag tasks onto your week.",
+                demo: SHOTS.calendar.src ? <Shot shot={SHOTS.calendar} sizes="(max-width: 1100px) 100vw, 72rem" /> : <WeekDemo />,
+              },
+              { tag: "Focus", title: "Focus mode. Just you and one task.", fill: "var(--lime)", line: "One task, a timer, nothing else.", demo: <FocusDemo /> },
+              { tag: "Together", title: "One list, the whole house.", fill: "var(--pink)", line: "Share lists with family or your team.", demo: <SharedDemo /> },
+              { tag: "Offline", title: "No signal? Keep going.", fill: "var(--orange)", line: "Works without internet. Syncs when you're back.", demo: <OfflineDemo /> },
+              { tag: "Goals", title: "Goals you can feel.", fill: "var(--peri)", line: "Finish tasks, earn karma points, spend them on treats you pick.", demo: <GoalsDemo /> },
+              { tag: "Calendars", title: "Your calendar, in step.", fill: "var(--butter)", line: "Your tasks show up in Google, Apple or Outlook.", demo: <ToolsDemo /> },
+              { tag: "Phone", title: "In your pocket, too.", fill: "var(--pink)", demo: <PhoneDemo /> },
+            ]}
+          />
         </section>
 
         {/* Why it's different, said once, plainly, beside the real thing. */}
@@ -425,31 +413,5 @@ export default function Home() {
         </a>
       </footer>
     </>
-  );
-}
-
-// One feature at a time: a big headline, one line, then the thing itself on a coloured stage.
-function Chapter({
-  tag,
-  title,
-  fill,
-  wide,
-  children,
-}: {
-  tag: string;
-  title: string;
-  fill: string;
-  wide?: boolean;
-  children: [React.ReactNode, React.ReactNode];
-}) {
-  const [line, demo] = children;
-  return (
-    <article className={s.chapter} data-reveal style={{ "--fill": fill } as React.CSSProperties} aria-label={tag}>
-      <h2 className="display">{title}</h2>
-      {line && <p>{line}</p>}
-      <div className={s.stage} data-wide={wide || undefined}>
-        {demo}
-      </div>
-    </article>
   );
 }
