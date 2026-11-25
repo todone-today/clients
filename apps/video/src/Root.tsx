@@ -5,7 +5,7 @@ import { Board, SCALE, field } from "./live";
 import { setTheme } from "./setup";
 import type { EditName } from "./seed";
 
-// The landing page's screenshots of the board (apps/web/public/landing/board.jpg and board-mobile.jpg): the sample
+// The landing page's screenshots of the board (apps/web/public/landing/board-2611.jpg and board-mobile-2611.jpg: save under a new name each time, so caches fetch it): the sample
 // account after the tour's first scenes, in the day theme. Render with `npm run video:board`.
 const MADE: EditName[] = ["added", "today", "high", "weekly", "step", "idea"];
 const Desk = () => {

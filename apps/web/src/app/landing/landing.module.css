@@ -367,7 +367,7 @@ button.box:hover {
   .chapter:not(:has(.stage[data-wide])) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
     grid-template-areas: "h stage" "p stage";
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr 1fr; /* the heading ends and the line starts at the middle: the pair sits centred */
     column-gap: clamp(2.5rem, 5vw, 5rem);
     justify-items: start;
     width: 100%;
@@ -2106,9 +2106,50 @@ button.box:hover {
     transition: none;
   }
 }
-/* Steps demo: the fold chip, top right of the note, as on a card in the app. */
+/* Steps demo: the trip note (with its fold chip, top right, as on a card in the app), the loose notes under it to
+   drop on it, and what to try. */
+.stepsDemo {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 26rem);
+}
 .stepNote {
   position: relative;
+}
+.stepNote[data-over],
+.stepNote[data-holding] {
+  outline: 3px dashed var(--black);
+  outline-offset: 4px;
+}
+.stepLoose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.stepLoose button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.8rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--butter);
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  cursor: grab;
+}
+.stepLoose button:nth-child(2) {
+  background: var(--pink);
+  rotate: 1deg;
+}
+.stepLoose button[aria-pressed="true"] {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.stepsDemo .try {
+  color: var(--ink-2);
 }
 .fold {
   position: absolute;
@@ -2259,6 +2300,7 @@ button.box:hover {
   display: grid;
   gap: 0.15rem;
   justify-self: end;
+  min-width: 65%;
   max-width: 90%;
   padding: 0.5rem 0.7rem;
   font-size: 0.9rem;
@@ -2268,7 +2310,17 @@ button.box:hover {
   animation: noteIn 0.35s var(--ease);
 }
 .focusNotes li b {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
   font-size: 0.75rem;
+}
+.focusNotes li time {
+  font-weight: 600;
+  color: #4a4540;
+}
+.focusNotes li span {
+  overflow-wrap: anywhere;
 }
 @keyframes noteIn {
   from {
@@ -2874,7 +2926,7 @@ button.box:hover {
 }
 
 /* Demos drawn straight onto the stage get a sticker of their own in the chapter's colour, like Ask todone's notes. */
-.stage > :is(.stepNote, .offlineDemo, .toolsDemo, .phoneDemo) {
+:is(.stage > .stepNote, .stepsDemo > .stepNote, .stage > .offlineDemo, .stage > .toolsDemo, .stage > .phoneDemo) {
   padding: clamp(1rem, 3vw, 1.6rem);
   color: var(--black);
   background: var(--fill);

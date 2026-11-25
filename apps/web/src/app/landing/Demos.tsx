@@ -51,57 +51,104 @@ export function StepsDemo() {
   const [steps, setSteps] = useState([
     ["Book flights", true],
     ["Find a place to stay", false],
-    ["Pack the chargers", false],
   ] as [string, boolean][]);
+  // Notes still on their own: drop one on the trip (or tap it, then the trip) and it becomes a step.
+  const [loose, setLoose] = useState(["Pack the chargers", "Get travel insurance"]);
+  const [held, setHeld] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [folded, setFolded] = useState(false);
+  const join = (t: string) => {
+    setLoose((l) => l.filter((x) => x !== t));
+    setSteps((st) => [...st, [t, done]]);
+    setFolded(false);
+    setHeld(null);
+  };
+  const drop = useDrop("steps", {
+    accept: (p) => p.kind === "demo" && loose.includes(p.id),
+    drop: (p) => p.kind === "demo" && join(p.id),
+  });
+  const root = useRef<HTMLDivElement>(null);
+  useAutoplay(root, async (alive) => {
+    await wait(900);
+    if (!alive()) return;
+    const note = root.current!.querySelector<HTMLElement>(`[data-loose="Pack the chargers"]`)!;
+    const done = await carry(note, root.current!.querySelector(`.${s.stepNote}`)!, 1000);
+    if (alive()) join("Pack the chargers");
+    done();
+  });
   return (
-    <div className={s.stepNote}>
-      <button
-        type="button"
-        className={s.row}
-        aria-pressed={done}
-        onClick={() => {
-          // Steps follow their task both ways: tick it and they're done, untick it and they're open again.
-          setSteps((st) => st.map(([t]) => [t, !done]));
-          setDone(!done);
-        }}
-      >
-        <Box on={done} />
-        <b data-done={done || undefined}>Plan the trip</b>
-      </button>
-      <button
-        type="button"
-        className={s.fold}
-        aria-expanded={!folded}
-        aria-label={`${folded ? "Show" : "Hide"} the steps`}
-        onClick={() => setFolded(!folded)}
-      >
-        <ChevronDown size={13} strokeWidth={3} aria-hidden />
-        {steps.filter(([, on]) => on).length}/{steps.length}
-      </button>
-      <ul hidden={folded}>
-        {steps.map(([t, on], i) => (
-          <li key={t}>
+    <div ref={root} className={s.stepsDemo}>
+      <div className={s.stepNote} {...drop("trip")} data-holding={held ? "" : undefined} onClick={() => held && join(held)}>
+        <button
+          type="button"
+          className={s.row}
+          aria-pressed={done}
+          aria-label={held ? `Make “${held}” a step of Plan the trip` : undefined}
+          onClick={(e) => {
+            if (held) return;
+            e.stopPropagation();
+            // Steps follow their task both ways: tick it and they're done, untick it and they're open again.
+            setSteps((st) => st.map(([t]) => [t, !done]));
+            setDone(!done);
+          }}
+        >
+          <Box on={done} />
+          <b data-done={done || undefined}>Plan the trip</b>
+        </button>
+        <button
+          type="button"
+          className={s.fold}
+          aria-expanded={!folded}
+          aria-label={`${folded ? "Show" : "Hide"} the steps`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setFolded(!folded);
+          }}
+        >
+          <ChevronDown size={13} strokeWidth={3} aria-hidden />
+          {steps.filter(([, on]) => on).length}/{steps.length}
+        </button>
+        <ul hidden={folded}>
+          {steps.map(([t, on], i) => (
+            <li key={t}>
+              <button
+                type="button"
+                className={s.row}
+                aria-pressed={on}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSteps((st) => st.map((x, j) => (j === i ? [x[0], !x[1]] : x)));
+                }}
+              >
+                <Box on={on} />
+                <span data-done={on || undefined}>{t}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {loose.length > 0 && (
+        <div className={s.stepLoose}>
+          {loose.map((t) => (
             <button
+              key={t}
               type="button"
-              className={s.row}
-              aria-pressed={on}
-              onClick={() =>
-                setSteps((st) =>
-                  st.map((x, j) => (j === i ? [x[0], !x[1]] : x)),
-                )
-              }
+              data-loose={t}
+              aria-pressed={held === t}
+              aria-label={`${t}: pick it up, then tap Plan the trip`}
+              onClick={() => setHeld(held === t ? null : t)}
+              {...draggable({ kind: "demo", id: t }, t)}
             >
-              <Box on={on} />
-              <span data-done={on || undefined}>{t}</span>
+              <Box on={false} />
+              {t}
             </button>
-          </li>
-        ))}
-      </ul>
-      <p className={s.try}>
-        Tick or untick the task and its steps go with it. Fold them away when
-        they&apos;re in the way.
+          ))}
+        </div>
+      )}
+      <p className={s.try} role="status">
+        {loose.length
+          ? "Drag a note onto Plan the trip to make it a step. Or tap the note, then the trip."
+          : "Tick the task and its steps go with it. Fold them away when they're in the way."}
       </p>
     </div>
   );
@@ -618,9 +665,11 @@ export function FocusDemo() {
           </button>
         </form>
         <ul>
-          {notes.map((n, i) => (
+          {notes.slice(0, 3).map((n, i) => (
             <li key={notes.length - i}>
-              <b>You</b>
+              <b>
+                You <time>{i === notes.length - 1 ? "earlier" : "now"}</time>
+              </b>
               <span>{n}</span>
             </li>
           ))}

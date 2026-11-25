@@ -50,8 +50,8 @@ export function Tour() {
       <div className={s.tourScreen}>
         <video
           ref={video}
-          src="/onboarding.mp4"
-          poster="/onboarding.jpg"
+          src="/tour-2611.mp4"
+          poster="/tour-2611.jpg"
           preload="none"
           playsInline
           controls={started}
