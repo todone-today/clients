@@ -47,13 +47,9 @@ export default function Home() {
           <Logo size={30} />
         </Link>
         <nav className={s.links} aria-label="Sections">
-          <a href="#ask">Ask todone</a>
-          <a href="#tour">Watch</a>
           <a href="#features">What it does</a>
           <a href="#privacy">Privacy</a>
-          <a href="#roadmap">Roadmap</a>
           <a href="#pricing">Pricing</a>
-          <Link href="/docs">Guide</Link>
           <Link href="/install">Get the app</Link>
         </nav>
         <div className={s.end}>
@@ -184,6 +180,51 @@ export default function Home() {
           </p>
         </section>
 
+        {/* Pricing: the deal stated plainly; checkout opens with Razorpay. */}
+        <section id="pricing" className={s.pricing} aria-labelledby="price-h" data-reveal>
+          <h2 id="price-h" className="display">
+            Free to use. Fair to keep running.
+          </h2>
+          <p className={s.sub}>
+            Free for everyday use. Pay for more lists and sharing.
+          </p>
+          <Pricing />
+          <div className={s.founding} data-reveal>
+            <span className={s.foundingTag}>Founding member</span>
+            <span className={s.foundingFace} aria-hidden>
+              K
+            </span>
+            <div>
+              <h3 className="display">
+                Know Kartikey personally? Like where todone is going?
+              </h3>
+              <p>
+                I&apos;m building todone in the open: private lists, no ads, no selling your data, then phones and a
+                calm e-ink screen. If that&apos;s the kind of thing you want to exist, back it once and you&apos;re part
+                of it from the start.
+              </p>
+              <p className={s.foundingSign}>— Kartikey, who makes todone</p>
+              <p className={s.foundingPrice}>
+                <b className="display">{FOUNDING.inr}</b> <small>/ {FOUNDING.usd} paid once</small>{" "}
+                <span className={`sticker ${s.foundingChip}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
+                  3 years of Plus
+                </span>
+              </p>
+              <Pay plan="founding" fill="var(--pink)">
+                <Heart size={18} strokeWidth={2.75} aria-hidden /> Become a founding member
+              </Pay>
+            </div>
+          </div>
+          <p className={s.selfhost}>
+            Rather run it yourself?{" "}
+            <a href={`${REPO}/server`}>Self-host todone</a> for free.
+          </p>
+          <p className={s.selfhost}>
+            For companies:{" "}
+            <a href="mailto:hello@todone.today">hello@todone.today</a>.
+          </p>
+        </section>
+
         {/* The roadmap: three lists on the same board, in order. */}
         <section id="roadmap" className={s.roadmap} aria-labelledby="roadmap-h">
           <h2 id="roadmap-h" className="display">
@@ -290,51 +331,6 @@ export default function Home() {
             <Goals />
           </section>
         )}
-
-        {/* Pricing: the deal stated plainly; checkout opens with Razorpay. */}
-        <section id="pricing" className={s.pricing} aria-labelledby="price-h" data-reveal>
-          <h2 id="price-h" className="display">
-            Free to use. Fair to keep running.
-          </h2>
-          <p className={s.sub}>
-            Free for everyday use. Pay for more lists and sharing.
-          </p>
-          <Pricing />
-          <div className={s.founding} data-reveal>
-            <span className={s.foundingTag}>Founding member</span>
-            <span className={s.foundingFace} aria-hidden>
-              K
-            </span>
-            <div>
-              <h3 className="display">
-                Know Kartikey personally? Like where todone is going?
-              </h3>
-              <p>
-                I&apos;m building todone in the open: private lists, no ads, no selling your data, then phones and a
-                calm e-ink screen. If that&apos;s the kind of thing you want to exist, back it once and you&apos;re part
-                of it from the start.
-              </p>
-              <p className={s.foundingSign}>— Kartikey, who makes todone</p>
-              <p className={s.foundingPrice}>
-                <b className="display">{FOUNDING.inr}</b> <small>/ {FOUNDING.usd} paid once</small>{" "}
-                <span className={`sticker ${s.foundingChip}`} style={{ "--fill": "var(--lime)" } as React.CSSProperties}>
-                  3 years of Plus
-                </span>
-              </p>
-              <Pay plan="founding" fill="var(--pink)">
-                <Heart size={18} strokeWidth={2.75} aria-hidden /> Become a founding member
-              </Pay>
-            </div>
-          </div>
-          <p className={s.selfhost}>
-            Rather run it yourself?{" "}
-            <a href={`${REPO}/server`}>Self-host todone</a> for free.
-          </p>
-          <p className={s.selfhost}>
-            For companies:{" "}
-            <a href="mailto:hello@todone.today">hello@todone.today</a>.
-          </p>
-        </section>
 
         {/* Community: four ways in. */}
         <section className={s.community} aria-labelledby="comm-h">
