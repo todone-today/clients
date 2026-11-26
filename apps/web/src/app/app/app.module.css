@@ -1667,35 +1667,6 @@
 .aiHead h2 {
   font-size: 2.2rem;
 }
-.aiSteps {
-  display: grid;
-  gap: 1.4rem;
-  padding-left: 1.3rem;
-}
-.aiSteps li {
-  display: grid;
-  gap: 0.6rem;
-  justify-items: start;
-}
-.aiSteps .code {
-  width: 100%;
-  max-height: 13rem;
-  overflow: auto;
-  white-space: pre-wrap;
-}
-.aiSteps textarea {
-  width: 100%;
-  padding: 0.7rem 0.8rem;
-  font: 0.85rem/1.5 var(--mono);
-  color: var(--ink);
-  background: var(--raise);
-  border: 2px solid var(--hair);
-  resize: vertical;
-}
-.aiSteps textarea:focus-visible {
-  outline: none;
-  border-color: var(--lime);
-}
 .aiInto {
   display: flex;
   flex-wrap: wrap;
@@ -3174,9 +3145,6 @@
 }
 .aiLists b {
   color: var(--ink);
-}
-.aiSteps .aiLists li {
-  display: list-item;
 }
 
 /* The demo's note under the header. */
@@ -9421,13 +9389,6 @@ input.askRowTitle:focus-visible {
 }
 
 /* Import with AI, step 1: one big Copy button; the prompt's text folds away below it. */
-.aiCopy {
-  --fill: var(--lime);
-  justify-self: start;
-  min-height: 3.2rem;
-  padding-inline: 1.4rem;
-  font-size: 1.05rem;
-}
 /* The board's views: tabs in one bordered bar, then a + to make another. */
 .views {
   display: flex;
@@ -11182,4 +11143,53 @@ input.askRowTitle:focus-visible {
   .binRow {
     transition: none;
   }
+}
+
+/* Connect an AI (Connections.tsx): what to paste, per app, then the connections you have. */
+.connectMade {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid var(--hair);
+  background: var(--raise);
+}
+.connectMade pre {
+  max-height: 16rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.connectMade small {
+  color: var(--ink-2);
+}
+.connectApps {
+  flex-wrap: wrap;
+}
+.connectRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.connectList {
+  display: grid;
+  width: 100%;
+  gap: 0.5rem;
+  list-style: none;
+}
+.connectList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--hair);
+}
+.connectList li > span {
+  display: grid;
+}
+.connectList small {
+  color: var(--ink-2);
+}
+.aiConnect {
+  display: grid;
+  gap: 1rem;
 }

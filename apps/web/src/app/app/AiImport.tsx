@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usage as counted } from "@/lib/usage";
-import { ArrowRight, ArrowUp, Check, Copy, Mic, Sparkles, Square, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Mic, Sparkles, Square, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useDictation } from "@/lib/dictate";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
 import { authClient } from "@/lib/auth-client";
 import { toBin, update, useLists } from "@/lib/store";
 import { type GoalItem } from "@todone/sdk/goals";
-import { numbered, parsePlan, planPrompt, type OpenList, type PlanGoal } from "@todone/sdk/plan";
+import { numbered, parsePlan, type OpenList, type PlanGoal } from "@todone/sdk/plan";
+import { Connections } from "./Connections";
 import { type List, type Task, todayISO, uid } from "@todone/sdk/tasks";
 import { changeGoals, useGoalItems } from "./goalStore";
 import { ASK_EVENT, IDEAS_EVENT, type Ask } from "./AskBar";
@@ -30,7 +31,7 @@ const SAYS: Record<Phase, string> = {
 };
 
 // Ask todone: type or say what you need, and the AI suggests tasks in your lists, plus goals and rewards, to review
-// before anything is added. Or use your own AI: copy a prompt, paste its answer.
+// before anything is added. Or connect your own AI app, which then works in todone itself (Connections.tsx).
 // `ai`: this server can answer itself (not in the demo, and only with a Gemini key set up).
 export function AiImport({
   trigger = true,
@@ -50,12 +51,11 @@ export function AiImport({
   const dialog = useRef<HTMLDialogElement>(null);
   const { lists: everything } = useLists();
   const { items } = useGoalItems();
-  const [tab, setTab] = useState<"ask" | "paste">("ask");
+  const [tab, setTab] = useState<"ask" | "connect">("ask");
   const [kind, setKind] = useState<"ideas" | "goals" | "rewards" | null>(null); // the page it was asked from (the refs below go with requests)
   const [words, setWords] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [usage, setUsage] = useState<{ used: number; limit: number | null } | null>(null);
-  const [answer, setAnswer] = useState(""); // a pasted answer (Use your own AI)
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [round, setRound] = useState(0); // a new answer starts the steps again from the first
   const [reviewing, setReviewing] = useState(false); // the results, step by step, in their own dialog
@@ -66,7 +66,6 @@ export function AiImport({
   const [needs, setNeeds] = useState<List[]>([]); // lists the AI asked to read, waiting for a yes
   const [shared, setShared] = useState<{ open: OpenList[]; refs: Record<number, string> } | null>(null); // agreed to
   const me = authClient.useSession().data?.user.id;
-  const [copied, setCopied] = useState(false);
   const [today, setToday] = useState(""); // read when the dialog opens, not while the page renders
   const [err, setErr] = useState("");
   const asking = ai && tab === "ask";
@@ -154,7 +153,6 @@ export function AiImport({
     focus.current = null;
     setKind(null);
     talk.stop();
-    setAnswer("");
     setWords("");
     setPhase("idle");
     setErr("");
@@ -380,7 +378,7 @@ export function AiImport({
 
   const open = () => {
     setToday(todayISO());
-    if (!ai) setTab("paste");
+    if (!ai) setTab("connect");
     if (!dialog.current?.open) dialog.current?.showModal();
     if (ai) api<{ used: number; limit: number | null }>("GET", "/ai/usage").then(setUsage, () => {});
   };
@@ -410,7 +408,7 @@ export function AiImport({
   return (
     <div className={s.import}>
       {trigger && (
-        <button className={s.ghost} data-tour="ai" onClick={open} data-tip={ai ? "Ask todone" : "Import with AI"}>
+        <button className={s.ghost} data-tour="ai" onClick={open} data-tip={ai ? "Ask todone" : "Connect your AI"}>
           <Sparkles size={16} strokeWidth={2.5} aria-hidden /> <span className={s.label}>{ai ? "Ask todone" : "Import with AI"}</span>
         </button>
       )}
@@ -430,8 +428,8 @@ export function AiImport({
             <button aria-pressed={tab === "ask"} onClick={() => setTab("ask")}>
               Tell todone
             </button>
-            <button aria-pressed={tab === "paste"} onClick={() => setTab("paste")}>
-              Use your own AI
+            <button aria-pressed={tab === "connect"} onClick={() => setTab("connect")}>
+              Connect your AI
             </button>
           </div>
         )}
@@ -528,48 +526,14 @@ export function AiImport({
             {board}
           </div>
         ) : (
-          <ol className={s.aiSteps}>
-            <li>
-              <p>
-                <b>Copy the prompt</b>, paste it into ChatGPT, Claude or any AI, and add your plans after it.
-              </p>
-              <button
-                className={`btn ${s.aiCopy}`}
-                onClick={async () => {
-                  await navigator.clipboard.writeText(planPrompt({ ...context(), today: today || todayISO() }));
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-              >
-                {copied ? <Check size={18} strokeWidth={3} /> : <Copy size={18} strokeWidth={2.5} />} {copied ? "Copied" : "Copy prompt"}
-              </button>
-            </li>
-            <li>
-              <label htmlFor="ai-answer">
-                <b>Paste the AI&apos;s answer</b>
-              </label>
-              <textarea
-                id="ai-answer"
-                rows={8}
-                value={answer}
-                onChange={(e) => {
-                  setAnswer(e.target.value);
-                  suggest(e.target.value, false);
-                }}
-                placeholder={
-                  "## Trip\n- [ ] Book flights ⏱ 30m 📅 2026-11-03\n- [ ] Pack\n  - [ ] Chargers\n## Goals\n- Read most days | habit | 5 a week\n## Rewards\n- Movie night | 300 XP"
-                }
-              />
-              <p className={s.open} role="status">
-                {answer.trim()
-                  ? found
-                    ? `Found ${drafts.length}, sorted below. Move any you like.`
-                    : "Nothing found yet. Tasks start with “- [ ]”."
-                  : "Nothing pasted yet."}
-              </p>
-            </li>
-            <li>{drafts.length ? board : <p className={s.open}>What it found shows here as stickers, to place before adding.</p>}</li>
-          </ol>
+          // Use your own AI: connect it to todone, and it reads and changes your lists itself (Connections.tsx).
+          <div className={s.aiConnect}>
+            <p>
+              Connect Claude, Cursor or another AI app on your computer. Then ask it in your own words and it adds, ticks
+              and plans in todone itself. Your lists stay encrypted.
+            </p>
+            <Connections />
+          </div>
         )}
 
         {(err || talk.err) && <p className={s.err}>{err || talk.err}</p>}

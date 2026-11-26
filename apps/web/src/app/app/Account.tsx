@@ -13,6 +13,7 @@ import { exportData } from "./actions";
 import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from "@/lib/vault";
 import { Billing } from "./Billing";
 import { ThemePicker } from "@/components/ThemeToggle";
+import { Connections } from "./Connections";
 import { save } from "@/lib/export";
 import { SITE } from "@/lib/urls";
 import s from "./app.module.css";
@@ -76,6 +77,15 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
         <button className={s.ghost} onClick={onIntegrations}>
           <Plug size={16} strokeWidth={2.5} aria-hidden /> Open integrations <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
         </button>
+      </section>
+
+      <section className={s.integration} id="connect-ai">
+        <h2>Connect an AI</h2>
+        <p>
+          Let Claude, Cursor or another AI app on your computer read and change your lists, goals, calendar and rewards.
+          Your lists stay encrypted: they&apos;re unlocked on your computer, not on our servers.
+        </p>
+        <Connections />
       </section>
 
       <section className={s.integration}>
