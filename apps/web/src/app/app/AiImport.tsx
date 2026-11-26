@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usage as counted } from "@/lib/usage";
-import { ArrowRight, ArrowUp, Check, Copy, Mic, Sparkles, Square, Upload, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, Copy, Mic, Sparkles, Square, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useDictation } from "@/lib/dictate";
 import { type Draft, applyChanges, commit, fromChanges, fromPlan } from "@/lib/askBoard";
@@ -30,7 +30,7 @@ const SAYS: Record<Phase, string> = {
 };
 
 // Ask todone: type or say what you need, and the AI suggests tasks in your lists, plus goals and rewards, to review
-// before anything is added. Or use your own AI: copy a prompt, paste its answer. A .md file works too.
+// before anything is added. Or use your own AI: copy a prompt, paste its answer.
 // `ai`: this server can answer itself (not in the demo, and only with a Gemini key set up).
 export function AiImport({
   trigger = true,
@@ -48,11 +48,9 @@ export function AiImport({
   onAppend: (listId: string, tasks: Task[]) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const file = useRef<HTMLInputElement>(null);
   const { lists: everything } = useLists();
   const { items } = useGoalItems();
   const [tab, setTab] = useState<"ask" | "paste">("ask");
-  const [promptText, setPromptText] = useState(""); // Use your own AI's prompt, made when it's unfolded
   const [kind, setKind] = useState<"ideas" | "goals" | "rewards" | null>(null); // the page it was asked from (the refs below go with requests)
   const [words, setWords] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -545,14 +543,6 @@ export function AiImport({
               >
                 {copied ? <Check size={18} strokeWidth={3} /> : <Copy size={18} strokeWidth={2.5} />} {copied ? "Copied" : "Copy prompt"}
               </button>
-              {/* The prompt itself, for the curious: folded away. */}
-              <details
-                className={s.aiPrompt}
-                onToggle={(e) => e.currentTarget.open && today && setPromptText(planPrompt({ ...context(), today }))}
-              >
-                <summary>See what it says</summary>
-                <pre className={s.code}>{promptText}</pre>
-              </details>
             </li>
             <li>
               <label htmlFor="ai-answer">
@@ -582,36 +572,6 @@ export function AiImport({
           </ol>
         )}
 
-        {!asking && (
-          <p className={s.aiFile}>
-            Have a Markdown file instead?{" "}
-            <button className={s.link} onClick={() => file.current?.click()}>
-              <Upload size={14} strokeWidth={2.5} /> Choose a .md file
-            </button>
-          </p>
-        )}
-        <input
-          ref={file}
-          type="file"
-          accept=".md,.markdown,text/markdown,text/plain"
-          hidden
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (!f) return;
-            const got = parsePlan(await f.text(), newId, 0).lists;
-            if (!got.length) return setErr(`No tasks found in ${f.name}. Tasks look like “- [ ] buy milk”.`);
-            // Headings become lists (added to one you have with that name); anything before the first heading becomes
-            // a list named after the file.
-            for (const g of got) {
-              const name = g.name ?? f.name.replace(/\.(md|markdown|txt)$/i, "");
-              const have = lists.find((l) => l.name.toLowerCase() === name.toLowerCase());
-              if (have) onAppend(have.id, g.tasks);
-              else onAdd(name, g.tasks);
-            }
-            close();
-          }}
-        />
         {(err || talk.err) && <p className={s.err}>{err || talk.err}</p>}
         {needs.length > 0 && (
           <Consent

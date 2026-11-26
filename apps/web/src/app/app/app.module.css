@@ -2254,11 +2254,6 @@
     animation: none;
   }
 }
-.aiFile {
-  margin-top: 1.25rem;
-  font-size: 0.85rem;
-  color: var(--ink-2);
-}
 .link {
   display: inline-flex;
   align-items: center;
@@ -9421,18 +9416,6 @@ input.askRowTitle:focus-visible {
   padding-inline: 1.4rem;
   font-size: 1.05rem;
 }
-.aiPrompt summary {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-.aiPrompt pre {
-  max-height: 14rem;
-  margin-top: 0.5rem;
-  overflow: auto;
-}
-
 /* The board's views: tabs in one bordered bar, then a + to make another. */
 .views {
   display: flex;
