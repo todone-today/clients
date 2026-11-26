@@ -235,7 +235,8 @@ export function draggable(payload: Payload, label: string) {
         if (ev.key !== "Escape" || !ghost) return;
         ev.preventDefault();
         ev.stopImmediatePropagation();
-        settle(ghost, () => ghost!.home);
+        const g = ghost; // read when it lands, after `ghost` is cleared below
+        settle(g, () => g.home);
         ghost = null;
         finish();
       };

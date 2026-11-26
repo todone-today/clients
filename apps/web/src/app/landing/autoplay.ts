@@ -22,7 +22,8 @@ export function useAutoplay(ref: RefObject<HTMLElement | null>, script: (alive: 
       ([e]) => {
         if (!e.isIntersecting) return;
         io.disconnect();
-        void run.current(() => alive);
+        // A demo that lost its page mid-way (scrolled off, swapped out) just stops.
+        run.current(() => alive).catch(() => {});
       },
       { threshold: 0.6 },
     );
@@ -40,7 +41,8 @@ export const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Carries `el` over to `to` the way a finger would: lift, travel, set down. The caller moves the data, then calls the
 // returned `done` to drop the motion (the element is then wherever the new state put it).
-export async function carry(el: HTMLElement, to: Element, ms = 900) {
+export async function carry(el: HTMLElement | null, to: Element | null, ms = 900) {
+  if (!el || !to) return () => {}; // not on the page (any more): nothing to carry
   const a = el.getBoundingClientRect();
   const b = to.getBoundingClientRect();
   const dx = b.left + b.width / 2 - (a.left + a.width / 2);
