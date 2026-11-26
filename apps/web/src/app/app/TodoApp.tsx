@@ -1535,7 +1535,7 @@ function ListView({
         </div>
         <p className={s.progress}>
           {c.all ? `${c.done} of ${c.all} done` : "Empty"}
-          <span className={s.bar} aria-hidden>
+          <span className={s.bar} aria-hidden key={list.id}>
             <i style={{ transform: `scaleX(${c.all ? c.done / c.all : 0})` }} />
           </span>
         </p>

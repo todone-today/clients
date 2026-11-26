@@ -275,6 +275,18 @@
   background: var(--lime);
   transform-origin: left;
   transition: transform 0.4s var(--ease);
+  /* Fills from empty to where it stands when it appears (and on each list opened). */
+  animation: barFill 0.9s 0.1s var(--ease) backwards;
+}
+@keyframes barFill {
+  from {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar i {
+    animation: none;
+  }
 }
 .tools {
   display: flex;
