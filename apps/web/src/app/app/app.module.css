@@ -11151,6 +11151,17 @@ input.askRowTitle:focus-visible {
   .binRow {
     transition: padding-right 0.25s var(--ease);
   }
+  /* The Bin sits up in the header's right side, beside the name and goals, not on a row of its own above the board:
+     the row takes no height and the Bin grows up from it. The header keeps clear of it. */
+  .binRow {
+    align-items: flex-end;
+    height: 0;
+    margin-bottom: 0;
+    translate: 0 -0.9rem;
+  }
+  .listHead {
+    padding-right: 12.5rem;
+  }
   :global(body[data-drag="task"]) .listBody:not([data-stickers="pinned"]) .binRow {
     padding-right: 16rem;
   }
