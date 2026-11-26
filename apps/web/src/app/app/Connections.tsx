@@ -21,7 +21,6 @@ export function Connections() {
   const [err, setErr] = useState("");
   const [made, setMade] = useState<{ name: string; code: string } | null>(null);
   const [app, setApp] = useState(0);
-  const [copied, setCopied] = useState(false);
   const [removing, setRemoving] = useState("");
   useEffect(() => {
     connections().then(setList, () => setSignedOut(true));
@@ -39,7 +38,7 @@ export function Connections() {
           </p>
           <div className={`${s.seg} ${s.connectApps}`} role="group" aria-label="Your AI app">
             {ways.map((w, i) => (
-              <button key={w.app} type="button" aria-pressed={i === app} onClick={() => (setApp(i), setCopied(false))}>
+              <button key={w.app} type="button" aria-pressed={i === app} onClick={() => setApp(i)}>
                 {w.app}
               </button>
             ))}
@@ -47,18 +46,9 @@ export function Connections() {
           <p>{ways[app].where}</p>
           <pre className={s.code}>{ways[app].text}</pre>
           <div className={s.connectRow}>
-            <button
-              type="button"
-              className="btn"
-              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-              onClick={async () => {
-                await navigator.clipboard.writeText(ways[app].text);
-                setCopied(true);
-              }}
-            >
-              {copied ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />}{" "}
-              {copied ? "Copied" : "Copy"}
-            </button>
+            <CopyButton text={ways[app].text} label={ways[app].code ? "Copy command" : "Copy"} key={`a${app}`} />
+            {/* The plugin and the extension ask for the code itself. */}
+            {ways[app].code && <CopyButton text={made.code} label="Copy your code" key={`c${app}`} />}
             <button type="button" className={s.ghost} onClick={() => setMade(null)}>
               Done
             </button>
@@ -80,7 +70,6 @@ export function Connections() {
               setList((l) => [...(l ?? []), c]);
               setMade({ name, code: c.code });
               setApp(0);
-              setCopied(false);
               form.reset();
             } catch (x) {
               setErr(x instanceof Error ? x.message : "Couldn't make the connection.");
@@ -134,5 +123,22 @@ export function Connections() {
         </ul>
       )}
     </div>
+  );
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn"
+      style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+      onClick={async () => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+      }}
+    >
+      {copied ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />} {copied ? "Copied" : label}
+    </button>
   );
 }

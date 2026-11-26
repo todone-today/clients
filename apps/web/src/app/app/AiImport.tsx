@@ -529,7 +529,7 @@ export function AiImport({
           // Use your own AI: connect it to todone, and it reads and changes your lists itself (Connections.tsx).
           <div className={s.aiConnect}>
             <p>
-              Connect Claude, Cursor or another AI app on your computer. Then ask it in your own words and it adds, ticks
+              Connect Claude, Gemini, Cursor or another AI app on your computer. Then ask it in your own words and it adds, ticks
               and plans in todone itself. Your lists stay encrypted.
             </p>
             <Connections />

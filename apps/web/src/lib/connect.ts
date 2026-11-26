@@ -38,18 +38,17 @@ export async function makeConnection(name: string, secret: string) {
   return { ...c, code: `${token}.${b64url(keyBytes)}` };
 }
 
-// What to paste where, for the apps people use most. `url`: set only when this isn't todone's own address
-// (a local copy while developing), so the connector talks to the same place.
+// How to add todone to each app. The Claude Code plugin and the Gemini CLI extension ask for the code when they're
+// installed (github.com/todone-today/todone-mcp); the others take it in their config. `url`: set only when this
+// isn't todone's own address (a local copy while developing), so the connector talks to the same place.
+export const VERSION = "0.1.0";
 export function setups(code: string, url?: string) {
   const env = { TODONE_CONNECT: code, ...(url ? { TODONE_URL: url } : {}) };
-  const json = JSON.stringify({ mcpServers: { todone: { command: "npx", args: ["-y", "todone-mcp"], env } } }, null, 2);
-  const flags = Object.entries(env)
-    .map(([k, v]) => `--env ${k}=${v}`)
-    .join(" ");
+  const json = JSON.stringify({ mcpServers: { todone: { command: "npx", args: ["-y", `todone-mcp@${VERSION}`], env } } }, null, 2);
   return [
+    { app: "Claude Code", where: "Run this in Claude Code, then paste your code when it asks.", text: "/plugin install todone --marketplace todone-today/todone-mcp", code: true },
     { app: "Claude Desktop", where: "Settings → Developer → Edit Config. Paste this, save, then quit and reopen Claude.", text: json },
-    { app: "Claude Code", where: "Run this in a terminal.", text: `claude mcp add todone ${flags} -- npx -y todone-mcp` },
+    { app: "Gemini CLI", where: "Run this in a terminal, then paste your code when it asks.", text: "gemini extensions install https://github.com/todone-today/todone-mcp", code: true },
     { app: "Cursor", where: "Settings → MCP → Add new server, or paste into ~/.cursor/mcp.json.", text: json },
-    { app: "Other apps", where: "Any app that takes MCP servers: run npx -y todone-mcp with this setting.", text: Object.entries(env).map(([k, v]) => `${k}=${v}`).join("\n") },
   ];
 }

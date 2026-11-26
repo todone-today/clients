@@ -82,7 +82,7 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
       <section className={s.integration} id="connect-ai">
         <h2>Connect an AI</h2>
         <p>
-          Let Claude, Cursor or another AI app on your computer read and change your lists, goals, calendar and rewards.
+          Let Claude, Gemini, Cursor or another AI app on your computer read and change your lists, goals, calendar and rewards.
           Your lists stay encrypted: they&apos;re unlocked on your computer, not on our servers.
         </p>
         <Connections />
