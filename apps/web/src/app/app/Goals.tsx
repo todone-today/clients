@@ -59,8 +59,8 @@ const FILLS = [
   "var(--cyan)",
   "var(--lime)",
   "var(--peri)",
-  "#ffbe86",
-  "#00afb9",
+  "var(--peach)",
+  "var(--aqua)",
 ];
 const fillFor = (id: string) =>
   FILLS[
@@ -1688,10 +1688,10 @@ export function GoalDialog({
 // Treats to start from: a name, its size in tasks like yours, and a sticker colour.
 const IDEAS = [
   ["20 min of Instagram", 3, "var(--cyan)"],
-  ["Dessert after dinner", 4, "#ffbe86"],
+  ["Dessert after dinner", 4, "var(--peach)"],
   ["Coffee out", 5, "var(--peri)"],
   ["An hour of gaming", 6, "var(--orange)"],
-  ["A lazy morning", 8, "#00afb9"],
+  ["A lazy morning", 8, "var(--aqua)"],
   ["Cheat meal", 10, "var(--pink)"],
   ["Movie night", 10, "var(--lime)"],
   ["A new book", 30, "var(--butter)"],

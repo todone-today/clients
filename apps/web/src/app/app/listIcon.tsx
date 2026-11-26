@@ -104,8 +104,8 @@ export const NOTES = [
   "var(--lime)",
   "var(--peri)",
   "var(--orange)",
-  "#ffbe86", // peach
-  "#00afb9", // aqua
+  "var(--peach)", // peach
+  "var(--aqua)", // aqua
 ];
 // A list's own colour, from its id: picked once when it's made, the same on every device and after a rename.
 export const listColor = (id: string) => NOTES[noteColor(id)];

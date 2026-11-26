@@ -16,7 +16,7 @@ import { Select } from "@/components/Select";
 import s from "./app.module.css";
 
 // Sticker colours, one per area, so a glance tells the areas apart.
-const FILLS = ["var(--lime)", "var(--cyan)", "var(--butter)", "var(--pink)", "var(--peri)", "#ffbe86"];
+const FILLS = ["var(--lime)", "var(--cyan)", "var(--butter)", "var(--pink)", "var(--peri)", "var(--peach)"];
 const fill = (areas: readonly string[], area: string) => FILLS[areas.indexOf(area) % FILLS.length];
 
 // Pick a starting point, or start from nothing. A search across every template, the areas as one row of chips (it

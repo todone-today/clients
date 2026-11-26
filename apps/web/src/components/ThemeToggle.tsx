@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Check, Moon, Palette, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 import s from "./ThemeToggle.module.css";
 
 // The colours live in globals.css ([data-theme="…"]); these are their names.
@@ -74,16 +74,16 @@ export function ThemePicker({ onPick }: { onPick?: (t: Theme) => void }) {
   );
 }
 
-// Asks for colours: by itself on every visit until a theme is kept (not while `hold`, when something else is on
-// screen), or when `open` (the header's button). Tapping previews, "Keep" saves, closing puts back what was there.
-export function ThemeAsk({ open, onClose, hold }: { open: boolean; onClose: () => void; hold?: boolean }) {
+// Asks for colours by itself on every visit until a theme is kept (not while `hold`, when something else is on
+// screen). Tapping previews, "Keep" saves, closing puts back what was there. Account has the same choices.
+export function ThemeAsk({ hold }: { hold?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const was = useRef<Theme | null>(null);
   const unset = useSyncExternalStore(subscribe, () => !saved(), () => false);
   const [later, setLater] = useState(false); // closed without keeping one: asks again next visit, not now
   const theme = useTheme();
   useEffect(() => apply(saved()), []); // the status bar matches the saved theme from the start
-  const show = open || (unset && !later && !hold);
+  const show = unset && !later && !hold;
   // Waits its turn: never on top of another dialog (the sign-in haiku, a tip).
   useEffect(() => {
     if (!show) return;
@@ -104,7 +104,6 @@ export function ThemeAsk({ open, onClose, hold }: { open: boolean; onClose: () =
       onClose={() => {
         if (saved() === was.current) apply(was.current); // closed without keeping: back to before
         setLater(true);
-        onClose();
       }}
       onMouseDown={(e) => e.target === e.currentTarget && ref.current?.close()}
     >
@@ -125,16 +124,9 @@ export function ThemeAsk({ open, onClose, hold }: { open: boolean; onClose: () =
   );
 }
 
-// `tile`: one square button styled by the given class. With `onOpen` it opens the colours (the app); otherwise it
-// flips between Day and Night (the website).
-export function ThemeToggle({ tile, onOpen }: { tile: string; onOpen?: () => void }) {
+// The website's one square button (styled by `tile`): flips between Day and Night.
+export function ThemeToggle({ tile }: { tile: string }) {
   const theme = useTheme();
-  if (onOpen)
-    return (
-      <button className={tile} onClick={onOpen} aria-label="Change colours" data-tip="Colours" aria-haspopup="dialog">
-        <Palette size={18} strokeWidth={2.5} aria-hidden />
-      </button>
-    );
   const next = isDark(theme) ? "day" : "night";
   return (
     <button className={tile} onClick={() => apply(next, true)} aria-label={`Switch to ${next}`} data-tip={`Switch to ${next}`}>

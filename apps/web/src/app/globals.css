@@ -15,6 +15,8 @@
   --cyan: #70c1b3;
   --hot: #ff2e63;
   --orange: #f07167;
+  --peach: #ffbe86;
+  --aqua: #00afb9;
 
   --display: var(--font-display), "Arial Narrow", sans-serif;
   --sans: var(--font-sans), system-ui, sans-serif;
@@ -40,7 +42,8 @@
     color-scheme: light;
   }
 }
-/* Night and Day are the website's; the app picks from the six after them. Not only on :root, so a swatch with data-theme shows its own colours. */
+/* Night and Day are the website's; the app picks from the six after them, each with its own sticker colours (the
+   cards: tasks, goals, rewards). Not only on :root, so a swatch with data-theme shows its own colours. */
 [data-theme="night"] {
   --ground: #0b0b0b;
   --ink: #fff8ef;
@@ -60,6 +63,14 @@
   color-scheme: light;
 }
 [data-theme="light"] {
+  --lime: #a5b4fc;
+  --butter: #fde68a;
+  --pink: #fbcfe8;
+  --peri: #c4b5fd;
+  --cyan: #a5f3fc;
+  --orange: #fdba74;
+  --peach: #fed7aa;
+  --aqua: #5eead4;
   --ground: #f8f8f5;
   --ink: #202124;
   --ink-2: #5f6368;
@@ -69,6 +80,14 @@
   color-scheme: light;
 }
 [data-theme="midnight"] {
+  --lime: #c4b5fd;
+  --butter: #fde68a;
+  --pink: #f9a8d4;
+  --peri: #a78bfa;
+  --cyan: #67e8f9;
+  --orange: #fb923c;
+  --peach: #fdba74;
+  --aqua: #2dd4bf;
   --ground: #111318;
   --ink: #f3f4f6;
   --ink-2: #a3a8b4;
@@ -78,6 +97,14 @@
   color-scheme: dark;
 }
 [data-theme="pastel"] {
+  --lime: #d9f99d;
+  --butter: #fef3c7;
+  --pink: #fbcfe8;
+  --peri: #ddd6fe;
+  --cyan: #a8dccb;
+  --orange: #fecaca;
+  --peach: #fed7c3;
+  --aqua: #b9e6f0;
   --ground: #faf7ff;
   --ink: #2a2438;
   --ink-2: #6b6280;
@@ -87,6 +114,14 @@
   color-scheme: light;
 }
 [data-theme="forest"] {
+  --lime: #b5d99c;
+  --butter: #e9dfa7;
+  --pink: #e8c4b8;
+  --peri: #c3cfe0;
+  --cyan: #9cc5a1;
+  --orange: #e3a587;
+  --peach: #ecc9a0;
+  --aqua: #8fc1b5;
   --ground: #f2f5ef;
   --ink: #26382c;
   --ink-2: #5b6e60;
@@ -96,15 +131,31 @@
   color-scheme: light;
 }
 [data-theme="swiss"] {
+  --lime: #ff593d;
+  --butter: #ffd23f;
+  --pink: #f4a6b8;
+  --peri: #9fb4ff;
+  --cyan: #8fd3c7;
+  --orange: #ff8a5b;
+  --peach: #ffc59e;
+  --aqua: #4cc9c0;
   --ground: #f5f3ee;
   --ink: #171717;
   --ink-2: #55524c;
   --raise: #ffffff;
   --hair: #dedad1;
-  --shadow: #ff593d;
+  --shadow: #171717;
   color-scheme: light;
 }
 [data-theme="navy"] {
+  --lime: #d6b56d;
+  --butter: #f2dc9b;
+  --pink: #e6a8b5;
+  --peri: #9fb3e0;
+  --cyan: #8cc7c2;
+  --orange: #e39b72;
+  --peach: #f0c49a;
+  --aqua: #6fb8c9;
   --ground: #101b2d;
   --ink: #f1f4f8;
   --ink-2: #a7b2c4;

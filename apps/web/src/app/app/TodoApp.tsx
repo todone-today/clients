@@ -36,7 +36,7 @@ import {
   Layers,
   LayoutGrid,
 } from "lucide-react";
-import { ThemeAsk, ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeAsk } from "@/components/ThemeToggle";
 import { Confetti } from "@/components/Confetti";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -214,7 +214,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   // First visit: "About you" (Intro), then the short tour; the i in the top bar plays the tour again.
   const [intro, setIntro] = useState(false);
   const [touring, setTouring] = useState(false);
-  const [colours, setColours] = useState(false);
   useEffect(() => {
     if (userId && tourDue(userId)) Promise.resolve().then(() => setTouring(true)); // reloaded mid-tour
   }, [userId]);
@@ -616,7 +615,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   if (gate && !demo) return gate;
   return (
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
-      <ThemeAsk open={colours} onClose={() => setColours(false)} hold={demo || intro || touring} />
+      <ThemeAsk hold={demo || intro || touring} />
       <Welcome />
       <PlanPrompt />
       {!demo && !intro && !touring && <InstallSheet />}
@@ -718,7 +717,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
         >
           <Info size={18} strokeWidth={2.5} aria-hidden />
         </button>
-        <ThemeToggle tile={s.tile} onOpen={() => setColours(true)} />
         {demo ? (
           <Link
             href="/login"
