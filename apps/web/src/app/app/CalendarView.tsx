@@ -35,6 +35,7 @@ type View = "day" | "week" | "month" | "year";
 type Item = { list: List; task: Task };
 type Drop = (arg: string) => object;
 const VIEWS: View[] = ["day", "week", "month", "year"];
+const DONE_TOO = "todone:cal-done"; // "1": the calendar shows finished tasks too
 
 // Every dated task on a Google-Calendar-style grid. With `update` it is also the planner:
 // tick tasks off, and drag them between days, onto times, or back to the "To plan" tray.
@@ -77,9 +78,20 @@ export function CalendarView({
   const all: Item[] = shown.flatMap((list) =>
     list.tasks.flatMap((t) => [t, ...t.sub]).map((task) => ({ list, task })),
   );
+  // Finished tasks take room on the days: hidden unless asked for ("All"), remembered on this device. A shared
+  // calendar shows everything (it has no switch).
+  const [doneToo, setDoneToo] = useState(false);
+  useEffect(() => {
+    let v = false;
+    try {
+      v = localStorage.getItem(DONE_TOO) === "1";
+    } catch {}
+    if (v) Promise.resolve().then(() => setDoneToo(true));
+  }, []);
+  const showDone = locked || doneToo;
   const byDay = new Map<string, Item[]>();
   for (const it of all)
-    if (it.task.due)
+    if (it.task.due && (showDone || !it.task.done))
       byDay.set(it.task.due, [...(byDay.get(it.task.due) ?? []), it]);
   for (const items of byDay.values())
     items.sort((a, b) => (a.task.at ?? "").localeCompare(b.task.at ?? ""));
@@ -429,6 +441,24 @@ export function CalendarView({
                 onClick={() => setView(v)}
               >
                 {v[0].toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
+        {!locked && (
+          <div className={s.seg} role="group" aria-label="Which tasks">
+            {([false, true] as const).map((v) => (
+              <button
+                key={String(v)}
+                aria-pressed={doneToo === v}
+                onClick={() => {
+                  setDoneToo(v);
+                  try {
+                    localStorage.setItem(DONE_TOO, v ? "1" : "0");
+                  } catch {}
+                }}
+              >
+                {v ? "All" : "Open"}
               </button>
             ))}
           </div>
