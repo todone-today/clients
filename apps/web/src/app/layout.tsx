@@ -42,7 +42,7 @@ export const viewport: Viewport = {
   ],
 };
 
-// Applies the saved Day/Night choice before paint, so the page never flashes the other theme. A task shared by
+// Applies the saved colours before paint, so the page never flashes the other theme. A task shared by
 // link (/t/…) is always Day for the people it's shared with.
 const themeScript = `try{var t=location.pathname.indexOf("/t/")===0?"day":localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
 

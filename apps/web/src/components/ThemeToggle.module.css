@@ -1,25 +1,92 @@
-.toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.875rem;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 26rem;
+}
+/* Each swatch carries its own theme (data-theme), so it shows that theme's ground, ink and shadow. */
+.swatch {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  min-height: 44px;
+  padding: 0;
+  font-size: 0.9rem;
   font-weight: 700;
+  color: inherit;
+  background: none;
+  border: 0;
 }
-.toggle > * + *::before {
-  content: "/";
-  margin-right: 0.35rem;
-  color: var(--ink-2);
-  font-weight: 400;
+.paper {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0 18%;
+  background: var(--ground);
+  border: var(--key);
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: translate 0.2s var(--ease);
 }
-.opt {
-  color: var(--ink-2);
-  padding: 0.25rem 0;
-  border-bottom: 3px solid transparent;
+.paper i {
+  height: 0.45rem;
+  border-radius: 99px;
+  background: var(--ink);
 }
-.opt[aria-pressed="true"] {
-  color: var(--ink);
-  border-bottom-color: var(--lime);
+.paper i + i {
+  width: 60%;
+  background: var(--ink-2);
 }
-.opt:hover {
-  color: var(--ink);
+.swatch:hover .paper {
+  translate: -2px -2px;
+}
+.swatch[aria-checked="true"] .paper {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+.tick {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  padding: 2px;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--black);
+  border-radius: 50%;
+  box-sizing: content-box;
+}
+
+.ask {
+  width: min(28rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 1.75rem 1.5rem 1.5rem;
+  display: grid;
+  gap: 1rem;
+  color: var(--black);
+  /* A light sticker reads the same on every theme: dark text on butter. */
+  --ink: var(--black);
+  --ink-2: #4a4540;
+  background: var(--butter);
+  border: var(--key);
+  box-shadow: var(--lift);
+}
+.ask:not([open]) {
+  display: none;
+}
+/* Light, so the theme being tried shows behind it. */
+.ask::backdrop {
+  background: rgb(0 0 0 / 0.25);
+}
+.ask h2 {
+  font: 400 2rem/1 var(--display);
+  text-transform: uppercase;
+}
+.ask p {
+  font-size: 0.95rem;
+}
+.ask > :global(.btn) {
+  justify-self: stretch;
+  min-height: 48px;
 }

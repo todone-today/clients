@@ -1,4 +1,4 @@
-/* Night is the ground; Day swaps it to cream. Stickers keep their colours and black keylines in both. */
+/* Night is the ground; the themes below swap it. Stickers keep their colours and black keylines in both. */
 :root {
   --ground: #0b0b0b;
   --ink: #fff8ef;
@@ -28,8 +28,9 @@
   color-scheme: dark;
 }
 
+/* Nothing chosen yet: follow the device. */
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="night"]) {
+  :root:not([data-theme]) {
     --ground: #fff8ef;
     --ink: #0b0b0b;
     --ink-2: #4a4540;
@@ -39,13 +40,59 @@
     color-scheme: light;
   }
 }
-:root[data-theme="day"] {
+/* The themes people pick from. Not only on :root, so a swatch with data-theme shows its own colours. */
+[data-theme="night"] {
+  --ground: #0b0b0b;
+  --ink: #fff8ef;
+  --ink-2: #c9c2b8;
+  --raise: #171717;
+  --hair: #2c2c2c;
+  --shadow: #fff8ef;
+  color-scheme: dark;
+}
+[data-theme="day"] {
   --ground: #fff8ef;
   --ink: #0b0b0b;
   --ink-2: #4a4540;
   --raise: #f3eadb;
   --hair: #ddd2c0;
   --shadow: #0b0b0b;
+  color-scheme: light;
+}
+[data-theme="forest"] {
+  --ground: #0f1f17;
+  --ink: #f1f7ec;
+  --ink-2: #b5c7b8;
+  --raise: #18301f;
+  --hair: #2a4433;
+  --shadow: #d4f04a;
+  color-scheme: dark;
+}
+[data-theme="ocean"] {
+  --ground: #0b1526;
+  --ink: #eef4ff;
+  --ink-2: #a9b7cf;
+  --raise: #13213a;
+  --hair: #26375a;
+  --shadow: #70c1b3;
+  color-scheme: dark;
+}
+[data-theme="plum"] {
+  --ground: #1c1022;
+  --ink: #fbefff;
+  --ink-2: #c8b3cf;
+  --raise: #281833;
+  --hair: #3f2a4a;
+  --shadow: #ff90b3;
+  color-scheme: dark;
+}
+[data-theme="blush"] {
+  --ground: #fff0f3;
+  --ink: #1a0b10;
+  --ink-2: #5c4048;
+  --raise: #fbdfe6;
+  --hair: #efc6d0;
+  --shadow: #1a0b10;
   color-scheme: light;
 }
 

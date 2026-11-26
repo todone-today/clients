@@ -12,6 +12,7 @@ import { forget } from "@/lib/store";
 import { exportData } from "./actions";
 import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from "@/lib/vault";
 import { Billing } from "./Billing";
+import { ThemePicker } from "@/components/ThemeToggle";
 import { save } from "@/lib/export";
 import { SITE } from "@/lib/urls";
 import s from "./app.module.css";
@@ -75,6 +76,12 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
         <button className={s.ghost} onClick={onIntegrations}>
           <Plug size={16} strokeWidth={2.5} aria-hidden /> Open integrations <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
         </button>
+      </section>
+
+      <section className={s.integration}>
+        <h2>Colours</h2>
+        <p>Pick how todone looks on this device.</p>
+        <ThemePicker />
       </section>
 
       <section className={s.integration}>

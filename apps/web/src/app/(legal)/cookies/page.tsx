@@ -63,7 +63,7 @@ export default function Cookies() {
             <td>
               <code>theme</code>
             </td>
-            <td>Remembers Day or Night.</td>
+            <td>Remembers the colours you picked.</td>
           </tr>
           <tr>
             <td>
