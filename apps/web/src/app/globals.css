@@ -40,7 +40,7 @@
     color-scheme: light;
   }
 }
-/* The themes people pick from. Not only on :root, so a swatch with data-theme shows its own colours. */
+/* Night and Day are the website's; the app picks from the six after them. Not only on :root, so a swatch with data-theme shows its own colours. */
 [data-theme="night"] {
   --ground: #0b0b0b;
   --ink: #fff8ef;
@@ -59,41 +59,59 @@
   --shadow: #0b0b0b;
   color-scheme: light;
 }
-[data-theme="forest"] {
-  --ground: #0f1f17;
-  --ink: #f1f7ec;
-  --ink-2: #b5c7b8;
-  --raise: #18301f;
-  --hair: #2a4433;
-  --shadow: #d4f04a;
-  color-scheme: dark;
-}
-[data-theme="ocean"] {
-  --ground: #0b1526;
-  --ink: #eef4ff;
-  --ink-2: #a9b7cf;
-  --raise: #13213a;
-  --hair: #26375a;
-  --shadow: #70c1b3;
-  color-scheme: dark;
-}
-[data-theme="plum"] {
-  --ground: #1c1022;
-  --ink: #fbefff;
-  --ink-2: #c8b3cf;
-  --raise: #281833;
-  --hair: #3f2a4a;
-  --shadow: #ff90b3;
-  color-scheme: dark;
-}
-[data-theme="blush"] {
-  --ground: #fff0f3;
-  --ink: #1a0b10;
-  --ink-2: #5c4048;
-  --raise: #fbdfe6;
-  --hair: #efc6d0;
-  --shadow: #1a0b10;
+[data-theme="light"] {
+  --ground: #f8f8f5;
+  --ink: #202124;
+  --ink-2: #5f6368;
+  --raise: #ffffff;
+  --hair: #e3e3de;
+  --shadow: #6366f1;
   color-scheme: light;
+}
+[data-theme="midnight"] {
+  --ground: #111318;
+  --ink: #f3f4f6;
+  --ink-2: #a3a8b4;
+  --raise: #1c2029;
+  --hair: #2b303b;
+  --shadow: #a78bfa;
+  color-scheme: dark;
+}
+[data-theme="pastel"] {
+  --ground: #faf7ff;
+  --ink: #2a2438;
+  --ink-2: #6b6280;
+  --raise: #ffffff;
+  --hair: #e6def5;
+  --shadow: #b49ae8;
+  color-scheme: light;
+}
+[data-theme="forest"] {
+  --ground: #f2f5ef;
+  --ink: #26382c;
+  --ink-2: #5b6e60;
+  --raise: #ffffff;
+  --hair: #d8e0d2;
+  --shadow: #477a57;
+  color-scheme: light;
+}
+[data-theme="swiss"] {
+  --ground: #f5f3ee;
+  --ink: #171717;
+  --ink-2: #55524c;
+  --raise: #ffffff;
+  --hair: #dedad1;
+  --shadow: #ff593d;
+  color-scheme: light;
+}
+[data-theme="navy"] {
+  --ground: #101b2d;
+  --ink: #f1f4f8;
+  --ink-2: #a7b2c4;
+  --raise: #192941;
+  --hair: #273a57;
+  --shadow: #d6b56d;
+  color-scheme: dark;
 }
 
 * {

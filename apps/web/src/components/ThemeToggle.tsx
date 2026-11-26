@@ -6,14 +6,14 @@ import s from "./ThemeToggle.module.css";
 
 // The colours live in globals.css ([data-theme="…"]); these are their names.
 export const THEMES = [
-  { id: "night", name: "Night", dark: true },
-  { id: "day", name: "Day", dark: false },
-  { id: "forest", name: "Forest", dark: true },
-  { id: "ocean", name: "Ocean", dark: true },
-  { id: "plum", name: "Plum", dark: true },
-  { id: "blush", name: "Blush", dark: false },
+  { id: "light", name: "Minimal Light", dark: false },
+  { id: "midnight", name: "Midnight Dark", dark: true },
+  { id: "pastel", name: "Pastel", dark: false },
+  { id: "forest", name: "Forest", dark: false },
+  { id: "swiss", name: "Swiss", dark: false },
+  { id: "navy", name: "Midnight Blue", dark: true },
 ] as const;
-type Theme = (typeof THEMES)[number]["id"];
+type Theme = (typeof THEMES)[number]["id"] | "day" | "night"; // Day and Night: the website's switch
 
 const subscribe = (f: () => void) => {
   addEventListener("themechange", f);
@@ -29,7 +29,7 @@ const saved = () => {
     return null;
   }
 };
-const isDark = (t: Theme | null) => THEMES.find((x) => x.id === t)?.dark ?? true;
+const isDark = (t: Theme | null) => (t === "day" ? false : (THEMES.find((x) => x.id === t)?.dark ?? true));
 
 // Shows a theme (none: follow the device); `keep` also remembers it. The phone's status bar takes the new ground too.
 function apply(t: Theme | null, keep = false) {
@@ -46,7 +46,7 @@ function apply(t: Theme | null, keep = false) {
 
 const useTheme = () => useSyncExternalStore(subscribe, current, () => null);
 
-// The six themes as little pages in their own colours. Tapping one shows it on the whole app (and keeps it, unless
+// The themes as little pages in their own colours. Tapping one shows it on the whole app (and keeps it, unless
 // `onPick` decides).
 export function ThemePicker({ onPick }: { onPick?: (t: Theme) => void }) {
   const theme = useTheme();
@@ -119,7 +119,7 @@ export function ThemeAsk({ open, onClose, hold }: { open: boolean; onClose: () =
           ref.current?.close();
         }}
       >
-        Keep {THEMES.find((t) => t.id === theme)?.name ?? "these"}
+        Keep {THEMES.find((t) => t.id === theme)?.name ?? "how it looks"}
       </button>
     </dialog>
   );
