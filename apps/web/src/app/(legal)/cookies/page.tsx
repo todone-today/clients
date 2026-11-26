@@ -81,7 +81,7 @@ export default function Cookies() {
             <td>
               <code>todone:welcome</code>
             </td>
-            <td>Shows the welcome haiku once per sign-in. Gone when you close the tab.</td>
+            <td>Marks that you just signed in, so the app asks for your colours once. Gone when you close the tab.</td>
           </tr>
           <tr>
             <td>Service worker cache</td>

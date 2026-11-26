@@ -38,12 +38,10 @@ const safeNext = () => {
 // (see lib/vault.ts). So nobody, us included, can read your lists or reset your password without your recovery key.
 export function LoginForm({
   canReset,
-  haiku,
   social = [],
 }: {
   canReset: boolean; // the server sends email, so "Forgot password?" can work
   social?: ("google" | "github" | "discord")[]; // the sign-ins this server offers
-  haiku: [string, string, string];
 }) {
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   // Arriving to start (a landing page's "Start a list", "Start free" or a plan): open on making an account.
@@ -58,8 +56,8 @@ export function LoginForm({
   const [recovery, setRecovery] = useState<string | null>(null);
 
   const enter = () => {
-    // Came to buy a plan: straight to the plans, without the welcome haiku in front of them.
-    if (!/[?&]plan=/.test(safeNext())) greet(haiku);
+    // Came to buy a plan: straight to the plans, without the colours in front of them.
+    if (!/[?&]plan=/.test(safeNext())) greet();
     location.assign(safeNext());
   };
   if (recovery)
@@ -140,6 +138,7 @@ export function LoginForm({
                     setBusy(true);
                     setErr("");
                     track("social_start", { provider: p, mode });
+                    greet();
                     const r = await authClient.signIn.social({ provider: p, callbackURL: safeNext() });
                     if (r?.error) {
                       setErr(r.error.message ?? "That didn't work. Try again.");

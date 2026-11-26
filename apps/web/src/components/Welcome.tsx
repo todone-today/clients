@@ -1,61 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
-import s from "./Welcome.module.css";
-
-// After each sign-in the app greets you with a haiku on why writing things down matters.
-// The sign-in page leaves it in sessionStorage; the app shows it once and clears it.
+// A fresh sign-in, marked by the sign-in page and read once by the app: it then asks for colours (and, on a first
+// visit, runs the training) instead of opening Sort.
 const KEY = "todone:welcome";
-const subs = new Set<() => void>();
-const read = () => {
-  try {
-    return sessionStorage.getItem(KEY);
-  } catch {
-    return null;
-  }
-};
 
-export function greet(haiku: string[]) {
+export function greet() {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify(haiku));
+    sessionStorage.setItem(KEY, "1");
   } catch {}
 }
 
-// The greeting closes (or is skipped: a first visit asks "About you" instead).
-export function skipWelcome() {
-  try {
-    sessionStorage.removeItem(KEY);
-  } catch {}
-  subs.forEach((f) => f());
-}
-
-export function Welcome() {
-  const raw = useSyncExternalStore(
-    (f) => (subs.add(f), () => void subs.delete(f)),
-    read,
-    () => null,
-  );
-  const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    if (raw && !dialog.current?.open) dialog.current?.showModal();
-  }, [raw]);
-  if (!raw) return null;
-  let lines: string[] = [];
-  try {
-    lines = JSON.parse(raw);
-  } catch {}
-  return (
-    <dialog ref={dialog} className={s.welcome} aria-label="A haiku to start" onClose={skipWelcome}>
-      <p className={s.lines}>
-        {lines.map((l) => (
-          <span key={l}>{l}</span>
-        ))}
-      </p>
-      <form method="dialog">
-        <button className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} autoFocus>
-          Let&apos;s go
-        </button>
-      </form>
-    </dialog>
-  );
+// Read once per page load, then the same answer (React may run the caller twice).
+let seen: boolean | undefined;
+export function justSignedIn() {
+  if (seen === undefined)
+    try {
+      seen = !!sessionStorage.getItem(KEY);
+      sessionStorage.removeItem(KEY);
+    } catch {
+      seen = false;
+    }
+  return seen;
 }

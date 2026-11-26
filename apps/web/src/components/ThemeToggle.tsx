@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Check, Moon, Sun } from "lucide-react";
 import s from "./ThemeToggle.module.css";
 
@@ -74,19 +74,19 @@ export function ThemePicker({ onPick }: { onPick?: (t: Theme) => void }) {
   );
 }
 
-// Asks for colours by itself on every visit until a theme is kept (not while `hold`, when something else is on
-// screen). Tapping previews, "Keep" saves, closing puts back what was there. Account has the same choices.
-export function ThemeAsk({ hold }: { hold?: boolean }) {
+// Whether a theme is kept on this device (the app asks after signing in until one is).
+export const themeKept = () => !!saved();
+// The phone's status bar in the kept theme's colour, from the start (the app calls it once).
+export const syncTheme = () => apply(saved());
+
+// Asks for colours (the app mounts it after signing in). Tapping previews, "Keep" saves, closing puts back what was
+// there. Account has the same choices.
+export function ThemeAsk({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const was = useRef<Theme | null>(null);
-  const unset = useSyncExternalStore(subscribe, () => !saved(), () => false);
-  const [later, setLater] = useState(false); // closed without keeping one: asks again next visit, not now
   const theme = useTheme();
-  useEffect(() => apply(saved()), []); // the status bar matches the saved theme from the start
-  const show = unset && !later && !hold;
-  // Waits its turn: never on top of another dialog (the sign-in haiku, a tip).
+  // Waits its turn: never on top of another dialog (a tip, the plans).
   useEffect(() => {
-    if (!show) return;
     const t = setInterval(() => {
       if (ref.current?.open || document.querySelector("dialog[open]")) return;
       clearInterval(t);
@@ -94,8 +94,7 @@ export function ThemeAsk({ hold }: { hold?: boolean }) {
       ref.current?.showModal();
     }, 400);
     return () => clearInterval(t);
-  }, [show]);
-  if (!show) return null;
+  }, []);
   return (
     <dialog
       ref={ref}
@@ -103,7 +102,7 @@ export function ThemeAsk({ hold }: { hold?: boolean }) {
       aria-label="Pick your colours"
       onClose={() => {
         if (saved() === was.current) apply(was.current); // closed without keeping: back to before
-        setLater(true);
+        onClose();
       }}
       onMouseDown={(e) => e.target === e.currentTarget && ref.current?.close()}
     >

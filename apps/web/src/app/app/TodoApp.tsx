@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { Welcome, skipWelcome } from "@/components/Welcome";
+import { justSignedIn } from "@/components/Welcome";
 import { setTour, tourDue } from "@/lib/onboard";
-import { Intro } from "./Intro";
 import { Training } from "./Training";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +35,7 @@ import {
   Layers,
   LayoutGrid,
 } from "lucide-react";
-import { ThemeAsk } from "@/components/ThemeToggle";
+import { ThemeAsk, syncTheme, themeKept } from "@/components/ThemeToggle";
 import { Confetti } from "@/components/Confetti";
 import { Avatar } from "@/components/Avatar";
 import { authClient } from "@/lib/auth-client";
@@ -155,6 +154,8 @@ const count = (ts: Task[], today = todayISO()) => {
 };
 
 // `demo`: the app on sample lists with no account (todone.today/demo); changes stay in this tab.
+const SORT_DAY = "todone:sort-day"; // the day Sort last opened by itself
+
 export function TodoApp({ demo = false }: { demo?: boolean }) {
   // Phones in the browser: the app is installed first (or let in for this visit), so the gate shows instead.
   const gate = useInstallGate();
@@ -211,9 +212,21 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   const [planWant] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("plan")));
   // ?go=add or ?go=calendar: the home-screen icon's shortcuts (manifest.ts), read once like ?plan.
   const [launch] = useState(() => (typeof location === "undefined" ? null : new URLSearchParams(location.search).get("go")));
-  // First visit: "About you" (Intro), then the short tour; the i in the top bar plays the tour again.
-  const [intro, setIntro] = useState(false);
+  // What opens by itself. Right after signing in: the colours (when none are kept on this device), then on a first
+  // visit the training. Otherwise, the first open of each day: Sort, when tasks are late or have no day.
+  // The i in the top bar plays the training again.
   const [touring, setTouring] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null); // just signed in (null: not read yet)
+  const [colours, setColours] = useState(false);
+  const [firstRun, setFirstRun] = useState(false); // a first visit: the training follows the colours
+  useEffect(syncTheme, []);
+  useEffect(() => {
+    const f = justSignedIn();
+    Promise.resolve().then(() => {
+      setSignedIn(f);
+      if (f && !themeKept()) setColours(true);
+    });
+  }, []);
   useEffect(() => {
     if (userId && tourDue(userId)) Promise.resolve().then(() => setTouring(true)); // reloaded mid-tour
   }, [userId]);
@@ -545,13 +558,39 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
       if (launch === "calendar") return setPanel("calendar");
       if (launch === "add")
         setTimeout(() => document.querySelector<HTMLInputElement>("input[placeholder^='Add a task']")?.focus(), 300);
-      // First visit: "About you" sets up their first list from what they say (made here, so it's encrypted).
+      // First visit: one empty list to start in, then the colours (if none kept yet) and the training.
       if (!orgId && (await startOnboarding())) {
-        skipWelcome();
-        setIntro(true);
+        open(add("My tasks", []));
+        if (!themeKept()) setColours(true);
+        setFirstRun(true);
       }
     })().catch(() => {});
   }, [demo, userId, orgId, vault, add, planWant, launch]);
+  // A first visit: the training, once the colours are picked (or closed).
+  useEffect(() => {
+    if (!firstRun || colours || !userId) return;
+    setTour(userId, true);
+    Promise.resolve().then(() => (setFirstRun(false), setTouring(true)));
+  }, [firstRun, colours, userId]);
+  // Not just signed in: the first open of the day goes to Sort when there's something to sort, so the day starts
+  // organised. Once a day per device; not over the training, a link that asked for a page, or the demo.
+  const sortChecked = useRef(false);
+  useEffect(() => {
+    // After the last page is restored (it opens over that, on the day's first open).
+    if (demo || sortChecked.current || !restored.current || signedIn !== false || !lists || vault !== "open" || touring || firstRun)
+      return;
+    sortChecked.current = true;
+    const today = todayISO();
+    let last: string | null = null;
+    try {
+      last = localStorage.getItem(SORT_DAY);
+    } catch {}
+    if (last === today || launch || planWant || toSort(lists, today) === 0) return;
+    try {
+      localStorage.setItem(SORT_DAY, today);
+    } catch {}
+    Promise.resolve().then(() => show("sort"));
+  });
   // Reminders come from the open app (the server can't read what's due): a check every minute.
   useEffect(() => {
     if (demo) return;
@@ -615,26 +654,12 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   if (gate && !demo) return gate;
   return (
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
-      <ThemeAsk hold={demo || intro || touring} />
-      <Welcome />
+      {colours && <ThemeAsk onClose={() => setColours(false)} />}
       <PlanPrompt />
-      {!demo && !intro && !touring && <InstallSheet />}
+      {!demo && !touring && !colours && panel !== "sort" && <InstallSheet />}
       {!demo && vault === "open" && <Moments />}
-      {!demo && vault === "open" && !intro && !touring && <WeeklyRecap />}
+      {!demo && vault === "open" && !touring && !colours && panel !== "sort" && <WeeklyRecap />}
       {!demo && <PullRefresh />}
-      {intro && userId && (
-        <Intro
-          who={userId}
-          ai={askAi}
-          add={add}
-          onDone={(id) => {
-            setIntro(false);
-            open(id);
-            setTour(userId, true);
-            setTouring(true);
-          }}
-        />
-      )}
       {touring && lists && <Training who={userId} lists={lists} onEnd={endTour} />}
       <header className={s.top}>
         <button
