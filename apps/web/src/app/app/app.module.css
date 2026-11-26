@@ -3504,7 +3504,7 @@ input.stick[data-custom][aria-invalid="true"] {
     padding: 1rem 0.55rem;
     overflow-x: hidden;
   }
-  .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools, .newListPlus),
+  .shell[data-slim] > .side > :not(.foldIn, .ideasBtn, .lists, .sideTools, .newListPlus, .iconGrid),
   .shell[data-slim] .sideTools > :not(.binBtn, .allBtn, .sortBtn, .import, .feedbackLink),
   .shell[data-slim] .side .label,
   .shell[data-slim] .side .open {
