@@ -528,7 +528,7 @@ export function AiImport({
         ) : (
           // Use your own AI: connect it to todone, and it reads and changes your lists itself (Connections.tsx).
           <div className={s.aiConnect}>
-            <p>Ask Claude or Gemini on your computer to add, tick off and plan your tasks for you.</p>
+            <p>Ask Claude, ChatGPT or Gemini on your computer to add, tick off and plan your tasks for you.</p>
             <Connections />
           </div>
         )}

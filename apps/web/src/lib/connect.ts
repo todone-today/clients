@@ -14,8 +14,12 @@ export const newCode = () => api<Code>("POST", "/connectors/code", {});
 // for the code; the others take one block with the code inside. `url`: set only when this isn't todone's own
 // address (a local copy while developing), so the connector talks to the same place.
 export const VERSION = "0.2.0";
-export type App = "Claude Code" | "Claude Desktop" | "Gemini CLI" | "Cursor";
-export const APPS: App[] = ["Claude Code", "Claude Desktop", "Gemini CLI", "Cursor"];
+export type App = "Claude Code" | "Claude Desktop" | "ChatGPT" | "Gemini CLI" | "Cursor";
+export const APPS: App[] = ["Claude Code", "Claude Desktop", "ChatGPT", "Gemini CLI", "Cursor"];
+// ChatGPT's desktop app takes the server field by field, and starts it without your shell's PATH, so npx can't find
+// Node unless we say where it usually lives (Homebrew on Apple and Intel Macs, then the system).
+// ponytail: Node from nvm/fnm lives elsewhere; those people swap in the folder `which npx` prints.
+export const CHATGPT_PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin";
 export const COMMANDS: Partial<Record<App, string>> = {
   "Claude Code": "/plugin install todone --marketplace todone-today/todone-mcp",
   "Gemini CLI": "gemini extensions install https://github.com/todone-today/todone-mcp",
