@@ -11238,25 +11238,19 @@ input.askRowTitle:focus-visible {
 .connectApps {
   flex-wrap: wrap;
 }
-.connectList {
-  display: grid;
-  width: 100%;
-  gap: 0.5rem;
-  list-style: none;
-}
-.connectList li {
+.connectCode,
+.connectRenew {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem 0.8rem;
-  border: 2px solid var(--hair);
+  gap: 0.6rem;
 }
-.connectList li > span {
-  display: grid;
-}
-.connectList small {
+.connectCode small {
   color: var(--ink-2);
+}
+.connectRenew {
+  justify-content: flex-end;
 }
 .aiConnect {
   display: grid;

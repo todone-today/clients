@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy, Lock, Trash2 } from "lucide-react";
-import { type App, APPS, COMMANDS, type Connection, config, connections, makeConnection, removeConnection } from "@/lib/connect";
+import { Check, Copy, Lock, RefreshCw } from "lucide-react";
+import { type App, APPS, COMMANDS, type Code, config, myCode, newCode } from "@/lib/connect";
 import { openPrivacy } from "./Privacy";
 import s from "./app.module.css";
 
@@ -11,46 +11,30 @@ const when = (t: number) => {
   const d = Math.round((Date.now() - t) / 86_400_000);
   return d < 1 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
 };
-// Clipboard writes after a server call: Safari wants the promise handed over inside the tap itself.
-async function copyLater(text: Promise<string>) {
-  if (typeof ClipboardItem !== "undefined")
-    return navigator.clipboard.write([new ClipboardItem({ "text/plain": text.then((t) => new Blob([t], { type: "text/plain" })) })]);
-  return navigator.clipboard.writeText(await text);
-}
 
-// Connect an AI app on your computer (lib/connect.ts): pick the app, copy, paste. The connection is made the first
-// time you copy its code, named after the app. It can only use what you made readable (Account → Privacy).
+// Connect an AI app on your computer (lib/connect.ts): pick the app, copy, paste. One code works in all your apps;
+// a new one replaces it everywhere. It can only use what you made readable (Privacy).
 export function Connections() {
-  const [list, setList] = useState<Connection[] | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
+  const [code, setCode] = useState<Code | null>(null);
+  const [failed, setFailed] = useState(false);
   const [app, setApp] = useState<App>("Claude Code");
-  const [codes, setCodes] = useState<Partial<Record<App, string>>>({}); // made this visit, so a second copy is the same
   const [copied, setCopied] = useState("");
-  const [err, setErr] = useState("");
-  const [removing, setRemoving] = useState("");
+  const [renewing, setRenewing] = useState(false);
   useEffect(() => {
-    connections().then(setList, () => setSignedOut(true));
+    myCode().then(setCode, () => setFailed(true));
   }, []);
-  if (signedOut) return <p>Make an account to connect an AI app to your lists.</p>;
+  if (failed) return <p>Make an account to connect an AI app to your lists.</p>;
 
-  const code = async () => {
-    if (codes[app]) return codes[app]!;
-    const c = await makeConnection(app);
-    setCodes((x) => ({ ...x, [app]: c.code }));
-    setList((l) => [...(l ?? []), c]);
-    return c.code;
-  };
-  const copy = (what: string, text: () => Promise<string>) => {
-    setErr("");
-    copyLater(text())
-      .then(() => setCopied(`${app}:${what}`))
-      .catch((x) => setErr(x instanceof Error && x.message ? x.message : "Couldn't copy. Try again."));
-  };
-  const done = (what: string) => copied === `${app}:${what}`;
-  const button = (what: string, label: string, text: () => Promise<string>) => (
-    <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={() => copy(what, text)}>
-      {done(what) ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />}{" "}
-      {done(what) ? "Copied" : label}
+  const button = (what: string, label: string, text: string | undefined) => (
+    <button
+      type="button"
+      className="btn"
+      style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+      disabled={!text}
+      onClick={() => text && navigator.clipboard.writeText(text).then(() => setCopied(what), () => {})}
+    >
+      {copied === what ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />}{" "}
+      {copied === what ? "Copied" : label}
     </button>
   );
   const command = COMMANDS[app];
@@ -73,18 +57,18 @@ export function Connections() {
               <p>
                 {app === "Claude Code" ? "In Claude Code, run:" : "In a terminal, run:"} <code>{command}</code>
               </p>
-              {button("cmd", "Copy", async () => command)}
+              {button(`${app}:cmd`, "Copy", command)}
             </li>
             <li>
               <p>When it asks for your todone code, paste it.</p>
-              {button("code", "Copy your code", code)}
+              {button("code", "Copy your code", code?.code)}
             </li>
           </>
         ) : (
           <>
             <li>
               <p>Copy your setup. Your code is inside.</p>
-              {button("setup", "Copy setup", async () => config(await code(), url))}
+              {button(`${app}:setup`, "Copy setup", code ? config(code.code, url) : undefined)}
             </li>
             <li>
               <p>
@@ -99,7 +83,6 @@ export function Connections() {
           <p>Ask it: “What’s on my list today?”</p>
         </li>
       </ol>
-      {err && <p className={s.err}>{err}</p>}
 
       <p className={s.connectNote}>
         <Lock size={15} strokeWidth={2.5} aria-hidden /> AI apps see only what you make readable. Everything else stays
@@ -116,35 +99,33 @@ export function Connections() {
         </button>
       </p>
 
-      {!!list?.length && (
-        <ul className={s.connectList} aria-label="Connected apps">
-          {list.map((c) => (
-            <li key={c.id}>
-              <span>
-                <b>{c.name}</b>
-                <small>{c.used ? `Last used ${when(c.used)}` : `Added ${when(c.created)}, not used yet`}</small>
-              </span>
-              {removing === c.id ? (
-                <button
-                  className={s.ghost}
-                  data-danger
-                  onClick={async () => {
-                    await removeConnection(c.id).catch(() => {});
-                    setList((l) => (l ?? []).filter((x) => x.id !== c.id));
-                    setRemoving("");
-                  }}
-                >
-                  Remove for good
-                </button>
-              ) : (
-                <button className={s.ghost} onClick={() => setRemoving(c.id)} aria-label={`Remove ${c.name}`}>
-                  <Trash2 size={15} strokeWidth={2.5} aria-hidden /> Remove
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* One code for every app; a new one is for when it may have leaked. */}
+      <div className={s.connectCode}>
+        <small>{code?.used ? `An AI app last used todone ${when(code.used)}.` : "No AI app has used todone yet."}</small>
+        {renewing ? (
+          <span className={s.connectRenew}>
+            <small>Your AI apps stop working until you paste the new code in.</small>
+            <button
+              className={s.ghost}
+              data-danger
+              onClick={async () => {
+                setCode(await newCode());
+                setCopied("");
+                setRenewing(false);
+              }}
+            >
+              Make a new code
+            </button>
+            <button className={s.ghost} onClick={() => setRenewing(false)}>
+              Keep this one
+            </button>
+          </span>
+        ) : (
+          <button className={s.ghost} onClick={() => setRenewing(true)}>
+            <RefreshCw size={15} strokeWidth={2.5} aria-hidden /> Make a new code
+          </button>
+        )}
+      </div>
     </div>
   );
 }
