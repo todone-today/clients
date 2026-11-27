@@ -14,7 +14,7 @@ import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from
 import { Billing } from "./Billing";
 import { ThemePicker } from "@/components/ThemeToggle";
 import { Connections } from "./Connections";
-import { Privacy } from "./Privacy";
+import { PrivacySummary } from "./Privacy";
 import { save } from "@/lib/export";
 import { SITE } from "@/lib/urls";
 import s from "./app.module.css";
@@ -88,7 +88,7 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
 
       <section className={s.integration} id="privacy">
         <h2>Privacy</h2>
-        <Privacy />
+        <PrivacySummary />
       </section>
 
       <section className={s.integration}>

@@ -499,17 +499,13 @@ function CalendarLink({
           <Lock size={15} strokeWidth={2.5} aria-hidden />
           <span>
             Empty for now: every list is end-to-end encrypted, so our server
-            can&apos;t read a task to put in it. Switch encryption off for the
-            lists you want here.
+            can&apos;t read a task to put in it. Make the lists you want here
+            readable.
           </span>
           <button
             className={`btn ${s.claim}`}
             style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-            onClick={() =>
-              document
-                .getElementById("e2e-h")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }
+            onClick={openPrivacy}
           >
             Choose lists
           </button>

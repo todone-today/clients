@@ -70,7 +70,7 @@ import { IconGrid, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
-import { PRIVACY_EVENT, openPrivacy } from "./Privacy";
+import { PrivacyDialog, openPrivacy } from "./Privacy";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
 import { useKeyboardInset, useSheetSwipe } from "./sheetSwipe";
@@ -267,20 +267,6 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setPanel(p);
     setDrawer(false);
   };
-  // Account → Privacy: from a list's lock, Connect an AI, Integrations, or a link an AI app gave (…/app#privacy).
-  useEffect(() => {
-    const go = () => {
-      setPanel("account");
-      setDrawer(false);
-      setTimeout(() => document.getElementById("privacy")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
-    };
-    addEventListener(PRIVACY_EVENT, go);
-    const t = location.hash === "#privacy" ? setTimeout(go, 0) : undefined; // after the last page is restored
-    return () => {
-      removeEventListener(PRIVACY_EVENT, go);
-      clearTimeout(t);
-    };
-  }, []);
   // Wider screens: how far down the window the sidebar starts (below the top bar and any banner, until they scroll
   // away and it sticks at the top), for its height.
   const shellRef = useRef<HTMLDivElement>(null);
@@ -673,6 +659,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   return (
     <div className={s.shell} data-slim={folded || undefined} ref={shellRef}>
       {colours && <ThemeAsk onClose={() => setColours(false)} />}
+      <PrivacyDialog />
       <PlanPrompt />
       {!demo && !touring && !colours && panel !== "sort" && <InstallSheet />}
       {!demo && vault === "open" && <Moments />}
