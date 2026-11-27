@@ -82,7 +82,7 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
 
       <section className={s.integration} id="connect-ai">
         <h2>Connect an AI</h2>
-        <p>Ask Claude, ChatGPT or Gemini on your computer to add, tick off and plan your tasks for you.</p>
+        <p>Ask Claude, Codex or Gemini on your computer to add, tick off and plan your tasks for you.</p>
         <Connections />
       </section>
 

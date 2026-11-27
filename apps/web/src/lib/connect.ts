@@ -13,19 +13,19 @@ export const newCode = () => api<Code>("POST", "/connectors/code", {});
 // How to add todone to each app, in as few steps as each allows (github.com/todone-today/todone-mcp). `url`: set only
 // when this isn't todone's own address (a local copy while developing), so the connector talks to the same place.
 export const VERSION = "0.2.0";
-export type App = "Claude Desktop" | "Claude Code" | "ChatGPT" | "Cursor" | "VS Code" | "Gemini CLI";
-export const APPS: App[] = ["Claude Desktop", "Claude Code", "ChatGPT", "Cursor", "VS Code", "Gemini CLI"];
-// ChatGPT's desktop app reads ~/.codex/config.toml and starts servers without your shell's PATH. So one Terminal
+export type App = "Claude Desktop" | "Claude Code" | "Codex" | "Cursor" | "VS Code" | "Gemini CLI";
+export const APPS: App[] = ["Claude Desktop", "Claude Code", "Codex", "Cursor", "VS Code", "Gemini CLI"];
+// Codex (and the ChatGPT desktop app) reads ~/.codex/config.toml and starts servers without your shell's PATH. So one Terminal
 // command finds npx where this Mac has it (Homebrew, nvm, …), drops any older todone entry (a new code) and adds it.
-// ponytail: Mac and Linux shells only; Windows people fill in ChatGPT's custom MCP form by hand.
-export function chatgpt(code: string, url?: string) {
+// ponytail: Mac and Linux shells only; Windows people fill in Codex's custom MCP form by hand.
+export function codex(code: string, url?: string) {
   const env = `TODONE_CONNECT = "${code}"\\n${url ? `TODONE_URL = "${url}"\\n` : ""}PATH = "%s:/usr/bin:/bin"\\n`;
   return (
     `n="$(command -v npx)"; [ -n "$n" ] || { echo "Install Node first: https://nodejs.org"; false; } && ` +
     `f=~/.codex/config.toml; mkdir -p ~/.codex; touch "$f"; ` +
     `awk '/^\\[/{s=($0~/^\\[mcp_servers\\.todone(\\.env)?\\]$/)} !s' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; ` +
     `printf '\\n[mcp_servers.todone]\\ncommand = "%s"\\nargs = ["-y", "todone-mcp@${VERSION}"]\\n\\n[mcp_servers.todone.env]\\n${env}' "$n" "\${n%/*}" >> "$f" && ` +
-    `echo "todone is in ChatGPT. Quit ChatGPT and open it again."`
+    `echo "todone is in Codex. Quit Codex and open it again."`
   );
 }
 // Claude Desktop installs this file with a double-click and asks for the code itself.

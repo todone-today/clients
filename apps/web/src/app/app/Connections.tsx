@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Download, Lock, Plus, RefreshCw } from "lucide-react";
-import { type App, APPS, type Code, DESKTOP_FILE, GEMINI, chatgpt, claudeCode, cursorLink, myCode, newCode, vscodeLink } from "@/lib/connect";
+import { type App, APPS, type Code, DESKTOP_FILE, GEMINI, codex, claudeCode, cursorLink, myCode, newCode, vscodeLink } from "@/lib/connect";
 import { openPrivacy } from "./Privacy";
 import s from "./app.module.css";
 
@@ -50,14 +50,14 @@ export function Connections() {
       </div>
 
       <ol className={s.connectSteps}>
-        {app === "ChatGPT" ? (
+        {app === "Codex" ? (
           <>
             <li>
               <p>On your Mac, open Terminal and paste this. Your code is inside.</p>
-              {button("gpt:cmd", "Copy", code ? chatgpt(code.code, url) : undefined)}
+              {button("codex:cmd", "Copy", code ? codex(code.code, url) : undefined)}
             </li>
             <li>
-              <p>Quit ChatGPT (⌘Q), open it again and start a new chat.</p>
+              <p>Quit Codex (⌘Q), open it again and start a new chat.</p>
             </li>
           </>
         ) : app === "Claude Desktop" ? (
