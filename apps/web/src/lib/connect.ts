@@ -15,10 +15,19 @@ export const newCode = () => api<Code>("POST", "/connectors/code", {});
 export const VERSION = "0.2.0";
 export type App = "Claude Desktop" | "Claude Code" | "ChatGPT" | "Cursor" | "VS Code" | "Gemini CLI";
 export const APPS: App[] = ["Claude Desktop", "Claude Code", "ChatGPT", "Cursor", "VS Code", "Gemini CLI"];
-// ChatGPT's desktop app takes the server field by field, and starts it without your shell's PATH, so npx can't find
-// Node unless we say where it usually lives (Homebrew on Apple and Intel Macs, then the system).
-// ponytail: Node from nvm/fnm lives elsewhere; those people swap in the folder `which npx` prints.
-export const CHATGPT_PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin";
+// ChatGPT's desktop app reads ~/.codex/config.toml and starts servers without your shell's PATH. So one Terminal
+// command finds npx where this Mac has it (Homebrew, nvm, …), drops any older todone entry (a new code) and adds it.
+// ponytail: Mac and Linux shells only; Windows people fill in ChatGPT's custom MCP form by hand.
+export function chatgpt(code: string, url?: string) {
+  const env = `TODONE_CONNECT = "${code}"\\n${url ? `TODONE_URL = "${url}"\\n` : ""}PATH = "%s:/usr/bin:/bin"\\n`;
+  return (
+    `n="$(command -v npx)"; [ -n "$n" ] || { echo "Install Node first: https://nodejs.org"; false; } && ` +
+    `f=~/.codex/config.toml; mkdir -p ~/.codex; touch "$f"; ` +
+    `awk '/^\\[/{s=($0~/^\\[mcp_servers\\.todone(\\.env)?\\]$/)} !s' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; ` +
+    `printf '\\n[mcp_servers.todone]\\ncommand = "%s"\\nargs = ["-y", "todone-mcp@${VERSION}"]\\n\\n[mcp_servers.todone.env]\\n${env}' "$n" "\${n%/*}" >> "$f" && ` +
+    `echo "todone is in ChatGPT. Quit ChatGPT and open it again."`
+  );
+}
 // Claude Desktop installs this file with a double-click and asks for the code itself.
 export const DESKTOP_FILE = "https://github.com/todone-today/todone-mcp/releases/latest/download/todone.mcpb";
 export const GEMINI = "gemini extensions install https://github.com/todone-today/todone-mcp";

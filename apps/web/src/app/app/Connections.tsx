@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Download, Lock, Plus, RefreshCw } from "lucide-react";
-import { type App, APPS, CHATGPT_PATH, type Code, DESKTOP_FILE, GEMINI, VERSION, claudeCode, cursorLink, myCode, newCode, vscodeLink } from "@/lib/connect";
+import { type App, APPS, type Code, DESKTOP_FILE, GEMINI, chatgpt, claudeCode, cursorLink, myCode, newCode, vscodeLink } from "@/lib/connect";
 import { openPrivacy } from "./Privacy";
 import s from "./app.module.css";
 
@@ -53,46 +53,11 @@ export function Connections() {
         {app === "ChatGPT" ? (
           <>
             <li>
-              <p>
-                In the ChatGPT app on your computer (not the website): Settings → add a custom MCP server. Name it{" "}
-                <b>todone</b> and pick <b>STDIO</b>.
-              </p>
+              <p>On your Mac, open Terminal and paste this. Your code is inside.</p>
+              {button("gpt:cmd", "Copy", code ? chatgpt(code.code, url) : undefined)}
             </li>
             <li>
-              <p>
-                Command to launch<code>npx</code>
-              </p>
-              {button("gpt:cmd", "Copy", "npx")}
-            </li>
-            <li>
-              <p>
-                Arguments: add these two<code>-y</code>
-                <code>todone-mcp@{VERSION}</code>
-              </p>
-              {button("gpt:arg", "Copy the second", `todone-mcp@${VERSION}`)}
-            </li>
-            <li>
-              <p>
-                Environment variable: key <b>TODONE_CONNECT</b>, value your code.
-              </p>
-              {button("code", "Copy your code", code?.code)}
-            </li>
-            <li>
-              <p>
-                One more: key <b>PATH</b>, value<code>{CHATGPT_PATH}</code>
-              </p>
-              {button("gpt:path", "Copy", CHATGPT_PATH)}
-            </li>
-            {url && (
-              <li>
-                <p>
-                  One more: key <b>TODONE_URL</b>, value<code>{url}</code>
-                </p>
-                {button("gpt:url", "Copy", url)}
-              </li>
-            )}
-            <li>
-              <p>Save, then start a new chat.</p>
+              <p>Quit ChatGPT (⌘Q), open it again and start a new chat.</p>
             </li>
           </>
         ) : app === "Claude Desktop" ? (
