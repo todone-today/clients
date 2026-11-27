@@ -78,12 +78,15 @@ const EXAMPLES: Example[] = [
 
 const TYPE_MS = 32;
 const THINK_MS = 900;
-const HOLD_MS = 5200;
+const HOLD_MS = 8000;
 
 export function AskDemo() {
   const [i, setI] = useState(0);
   const [chars, setChars] = useState(0);
   const [shown, setShown] = useState(false);
+  // It moves on by itself only until you pick an example, and never while your pointer or focus is on it.
+  const [auto, setAuto] = useState(true);
+  const [held, setHeld] = useState(false);
   const ex = EXAMPLES[i];
   useEffect(() => {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -103,17 +106,30 @@ export function AskDemo() {
     for (let n = 1; n <= ex.said.length; n++) later(250 + n * TYPE_MS, () => setChars(n));
     const typed = 250 + ex.said.length * TYPE_MS;
     later(typed + THINK_MS, () => setShown(true));
-    later(typed + THINK_MS + HOLD_MS, () => setI((n) => (n + 1) % EXAMPLES.length));
     return () => timers.forEach(clearTimeout);
   }, [i, ex.said.length]);
+  useEffect(() => {
+    if (!shown || !auto || held || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(() => setI((n) => (n + 1) % EXAMPLES.length), HOLD_MS);
+    return () => clearTimeout(t);
+  }, [shown, auto, held, i]);
   const thinking = chars === ex.said.length && !shown;
   let k = 0; // stagger across lanes
 
   return (
-    <div className={s.ask}>
+    <div
+      className={s.ask}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHeld(true)}
+      onPointerLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)}
+      onBlur={() => setHeld(false)}
+    >
       <div className={s.askTabs} role="group" aria-label="Examples">
         {EXAMPLES.map((e, n) => (
-          <button key={e.tag} aria-pressed={n === i} onClick={() => setI(n)}>
+          <button key={e.tag} aria-pressed={n === i} onClick={() => {
+              setAuto(false);
+              setI(n);
+            }}>
             {e.tag}
           </button>
         ))}

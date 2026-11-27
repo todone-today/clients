@@ -90,7 +90,7 @@ export function LoginForm({
               const r = await authClient.signUp.email({
                 email,
                 password: a.authHash,
-                name: String(f.get("name")).trim() || email.split("@")[0],
+                name: email.split("@")[0], // changeable in Account; one field less to sign up
                 // The confirmation email's link lands in the app (on the server's own address, BETTER_AUTH_URL).
                 callbackURL: "/app",
                 ...a.keys,
@@ -162,12 +162,6 @@ export function LoginForm({
               : "We'll email you a link. Your lists are end-to-end encrypted, so keeping them needs the recovery key you saved when you signed up."}
           </p>
         )}
-        {mode === "up" && (
-          <label>
-            <span>Name</span>
-            <input name="name" autoComplete="name" maxLength={80} />
-          </label>
-        )}
         <label>
           <span>Email</span>
           {/* "username": what password managers (Apple Passwords, Bitwarden, 1Password) pair with the password. */}
@@ -186,8 +180,8 @@ export function LoginForm({
         )}
         {mode === "up" && (
           <p className={s.fine}>
-            Only you can read your lists: this password locks them on your device, so we never see it. Pick one
-            you&apos;ll remember. If you ever forget it, the recovery key you get next lets you back in.
+            This password locks your lists so only you can read them. We never see it, so pick one you&apos;ll
+            remember. You&apos;ll get a recovery key next, just in case.
           </p>
         )}
         {mode === "in" && canReset && (
@@ -222,11 +216,13 @@ export function LoginForm({
             {busy
               ? mode === "reset"
                 ? "Sending…"
-                : "Unlocking…"
+                : mode === "up"
+                  ? "Making your account…"
+                  : "Unlocking…"
               : mode === "in"
                 ? "Sign in"
                 : mode === "up"
-                  ? "Sign up"
+                  ? "Make my account"
                   : "Send the link"}
           </button>
         )}

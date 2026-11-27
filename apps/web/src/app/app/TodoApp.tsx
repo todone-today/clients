@@ -496,8 +496,9 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
   }, [lists, vault, userId]);
 
   useEffect(() => {
+    // The whole address goes along, so "Try it free" (?new=1), a plan or a goal invite opens on making an account.
     if (!demo && !isPending && !userId && !offline)
-      router.replace("/login?next=/app");
+      router.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
   }, [demo, isPending, userId, offline, router]);
   useEffect(() => {
     if (!demo) return;
@@ -622,6 +623,8 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     };
   }, []);
 
+  // Signed out (or not known yet): nothing, rather than a flash of an empty app or the install screen before sign-in.
+  if (!demo && !userId && !offline) return null;
   if (!demo && session && vault === "locked")
     return (
       <Unlock
