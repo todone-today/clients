@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy, Lock, RefreshCw } from "lucide-react";
-import { type App, APPS, CHATGPT_PATH, COMMANDS, type Code, config, myCode, newCode, VERSION } from "@/lib/connect";
+import { Check, Copy, Download, Lock, Plus, RefreshCw } from "lucide-react";
+import { type App, APPS, CHATGPT_PATH, type Code, DESKTOP_FILE, GEMINI, VERSION, claudeCode, cursorLink, myCode, newCode, vscodeLink } from "@/lib/connect";
 import { openPrivacy } from "./Privacy";
 import s from "./app.module.css";
 
@@ -17,7 +17,7 @@ const when = (t: number) => {
 export function Connections() {
   const [code, setCode] = useState<Code | null>(null);
   const [failed, setFailed] = useState(false);
-  const [app, setApp] = useState<App>("Claude Code");
+  const [app, setApp] = useState<App>("Claude Desktop");
   const [copied, setCopied] = useState("");
   const [renewing, setRenewing] = useState(false);
   useEffect(() => {
@@ -37,7 +37,6 @@ export function Connections() {
       {copied === what ? "Copied" : label}
     </button>
   );
-  const command = COMMANDS[app];
   const url = location.origin === OWN ? undefined : location.origin;
 
   return (
@@ -96,31 +95,49 @@ export function Connections() {
               <p>Save, then start a new chat.</p>
             </li>
           </>
-        ) : command ? (
+        ) : app === "Claude Desktop" ? (
+          <>
+            <li>
+              <p>Download todone for Claude, then open the file. Claude asks to install it.</p>
+              <a className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} href={DESKTOP_FILE}>
+                <Download size={16} strokeWidth={2.5} aria-hidden /> Download
+              </a>
+            </li>
+            <li>
+              <p>When Claude asks for your todone code, paste it.</p>
+              {button("code", "Copy your code", code?.code)}
+            </li>
+          </>
+        ) : app === "Claude Code" ? (
+          <li>
+            <p>
+              In a terminal, run this. Your code is in it. <code>claude mcp add todone …</code>
+            </p>
+            {button("cc:cmd", "Copy command", code ? claudeCode(code.code, url) : undefined)}
+          </li>
+        ) : app === "Cursor" || app === "VS Code" ? (
+          <li>
+            <p>{app === "Cursor" ? "Opens Cursor with todone filled in. Press Install." : "Opens VS Code with todone filled in. Press Install, then use Copilot Chat in agent mode."}</p>
+            <a
+              className="btn"
+              style={{ "--fill": "var(--lime)" } as React.CSSProperties}
+              href={code ? (app === "Cursor" ? cursorLink : vscodeLink)(code.code, url) : undefined}
+              aria-disabled={!code}
+            >
+              <Plus size={16} strokeWidth={2.75} aria-hidden /> Add to {app}
+            </a>
+          </li>
+        ) : (
           <>
             <li>
               <p>
-                {app === "Claude Code" ? "In Claude Code, run:" : "In a terminal, run:"} <code>{command}</code>
+                In a terminal, run: <code>{GEMINI}</code>
               </p>
-              {button(`${app}:cmd`, "Copy", command)}
+              {button("gem:cmd", "Copy", GEMINI)}
             </li>
             <li>
               <p>When it asks for your todone code, paste it.</p>
               {button("code", "Copy your code", code?.code)}
-            </li>
-          </>
-        ) : (
-          <>
-            <li>
-              <p>Copy your setup. Your code is inside.</p>
-              {button(`${app}:setup`, "Copy setup", code ? config(code.code, url) : undefined)}
-            </li>
-            <li>
-              <p>
-                {app === "Claude Desktop"
-                  ? "In Claude: Settings → Developer → Edit Config. Paste it, save, then quit and reopen Claude."
-                  : "In Cursor: Settings → MCP → Add new server, or paste it into ~/.cursor/mcp.json."}
-              </p>
             </li>
           </>
         )}
