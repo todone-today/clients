@@ -1,54 +1,37 @@
 "use client";
 
 // AI apps on your computer (the todone-mcp connector, server actions/connectors.ts). A connection code is a token
-// that signs the connector in (the server keeps only its hash) and a secret that unwraps your account key on that
-// computer. The account key is wrapped to the secret here, after your password re-derives it, and only the
-// wrapped form goes to the server. So your lists stay end-to-end encrypted.
-import * as C from "@todone/sdk/crypto";
+// that signs the connector in; the server keeps only its hash. It holds no key, so the AI app can read and change
+// only lists you made readable (Account → Privacy); encrypted ones stay private.
 import { api } from "./api";
 
 export type Connection = { id: string; name: string; created: number; used: number | null };
 
 const b64url = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-const random = (n: number) => crypto.getRandomValues(new Uint8Array(n));
 const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 
 export const connections = () => api<Connection[]>("GET", "/connectors");
 export const removeConnection = (id: string) => api("DELETE", `/connectors/${encodeURIComponent(id)}`);
-// Whether this account unlocks with a password (else a passphrase it chose when signing in with Google and the like).
-export const usesPassword = () => api<{ hasPassword?: boolean }>("GET", "/keys").then((k) => !!k.hasPassword);
 
-// `secret`: the password, or the unlock passphrase. Returns the new connection with its code (shown once).
-export async function makeConnection(name: string, secret: string) {
-  const k = await api<{ kdfSalt: string | null; kdfIter?: number; wrappedKey: string }>("GET", "/keys");
-  if (!k.kdfSalt) throw new Error("Sign out and in again to finish setting up encryption first.");
-  // Never fewer rounds than the server lets anyone set (as vault.ts checks), so a bad server can't weaken this.
-  if (k.kdfIter !== undefined && (!Number.isInteger(k.kdfIter) || k.kdfIter < 100_000 || k.kdfIter > 10_000_000))
-    throw new Error("This account's key settings look wrong.");
-  const { wrapKey } = await C.deriveLogin(secret, k.kdfSalt, k.kdfIter);
-  const accountKey = await C.unwrapSymmetric(wrapKey, k.wrappedKey, true).catch(() => {
-    throw new Error("That isn't right. Try again.");
-  });
-  const token = `tdn_${b64url(random(32))}`;
-  const keyBytes = random(32);
-  const wrapTo = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt", "decrypt"]);
-  const wrappedKey = await C.wrapSymmetric(wrapTo, accountKey);
+// A new connection named after its app; returns it with its code (shown once).
+export async function makeConnection(name: string) {
+  const token = `tdn_${b64url(crypto.getRandomValues(new Uint8Array(32)))}`;
   const tokenHash = hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)));
-  const c = await api<Connection>("POST", "/connectors", { name, tokenHash, wrappedKey });
-  return { ...c, code: `${token}.${b64url(keyBytes)}` };
+  const c = await api<Connection>("POST", "/connectors", { name, tokenHash });
+  return { ...c, code: token };
 }
 
-// How to add todone to each app. The Claude Code plugin and the Gemini CLI extension ask for the code when they're
-// installed (github.com/todone-today/todone-mcp); the others take it in their config. `url`: set only when this
-// isn't todone's own address (a local copy while developing), so the connector talks to the same place.
-export const VERSION = "0.1.0";
-export function setups(code: string, url?: string) {
+// How to add todone to each app. Claude Code and Gemini CLI install from github.com/todone-today/todone-mcp and ask
+// for the code; the others take one block with the code inside. `url`: set only when this isn't todone's own
+// address (a local copy while developing), so the connector talks to the same place.
+export const VERSION = "0.2.0";
+export type App = "Claude Code" | "Claude Desktop" | "Gemini CLI" | "Cursor";
+export const APPS: App[] = ["Claude Code", "Claude Desktop", "Gemini CLI", "Cursor"];
+export const COMMANDS: Partial<Record<App, string>> = {
+  "Claude Code": "/plugin install todone --marketplace todone-today/todone-mcp",
+  "Gemini CLI": "gemini extensions install https://github.com/todone-today/todone-mcp",
+};
+export function config(code: string, url?: string) {
   const env = { TODONE_CONNECT: code, ...(url ? { TODONE_URL: url } : {}) };
-  const json = JSON.stringify({ mcpServers: { todone: { command: "npx", args: ["-y", `todone-mcp@${VERSION}`], env } } }, null, 2);
-  return [
-    { app: "Claude Code", where: "Run this in Claude Code, then paste your code when it asks.", text: "/plugin install todone --marketplace todone-today/todone-mcp", code: true },
-    { app: "Claude Desktop", where: "Settings → Developer → Edit Config. Paste this, save, then quit and reopen Claude.", text: json },
-    { app: "Gemini CLI", where: "Run this in a terminal, then paste your code when it asks.", text: "gemini extensions install https://github.com/todone-today/todone-mcp", code: true },
-    { app: "Cursor", where: "Settings → MCP → Add new server, or paste into ~/.cursor/mcp.json.", text: json },
-  ];
+  return JSON.stringify({ mcpServers: { todone: { command: "npx", args: ["-y", `todone-mcp@${VERSION}`], env } } }, null, 2);
 }

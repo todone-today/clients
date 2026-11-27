@@ -528,10 +528,7 @@ export function AiImport({
         ) : (
           // Use your own AI: connect it to todone, and it reads and changes your lists itself (Connections.tsx).
           <div className={s.aiConnect}>
-            <p>
-              Connect Claude, Gemini, Cursor or another AI app on your computer. Then ask it in your own words and it adds, ticks
-              and plans in todone itself. Your lists stay encrypted.
-            </p>
+            <p>Ask Claude or Gemini on your computer to add, tick off and plan your tasks for you.</p>
             <Connections />
           </div>
         )}

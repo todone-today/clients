@@ -70,6 +70,7 @@ import { IconGrid, ListIcon, NOTES, listColor, noteColor } from "./listIcon";
 import { useUnread } from "./unread";
 import { foldAll, useFolded } from "./folded";
 import { Account } from "./Account";
+import { PRIVACY_EVENT, openPrivacy } from "./Privacy";
 import { Diamond, PlanPrompt, needsPlan, usePlan } from "./PlanPrompt";
 import { InstallSheet } from "./InstallSheet";
 import { useKeyboardInset, useSheetSwipe } from "./sheetSwipe";
@@ -266,6 +267,20 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     setPanel(p);
     setDrawer(false);
   };
+  // Account → Privacy: from a list's lock, Connect an AI, Integrations, or a link an AI app gave (…/app#privacy).
+  useEffect(() => {
+    const go = () => {
+      setPanel("account");
+      setDrawer(false);
+      setTimeout(() => document.getElementById("privacy")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    };
+    addEventListener(PRIVACY_EVENT, go);
+    const t = location.hash === "#privacy" ? setTimeout(go, 0) : undefined; // after the last page is restored
+    return () => {
+      removeEventListener(PRIVACY_EVENT, go);
+      clearTimeout(t);
+    };
+  }, []);
   // Wider screens: how far down the window the sidebar starts (below the top bar and any banner, until they scroll
   // away and it sticks at the top), for its height.
   const shellRef = useRef<HTMLDivElement>(null);
@@ -586,7 +601,7 @@ export function TodoApp({ demo = false }: { demo?: boolean }) {
     try {
       last = localStorage.getItem(SORT_DAY);
     } catch {}
-    if (last === today || launch || planWant || toSort(lists, today) === 0) return;
+    if (last === today || launch || planWant || location.hash === "#privacy" || toSort(lists, today) === 0) return;
     try {
       localStorage.setItem(SORT_DAY, today);
     } catch {}
@@ -1108,9 +1123,9 @@ function NewList({
 
 type Update = (id: string, f: (l: List) => List | null) => void;
 
-// Each list is end-to-end encrypted unless its owner switches that off, so integrations, the calendar feed and
-// shared links can use it. Switching off asks twice: the server can then read the list.
-function Privacy({ list, update }: { list: List; update: Update }) {
+// Each list is end-to-end encrypted unless its owner makes it readable, so AI apps, integrations, the calendar feed
+// and shared links can use it. The lock says which; the switches are in Account → Privacy, all in one place.
+function Privacy({ list }: { list: List }) {
   // A lock; a click opens one on/off switch for encryption.
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -1132,29 +1147,27 @@ function Privacy({ list, update }: { list: List; update: Update }) {
         className={s.privacy}
         data-plain={plain || undefined}
         aria-expanded={open}
-        aria-label={plain ? "Not encrypted" : "Encrypted"}
+        aria-label={plain ? "Readable" : "Encrypted"}
         onClick={() => setOpen(!open)}
-        data-tip={open ? undefined : plain ? "Not encrypted: integrations can read this list" : "Encrypted: only you can read this list"}
+        data-tip={open ? undefined : plain ? "Readable: your AI apps and integrations can use it" : "Encrypted: only you can read this list"}
       >
         {plain ? <LockOpen size={18} strokeWidth={2.5} aria-hidden /> : <Lock size={18} strokeWidth={2.5} aria-hidden />}
       </button>
       {open && (
-        // One switch: encrypted, on or off. Off means our server can read the list (for integrations and calendar
-        // links); it can be switched back any time.
         <div className={s.privacyCard} role="dialog" aria-label="Encryption">
+          <p>
+            <b>{plain ? "Readable." : "Encrypted."}</b>{" "}
+            {plain ? "Your AI apps, calendar link and integrations can use this list." : "Only you can read this list."}
+          </p>
           <button
-            role="switch"
-            aria-checked={!plain}
-            className={s.privacySwitch}
-            onClick={() => update(list.id, (l) => ({ ...l, plain: !plain }))}
+            className={s.ghost}
+            onClick={() => {
+              setOpen(false);
+              openPrivacy();
+            }}
           >
-            {plain ? <LockOpen size={16} strokeWidth={2.5} aria-hidden /> : <Lock size={16} strokeWidth={2.5} aria-hidden />}
-            <b>Encrypted</b>
-            <span className={s.switchTrack} aria-hidden>
-              <i />
-            </span>
+            Change in Account
           </button>
-          {plain && <small>Off: integrations can read this list.</small>}
         </div>
       )}
     </div>
@@ -1528,7 +1541,7 @@ function ListView({
             Esc cancels. */}
         <div className={s.nameRow} style={{ "--list": listColor(list.id) } as React.CSSProperties}>
           {/* The lock, a little sticker on the name's corner: click it for the encryption switch. */}
-          <Privacy list={list} update={update} />
+          <Privacy list={list} />
         {renaming ? (
           <>
             <label className="sr-only" htmlFor="list-name">

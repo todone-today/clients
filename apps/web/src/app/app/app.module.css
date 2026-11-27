@@ -11146,28 +11146,68 @@ input.askRowTitle:focus-visible {
 }
 
 /* Connect an AI (Connections.tsx): what to paste, per app, then the connections you have. */
-.connectMade {
+.connectSteps {
   display: grid;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 2px solid var(--hair);
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.connectSteps li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 0.9rem 0.75rem 3.1rem;
+  position: relative;
   background: var(--raise);
+  border: 2px solid var(--hair);
+  counter-increment: step;
 }
-.connectMade pre {
-  max-height: 16rem;
-  white-space: pre-wrap;
+.connectSteps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-weight: 900;
+  color: var(--black);
+  background: var(--lime);
+  border-radius: 50%;
+}
+.connectSteps p {
+  flex: 1 1 16rem;
+  font-weight: 600;
+}
+.connectSteps code {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
   word-break: break-all;
+  color: var(--ink-2);
 }
-.connectMade small {
+.connectNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.e2eName small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: normal;
   color: var(--ink-2);
 }
 .connectApps {
   flex-wrap: wrap;
-}
-.connectRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
 }
 .connectList {
   display: grid;

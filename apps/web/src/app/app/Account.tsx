@@ -14,6 +14,7 @@ import { changePassword, derive, myFingerprint, newRecovery, showRecovery } from
 import { Billing } from "./Billing";
 import { ThemePicker } from "@/components/ThemeToggle";
 import { Connections } from "./Connections";
+import { Privacy } from "./Privacy";
 import { save } from "@/lib/export";
 import { SITE } from "@/lib/urls";
 import s from "./app.module.css";
@@ -81,11 +82,13 @@ export function Account({ onIntegrations }: { onIntegrations: () => void }) {
 
       <section className={s.integration} id="connect-ai">
         <h2>Connect an AI</h2>
-        <p>
-          Let Claude, Gemini, Cursor or another AI app on your computer read and change your lists, goals, calendar and rewards.
-          Your lists stay encrypted: they&apos;re unlocked on your computer, not on our servers.
-        </p>
+        <p>Ask Claude or Gemini on your computer to add, tick off and plan your tasks for you.</p>
         <Connections />
+      </section>
+
+      <section className={s.integration} id="privacy">
+        <h2>Privacy</h2>
+        <Privacy />
       </section>
 
       <section className={s.integration}>

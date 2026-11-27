@@ -5,7 +5,6 @@ import {
   CalendarDays,
   Copy,
   Lock,
-  LockOpen,
   RefreshCw,
 } from "lucide-react";
 import { Select } from "@/components/Select";
@@ -13,7 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { label, rangeOf } from "@todone/sdk/calendar";
 import { GOOGLE_SCOPE } from "@todone/sdk/integrations";
 import { refresh, useLists } from "@/lib/store";
-import { ListIcon } from "./listIcon";
+import { openPrivacy } from "./Privacy";
 import {
   connectGoogle,
   disconnectGoogle,
@@ -148,7 +147,13 @@ export function Integrations({ onBack }: { onBack: () => void }) {
         {msg && <p className={s.open}>{msg}</p>}
       </div>
 
-      <Encryption />
+      <p className={s.connectNote}>
+        <Lock size={15} strokeWidth={2.5} aria-hidden /> Integrations see only lists you make readable. Encrypted ones stay
+        private.{" "}
+        <button type="button" className={s.link} onClick={openPrivacy}>
+          Choose which
+        </button>
+      </p>
 
       <div className={s.picker}>
         <span aria-hidden>Service</span>
@@ -620,72 +625,3 @@ function SharedViews() {
   );
 }
 
-// Which lists integrations can see. Lists are end-to-end encrypted, so integrations (and our server) can't read them;
-// switching encryption off for a list makes it readable to both, so it can sync. One switch per list.
-function Encryption() {
-  const { lists, update } = useLists();
-  const [armed, setArmed] = useState<string | null>(null);
-  const mine = (lists ?? []).filter((l) => !l.kind);
-  const open = mine.filter((l) => l.plain).length;
-  return (
-    <section className={s.e2e} aria-labelledby="e2e-h">
-      <h2 id="e2e-h">
-        <Lock size={18} strokeWidth={2.5} aria-hidden /> End-to-end encryption
-      </h2>
-      <p>
-        Privacy comes first: your lists are locked on your device before
-        they&apos;re saved, and nobody else can read them, not us and not your
-        calendar. So even with your calendar link added or shared, an encrypted
-        list never shows up in it. Only the lists you make readable below go
-        into the calendar, and our server can read those too. Switch encryption
-        back on any time and the list leaves the calendar on its next refresh.
-      </p>
-      <p className={s.e2eCount}>
-        {open
-          ? `${open} of ${mine.length} lists readable in your calendar`
-          : "Every list is encrypted: your calendar shows nothing yet."}
-      </p>
-      <ul className={s.e2eLists}>
-        {mine.map((l) => {
-          const on = !l.plain;
-          return (
-            <li key={l.id}>
-              <span className={s.e2eName}>
-                <ListIcon id={l.id} name={l.name} icon={l.icon} /> {l.name}
-              </span>
-              {armed === l.id && (
-                <span className={s.e2eWarn}>
-                  Our server could read it. Click again
-                </span>
-              )}
-              <button
-                role="switch"
-                aria-checked={on}
-                aria-label={`Encrypt ${l.name}`}
-                className={s.e2eSwitch}
-                data-armed={armed === l.id || undefined}
-                onBlur={() => setArmed((x) => (x === l.id ? null : x))}
-                onClick={() => {
-                  if (!on) return update(l.id, (x) => ({ ...x, plain: false }));
-                  if (armed !== l.id) return setArmed(l.id);
-                  update(l.id, (x) => ({ ...x, plain: true }));
-                  setArmed(null);
-                }}
-              >
-                <i aria-hidden />
-                <span>
-                  {on ? (
-                    <Lock size={13} strokeWidth={2.75} aria-hidden />
-                  ) : (
-                    <LockOpen size={13} strokeWidth={2.75} aria-hidden />
-                  )}
-                  {on ? "Encrypted" : "Readable"}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}

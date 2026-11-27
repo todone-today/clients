@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, Check, Copy, Trash2 } from "lucide-react";
-import { type Connection, connections, makeConnection, removeConnection, setups, usesPassword } from "@/lib/connect";
+import { Check, Copy, Lock, Trash2 } from "lucide-react";
+import { type App, APPS, COMMANDS, type Connection, config, connections, makeConnection, removeConnection } from "@/lib/connect";
+import { openPrivacy } from "./Privacy";
 import s from "./app.module.css";
 
 const OWN = "https://app.todone.today";
@@ -10,96 +11,118 @@ const when = (t: number) => {
   const d = Math.round((Date.now() - t) / 86_400_000);
   return d < 1 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
 };
+// Clipboard writes after a server call: Safari wants the promise handed over inside the tap itself.
+async function copyLater(text: Promise<string>) {
+  if (typeof ClipboardItem !== "undefined")
+    return navigator.clipboard.write([new ClipboardItem({ "text/plain": text.then((t) => new Blob([t], { type: "text/plain" })) })]);
+  return navigator.clipboard.writeText(await text);
+}
 
-// Connect an AI app on your computer (Claude, Cursor, …) to your lists, goals, calendar and rewards (lib/connect.ts).
-// Make one: a name and your password, then one block to paste, shown once. Below: the ones you have, to remove.
+// Connect an AI app on your computer (lib/connect.ts): pick the app, copy, paste. The connection is made the first
+// time you copy its code, named after the app. It can only use what you made readable (Account → Privacy).
 export function Connections() {
   const [list, setList] = useState<Connection[] | null>(null);
   const [signedOut, setSignedOut] = useState(false);
-  const [password, setPassword] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [app, setApp] = useState<App>("Claude Code");
+  const [codes, setCodes] = useState<Partial<Record<App, string>>>({}); // made this visit, so a second copy is the same
+  const [copied, setCopied] = useState("");
   const [err, setErr] = useState("");
-  const [made, setMade] = useState<{ name: string; code: string } | null>(null);
-  const [app, setApp] = useState(0);
   const [removing, setRemoving] = useState("");
   useEffect(() => {
     connections().then(setList, () => setSignedOut(true));
-    usesPassword().then(setPassword, () => {});
   }, []);
-
   if (signedOut) return <p>Make an account to connect an AI app to your lists.</p>;
-  const ways = made ? setups(made.code, location.origin === OWN ? undefined : location.origin) : [];
+
+  const code = async () => {
+    if (codes[app]) return codes[app]!;
+    const c = await makeConnection(app);
+    setCodes((x) => ({ ...x, [app]: c.code }));
+    setList((l) => [...(l ?? []), c]);
+    return c.code;
+  };
+  const copy = (what: string, text: () => Promise<string>) => {
+    setErr("");
+    copyLater(text())
+      .then(() => setCopied(`${app}:${what}`))
+      .catch((x) => setErr(x instanceof Error && x.message ? x.message : "Couldn't copy. Try again."));
+  };
+  const done = (what: string) => copied === `${app}:${what}`;
+  const button = (what: string, label: string, text: () => Promise<string>) => (
+    <button type="button" className="btn" style={{ "--fill": "var(--lime)" } as React.CSSProperties} onClick={() => copy(what, text)}>
+      {done(what) ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />}{" "}
+      {done(what) ? "Copied" : label}
+    </button>
+  );
+  const command = COMMANDS[app];
+  const url = location.origin === OWN ? undefined : location.origin;
+
   return (
     <div className={s.stack}>
-      {made ? (
-        <div className={s.connectMade}>
-          <p>
-            <b>“{made.name}” is ready.</b> Paste this into your AI app. It&apos;s shown only this once, so copy it now.
-          </p>
-          <div className={`${s.seg} ${s.connectApps}`} role="group" aria-label="Your AI app">
-            {ways.map((w, i) => (
-              <button key={w.app} type="button" aria-pressed={i === app} onClick={() => setApp(i)}>
-                {w.app}
-              </button>
-            ))}
-          </div>
-          <p>{ways[app].where}</p>
-          <pre className={s.code}>{ways[app].text}</pre>
-          <div className={s.connectRow}>
-            <CopyButton text={ways[app].text} label={ways[app].code ? "Copy command" : "Copy"} key={`a${app}`} />
-            {/* The plugin and the extension ask for the code itself. */}
-            {ways[app].code && <CopyButton text={made.code} label="Copy your code" key={`c${app}`} />}
-            <button type="button" className={s.ghost} onClick={() => setMade(null)}>
-              Done
-            </button>
-          </div>
-          <small>Then ask it things like “add milk to my Groceries list” or “what’s on my plate this week?”</small>
-        </div>
-      ) : (
-        <form
-          className={s.stack}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const f = new FormData(form);
-            const name = String(f.get("name")).trim();
-            setBusy(true);
-            setErr("");
-            try {
-              const c = await makeConnection(name, String(f.get("secret")));
-              setList((l) => [...(l ?? []), c]);
-              setMade({ name, code: c.code });
-              setApp(0);
-              form.reset();
-            } catch (x) {
-              setErr(x instanceof Error ? x.message : "Couldn't make the connection.");
-            }
-            setBusy(false);
+      <div className={`${s.seg} ${s.connectApps}`} role="group" aria-label="Your AI app">
+        {APPS.map((a) => (
+          <button key={a} type="button" aria-pressed={a === app} onClick={() => setApp(a)}>
+            {a}
+          </button>
+        ))}
+      </div>
+
+      <ol className={s.connectSteps}>
+        {command ? (
+          <>
+            <li>
+              <p>
+                {app === "Claude Code" ? "In Claude Code, run:" : "In a terminal, run:"} <code>{command}</code>
+              </p>
+              {button("cmd", "Copy", async () => command)}
+            </li>
+            <li>
+              <p>When it asks for your todone code, paste it.</p>
+              {button("code", "Copy your code", code)}
+            </li>
+          </>
+        ) : (
+          <>
+            <li>
+              <p>Copy your setup. Your code is inside.</p>
+              {button("setup", "Copy setup", async () => config(await code(), url))}
+            </li>
+            <li>
+              <p>
+                {app === "Claude Desktop"
+                  ? "In Claude: Settings → Developer → Edit Config. Paste it, save, then quit and reopen Claude."
+                  : "In Cursor: Settings → MCP → Add new server, or paste it into ~/.cursor/mcp.json."}
+              </p>
+            </li>
+          </>
+        )}
+        <li>
+          <p>Ask it: “What’s on my list today?”</p>
+        </li>
+      </ol>
+      {err && <p className={s.err}>{err}</p>}
+
+      <p className={s.connectNote}>
+        <Lock size={15} strokeWidth={2.5} aria-hidden /> AI apps see only what you make readable. Everything else stays
+        encrypted.{" "}
+        <button
+          type="button"
+          className={s.link}
+          onClick={(e) => {
+            e.currentTarget.closest("dialog")?.close();
+            openPrivacy();
           }}
         >
-          <input name="name" aria-label="Name for this connection" defaultValue="Claude on my computer" maxLength={60} required />
-          <input
-            name="secret"
-            type="password"
-            aria-label={password ? "Your password" : "Your unlock passphrase"}
-            placeholder={password ? "Your password, to unlock your lists for it" : "Your unlock passphrase"}
-            autoComplete="current-password"
-            required
-          />
-          <button className="btn" disabled={busy}>
-            <Bot size={16} strokeWidth={2.5} aria-hidden /> {busy ? "Making it…" : "Make a connection"}
-          </button>
-          {err && <p className={s.err}>{err}</p>}
-        </form>
-      )}
+          Choose what they see
+        </button>
+      </p>
 
       {!!list?.length && (
-        <ul className={s.connectList} aria-label="Your connections">
+        <ul className={s.connectList} aria-label="Connected apps">
           {list.map((c) => (
             <li key={c.id}>
               <span>
                 <b>{c.name}</b>
-                <small>{c.used ? `Last used ${when(c.used)}` : "Not used yet"}</small>
+                <small>{c.used ? `Last used ${when(c.used)}` : `Added ${when(c.created)}, not used yet`}</small>
               </span>
               {removing === c.id ? (
                 <button
@@ -123,22 +146,5 @@ export function Connections() {
         </ul>
       )}
     </div>
-  );
-}
-
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      className="btn"
-      style={{ "--fill": "var(--lime)" } as React.CSSProperties}
-      onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-      }}
-    >
-      {copied ? <Check size={16} strokeWidth={3} aria-hidden /> : <Copy size={16} strokeWidth={2.5} aria-hidden />} {copied ? "Copied" : label}
-    </button>
   );
 }
