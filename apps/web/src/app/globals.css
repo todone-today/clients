@@ -443,11 +443,12 @@ kbd {
   border-radius: 3px;
 }
 
-/* Instant tooltips, as little stickers: data-tip="…" on a control (it keeps its aria-label for screen readers). */
+/* Instant tooltips, as little stickers: data-tip="…" on a control (it keeps its aria-label for screen readers).
+   Only with a mouse or the keyboard: on a phone a tap counts as hover, so the tip would pop up after the tap. */
 [data-tip] {
   position: relative;
 }
-[data-tip]:is(:hover, :focus-visible)::after {
+[data-tip]:focus-visible::after {
   content: attr(data-tip);
   position: absolute;
   top: calc(100% + 0.55rem);
@@ -464,6 +465,26 @@ kbd {
   border: 2px solid var(--black);
   box-shadow: 3px 3px 0 var(--black);
   translate: -50% 0;
+}
+@media (hover: hover) {
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 0.55rem);
+    left: 50%;
+    z-index: 200;
+    padding: 0.3rem 0.55rem;
+    font: 800 0.75rem/1.2 var(--sans);
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: nowrap;
+    color: var(--black);
+    pointer-events: none;
+    background: var(--butter);
+    border: 2px solid var(--black);
+    box-shadow: 3px 3px 0 var(--black);
+    translate: -50% 0;
+  }
 }
 /* Near the right edge, the tip lines up with the control's right side so it stays on screen. */
 [data-tip-end]:is(:hover, :focus-visible)::after {

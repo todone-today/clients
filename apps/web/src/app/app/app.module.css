@@ -8334,9 +8334,38 @@ input.askRowTitle:focus-visible {
     flex-basis: 100%;
     justify-content: flex-end;
   }
+  /* No hover on a phone, so each button says what it does under its icon. Room on the left for the
+     panel's lock sticker. */
+  .panelActions {
+    gap: 0.4rem;
+    padding-left: 1.6rem;
+  }
+  .panelActions > :not(button) {
+    display: grid;
+  }
+  .panelActions > *,
   .panelActions .panelClose {
-    width: 2.2rem;
-    height: 2.2rem;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .panelActions .panelClose {
+    width: auto;
+    height: auto;
+    min-height: 3.1rem;
+    padding: 0.35rem 0.2rem;
+    gap: 0.15rem;
+  }
+  .panelActions > :not(button) > .panelClose {
+    width: 100%;
+  }
+  .panelActions .panelClose::before {
+    content: attr(aria-label);
+    grid-row: 2;
+    font: 800 0.66rem/1.1 var(--sans);
+    text-align: center;
+  }
+  .panelActions .panelClose[data-label]::before {
+    content: attr(data-label);
   }
 }
 @media (max-width: 760px) {

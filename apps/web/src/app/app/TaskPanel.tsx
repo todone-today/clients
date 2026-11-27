@@ -291,6 +291,7 @@ export function TaskPanel({
                 disabled={!!busy}
                 aria-label={gated ? "Share (needs Plus)" : "Share"}
                 data-tip={gated ? "Share (needs Plus)" : "Share"}
+                data-label="Share"
               >
                 <Share2 size={19} strokeWidth={2.5} />
               </button>
