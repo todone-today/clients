@@ -1208,6 +1208,7 @@ function ListView({
   }
   const me = authClient.useSession().data?.user.id;
   const [show, setShowState] = useState<View>(ALL); // the view the board shows (Views.tsx)
+  const [soon, setSoon] = useState(false); // "Coming up" opened
   const setShow = (v: View) => {
     setShowState(v);
     rememberView(list.id, v.id);
@@ -1508,6 +1509,14 @@ function ListView({
     colors,
     lists,
   };
+  // Today's work first, then what's done (faded), then what's dated later, folded into one "Coming up" row. A view
+  // with its own date rule ("Tomorrow") already picks the days, so it shows as it is.
+  const shown = board(list.tasks, show, sort, today, nowMin);
+  const later = show.when === "any" ? shown.filter((t) => !t.done && !!t.due && t.due > today) : [];
+  const groups = {
+    now: show.when === "any" ? [...shown.filter((t) => !t.done && !later.includes(t)), ...shown.filter((t) => t.done)] : shown,
+    later,
+  };
 
   return (
     <>
@@ -1719,7 +1728,7 @@ function ListView({
               ref={boardRef}
               {...drop("unnest")}
             >
-              {board(list.tasks, show, sort, today, nowMin).flatMap((t) => {
+              {groups.now.flatMap((t) => {
                 const note = (
                   <TaskRow
                     key={t.id}
@@ -1740,6 +1749,14 @@ function ListView({
                 );
                 return gap.place === "before" ? [slot, note] : [note, slot];
               })}
+              {!!later.length && (
+                <li className={s.soonRow}>
+                  <button type="button" className={s.soonBtn} aria-expanded={soon} onClick={() => setSoon((x) => !x)}>
+                    <ChevronDown size={16} strokeWidth={3} aria-hidden /> Coming up · {later.length}
+                  </button>
+                </li>
+              )}
+              {soon && later.map((t) => <TaskRow key={t.id} task={t} {...row} top dragged={!!gap?.ids.includes(t.id)} />)}
               {show.status === "open" && list.tasks.some((t) => waiting(t, today) && !upcoming(t, today)) && (
                 <li className={s.noMatch}>
                   {(() => {
@@ -1751,7 +1768,7 @@ function ListView({
                   </button>
                 </li>
               )}
-              {!board(list.tasks, show, sort, today, nowMin).length &&
+              {!shown.length &&
                 !list.tasks.some((t) => waiting(t, today)) &&
                 (show.status !== "done" && c.all > 0 && c.done === c.all ? (
                   // Everything on the list is ticked: say so, properly, instead of "nothing here".

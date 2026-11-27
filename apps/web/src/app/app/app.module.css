@@ -11193,3 +11193,34 @@ input.askRowTitle:focus-visible {
   display: grid;
   gap: 1rem;
 }
+
+/* "Coming up": tasks dated after today, folded under the board until tapped */
+.soonRow {
+  grid-column: 1 / -1;
+  list-style: none;
+}
+.soonBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--raise);
+  border: 2px dashed var(--hair);
+  cursor: pointer;
+}
+.soonBtn svg {
+  transition: rotate 0.2s var(--ease);
+  rotate: -90deg;
+}
+.soonBtn[aria-expanded="true"] svg {
+  rotate: 0deg;
+}
+@media (prefers-reduced-motion: reduce) {
+  .soonBtn svg {
+    transition: none;
+  }
+}
