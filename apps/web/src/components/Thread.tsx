@@ -188,6 +188,8 @@ function Composer({
   return (
     <form
       className={s.composer}
+      // A reply box with nothing in it folds back to "Reply" when you click elsewhere.
+      onBlur={(e) => reply && !text.trim() && !files.length && !busy && !e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy || (!text.trim() && !files.length)) return;

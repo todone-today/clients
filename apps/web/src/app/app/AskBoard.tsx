@@ -199,6 +199,7 @@ export function AskBoard({
           {naming === d.id ? (
             <form
               className={s.askMake}
+              onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setNaming(null)}
               onSubmit={(e) => {
                 e.preventDefault();
                 const n = new FormData(e.currentTarget)

@@ -210,7 +210,11 @@ export function Stickers({
       aria-invalid={estErr}
       title="Like 45m, 2h or 1h30m"
       onKeyDown={(e) => {
-        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Enter") {
+          const v = e.currentTarget.value.trim();
+          if (v && parseMinutes(v) === null) setEstErr(true);
+          else e.currentTarget.blur();
+        }
         if (e.key === "Escape") {
           forIds.current = undefined;
           setTyping(false);
@@ -219,8 +223,7 @@ export function Stickers({
       onBlur={(e) => {
         const v = e.target.value.trim();
         const m = v ? parseMinutes(v) : 0;
-        setEstErr(m === null);
-        if (m === null) return;
+        setEstErr(false);
         if (m) {
           hold("est", m);
           use(`est:${m}`);

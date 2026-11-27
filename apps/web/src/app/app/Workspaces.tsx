@@ -96,7 +96,7 @@ export function Workspaces({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onBlur={() => !name.trim() && stop()}
+            onBlur={(e) => !e.currentTarget.form?.contains(e.relatedTarget as Node) && stop()}
             placeholder="Team name, Enter to create"
             maxLength={60}
           />

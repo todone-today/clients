@@ -3,6 +3,7 @@ import { Big_Shoulders, Schibsted_Grotesk, JetBrains_Mono } from "next/font/goog
 import { NAME } from "@/lib/brand";
 import { SITE } from "@/lib/urls";
 import { Visits } from "@/components/Visits";
+import { OutsideCloses } from "@/components/OutsideCloses";
 import "./globals.css";
 
 const display = Big_Shoulders({ variable: "--font-display", subsets: ["latin"], weight: ["800", "900"] });
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <Visits />
+        <OutsideCloses />
       </body>
     </html>
   );

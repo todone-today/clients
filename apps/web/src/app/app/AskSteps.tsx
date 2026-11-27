@@ -328,6 +328,7 @@ function Row({
           (naming ? (
             <form
               className={s.askMake}
+              onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setNaming(false)}
               onSubmit={(e) => {
                 e.preventDefault();
                 const n = new FormData(e.currentTarget).get("name")?.toString().trim().slice(0, 60);
